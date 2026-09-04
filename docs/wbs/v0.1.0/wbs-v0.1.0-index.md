@@ -19,7 +19,8 @@
 | [9](wbs-v0.1.0-part9-corpus.md) | Corpus, Benchmarks & Scale | M23-M25 | 27 |
 | [10](wbs-v0.1.0-part10-safety.md) | Safety, Adversarial & Field Tests | M26-M27 | 14 |
 | [11](wbs-v0.1.0-part11-distribution.md) | Distribution, Demo & Release | M28-M30 | 18 |
-| **Total** | | **M1-M30** | **201** |
+| [12](wbs-v0.1.0-part12-field-test.md) | Comprehensive Field Test | M31 | 34 |
+| **Total** | | **M1-M31** | **235** |
 
 ## Milestone Map
 
@@ -46,11 +47,12 @@ Part 6 ──> Part 8 (CLI & TUI)
 Part 4 ──> Part 9 (Corpus & Scale)
 Part 9 ──> Part 10 (Safety & Field Tests)
 All ──> Part 11 (Distribution & Release)
+All ──> Part 12 (Comprehensive Field Test)
 ```
 
 ## Exit Gate (per milestone)
 
-Every milestone (M1-M30) must pass its exit gate before the next milestone begins:
+Every milestone (M1-M31) must pass its exit gate before the next milestone begins:
 
 - [ ] Run all tests: `pytest` — all pass
 - [ ] Lint strict clean: `ruff check` + `mypy src/` — zero errors
@@ -66,6 +68,7 @@ Every milestone (M1-M30) must pass its exit gate before the next milestone begin
 Before tagging v0.1.0, ALL of the following must be true:
 
 - [ ] All 30 milestones complete and exit gates passed
+- [ ] M31 field test complete and report published
 - [ ] `cauterule demo` runs successfully end-to-end on macOS, Linux, and CI
 - [ ] Replay precision >= 90% on public benchmark corpus
 - [ ] Counterexample rejection rate >= 90%
