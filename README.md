@@ -56,10 +56,3 @@ MVP scope:
 
 MIT — see [LICENSE](LICENSE).
 
----
-
-## Related
-
-- [ToolTrustEngine](https://github.com/deghosal-2026/ToolTrustEngine) — trust/verification signals
-- [AgentEvalForge](https://github.com/deghosal-2026/AgentEvalForge) — scenario generation for replay
-- [DecisionJournal](https://github.com/deghosal-2026/DecisionJournal) — decision log for historical scenarios
