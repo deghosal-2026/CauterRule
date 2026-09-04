@@ -46,7 +46,7 @@
 - [ ] Commit with message: `milestone: M16 complete`
 - [ ] Push to main
 
-## M17: Rule Injection
+## M17: Rule Injection & Loop Orchestration
 
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
