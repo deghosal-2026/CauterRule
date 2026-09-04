@@ -56,6 +56,9 @@
 | 17.4 | Rule explanations | `src/cauterule/injection/explainer.py` | LLM generates human-readable explanation of why rule fires | ⬜ |
 | 17.5 | Rule templates | `src/cauterule/injection/templates.py` | retry, verify-then-act, check-preconditions | ⬜ |
 | 17.6 | Context budget optimizer | `src/cauterule/injection/budget.py` | Rank rules, compress, fit token budget | ⬜ |
+| 17.9 | Lesson portfolio optimizer | `src/cauterule/injection/portfolio.py` | If only N rules can be injected, choose the set that maximizes expected failure prevention | ⬜ |
+| 17.10 | Loop orchestrator | `src/cauterule/loop/orchestrator.py` | Wires capture → redact → cluster → extract → lint → replay → tournament → conflict → promote → inject into one triggered pipeline with error-handling policy | ⬜ |
+| 17.11 | Loop error handling | `src/cauterule/loop/errors.py` | Extraction retry, replay failure hold, linter block, git push retry, async conflict retry, redaction block | ⬜ |
 | 17.7 | Preflight mode | `src/cauterule/injection/preflight.py` | Predict likely failures and recommend rules before task | ⬜ |
 | 17.8 | No-match graceful degradation | `src/cauterule/injection/fallback.py` | Empty set if no rules match | ⬜ |
 

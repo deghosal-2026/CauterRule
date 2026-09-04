@@ -400,14 +400,14 @@ Features being considered but not yet scheduled:
 
 | Version | Theme | Key Deliverable |
 |---------|-------|-----------------|
-| **v0.1.0** | Core Loop + First-Class DX | Extract → test → promote + CLI + replay + export/import + adapter + demo |
+| **v0.1.0** | Core Loop + First-Class DX | Full loop, CLI (24+ commands), replay + visualization, export/import, MCP server, bundled pack-git, `@cauterule.watch` adapter, TUI review, corpus, benchmarks, scale tests, field tests, adversarial tests, distribution |
 | **v0.1.1** | Framework Adapters | LangGraph, CrewAI, PydanticAI adapters |
-| **v0.2.0** | Intelligence | Conflict detection, retirement, TUI review |
-| **v0.3.0** | Rule Packs | Pre-built, shareable rule collections |
-| **v0.4.0** | MCP & Integrations | Rules as MCP tools, GitHub Action, webhooks |
-| **v0.5.0** | Observability | Dashboard, metrics, replay visualization |
-| **v0.6.0** | Advanced Retrieval | Semantic matching, multi-pass extraction |
-| **v0.7.0** | Multi-Agent | Cross-agent transfer, fleet governance |
+| **v0.2.0** | Rule Lifecycle Management | Specificity scoring, outcome tracking, automated retirement, supersession chains, auto-promotion tuning |
+| **v0.3.0** | Rule Pack Ecosystem | Official packs (docker, deploy, testing, python), pack install/create/publish, `cauterule share` |
+| **v0.4.0** | Deep Integrations | AgentObservatory, AgentEvalForge, DecisionJournal, LangSmith/Phoenix, CI pipeline testing |
+| **v0.5.0** | Observability & Analytics | Web dashboard, replay visualization, trend lines, weekly digest, failure recurrence tracking |
+| **v0.6.0** | Advanced Retrieval | Semantic matching, hybrid matching, rule embedding index, cross-failure pattern detection |
+| **v0.7.0** | Multi-Agent | Cross-agent transfer, shared registry, rule governance, agent profiles, rule federation |
 
 ---
 

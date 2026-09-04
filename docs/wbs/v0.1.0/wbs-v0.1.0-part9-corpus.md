@@ -7,7 +7,7 @@
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
 | 23.1 | Corpus format spec | `src/cauterule/corpus/format.py` | JSONL with metadata schema | ⬜ |
-| 23.2 | Tiered corpus builder | `src/cauterule/corpus/tiers.py` | tiny (25), small (100), medium (1k), large (10k+) | ⬜ |
+| 23.2 | Tiered corpus builder | `src/cauterule/corpus/tiers.py` | tiny (25), small (100), medium (1k), large (10k+) with balanced success/failure in each tier | ⬜ |
 | 23.3 | Domain-specific corpora | `src/cauterule/corpus/domains/` | coding, DevOps, research, support, browser automation | ⬜ |
 | 23.4 | Trajectory quality labels | `src/cauterule/corpus/labels.py` | clear, ambiguous, multi-causal, misleading, operator-induced | ⬜ |
 | 23.5 | Gold rule families | `src/cauterule/corpus/gold.py` | Multiple acceptable abstractions per benchmark scenario | ⬜ |
@@ -42,6 +42,9 @@
 | 24.7 | Prompt bake-off harness | `src/cauterule/benchmark/prompts.py` | Compare extractor prompt variants by replay pass rate | ⬜ |
 | 24.8 | Rule mutation testing | `tests/benchmark/mutation.py` | Perturb good rule, verify replay catches degradation | ⬜ |
 | 24.9 | Confidence calibration test | `tests/benchmark/calibration.py` | Confidence scores correlate with replay outcomes | ⬜ |
+| 24.10 | Ablation studies | `tests/benchmark/ablation.py` | Compare no clustering vs clustering, single-pass vs multi-pass, tags vs no tags | ⬜ |
+| 24.11 | Human vs LLM lesson comparison | `tests/benchmark/human_vs_llm.py` | Compare manually written rules to extracted rules on same failures | ⬜ |
+| 24.12 | Calibration feedback loop | `src/cauterule/benchmark/calibration_loop.py` | Feed calibration data back into promotion gate hybrid mode thresholds | ⬜ |
 
 ### M24 Exit Gate
 

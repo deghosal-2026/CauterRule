@@ -74,7 +74,11 @@
 | 22.3 | Failure pattern leaderboard | `src/cauterule/observe/leaderboard.py` | Most common failure classes, most prevented, top gaps | ⬜ |
 | 22.4 | Coverage gap detector | `src/cauterule/observe/coverage_gap.py` | Domains with repeated failures but no matching rules | ⬜ |
 | 22.5 | Rule coverage score | `src/cauterule/observe/coverage_score.py` | Weighted blend of coverage %, precision %, stale % | ⬜ |
-| 22.6 | Learning journal | `src/cauterule/observe/journal.py` | Auto-generate markdown log: failure → rule → replay → promotion | ⬜ |
+| 22.6 | Learning journal | `src/cauterule/observe/journal.py` | Auto-generate markdown log: failure → rule → replay → promotion |
+| 22.7 | Domain coverage score | `src/cauterule/observe/domain_coverage.py` | How well current rules cover failure classes across domains |
+| 22.8 | Failure-class coverage score | `src/cauterule/observe/class_coverage.py` | % of recurring failure classes with at least one validated rule |
+| 22.9 | Coverage frontier | `src/cauterule/observe/coverage_frontier.py` | Identify next most valuable domain/failure family to learn based on recurrence + missing coverage |
+| 22.10 | Monthly learning report | `src/cauterule/observe/monthly_report.py` | Auto-generate report: rules learned, failures reduced, coverage gaps found | ⬜ |
 
 ### M22 Exit Gate
 

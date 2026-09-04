@@ -14,6 +14,8 @@
 | 28.6 | GitHub Action | `.github/action.yml`, `action/` | `cauterule/action` — extraction on CI failures, promote via PR | ⬜ |
 | 28.7 | Webhook on promotion | `src/cauterule/integrations/webhook.py` | Notify Slack/Discord/GitHub (configurable URL) | ⬜ |
 | 28.8 | OpenTelemetry exporter | `src/cauterule/integrations/otel.py` | Emit rule hit/promotion/extraction events | ⬜ |
+| 28.9 | Official benchmark leaderboard | `src/cauterule/benchmark/leaderboard.py` | Publish model + prompt results on public corpus | ⬜ |
+| 28.10 | Pack certification baseline | `src/cauterule/packs/certification.py` | Minimum safety, replay, and provenance checks for official rule packs | ⬜ |
 
 ### M28 Exit Gate
 
@@ -38,6 +40,8 @@
 | 29.6 | Human correction capture demo | `examples/human-correction.py` | User types "next time do X" → candidate → replay → promote | ⬜ |
 | 29.7 | Animated demo GIF | `assets/demo.gif` | README demo animation | ⬜ |
 | 29.8 | `cauterule init` templates | `src/cauterule/cli/templates/` | Scaffold templates for new project | ⬜ |
+| 29.9 | Public demo corpus | `examples/demo-corpus/` | Reproducible demo data set with screenshots, recordings, and expected outputs | ⬜ |
+| 29.10 | Adapter docs | `docs/adapter-guide.md` | "Add CauterRule to your agent in 5 lines" — adapter spec and examples | ⬜ |
 
 ### M29 Exit Gate
 
