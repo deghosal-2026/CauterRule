@@ -25,7 +25,7 @@
 ### `.cursorrules` / `CLAUDE.md` / `AGENTS.md` (Static Convention Files)
 - **What:** Hand-written convention files that agents read at startup
 - **Why it's different:** These are static — humans write them, humans maintain them. They are not extracted from failures, not tested, and not versioned with provenance.
-- **Gap it leaves open:** CauterRule can **export to** these formats (v0.3.0), turning tested rules into drop-in convention files. And it can **import from** them, converting existing conventions into testable rules.
+- **Gap it leaves open:** CauterRule **exports to** these formats in v0.1.0, turning tested rules into drop-in convention files. And it **imports from** them, converting existing conventions into testable rules. It also imports from chat history — parsing past corrections given to agents.
 
 ### CrewAI — 58k stars
 - **What:** Framework for orchestrating role-playing, autonomous AI agents
@@ -43,8 +43,11 @@ CauterRule occupies the intersection of:
 | **Verification** | Historical replay testing before promotion | None — write and forget |
 | **Provenance** | Full chain: source failure → evidence → promotion | None or minimal |
 | **Versioning** | Git-based, with rollback | None or append-only |
-| **Lifecycle** | Promote → track → retire → supersede | Append-only or manual |
-| **Sharing** | Rule packs (v0.3.0), MCP server (v0.4.0) | None |
-| **DX** | CLI, TUI, dashboard, demo command | Varies |
+| **Lifecycle** | Promote → track → retire → supersede → consolidate | Append-only or manual |
+| **Sharing** | Rule packs + MCP server (both in v0.1.0) | None |
+| **Interop** | Export to `.cursorrules`/`CLAUDE.md`/`AGENTS.md`/`.windsurfrules`/`aider` + import from all + chat history | None |
+| **Corpus** | Tiered public corpus + private local mode + gold families + counterexample + adversarial | None |
+| **Benchmarks** | Replay throughput, injection latency, conflict scale, cost, model bake-off | None |
+| **DX** | CLI (25+ commands), TUI, demo, `@cauterule.watch`, Homebrew, Docker, binary | Varies |
 
-**No existing OSS tool automates the extract → test → promote loop for agent standing rules.** The closest (Letta, LangGraph) provide memory infrastructure but not failure-driven, evidence-based rule promotion.
+**No existing OSS tool automates the extract → test → promote loop for agent standing rules.** The closest (Letta, LangGraph) provide memory infrastructure but not failure-driven, evidence-based rule promotion. None ship a corpus, benchmarks, or adversarial testing.
