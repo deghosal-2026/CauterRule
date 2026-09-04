@@ -175,6 +175,79 @@ CauterRule is built on five pillars that make it a compelling, differentiated OS
 - [ ] **Bundled `pack-git` demo** — show rules working out of the box with zero setup
 - [ ] **Human correction capture demo** — user types "next time do X," system turns it into a candidate rule, replay-tests it, and promotes it if valid
 
+### Field Test Program
+
+- [ ] **Single-agent coding field test** — run CauterRule against a coding agent on real repo tasks and measure repeat-failure reduction over one week
+- [ ] **Long-horizon task field test** — evaluate tasks with 20-50 steps to confirm rules still help when failures occur late in trajectories
+- [ ] **Noisy trajectory field test** — inject retries, irrelevant tool calls, and distractions to verify the extractor still finds the right lesson
+- [ ] **Human-in-the-loop field test** — compare auto-promotion vs review-gated promotion for precision, trust, and operator load
+- [ ] **Cold-start field test** — start from zero learned rules and measure time to first useful rule and first prevented repeat failure
+- [ ] **Cross-session memory field test** — fail in one session and verify the promoted rule still fires correctly in a fresh session later
+- [ ] **Regression field test** — previously promoted rules must still pass after extractor prompt or model changes
+- [ ] **Multi-environment field test** — run the same scenarios on macOS, Linux, and CI containers to expose environment-specific lessons
+
+### Corpus & Benchmarks
+
+- [ ] **Tiered corpus** — `tiny` (25), `small` (100), `medium` (1k), and `large` (10k+) trajectory sets for local dev, CI, and scale testing
+- [ ] **Domain-specific corpora** — coding, DevOps, research, support, and browser-automation trajectory families
+- [ ] **Balanced success/failure corpus** — maintain both failure and success trajectories so replay measures regressions, not just fixes
+- [ ] **Trajectory metadata schema** — each trajectory labeled with task type, toolchain, failure class, severity, domain, and tags
+- [ ] **Trajectory quality labels** — clear failure, ambiguous failure, multi-causal failure, misleading failure, operator-induced failure
+- [ ] **Public synthetic corpus** — shareable open corpus with no secrets for reproducible benchmarking
+- [ ] **Private local corpus mode** — let users point CauterRule at their own local traces without uploading data anywhere
+- [ ] **Gold rule families** — benchmark accepts multiple valid abstractions, not a single exact phrasing
+- [ ] **Counterexample corpus** — trajectories where plausible-looking rules should be rejected
+- [ ] **Near-miss corpus** — scenarios that look similar but should not trigger the rule
+- [ ] **Staleness corpus** — historical failures that no longer matter, used to validate retirement behavior
+- [ ] **Redaction corpus** — trajectories containing secrets, tokens, internal URLs, and private paths to validate sanitization
+
+### Scale & Reliability Tests
+
+- [ ] **Replay throughput benchmarks** — measure candidates processed per minute with and without caching across corpus sizes
+- [ ] **Rule matching latency benchmarks** — track p50, p95, and p99 pre-task injection latency
+- [ ] **Conflict explosion benchmarks** — test naive pairwise conflict detection at 100, 1k, and 10k rules
+- [ ] **Storage churn benchmarks** — simulate frequent promotion and retirement to validate YAML + git as a long-lived backend
+- [ ] **Concurrent failure ingestion** — process multiple failures at once and verify queueing, deduplication, and promotion consistency
+- [ ] **LLM cost benchmarks** — cost per extracted rule, cost per promoted rule, and cost per prevented repeat failure
+- [ ] **Memory footprint benchmarks** — RAM usage for replay, matching, and indexing under growing corpora
+- [ ] **Incremental indexing benchmarks** — time to add one new rule into a large rule store without full reindexing
+- [ ] **Replay determinism tests** — same candidate and same corpus should produce identical evidence reports
+- [ ] **Extractor stability tests** — repeated extraction on the same trajectory should show bounded variance
+
+### Safety & Adversarial Testing
+
+- [ ] **Prompt injection corpus** — malicious trajectory content tries to manipulate extractor output
+- [ ] **Misleading root-cause corpus** — visible failure differs from actual root cause; extractor must avoid shallow lessons
+- [ ] **Contradiction stress tests** — intentionally generate conflicting rules and verify precedence + conflict handling
+- [ ] **Unsafe directive corpus** — candidate rules suggesting dangerous actions must be blocked by linter or promotion gate
+- [ ] **Data poisoning simulation** — corrupted or fabricated trajectories attempt to poison rule promotion
+- [ ] **Instruction leakage tests** — exports must not leak secret paths, tokens, or private notes
+
+### Advanced Evaluation
+
+- [ ] **Model bake-off harness** — compare GPT, Claude, local models, and LiteLLM providers on the same corpus
+- [ ] **Prompt bake-off harness** — compare extractor prompt variants by replay pass rate, not just readability
+- [ ] **Rule mutation testing** — slightly perturb a good rule and verify replay catches degraded variants
+- [ ] **Ablation studies** — no clustering vs clustering, single-pass vs multi-pass, tags vs no tags, etc.
+- [ ] **Confidence calibration** — verify extractor confidence scores correlate with real replay outcomes
+- [ ] **Human vs LLM lesson comparison** — compare manually written standing rules to extracted rules on the same failures
+
+### Coverage & Optimization
+
+- [ ] **Domain coverage score** — how well current rules cover failure classes across domains
+- [ ] **Failure-class coverage score** — percent of recurring failure classes with at least one validated rule
+- [ ] **Coverage frontier** — identify the next most valuable domain or failure family to learn based on recurrence and missing coverage
+- [ ] **Lesson portfolio optimizer** — if only N rules can be injected, choose the set that maximizes expected failure prevention
+- [ ] **Context budget optimizer** — prioritize and compress injected rules to fit token limits without losing critical protection
+
+### Community & Ecosystem
+
+- [ ] **Corpus contribution guide** — contributors can submit anonymized or synthetic trajectories in a standard format
+- [ ] **Official benchmark leaderboard** — publish model and prompt results on the public corpus
+- [ ] **Pack certification baseline** — define minimum safety, replay, and provenance checks for official rule packs
+- [ ] **Monthly learning report** — auto-generate a report of rules learned, failures reduced, and coverage gaps found
+- [ ] **Public demo corpus** — reproducible demo data set with screenshots, recordings, and expected outputs
+
 ### Configuration
 
 - [ ] **`cauterule.toml`** config file — LLM provider, model, thresholds, mode, paths, redaction patterns
