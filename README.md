@@ -48,41 +48,180 @@ CauterRule automates the extract → test → promote loop. Same pattern as CI/C
 - Conflict detection and rule consolidation
 - Versioned YAML rule store with git provenance
 
-### CLI & DX (25+ Commands)
-- `cauterule demo` | `init` | `extract` | `test` | `promote` | `inject` | `list` | `show` | `search`
-- `cauterule audit` | `diff` | `review` (TUI) | `retire` | `history` | `conflicts` | `validate` | `health`
-- `cauterule counterfactual` | `story` | `explain` | `config` | `metrics` | `report` | `pack`
+### CLI (25+ Commands)
+- `cauterule init` | `demo` | `extract` (`--dry-run`) | `test` (`--ci`) | `promote` | `inject` | `list` | `show` | `search`
+- `cauterule audit` | `diff` | `review` (TUI) | `retire` | `history` | `conflicts` | `health` | `validate`
+- `cauterule counterfactual` | `story` | `explain` | `config` | `metrics` | `report` | `pack list` | `pack info`
 - `cauterule rewind` (Failure Time Machine) | `cauterule mcp` (MCP server)
 
-### Interop
-- Export to `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, `.windsurfrules`, `aider.conf.yml`, markdown, JSON
-- Import from `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, and chat history
-- MCP server — 4 tools: `get_matching_rules`, `get_rule`, `list_rules`, `report_failure`
-- `@cauterule.watch` decorator — add learning to any Python agent in 5 lines
+### Replay Engine
+- Replay harness with evidence reports (failures prevented, successes broken, precision, recall, verdict)
+- Replay visualization — step-by-step view of how a rule changes a past trajectory
+- Failure Time Machine — `cauterule rewind <trajectory>` with rule overlay
+- "What if?" mode — apply a hypothetical rule and simulate the outcome
+- Replay diff — before/after comparison of agent behavior with and without a rule
+- Insufficient history detection — warns when replay count is below threshold
+- Rule Draft Tournament — generate 3-5 candidates, replay all, rank, promote the winner
 
-### Bundled Rule Packs
+### Rule Store
+- YAML rule files with provenance metadata and tags
+- Auto-classified failure taxonomy (`git/push`, `python/import`, `docker/network`)
+- Git-based versioning, rollback, archive directory
+- Rule consolidation — merge overlapping triggers
+- Rule linter — validates for vagueness, tautologies, duplicates, contradictions, untestable directives
+
+### Rule Injection
+- Structured matching by trigger, tool, error type, context, tags, taxonomy
+- Specificity ordering — more specific rules injected first
+- Rule explanations — LLM generates human-readable explanation of why a rule fires
+- Rule templating — retry, verify-then-act, check-preconditions
+- Context budget optimizer — rank and compress rules to fit token limits
+- Lesson portfolio optimizer — if only N rules can be injected, choose the set that maximizes expected failure prevention
+- Preflight mode — predict likely failures and recommend rules before a task
+- No-match graceful degradation
+
+### Rule Packs (Bundled)
 - `pack-git` — 10-15 pre-built git rules (push, merge, rebase, conflicts, hooks)
 - Zero cold-start: rules work out of the box, zero LLM cost
 
-### Observability
-- Metrics CLI, markdown reports, learning journal, failure pattern leaderboard
-- Coverage gap detector, rule coverage score, domain coverage score
-- Coverage frontier — identifies the next most valuable area to learn
+### Export & Import (Day-One Interop)
+- Export to `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, `.windsurfrules`, `aider.conf.yml`, markdown, JSON
+- Import from `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, and chat history
 
-### Corpus & Benchmarks
-- Tiered corpus (tiny 25 / small 100 / medium 1k / large 10k+)
-- Domain-specific corpora (coding, DevOps, research, support, automation)
-- Gold rule families, counterexample/near-miss/staleness/redaction/adversarial corpora
-- Model bake-off harness, prompt bake-off harness, ablation studies
+### MCP Server
+- 4 tools: `get_matching_rules`, `get_rule`, `list_rules`, `report_failure`
+- Any MCP-compatible agent (Claude, etc.) consumes rules with zero code changes
+- Stdio (local) + HTTP (remote) transport
+- `cauterule mcp` — launch the server
 
-### Scale & Safety
-- Replay throughput, injection latency, conflict explosion, concurrent ingestion benchmarks
-- 6 adversarial corpora (injection, misleading, contradiction, unsafe, poisoning, leakage)
-- 8 field tests (coding, long-horizon, noisy, cold-start, cross-session, regression, multi-env, human-correction)
+### Integrations
+- GitHub Action — `cauterule/action` — extraction on CI failures, promote via PR
+- Webhook on promotion — notify Slack/Discord/GitHub
+- OpenTelemetry — emit rule hit/promotion/extraction events
+- GitHub badge — "CauterRule: N rules learned" (shields.io-style)
 
 ### Distribution
-- `pip install cauterule`, Homebrew, Docker, standalone binary
-- GitHub Action, webhook on promotion, OpenTelemetry, GitHub badge
+- PyPI — `pip install cauterule`
+- Homebrew — `brew install cauterule`
+- Docker — `docker run cauterule demo`
+- Standalone binary — `curl install` for non-Python users
+
+### Custom Agent Adapter
+- `@cauterule.watch` decorator — wrap any agent function, auto-captures trajectories on failure
+- `cauterule.inject()` context manager — prep context with matching rules before task execution
+- Adapter docs — "Add CauterRule to your agent in 5 lines"
+- Works with any Python agent — no framework lock-in
+
+### TUI Review
+- `cauterule review` — rich terminal UI (textual/rich) for browsing, approving, rejecting candidates
+- Evidence summary cards — "This rule would have prevented 3 failures, broken 0 successes"
+- Rule confidence cards — confidence, failures prevented, successes broken, last hit, tags
+- Human annotation capture — tag, comment, categorize failures before extraction
+- Batch review mode — review 10 candidates in one session
+- Filter by tag, status, confidence
+
+### Observability
+- `cauterule metrics` — CLI summary: rules promoted, replay precision, repeat-failure rate, store size
+- `cauterule report` — generate markdown report for sharing
+- Per-rule hit counter and last-match timestamp
+- Failure pattern leaderboard — most common failure classes, most prevented, top gaps
+- Coverage gap detector — domains with repeated failures but no matching rules
+- Rule coverage score — weighted blend of coverage %, precision %, stale-rule %
+- Domain coverage score — how well current rules cover failure classes across domains
+- Failure-class coverage score — % of recurring failure classes with at least one validated rule
+- Coverage frontier — identify the next most valuable domain to learn
+- Learning journal — auto-generated markdown log of each failure → rule → replay → promotion
+- Monthly learning report — rules learned, failures reduced, coverage gaps found
+
+### Sample & Demo
+- Seeded failure history — 10+ pre-built trajectories (git, docker, deploy, python, shell, CI, env)
+- Scenario library — curated scenarios for immediate testing
+- `cauterule demo` — narrated walkthrough of the full loop
+- Example agent — toy agent that fails, learns, succeeds on the second try
+- Example rule store — 10 promoted rules with full provenance
+- Bundled pack-git demo — rules working out of the box
+- Human correction capture demo — "next time do X" → candidate → replay → promote
+- `cauterule init` templates — scaffold a new project
+- Public demo corpus — reproducible data set with screenshots, recordings, expected outputs
+- Animated demo GIF in README
+
+### Field Test Program
+- Single-agent coding field test — repeat-failure reduction over one week
+- Long-horizon task field test — 20-50 step tasks, late-stage failures
+- Noisy trajectory field test — retries, irrelevant calls, distractions
+- Human-in-the-loop field test — auto vs human promotion comparison
+- Cold-start field test — time to first useful rule from zero
+- Cross-session memory field test — failure in session 1, rule applied in session 2
+- Regression field test — old rules still pass after model/prompt changes
+- Multi-environment field test — macOS, Linux, CI container
+
+### Corpus & Benchmarks
+- Tiered corpus: tiny (25), small (100), medium (1k), large (10k+) — balanced success/failure
+- Domain-specific corpora — coding, DevOps, research, support, browser automation
+- Trajectory quality labels — clear, ambiguous, multi-causal, misleading, operator-induced
+- Gold rule families — multiple acceptable abstractions per benchmark scenario
+- Counterexample corpus — plausible rules that should be rejected
+- Near-miss corpus — scenarios that look similar but should not trigger
+- Staleness corpus — historical failures that no longer matter
+- Redaction corpus — trajectories with secrets, validates sanitization
+- Public synthetic corpus + private local corpus mode
+- Model bake-off harness — compare GPT, Claude, local models
+- Prompt bake-off harness — compare extractor prompt variants
+- Ablation studies — no clustering vs clustering, single-pass vs multi-pass, tags vs no tags
+- Human vs LLM lesson comparison — manually written rules vs extracted rules
+
+### Scale & Reliability
+- Replay throughput benchmarks — candidates processed per minute
+- Injection latency benchmarks — p50 <100ms, p95 <500ms on `small` corpus
+- Conflict explosion benchmarks — 100/1k/10k rules, <5s at 1k
+- Storage churn benchmarks — YAML + git under frequent promote/retire
+- Concurrent ingestion — multiple failures at once, queue, dedup, consistent promotion
+- LLM cost benchmarks — cost per extracted candidate, per promoted rule, per prevented failure
+- Memory footprint benchmarks — <1GB RAM on `small` corpus
+- Incremental indexing benchmarks — <1s per new rule at 1k rules
+- Replay determinism tests — same candidate + same corpus = same report
+- Extractor stability tests — repeat extraction, bounded variance
+- Confidence calibration — extractor confidence correlates with replay outcomes
+
+### Safety & Adversarial Testing
+- Prompt injection corpus — >=90% of injection attempts fail
+- Misleading root-cause corpus — extractor avoids superficial lessons
+- Contradiction stress tests — >=90% detection recall
+- Unsafe directive corpus — >=95% blocked by linter or gate
+- Data poisoning simulation — poisoned trajectories caught by replay
+- Instruction leakage tests — no secrets survive export
+
+### Coverage & Optimization
+- Domain coverage score — how well rules cover failure classes across domains
+- Failure-class coverage score — % of recurring classes with a validated rule
+- Coverage frontier — next most valuable area to learn
+- Lesson portfolio optimizer — maximize expected failure prevention with N rules
+- Context budget optimizer — prioritize and compress injected rules to fit token limits
+
+### Community & Ecosystem
+- Corpus contribution guide — submit anonymized or synthetic trajectories
+- Official benchmark leaderboard — publish model + prompt results
+- Pack certification baseline — minimum safety, replay, and provenance checks
+- Monthly learning report — auto-generated report of rules learned, failures reduced, coverage gaps
+- Public demo corpus — reproducible data set with screenshots, recordings, expected outputs
+
+### Configuration
+- `cauterule.toml` — LLM provider, model, thresholds, mode, paths, redaction patterns, extraction passes/temperatures
+- Environment variable support — `CAUTERULE_LLM_PROVIDER`, `CAUTERULE_MODEL`, etc.
+- LLM provider abstraction — OpenAI, Anthropic, Ollama, LiteLLM
+- Promotion mode — auto, human-review, hybrid
+- Replay thresholds — conservative, balanced, aggressive
+- Extraction config — passes (default 3), temperatures, confidence threshold
+
+### Quality & OSS Hygiene
+- `pyproject.toml` — installable via `pip install cauterule`
+- Type-checked — mypy strict, zero errors
+- Linted — ruff, zero warnings
+- Tested — pytest, >=80% coverage on core modules (exit gate: >95%)
+- CI — GitHub Actions: lint, type-check, test on every PR
+- `CONTRIBUTING.md` — how to contribute, adapter spec, rule pack format, corpus guide
+- `CHANGELOG.md` — conventional commits, Keep a Changelog format
+- `SECURITY.md` — security policy, threat model summary, adversarial coverage
 
 ---
 
@@ -179,7 +318,8 @@ CauterRule is the **learning layer** in an open-source agent infrastructure stac
 - [Design Decisions](docs/design/design-decisions.md)
 - [Roadmap](docs/design/prd/09-roadmap.md)
 - [Success Metrics](docs/design/prd/07-success-metrics.md)
-- [WBS v0.1.0](docs/wbs/v0.1.0/wbs-v0.1.0-index.md)
+- [Risks](docs/design/prd/08-risks.md)
+- [WBS v0.1.0](docs/wbs/v0.1.0/wbs-v0.1.0-index.md) — 32 milestones, 241 tasks
 
 ---
 
