@@ -14,23 +14,106 @@ CauterRule is built on five pillars that make it a compelling, differentiated OS
 
 ---
 
-## v0.1.0 — Core Loop (The "Wow" Release)
+## v0.1.0 — Core Loop + First-Class DX (The "Wow" Release)
 
-> **Goal:** A complete extract → test → promote loop that runs on any agent. The "wow" moment: watch your agent fail, extract a rule, replay-test it, and promote it — all in one command.
+> **Goal:** Ship a complete, usable, impressive system on day one. Not just the loop — the loop *plus* the developer experience that makes people want to use it and show it off. The "wow" moment: `pip install cauterule && cauterule demo` — watch an agent fail, extract a rule, replay-test it, promote it, and see it fire on the next run — all in 60 seconds.
 
-### Must-Have
-- [ ] Trajectory capture on failure with structured logging (JSONL)
-- [ ] LLM extraction of candidate standing rules (*when X, do Y*)
-- [ ] Historical replay testing (past failures + past successes)
-- [ ] Promotion gate with pass/fail evidence report
-- [ ] Standing-rules store in versioned YAML files with provenance
-- [ ] Rule injection into context on future matching tasks
-- [ ] **One-command demo**: `cauterule demo` — seeded failure history, 10 rules extracted → tested → promoted in <60 seconds
-- [ ] **CLI**: `cauterule extract`, `cauterule test`, `cauterule promote`, `cauterule inject`, `cauterule list`
+### Core Loop
 
-### Nice-to-Have
-- [ ] Streaming extraction (watch the LLM extract a rule in real-time)
+- [ ] **Trajectory capture** on failure with structured logging (JSONL)
+- [ ] **LLM extraction** of candidate standing rules (*when X, do Y*) with structured output parsing
+- [ ] **Historical replay testing** — replay candidate against past failures + past successes
+- [ ] **Promotion gate** with pass/fail evidence report (precision, recall, verdict)
+- [ ] **Standing-rules store** in versioned YAML files with full provenance
+- [ ] **Rule injection** into context on future matching tasks (structured matching)
+- [ ] **Rule lifecycle** — promote, retire, supersede with git-committed history
+
+### CLI (Full Surface)
+
+- [ ] `cauterule demo` — seeded failure history, 10 rules extracted → tested → promoted in <60s
+- [ ] `cauterule extract <trajectory>` — extract a candidate rule from a trajectory file
+- [ ] `cauterule test <rule>` — replay-test a candidate against history, print evidence report
+- [ ] `cauterule promote <rule>` — promote a tested rule to the store (git commit)
+- [ ] `cauterule inject <task>` — show which rules would fire for a given task
+- [ ] `cauterule list` — browse all promoted rules (table: id, trigger, status, hits)
 - [ ] `cauterule show <rule-id>` — full provenance view (source failure → evidence → promotion)
+- [ ] `cauterule retire <rule-id>` — retire a rule with reason (git commit)
+- [ ] `cauterule history` — git-log-style timeline of all promotions and retirements
+- [ ] `cauterule config` — view/edit configuration (LLM provider, thresholds, mode)
+
+### Replay Engine
+
+- [ ] **Replay harness** — load historical trajectories, simulate rule application, score outcome
+- [ ] **Evidence report** — failures prevented, successes broken, precision, recall, verdict
+- [ ] **Replay visualization** — step-by-step view of how a rule would have changed a past trajectory
+- [ ] **"What if?" mode** — apply a hypothetical rule to a trajectory and see the simulated outcome
+- [ ] **Replay diff** — before/after comparison of agent behavior with and without a rule
+- [ ] **Insufficient history detection** — warn when replay count is below threshold
+
+### Rule Store
+
+- [ ] **YAML rule files** — one rule per file, with provenance metadata
+- [ ] **Index file** — `rules/index.yaml` with all rules, statuses, summaries
+- [ ] **Git-based versioning** — every promotion/retirement is a git commit with conventional message
+- [ ] **Rollback** — `git revert` any promotion; rule store stays consistent
+- [ ] **Archive directory** — retired/superseded rules moved to `rules/archived/`
+
+### Rule Injection
+
+- [ ] **Structured matching** — match by trigger pattern, tool name, error type, context clauses
+- [ ] **Specificity ordering** — more specific rules injected first
+- [ ] **Injection format** — clean markdown block injected into agent context
+- [ ] **Injection preview** — `cauterule inject <task>` shows what would be injected without running
+- [ ] **No-match graceful degradation** — if no rules match, agent runs without standing-rule context
+
+### Export & Import (Day-One Interop)
+
+- [ ] **Export to `.cursorrules`** — `cauterule export --format cursor` — drop-in for Cursor
+- [ ] **Export to `CLAUDE.md`** — `cauterule export --format claude` — drop-in for Claude Code
+- [ ] **Export to `AGENTS.md`** — `cauterule export --format agents` — drop-in for any agent
+- [ ] **Export to markdown** — `cauterule export --format markdown` — human-readable rule doc
+- [ ] **Export to JSON** — `cauterule export --format json` — machine-readable
+- [ ] **Import from `.cursorrules` / `CLAUDE.md` / `AGENTS.md`** — convert existing conventions to testable rules
+
+### Custom Agent Adapter
+
+- [ ] **`@cauterule.watch` decorator** — wrap any agent function: auto-captures trajectories on failure
+- [ ] **`cauterule.inject()` context manager** — prep context with matching rules before task execution
+- [ ] **Adapter docs** — "Add CauterRule to your agent in 5 lines"
+- [ ] Works with any Python agent — no framework lock-in for v0.1.0
+
+### Observability (Lite)
+
+- [ ] `cauterule metrics` — CLI summary: rules promoted, replay precision, repeat-failure rate, rule store size
+- [ ] `cauterule report` — generate a markdown report (rules, evidence, metrics) for sharing
+- [ ] Per-rule hit counter — how many times each rule has matched
+- [ ] Last-match timestamp per rule
+
+### Sample & Demo
+
+- [ ] **Seeded failure history** — 10+ pre-built trajectories (git failures, docker failures, deploy failures)
+- [ ] **`cauterule demo`** — runs the full loop on seeded data, prints a narrated walkthrough
+- [ ] **Example agent** — a toy agent in `examples/` that fails, learns, and succeeds on the second try
+- [ ] **Rule store example** — `examples/rules/` showing 10 promoted rules with full provenance
+
+### Configuration
+
+- [ ] **`cauterule.toml`** config file — LLM provider, model, thresholds, mode, paths
+- [ ] **Environment variable support** — `CAUTERULE_LLM_PROVIDER`, `CAUTERULE_MODEL`, etc.
+- [ ] **LLM provider abstraction** — OpenAI, Anthropic, local (Ollama), any LiteLLM-compatible
+- [ ] **Promotion mode** — `auto` (promote on pass), `human-review` (require approval), `hybrid` (auto for high-confidence, review for low)
+- [ ] **Replay thresholds** — `conservative`, `balanced` (default), `aggressive`
+
+### Quality & OSS Hygiene
+
+- [ ] **`pyproject.toml`** — installable via `pip install cauterule`
+- [ ] **Type-checked** — mypy strict, zero errors
+- [ ] **Linted** — ruff, zero warnings
+- [ ] **Tested** — pytest, ≥80% coverage on core modules
+- [ ] **CI** — GitHub Actions: lint, type-check, test on every PR
+- [ ] **`CONTRIBUTING.md`** — how to contribute, adapter spec, rule pack format
+- [ ] **`CHANGELOG.md`** — conventional commits, Keep a Changelog format
+- [ ] **`SECURITY.md`** — security policy, threat model summary
 
 ---
 
@@ -41,7 +124,7 @@ CauterRule is built on five pillars that make it a compelling, differentiated OS
 - [ ] **LangGraph adapter** — trajectory capture as a graph node, rule injection as state prep
 - [ ] **CrewAI adapter** — trajectory capture as a crew callback, rule injection as task context
 - [ ] **PydanticAI adapter** — trajectory capture as a tool wrapper, rule injection as system prompt
-- [ ] **Custom loop adapter** — decorator-based: `@cauterule.watch` on any agent function
+- [ ] **Custom loop adapter** — enhanced `@cauterule.watch` with async support and streaming
 - [ ] Adapter spec + docs — "Write your own adapter in 50 lines"
 - [ ] `cauterule init --adapter langgraph` — scaffold a new project with CauterRule wired in
 
@@ -85,12 +168,6 @@ CauterRule is built on five pillars that make it a compelling, differentiated OS
 - [ ] Pack versioning with semantic versioning (major/minor/patch)
 - [ ] Pack dependency resolution — pack A depends on pack B
 
-### Export & Import
-- [ ] Export rules as system prompt fragments (markdown, JSON, YAML)
-- [ ] Export rules as `.clinerules` / `.cursorrules` format — drop-in for existing tools
-- [ ] Import rules from `.cursorrules` / `CLAUDE.md` / `AGENTS.md` — convert existing conventions to tested rules
-- [ ] `cauterule export --format cursor` / `--format claude` / `--format markdown`
-
 ---
 
 ## v0.4.0 — MCP Server & Integrations (The "Plumbing" Release)
@@ -130,15 +207,10 @@ CauterRule is built on five pillars that make it a compelling, differentiated OS
 - [ ] Export dashboard as static HTML for sharing
 
 ### Metrics & Telemetry
-- [ ] `cauterule metrics` — CLI summary: rules promoted, replay precision, repeat-failure rate
+- [ ] `cauterule metrics` — enhanced with trend lines (rule store growth, precision over time)
 - [ ] Per-rule outcome tracking with trend lines
 - [ ] "Rules that prevented a failure this week" — weekly digest
 - [ ] `cauterule report` — generate a markdown report for stakeholders
-
-### Replay Visualization
-- [ ] Replay timeline — step-by-step view of how a rule would have changed a past trajectory
-- [ ] "What if?" mode — apply a hypothetical rule to a trajectory and see the simulated outcome
-- [ ] Replay diff — before/after comparison of agent behavior with and without a rule
 
 ---
 
@@ -194,8 +266,8 @@ Features being considered but not yet scheduled:
 
 | Version | Theme | Key Deliverable |
 |---------|-------|-----------------|
-| **v0.1.0** | Core Loop | Extract → test → promote in one command |
-| **v0.1.1** | Framework Adapters | Plug into LangGraph, CrewAI, PydanticAI |
+| **v0.1.0** | Core Loop + First-Class DX | Extract → test → promote + CLI + replay + export/import + adapter + demo |
+| **v0.1.1** | Framework Adapters | LangGraph, CrewAI, PydanticAI adapters |
 | **v0.2.0** | Intelligence | Conflict detection, retirement, TUI review |
 | **v0.3.0** | Rule Packs | Pre-built, shareable rule collections |
 | **v0.4.0** | MCP & Integrations | Rules as MCP tools, GitHub Action, webhooks |
@@ -205,14 +277,15 @@ Features being considered but not yet scheduled:
 
 ---
 
-## What Makes This Exciting as OSS
+## What Makes v0.1.0 Exciting as OSS
 
 | Hook | Why it gets engagement |
 |------|----------------------|
 | **"My agent wrote its own rules"** | The demo is visceral — watch a failure become a tested rule in 60 seconds |
-| **Rule Packs** | The npm-for-agent-knowledge angle — community can contribute and share |
-| **MCP Server** | Any MCP-compatible agent (Claude, etc.) gets rules with zero code changes |
-| **`.cursorrules` export** | Drop-in compatibility with tools people already use |
-| **Framework adapters** | Works with what you have — LangGraph, CrewAI, PydanticAI |
-| **Replay dashboard** | Visual proof the system works — see failures drop over time |
-| **GitHub Action** | Rules promoted via PR — fits existing workflows |
+| **`.cursorrules` / `CLAUDE.md` export** | Drop-in compatibility with tools people already use — zero migration friction |
+| **Import existing conventions** | Turn your static `CLAUDE.md` into tested, provenance-tracked rules |
+| **`@cauterule.watch` decorator** | Add learning to any agent in 5 lines — no framework lock-in |
+| **Replay visualization** | See exactly how a rule would have changed a past failure — visual proof it works |
+| **"What if?" mode** | Apply a hypothetical rule to history before promoting — test before you trust |
+| **Full CLI surface** | 10+ commands on day one — not a toy, a usable tool |
+| **`cauterule report`** | Generate a shareable markdown report — show your boss the agent is learning |
