@@ -29,7 +29,7 @@ Documentation for the CauterRule project — automated standing-rule extraction 
 - [Rule Injection](design/rule-injection-design.md)
 - [Conflict Detection](design/conflict-detection-design.md)
 - [Loop Orchestration](design/loop-orchestration-design.md)
-- [v0.1.0 WBS](wbs/v0.1.0/wbs-v0.1.0-index.md)
+- [v0.1.0 WBS Index](wbs/v0.1.0/wbs-v0.1.0-index.md) — 32 milestones, 241 tasks
 
 ## Conventions
 

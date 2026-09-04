@@ -20,7 +20,8 @@
 | [10](wbs-v0.1.0-part10-safety.md) | Safety, Adversarial & Field Tests | M26-M27 | 14 |
 | [11](wbs-v0.1.0-part11-distribution.md) | Distribution, Demo & Release | M28-M30 | 18 |
 | [12](wbs-v0.1.0-part12-field-test.md) | Comprehensive Field Test | M31 | 34 |
-| **Total** | | **M1-M31** | **235** |
+| [13](wbs-v0.1.0-part13-release-readiness.md) | Release Readiness | M32 | 6 |
+| **Total** | | **M1-M32** | **241** |
 
 ## Milestone Map
 
@@ -30,10 +31,10 @@ M1  M2  M3  M4  M5  M6  M7  M8  M9  M10 M11 M12 M13 M14 M15
  └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘
  Part 1      Part 2    Part 3       Part 4       Part 5
 
-M16 M17 M18 M19 M20 M21 M22 M23 M24 M25 M26 M27 M28 M29 M30
- │   │   │   │   │   │   │   │   │   │   │   │   │   │   │
- └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘
- Part 6    Part 7   Part 8       Part 9    P10  Part 11
+M16 M17 M18 M19 M20 M21 M22 M23 M24 M25 M26 M27 M28 M29 M30 M31 M32
+ │   │   │   │   │   │   │   │   │   │   │   │   │   │   │   │   │
+ └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘
+ Part 6    Part 7     Part 8        Part 9      P10  P11  P12  P13
 ```
 
 ## Dependencies
