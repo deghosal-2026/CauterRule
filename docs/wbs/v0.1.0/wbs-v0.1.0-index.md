@@ -19,10 +19,10 @@
 | [9](wbs-v0.1.0-part9-corpus.md) | Corpus, Benchmarks & Scale | M23-M25 | 27 |
 | [10](wbs-v0.1.0-part10-safety.md) | Safety & Adversarial | M26 | 6 |
 | [11](wbs-v0.1.0-part11-distribution.md) | Demo & Examples | M29 | 10 |
-| [12](wbs-v0.1.0-part12-field-test.md) | Comprehensive Field Test | M30 | 56 |
+| [12](wbs-v0.1.0-part12-field-test.md) | Comprehensive Field Test | M30 | 70 |
 | [13](wbs-v0.1.0-part13-release-readiness.md) | Release Readiness (incl Distribution) | M31 | 16 |
 | [14](wbs-v0.1.0-part14-release.md) | Release | M32 | 8 |
-| **Total** | | **M1-M32** | **261** |
+| **Total** | | **M1-M32** | **275** |
 
 ## Milestone Map
 
