@@ -6,24 +6,24 @@
 
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
-| 9.1 | Trajectory loader | `src/cauterule/replay/loader.py` | Loads historical trajectories from corpus/scenarios dir | ⬜ |
-| 9.2 | Rule matcher | `src/cauterule/replay/matcher.py` | Matches candidate `when` clause against each trajectory's conditions | ⬜ |
-| 9.3 | Outcome simulator | `src/cauterule/replay/simulator.py` | Simulates whether rule would prevent failure or break success | ⬜ |
-| 9.4 | Evidence scorer | `src/cauterule/replay/scorer.py` | Computes precision, recall, verdict | ⬜ |
-| 9.5 | Evidence report builder | `src/cauterule/replay/report.py` | Produces `EvidenceReport` with failures_prevented, successes_broken, near_misses | ⬜ |
-| 9.6 | Determinism guarantee | `src/cauterule/replay/determinism.py` | Same candidate + same corpus = same report (no randomness) | ⬜ |
-| 9.7 | Insufficient history detection | `src/cauterule/replay/history_check.py` | Returns "inconclusive" if <3 trajectories | ⬜ |
+| 9.1 | Trajectory loader | `src/cauterule/replay/loader.py` | Loads historical trajectories from corpus/scenarios dir | ✅ |
+| 9.2 | Rule matcher | `src/cauterule/replay/matcher.py` | Matches candidate `when` clause against each trajectory's conditions | ✅ |
+| 9.3 | Outcome simulator | `src/cauterule/replay/simulator.py` | Simulates whether rule would prevent failure or break success | ✅ |
+| 9.4 | Evidence scorer | `src/cauterule/replay/scorer.py` | Computes precision, recall, verdict | ✅ |
+| 9.5 | Evidence report builder | `src/cauterule/replay/report.py` | Produces `EvidenceReport` with failures_prevented, successes_broken, near_misses | ✅ |
+| 9.6 | Determinism guarantee | `src/cauterule/replay/determinism.py` | Same candidate + same corpus = same report (no randomness) | ✅ |
+| 9.7 | Insufficient history detection | `src/cauterule/replay/history_check.py` | Returns "inconclusive" if <3 trajectories | ✅ |
 
 ### M9 Exit Gate
 
-- [ ] Run all tests: `pytest` — all pass
-- [ ] Lint strict clean: `ruff check` + `mypy src/` — zero errors
-- [ ] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing`
-- [ ] Update all docs affected by this milestone
-- [ ] Verify all issues in this milestone are done
-- [ ] Close all completed issues
-- [ ] Commit with message: `milestone: M9 complete`
-- [ ] Push to main
+- [x] Run all tests: `pytest` — all pass (229 passed)
+- [x] Lint strict clean: `ruff check` + `mypy src/` — zero errors
+- [x] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing` — 97.44%
+- [x] Update all docs affected by this milestone
+- [x] Verify all issues in this milestone are done
+- [x] Close all completed issues
+- [x] Commit with message: `milestone: M9 complete`
+- [x] Push to main
 
 ## M10: Replay Visualization
 
