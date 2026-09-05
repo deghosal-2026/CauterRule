@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Automated standing-rule extraction from agent failures — extract, test, promote."
 readme = "README.md"
 license = {text = "MIT"}
+long_description_content_type = "text/markdown"
 authors = [{name = "Debashish Ghosal"}]
 maintainers = [{name = "Debashish Ghosal"}]
 requires-python = ">=3.11"
@@ -36,6 +37,8 @@ dev = [
     "ruff>=0.8",
     "mypy>=1.13",
     "types-PyYAML>=6.0",
+    "build>=1.0",
+    "twine>=4.0",
 ]
 llm = [
     "openai>=1.0",
@@ -89,6 +92,7 @@ convention = "google"
 "src/cauterule/corpus/**" = ["D105", "D107", "TRY003", "E501", "ANN401", "ARG001"]
 "src/cauterule/cli/**" = ["D"]
 "src/cauterule/benchmark/**" = ["D", "TRY003", "E501", "W292"]
+"src/cauterule/integrations/**" = ["D", "TRY003", "E501"]
 "src/cauterule/tui/**" = ["D"]
 
 [tool.mypy]

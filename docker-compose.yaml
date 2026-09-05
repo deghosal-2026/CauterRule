@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  cauterule-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cauterule-demo
+    command: demo
+    volumes:
+      - ./rules:/app/rules
+      - ./corpus:/app/corpus

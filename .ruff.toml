@@ -33,3 +33,4 @@ convention = "google"
 "src/cauterule/cli/**" = ["D"]
 "src/cauterule/tui/**" = ["D"]
 "src/cauterule/benchmark/**" = ["D", "TRY003", "E501", "W292"]
+"src/cauterule/integrations/**" = ["D", "TRY003", "E501"]
