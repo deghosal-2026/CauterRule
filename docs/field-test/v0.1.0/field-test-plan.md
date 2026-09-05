@@ -1105,3 +1105,533 @@ export ANTHROPIC_API_KEY=sk-ant-...       # for Anthropic
 | **Total** | **~18 hours** | | |
 
 With parallelization and multiple agents, the field test can be completed in **~6-8 hours** of wall-clock time.
+
+---
+
+## 15. Phase 6: Advanced & Edge Case Testing
+
+### 15.1 LLM Configuration (Updated — Non-Anthropic, Low Cost)
+
+All real-LLM tests use 3 models across 2 tiers (local + cloud). No Anthropic API keys needed.
+
+| Tier | Model | Provider | Type | Cost | Role |
+|------|-------|----------|------|------|------|
+| Local (free) | Llama 3.1 (8B) | Ollama | Local | $0 | Primary for all real-LLM tests |
+| Cloud (cheap) | gpt-4o-mini | OpenAI | Cloud | ~$0.15/1M tokens | Budget cloud fallback |
+| Cloud (better) | gpt-4o | OpenAI | Cloud | ~$2.50/1M tokens | Quality comparison only |
+
+**Rationale:** Llama 3.1 runs locally via Ollama at zero cost. gpt-4o-mini is ~17x cheaper than gpt-4o and sufficient for extraction quality. gpt-4o is used only for the model bake-off to measure quality differences. No Anthropic — keeps costs low and avoids a second API provider.
+
+**Estimated total cost:** ~$5-10 (down from $19-35) — most tests use Llama 3.1 ($0).
+
+**Environment variables:**
+```bash
+# Primary (local, free)
+export CAUTERULE_LLM_PROVIDER=ollama
+export CAUTERULE_MODEL=llama3.1
+
+# Cloud fallback (cheap)
+export CAUTERULE_LLM_PROVIDER=openai
+export CAUTERULE_MODEL=gpt-4o-mini
+export OPENAI_API_KEY=sk-...
+
+# Quality comparison (better)
+export CAUTERULE_MODEL=gpt-4o
+```
+
+### 15.2 Task 30.7.1: Performance Baselines & Regression Tracking
+
+**What:** Establish performance baselines for every operation so future versions can compare against them.
+
+**Corpus:** Tiered corpus (tiny, small, medium)
+**LLM:** Mock (hermetic)
+**Duration:** ~10 minutes
+
+**Metrics to capture and persist:**
+
+| Operation | Metric | Baseline Target | How to Measure |
+|-----------|--------|-----------------|----------------|
+| Extraction | Time per candidate (ms) | <2000ms | `time.perf_counter()` around `extract_candidate` |
+| Extraction | Candidates per minute | ≥30 | 60 / (avg extraction time in seconds) |
+| Replay | Time per candidate per tier | tiny<2s, small<10s, medium<60s | `time.perf_counter()` around `build_evidence_report` |
+| Injection | p50 latency | <100ms | 1000 injections, measure p50 |
+| Injection | p95 latency | <500ms | Same, measure p95 |
+| Injection | p99 latency | <2000ms | Same, measure p99 |
+| Conflict detection | Time at 100 rules | <1s | `time.perf_counter()` around `detect_contradictions` |
+| Conflict detection | Time at 1k rules | <5s | Same |
+| Conflict detection | Time at 10k rules | <60s | Same |
+| Store | Add rule latency | <100ms | `time.perf_counter()` around `store.add_rule` |
+| Store | List rules latency (1k) | <500ms | `time.perf_counter()` around `store.list_rules` |
+| Memory | RSS during replay (small) | <512MB | `tracemalloc.get_traced_memory()` |
+| Memory | RSS during injection (1k rules) | <256MB | Same |
+
+**Output file:** `field-test/v0.1.0/performance-baselines.json`
+
+**Acceptance Criteria:**
+- [ ] All 12 baseline metrics captured and saved to JSON
+- [ ] Each metric meets its target threshold
+- [ ] Baselines can be loaded by future regression tests: `pytest tests/perf/ --baseline=field-test/v0.1.0/performance-baselines.json`
+
+### 15.3 Task 30.7.2: Failure Mode Catalog
+
+**What:** Systematically test every failure type the system should handle. Each failure mode gets a dedicated test trajectory.
+
+**Corpus:** 20 hand-crafted trajectories covering all failure modes
+**LLM:** Llama 3.1 (local, free)
+**Duration:** ~30 minutes
+
+**Failure mode catalog:**
+
+| # | Failure Mode | Domain | Trajectory Description | Expected Rule | Quality Label |
+|---|-------------|--------|----------------------|---------------|---------------|
+| 1 | Non-fast-forward push | coding | `git push` rejected, remote ahead | "when git push fails with non-fast-forward, pull before pushing" | clear |
+| 2 | Missing import | coding | `import fastapi` fails, not installed | "when python import fails with ModuleNotFoundError, install the package" | clear |
+| 3 | Pip install conflict | coding | `pip install` fails, version conflict | "when pip install fails with version conflict, use --no-deps or pin version" | clear |
+| 4 | Syntax error | coding | Python file has syntax error | "when python execution fails with SyntaxError, check for missing colons" | clear |
+| 5 | Type error | coding | Wrong argument type passed | "when TypeError occurs, check argument types match function signature" | clear |
+| 6 | Docker build missing dep | devops | `docker build` fails, base image missing package | "when docker build fails with missing package, add apt-get install to Dockerfile" | clear |
+| 7 | Docker network error | devops | Container can't reach database | "when docker container fails to connect, check network and DNS" | multi-causal |
+| 8 | Kubectl apply fails | devops | `kubectl apply` fails, CRD not installed | "when kubectl apply fails with NotFound, install the CRD first" | clear |
+| 9 | Deploy timeout | devops | Deployment hangs, health check fails | "when deployment times out, check health check endpoint and increase timeout" | ambiguous |
+| 10 | Terraform plan error | devops | `terraform plan` fails, state lock | "when terraform plan fails with state lock, run terraform unlock" | clear |
+| 11 | Test assertion failure | support | `assert x == y` fails, values differ | "when test assertion fails, compare expected vs actual values" | clear |
+| 12 | Test timeout | support | Test exceeds 30s timeout | "when test times out, check for infinite loops or slow I/O" | ambiguous |
+| 13 | Flaky test | support | Test passes sometimes, fails others | "when test is flaky, check for race conditions or time-dependent assertions" | misleading |
+| 14 | API rate limit | research | HTTP 429 from API | "when API returns 429, implement rate limiting and exponential backoff" | clear |
+| 15 | API timeout | research | HTTP request times out | "when API request times out, increase timeout or add retry logic" | clear |
+| 16 | Invalid query | research | SQL query fails, syntax error | "when query fails with syntax error, validate SQL before execution" | clear |
+| 17 | Missing data | research | Expected field not in response | "when API response is missing expected field, add null checks" | ambiguous |
+| 18 | Element not found | browser | Selenium can't find element | "when browser element is not found, wait for page load or check selector" | clear |
+| 19 | Stale element | browser | Element reference is stale | "when stale element error occurs, re-find the element before interacting" | clear |
+| 20 | Navigation timeout | browser | Page navigation exceeds timeout | "when page navigation times out, increase timeout or check network" | ambiguous |
+
+**Acceptance Criteria:**
+- [ ] All 20 trajectories created as JSONL files in `field-test/v0.1.0/trajectories/`
+- [ ] Each trajectory has correct `failure_class`, `domain`, and `quality_label` metadata
+- [ ] Llama 3.1 extracts a candidate rule from each trajectory
+- [ ] ≥16 of 20 extracted rules match the expected rule (≥80%)
+- [ ] Rules for "misleading" and "ambiguous" labels have lower confidence (documented)
+
+### 15.4 Task 30.7.3: Data Drift & Staleness Testing
+
+**What:** Verify the system handles rules that become stale — old rules that no longer match new failure patterns.
+
+**Corpus:** 10 old trajectories (from staleness corpus) + 10 new trajectories (same domain, different failure)
+**LLM:** Llama 3.1
+**Duration:** ~20 minutes
+
+**Steps:**
+1. Promote 5 rules from old trajectories (e.g., "when git push fails, use --force")
+2. Run 10 new trajectories where the old rules should NOT fire (e.g., git push now uses `--force-with-lease`)
+3. Verify old rules don't match the new failure patterns
+4. Run `cauterule health` — should flag old rules as stale (no hits in N days)
+5. Run `cauterule retire` on stale rules
+6. Extract new rules from new trajectories
+7. Verify new rules are more specific than old rules
+
+**Acceptance Criteria:**
+- [ ] Old rules correctly don't match new failure patterns
+- [ ] `cauterule health` flags rules with no hits in 30+ days as stale
+- [ ] `cauterule retire` removes stale rules with documented reason
+- [ ] New rules extracted from new trajectories are more specific
+- [ ] Staleness corpus produces correct retirement triggers
+
+### 15.5 Task 30.7.4: Rule Conflict Resolution in Practice
+
+**What:** When two rules fire for the same task, verify the system resolves conflicts correctly.
+
+**Corpus:** 5 conflicting rule pairs
+**LLM:** Llama 3.1
+**Duration:** ~15 minutes
+
+**Conflict scenarios:**
+
+| # | Rule A | Rule B | Conflict Type | Expected Resolution |
+|---|--------|--------|-------------|---------------------|
+| 1 | "always commit before push" | "always pull before push" | Contradiction | Flag for human review |
+| 2 | "when git push fails, pull" | "when git push fails with auth error, check token" | Overlap (specificity) | More specific rule wins |
+| 3 | "when docker build fails, add dependency" | "when docker build fails, check base image" | Overlap (equal) | Merge into combined rule |
+| 4 | "always use --force push" | "never use --force push" | Direct contradiction | Block both, flag for review |
+| 5 | "when test fails, check assertions" | "when test fails, check mocks" | Overlap (different aspect) | Both can coexist |
+
+**Acceptance Criteria:**
+- [ ] Direct contradictions (#1, #4) are flagged and blocked from promotion
+- [ ] Specificity overlaps (#2) resolve to more specific rule
+- [ ] Equal specificity overlaps (#3) trigger consolidation/merge
+- [ ] Different-aspect overlaps (#5) coexist without conflict
+- [ ] `cauterule conflicts` lists all detected conflicts with type and resolution
+
+### 15.6 Task 30.7.5: Token Budget & Context Window Limits
+
+**What:** Verify injection works correctly when there are many rules and context budget is limited.
+
+**Corpus:** 100, 500, 1000 promoted rules
+**LLM:** Mock (no cost — testing injection, not extraction)
+**Duration:** ~10 minutes
+
+**Steps:**
+1. Generate 100 rules in the store (various triggers)
+2. Run `cauterule inject --task "git push"` — verify all matching rules injected
+3. Measure total token count of injection block
+4. Set context budget to 500 tokens
+5. Run `cauterule inject` again — verify budget optimizer compresses (trigger+directive only)
+6. Set context budget to 100 tokens
+7. Run `cauterule inject` — verify only top-N rules fit as one-liners
+8. Repeat with 500 and 1000 rules
+
+**Acceptance Criteria:**
+- [ ] 100 rules: all matching rules injected within default budget
+- [ ] 500 rules: budget optimizer compresses lower-ranked rules to trigger+directive
+- [ ] 1000 rules: budget optimizer drops lowest-ranked rules, keeps top-N as one-liners
+- [ ] No rule is silently dropped without compression first
+- [ ] Total injected token count never exceeds configured budget
+- [ ] `cauterule inject --preflight` shows what would be injected and what would be compressed/dropped
+
+### 15.7 Task 30.7.6: Upgrade Path Testing
+
+**What:** Verify upgrading CauterRule over a pre-existing rule store doesn't break anything.
+
+**Corpus:** 10 pre-existing rules (from v0.0.1 format, if available; otherwise from fixtures)
+**LLM:** Mock
+**Duration:** ~10 minutes
+
+**Steps:**
+1. Create a rule store with 10 rules (mix of active, retired, superseded)
+2. Install CauterRule v0.1.0 "over" the existing store (don't delete rules)
+3. Run `cauterule validate` — verify all rules are valid
+4. Run `cauterule list` — verify all rules appear
+5. Run `cauterule health` — verify health report works
+6. Run `cauterule inject --task "git push"` — verify rules still fire
+7. Promote a new rule — verify it coexists with old rules
+8. Check `index.yaml` format — verify backward compat with old format
+
+**Acceptance Criteria:**
+- [ ] Pre-existing rules survive upgrade (no data loss)
+- [ ] `cauterule validate` passes on old-format rules
+- [ ] `cauterule list` shows all old and new rules
+- [ ] Old rules still fire on matching tasks
+- [ ] New rules can be promoted alongside old rules
+- [ ] `index.yaml` handles both old dict format and new `{rules: [...]}` format
+
+### 15.8 Task 30.7.7: Concurrent Agent Testing
+
+**What:** Multiple agents failing simultaneously — verify queueing, dedup, and consistent promotion.
+
+**Corpus:** 5 trajectories submitted simultaneously
+**LLM:** Llama 3.1
+**Duration:** ~15 minutes
+
+**Steps:**
+1. Create 5 trajectory files (different failure types)
+2. Submit all 5 to the loop simultaneously (using threading or asyncio)
+3. Verify all 5 are processed (none lost)
+4. Verify no duplicate rules promoted (dedup works)
+5. Verify rule store is consistent after all 5 complete
+6. Verify git history has 5 separate commits (one per promotion)
+
+**Acceptance Criteria:**
+- [ ] All 5 trajectories processed (none dropped)
+- [ ] No duplicate rules promoted (clustering/dedup works)
+- [ ] Rule store consistent after concurrent processing
+- [ ] Git history has separate commits per promotion
+- [ ] No race conditions or file corruption
+
+### 15.9 Task 30.7.8: LLM Provider Fallback
+
+**What:** When the primary LLM provider is unavailable, verify the system falls back gracefully.
+
+**Corpus:** 1 trajectory
+**LLM:** Ollama (primary, stop it mid-test), gpt-4o-mini (fallback)
+**Duration:** ~10 minutes
+
+**Steps:**
+1. Configure primary LLM as Ollama (localhost:11434)
+2. Configure fallback LLM as OpenAI gpt-4o-mini
+3. Run extraction — verify it uses Ollama
+4. Stop Ollama (`ollama stop`)
+5. Run extraction again — verify it falls back to gpt-4o-mini
+6. Restart Ollama
+7. Run extraction — verify it switches back to Ollama
+8. Configure primary with invalid API key — verify error is handled gracefully
+
+**Acceptance Criteria:**
+- [ ] Primary LLM used when available
+- [ ] Falls back to secondary LLM when primary is down
+- [ ] Switches back to primary when it recovers
+- [ ] Invalid API key produces a clear error message (not a crash)
+- [ ] No data loss or corruption during fallback
+
+### 15.10 Task 30.7.9: Negative Tests — What Should NOT Be Extracted
+
+**What:** Verify the extractor doesn't produce rules from non-failures, opinions, or successes.
+
+**Corpus:** 10 negative test trajectories
+**LLM:** Llama 3.1
+**Duration:** ~15 minutes
+
+**Negative test cases:**
+
+| # | Input | Why It Should NOT Produce a Rule |
+|---|-------|--------------------------------|
+| 1 | Successful task (success=true) | No failure to learn from |
+| 2 | User opinion ("I think we should use tabs") | Not a failure, just preference |
+| 3 | Cosmetic issue ("code formatting is ugly") | Not actionable |
+| 4 | Environment info ("running on macOS") | Not a failure |
+| 5 | Normal log output ("task completed") | Not a failure |
+| 6 | Warning that didn't cause failure | No actionable failure |
+| 7 | Intermittent network blip that self-resolved | Not a persistent failure |
+| 8 | User error ("I typed the wrong command") | Operator-induced, not system failure |
+| 9 | Feature request ("it would be nice if...") | Not a failure |
+| 10 | Test that passed after retry (flaky, but succeeded) | Success, not failure |
+
+**Acceptance Criteria:**
+- [ ] 0 rules extracted from success trajectories (#1, #10)
+- [ ] 0 rules extracted from opinions/preferences (#2, #4, #9)
+- [ ] 0 rules extracted from non-actionable inputs (#3, #5, #6)
+- [ ] Rules from #7 and #8 have low confidence (if extracted at all)
+- [ ] `cauterule extract --dry-run` on non-failures produces no candidate
+
+### 15.11 Task 30.7.10: Golden Trajectory Set (Regression Anchor)
+
+**What:** Create a fixed set of 10 trajectories with known correct extractions for regression testing across versions.
+
+**Corpus:** 10 golden trajectories with known expected rules
+**LLM:** Llama 3.1, gpt-4o-mini, gpt-4o (all 3, to compare)
+**Duration:** ~20 minutes
+
+**Golden trajectories:**
+
+| # | Trajectory | Expected Rule | Expected Confidence |
+|---|-----------|---------------|-------------------|
+| G1 | git push non-fast-forward | "when git push fails with non-fast-forward, pull before pushing" | 0.85+ |
+| G2 | python import ModuleNotFoundError | "when import fails with ModuleNotFoundError, install the missing package" | 0.90+ |
+| G3 | docker build missing apt package | "when docker build fails with package not found, add apt-get install to Dockerfile" | 0.85+ |
+| G4 | pip install version conflict | "when pip install fails with version conflict, pin compatible versions" | 0.80+ |
+| G5 | kubectl apply CRD not found | "when kubectl apply fails with NotFound, install the CRD first" | 0.85+ |
+| G6 | test assertion equality failure | "when test assertion fails, compare expected and actual values" | 0.80+ |
+| G7 | API 429 rate limit | "when API returns 429, implement exponential backoff" | 0.85+ |
+| G8 | terraform state lock | "when terraform plan fails with state lock, run terraform unlock" | 0.85+ |
+| G9 | selenium element not found | "when browser element not found, wait for page load or check selector" | 0.80+ |
+| G10 | deploy health check timeout | "when deployment health check times out, check endpoint and increase timeout" | 0.75+ |
+
+**Output file:** `field-test/v0.1.0/golden-trajectories.json` — machine-readable, can be loaded by future regression tests
+
+**Acceptance Criteria:**
+- [ ] All 10 golden trajectories saved as JSONL files
+- [ ] Expected rules documented for each
+- [ ] Llama 3.1 extracts rules matching expected (≥80% match)
+- [ ] gpt-4o-mini extracts rules matching expected (≥85% match)
+- [ ] gpt-4o extracts rules matching expected (≥90% match)
+- [ ] Golden set can be loaded by: `pytest tests/golden/ --golden=field-test/v0.1.0/golden-trajectories.json`
+
+### 15.12 Task 30.7.11: Rule Quality Scoring
+
+**What:** Beyond precision/recall, measure rule readability, specificity, and actionability.
+
+**Corpus:** 20 promoted rules from the field test
+**LLM:** gpt-4o-mini (for quality scoring only)
+**Duration:** ~15 minutes
+
+**Quality dimensions:**
+
+| Dimension | What It Measures | Score Range | How to Measure |
+|-----------|-------------------|-------------|----------------|
+| Readability | Can a human understand the rule? | 1-5 (Likert) | LLM rates: "Is this rule clear and understandable?" |
+| Specificity | How narrow is the trigger? | 0.0-1.0 | Count of context items + trigger specificity |
+| Actionability | Does the directive tell you what to do? | 1-5 (Likert) | LLM rates: "Does this rule tell you a specific action?" |
+| Testability | Can the rule be replay-tested? | 0.0-1.0 | Linter check: is the trigger testable? |
+| Coverage | How many failures does it prevent? | Integer | Replay: count of failures prevented |
+
+**Output file:** `field-test/v0.1.0/rule-quality-scores.md`
+
+**Acceptance Criteria:**
+- [ ] All 20 rules scored on all 5 dimensions
+- [ ] Average readability ≥ 4.0/5
+- [ ] Average actionability ≥ 4.0/5
+- [ ] Average specificity ≥ 0.7
+- [ ] No rule scores below 3.0 on readability or actionability
+
+### 15.13 Task 30.7.12: Time-to-Value Measurement
+
+**What:** Measure how long it takes from `pip install cauterule` to the first prevented failure.
+
+**Corpus:** Fresh install, coding agent harness
+**LLM:** Llama 3.1 (local, free)
+**Duration:** ~20 minutes
+
+**Steps:**
+1. Fresh environment: `pip install cauterule`
+2. Start timer
+3. `cauterule init --dir /tmp/ttv-test`
+4. `cauterule demo` (watch it work)
+5. Run coding agent harness with 3 tasks
+6. Extract → test → promote rules from failures
+7. Re-run tasks with rules injected
+8. First failure prevented → stop timer
+
+**Metrics:**
+
+| Metric | Target | Measurement |
+|--------|--------|-------------|
+| Install time | <30s | `time pip install cauterule` |
+| Demo time | <60s | `time cauterule demo` |
+| Time to first rule | <5 min | From init to first promotion |
+| Time to first prevented failure | <10 min | From init to first prevented repeat failure |
+| Time to value (total) | <15 min | From install to first prevented failure |
+
+**Acceptance Criteria:**
+- [ ] Install completes in <30 seconds
+- [ ] Demo completes in <60 seconds
+- [ ] First rule promoted in <5 minutes
+- [ ] First failure prevented in <10 minutes
+- [ ] Total time-to-value <15 minutes
+
+### 15.14 Task 30.7.13: CI Integration Testing
+
+**What:** Verify `cauterule test --ci` produces JUnit XML output suitable for GitHub Actions.
+
+**Corpus:** 5 candidate rules
+**LLM:** Mock
+**Duration:** ~5 minutes
+
+**Steps:**
+1. Create 5 candidate rules (3 pass, 2 fail replay)
+2. Run `cauterule test --ci --output results.xml`
+3. Verify `results.xml` is valid JUnit XML
+4. Verify XML contains 5 test cases
+5. Verify 3 pass and 2 fail in the XML
+6. Upload as GitHub Actions artifact
+
+**Acceptance Criteria:**
+- [ ] `cauterule test --ci` produces valid JUnit XML
+- [ ] XML parses with `junitparser` or `xunitparser`
+- [ ] 5 test cases in XML (3 pass, 2 fail)
+- [ ] Exit code 0 when all pass, 1 when any fail
+- [ ] Can be used as GitHub Actions step: `cauterule test --ci --output results.xml`
+
+### 15.15 Task 30.7.14: Export Format Validation Against Real Tools
+
+**What:** Verify exported rules actually work in real agent tools — specifically OpenCode (the user's agent), plus Aider and generic markdown/JSON.
+
+**Corpus:** 5 promoted rules
+**LLM:** Mock (export only, no extraction)
+**Duration:** ~20 minutes (manual verification)
+
+**Steps:**
+1. Promote 5 rules (git push, docker build, python import, deploy timeout, test failure)
+2. Export to formats relevant to the user's toolchain:
+   - `cauterule export --format agents --output AGENTS.md` — **OpenCode** reads this for project rules
+   - `cauterule export --format markdown --output rules.md` — human-readable reference
+   - `cauterule export --format json --output rules.json` — machine-readable
+   - `cauterule export --format cursor --output .cursorrules` — for Cursor users (community)
+   - `cauterule export --format windsurf --output .windsurfrules` — for Windsurf users (community)
+   - `cauterule export --format aider --output aider.conf.yml` — for Aider users (community)
+   - `cauterule export --format claude --output CLAUDE.md` — for Claude Code users (community)
+3. **Manual verification (OpenCode — primary tool):**
+   - Place `AGENTS.md` in project root
+   - Open project in OpenCode — verify rules appear in context and are followed
+   - Run a task that matches a rule trigger — verify the rule fires and is injected
+   - Verify rules don't interfere with normal OpenCode operation
+4. **Manual verification (other formats — community compatibility):**
+   - Run Aider with `aider.conf.yml` — verify rules load
+   - Verify `.cursorrules`, `CLAUDE.md`, `.windsurfrules` are syntactically valid for those tools
+5. Verify only active rules are exported (no retired/superseded)
+
+**Acceptance Criteria:**
+- [ ] `AGENTS.md` recognized by OpenCode (rules visible in agent context)
+- [ ] Rules in `AGENTS.md` are followed by OpenCode when matching tasks are run
+- [ ] `rules.md` is valid markdown (human-readable)
+- [ ] `rules.json` is valid JSON (machine-readable)
+- [ ] `.cursorrules` is syntactically valid for Cursor
+- [ ] `CLAUDE.md` is syntactically valid for Claude Code
+- [ ] `.windsurfrules` is syntactically valid for Windsurf
+- [ ] `aider.conf.yml` is valid YAML and loads in Aider
+- [ ] No retired/superseded rules in default export
+
+---
+
+## 16. Updated LLM Configuration (Non-Anthropic, Low Cost)
+
+### 16.1 Model Usage Matrix (Final)
+
+| Test | Llama 3.1 (local) | gpt-4o-mini (cheap cloud) | gpt-4o (better cloud) | Mock | Total Cost |
+|------|-------------------|--------------------------|---------------------|------|------------|
+| Phase 1: Foundations | — | — | — | ✅ | $0 |
+| Phase 2: Corpus validation | — | — | — | ✅ | $0 |
+| Phase 2: Model bake-off | ✅ | ✅ | ✅ | — | ~$3-5 |
+| Phase 2: Prompt bake-off | ✅ | — | ✅ | — | ~$2-3 |
+| Phase 3: Cold-start | ✅ | — | — | — | $0 |
+| Phase 3: Learning | ✅ | — | — | — | $0 |
+| Phase 3: Cross-session | ✅ | — | — | — | $0 |
+| Phase 3: Long-horizon | ✅ | — | — | — | $0 |
+| Phase 3: Noisy | ✅ | — | — | — | $0 |
+| Phase 3: Human-correction | ✅ | — | — | — | $0 |
+| Phase 3: Regression | ✅ | — | ✅ | — | ~$0.50 |
+| Phase 6: Failure mode catalog | ✅ | — | — | — | $0 |
+| Phase 6: Data drift | ✅ | — | — | — | $0 |
+| Phase 6: Conflict resolution | ✅ | — | — | — | $0 |
+| Phase 6: Concurrent | ✅ | — | — | — | $0 |
+| Phase 6: LLM fallback | ✅ | ✅ (fallback) | — | — | ~$0.10 |
+| Phase 6: Negative tests | ✅ | — | — | — | $0 |
+| Phase 6: Golden set | ✅ | ✅ | ✅ | — | ~$1-2 |
+| Phase 6: Rule quality | — | ✅ | — | — | ~$0.50 |
+| Phase 6: Time-to-value | ✅ | — | — | — | $0 |
+| Phase 6: CI integration | — | — | — | ✅ | $0 |
+| Phase 6: Export validation | — | — | — | ✅ | $0 |
+| **Total** | | | | | **~$8-12** |
+
+### 16.2 Cost Optimization
+
+- **Llama 3.1 (local) handles 80% of real-LLM tests at $0 cost**
+- **gpt-4o-mini used for quality scoring and golden set comparison ($0.50-1)**
+- **gpt-4o used only for bake-off and golden set ($3-5)**
+- **Mock LLM handles all hermetic tests ($0)**
+- **Total estimated cost: $8-12** (down from original $19-35)
+
+### 16.3 Ollama Setup
+
+```bash
+# Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Pull Llama 3.1 (8B)
+ollama pull llama3.1
+
+# Verify it's running
+ollama run llama3.1 "Hello, CauterRule!"
+
+# Configure CauterRule to use Ollama
+export CAUTERULE_LLM_PROVIDER=ollama
+export CAUTERULE_MODEL=llama3.1
+```
+
+---
+
+## 17. Updated Timeline
+
+| Phase | Estimated Duration | LLM Cost | New? |
+|-------|-------------------|----------|------|
+| Phase 1: Foundations | 2 hours | $0 | Existing |
+| Phase 2: Corpus & Benchmarks | 4 hours | ~$5-8 | Existing |
+| Phase 3: Single-Agent | 8 hours | $0 (Llama 3.1) | Existing |
+| Phase 4: Multi-Env | 2 hours | $0 | Existing |
+| Phase 5: Reporting | 2 hours | $0 | Existing |
+| Phase 6: Advanced & Edge Cases | 6 hours | ~$3-4 | **NEW** |
+| **Total** | **~24 hours** | **~$8-12** | |
+
+With parallelization: **~10-12 hours** of wall-clock time.
+
+---
+
+## 18. Updated GitHub Issue Mapping (Including Phase 6)
+
+| Issue # | WBS Task | Phase | Description |
+|---------|----------|-------|-------------|
+| #231-#238 | 30.1.1-30.1.8 | 1 | Foundations (8 tasks) |
+| #239-#245 | 30.2.1-30.2.7 | 2 | Corpus & Benchmarks (7 tasks) |
+| #25-#32, #246-#255 | 30.3.1-30.3.11 | 3 | Single-Agent (19 tasks) |
+| #256-#260 | 30.4.1-30.4.5 | 4 | Multi-Env (5 tasks) |
+| #261-#264 | 30.5.1-30.5.4 | 5 | Reporting (4 tasks) |
+| **NEW** | 30.7.1-30.7.14 | 6 | Advanced & Edge Cases (14 tasks) |
+
+**Phase 6 issues to create:** 14 new GitHub issues (30.7.1 through 30.7.14)
