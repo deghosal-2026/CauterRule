@@ -1,6 +1,6 @@
-# v0.1.0 — WBS Part 11: Distribution & Demo
+# v0.1.0 — WBS Part 11: Demo & Examples
 
-**Milestones:** M28-M29
+**Milestones:** M29
 
 ## M28: Distribution
 

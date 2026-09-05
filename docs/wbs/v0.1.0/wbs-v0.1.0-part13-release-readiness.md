@@ -5,8 +5,10 @@
 ## M31: Release Readiness
 
 > **Goal:** Final release readiness gate for v0.1.0. All issues are strictly sequential — each depends on the previous one completing successfully. No issue in M31 can close until the aggregate pre-release gate passes.
+> 
+> **Note:** M31 also includes all Distribution tasks (formerly M28): PyPI config, Homebrew formula, Docker image, standalone binary, GitHub badge, GitHub Action, webhook, OpenTelemetry exporter, benchmark leaderboard, and pack certification. These are listed as M31.2.x sub-tasks.
 
-**Execution order:** M31.1 → M31.2 → M31.3 → M31.4 → M31.5 → M31.6
+**Execution order:** M31.1 → M31.2 → M31.3 → M31.4 → M31.5 → M31.6 → M31.7
 
 | Issue | Title | Area | Complexity |
 |-------|-------|------|------------|
@@ -59,6 +61,140 @@
 - [ ] CI run: hermetic pass on GitHub Actions
 - [ ] Test count: documented and matches CI output
 - [ ] Coverage: >95% on all modules
+
+---
+
+### M31.2.1 — PyPI publish config
+
+**Problem:** `pip install cauterule` must work before packaging.
+
+**Scope:**
+- Verify `pyproject.toml` has all required metadata (license, classifiers, long_description_content_type)
+- Create `scripts/build.sh` for `python -m build` + `twine upload dist/*`
+- Add `build` and `twine` to dev dependencies
+
+**Completion checklist:**
+- [ ] `pyproject.toml` has all required fields
+- [ ] `scripts/build.sh` exists and is executable
+- [ ] Build + twine deps in pyproject.toml
+
+---
+
+### M31.2.2 — Homebrew formula
+
+**Problem:** `brew install cauterule` must work on macOS.
+
+**Scope:**
+- Create `dist/homebrew/cauterule.rb` with standard Python formula template
+
+**Completion checklist:**
+- [ ] `dist/homebrew/cauterule.rb` created
+
+---
+
+### M31.2.3 — Docker image
+
+**Problem:** `docker run cauterule demo` must work.
+
+**Scope:**
+- Create `Dockerfile` (multi-stage: build + runtime)
+- Create `docker-compose.yaml` with demo service
+
+**Completion checklist:**
+- [ ] `Dockerfile` created and builds
+- [ ] `docker-compose.yaml` created
+
+---
+
+### M31.2.4 — Standalone binary
+
+**Problem:** Users should be able to run cauterule without Python installed.
+
+**Scope:**
+- Create `scripts/build_binary.sh` using PyInstaller
+- Add `pyinstaller` to optional deps
+
+**Completion checklist:**
+- [ ] `scripts/build_binary.sh` exists
+- [ ] pyinstaller in optional deps
+
+---
+
+### M31.2.5 — GitHub badge endpoint
+
+**Problem:** A shields.io-style badge showing "N rules learned" for README.
+
+**Scope:**
+- Create `src/cauterule/badge.py` serving an SVG badge template
+
+**Completion checklist:**
+- [ ] `src/cauterule/badge.py` created with SVG template
+
+---
+
+### M31.2.6 — GitHub Action
+
+**Problem:** CI integration — run extraction on CI failures.
+
+**Scope:**
+- Create `.github/action.yml` composite action calling `cauterule extract`
+
+**Completion checklist:**
+- [ ] `.github/action.yml` created
+
+---
+
+### M31.2.7 — Webhook on promotion
+
+**Problem:** Notify Slack/Discord/GitHub when a rule is promoted.
+
+**Scope:**
+- Create `src/cauterule/integrations/__init__.py` and `src/cauterule/integrations/webhook.py`
+- `WebhookNotifier` class sends POST to configured URL on promotion
+
+**Completion checklist:**
+- [ ] `src/cauterule/integrations/webhook.py` created
+- [ ] Tests pass
+
+---
+
+### M31.2.8 — OpenTelemetry exporter
+
+**Problem:** Emit rule hit/promotion/extraction events as OTel spans.
+
+**Scope:**
+- Create `src/cauterule/integrations/otel.py` — `OtelExporter` class
+
+**Completion checklist:**
+- [ ] `src/cauterule/integrations/otel.py` created
+
+---
+
+### M31.2.9 — Official benchmark leaderboard
+
+**Problem:** Publish model + prompt results on public corpus.
+
+**Scope:**
+- Create `src/cauterule/benchmark/leaderboard.py` — `Leaderboard` class
+- Test in `tests/benchmark/test_leaderboard.py`
+
+**Completion checklist:**
+- [ ] `src/cauterule/benchmark/leaderboard.py` created
+- [ ] Tests pass
+
+---
+
+### M31.2.10 — Pack certification baseline
+
+**Problem:** Minimum safety, replay, and provenance checks for official rule packs.
+
+**Scope:**
+- Create `src/cauterule/packs/certification.py` — `certify_pack()` function
+- Test in `tests/packs/test_certification.py`
+
+**Completion checklist:**
+- [ ] `src/cauterule/packs/certification.py` created
+- [ ] Tests pass
 
 ---
 
