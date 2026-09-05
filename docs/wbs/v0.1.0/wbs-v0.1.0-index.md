@@ -17,10 +17,11 @@
 | [7](wbs-v0.1.0-part7-export-import.md) | Export, Import & MCP Server | M18-M19 | 16 |
 | [8](wbs-v0.1.0-part8-cli-tui.md) | CLI, TUI & Observability | M20-M22 | 30 |
 | [9](wbs-v0.1.0-part9-corpus.md) | Corpus, Benchmarks & Scale | M23-M25 | 27 |
-| [10](wbs-v0.1.0-part10-safety.md) | Safety, Adversarial & Field Tests | M26-M27 | 14 |
-| [11](wbs-v0.1.0-part11-distribution.md) | Distribution, Demo & Release | M28-M30 | 18 |
-| [12](wbs-v0.1.0-part12-field-test.md) | Comprehensive Field Test | M31 | 34 |
-| [13](wbs-v0.1.0-part13-release-readiness.md) | Release Readiness | M32 | 6 |
+| [10](wbs-v0.1.0-part10-safety.md) | Safety & Adversarial | M26 | 6 |
+| [11](wbs-v0.1.0-part11-distribution.md) | Distribution, Demo & Examples | M28-M29 | 20 |
+| [12](wbs-v0.1.0-part12-field-test.md) | Comprehensive Field Test | M30 | 42 |
+| [13](wbs-v0.1.0-part13-release-readiness.md) | Release Readiness | M31 | 6 |
+| [14](wbs-v0.1.0-part14-release.md) | Release | M32 | 6 |
 | **Total** | | **M1-M32** | **241** |
 
 ## Milestone Map
@@ -31,10 +32,10 @@ M1  M2  M3  M4  M5  M6  M7  M8  M9  M10 M11 M12 M13 M14 M15
  └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘
  Part 1      Part 2    Part 3       Part 4       Part 5
 
-M16 M17 M18 M19 M20 M21 M22 M23 M24 M25 M26 M27 M28 M29 M30 M31 M32
- │   │   │   │   │   │   │   │   │   │   │   │   │   │   │   │   │
- └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘
- Part 6    Part 7     Part 8        Part 9      P10  P11  P12  P13
+M16 M17 M18 M19 M20 M21 M22 M23 M24 M25 M26 M28 M29 M30 M31 M32
+ │   │   │   │   │   │   │   │   │   │   │   │   │   │   │   │
+ └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘
+ Part 6    Part 7     Part 8        Part 9      P10 P11 Part 12  P13 P14
 ```
 
 ## Dependencies
@@ -46,8 +47,8 @@ Part 1 (Foundation) ──> Part 2 (Trajectory) ──> Part 3 (Extraction)
 Part 5 ──> Part 6 (Store & Injection) ──> Part 7 (Export & MCP)
 Part 6 ──> Part 8 (CLI & TUI)
 Part 4 ──> Part 9 (Corpus & Scale)
-Part 9 ──> Part 10 (Safety & Field Tests)
-All ──> Part 11 (Distribution & Release)
+Part 9 ──> Part 10 (Safety & Adversarial)
+All ──> Part 11 (Distribution & Demo)
 All ──> Part 12 (Comprehensive Field Test)
 ```
 
@@ -68,8 +69,8 @@ Every milestone (M1-M31) must pass its exit gate before the next milestone begin
 
 Before tagging v0.1.0, ALL of the following must be true:
 
-- [ ] All 30 milestones complete and exit gates passed
-- [ ] M31 field test complete and report published
+- [ ] All 32 milestones complete and exit gates passed
+- [ ] M30 field test complete and report published
 - [ ] `cauterule demo` runs successfully end-to-end on macOS, Linux, and CI
 - [ ] Replay precision >= 90% on public benchmark corpus
 - [ ] Counterexample rejection rate >= 90%

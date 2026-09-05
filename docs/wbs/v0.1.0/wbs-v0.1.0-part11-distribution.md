@@ -1,6 +1,6 @@
-# v0.1.0 — WBS Part 11: Distribution, Demo & Release
+# v0.1.0 — WBS Part 11: Distribution & Demo
 
-**Milestones:** M28-M30
+**Milestones:** M28-M29
 
 ## M28: Distribution
 
@@ -52,26 +52,4 @@
 - [ ] Verify all issues in this milestone are done
 - [ ] Close all completed issues
 - [ ] Commit with message: `milestone: M29 complete`
-- [ ] Push to main
-
-## M30: Release
-
-| # | Task | Files | Behavior | Status |
-|---|------|-------|----------|--------|
-| 30.1 | CONTRIBUTING.md | `CONTRIBUTING.md` | How to contribute, adapter spec, rule pack format, corpus guide | ⬜ |
-| 30.2 | CHANGELOG.md | `CHANGELOG.md` | Conventional commits, Keep a Changelog format | ⬜ |
-| 30.3 | SECURITY.md | `SECURITY.md` | Security policy, threat model summary, adversarial coverage | ⬜ |
-| 30.4 | README.md | `README.md` | Updated with full v0.1.0 feature list, quick start, architecture | ⬜ |
-| 30.5 | Release notes | `docs/release/v0.1.0/release-notes.md` | What's new, field test results, known issues, upgrade guide | ⬜ |
-| 30.6 | Release gate check | `scripts/release_check.sh` | Verify all release gates pass (demo, precision, counterexample, redaction, validate, install) | ⬜ |
-
-### M30 Exit Gate
-
-- [ ] Run all tests: `pytest` — all pass
-- [ ] Lint strict clean: `ruff check` + `mypy src/` — zero errors
-- [ ] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing`
-- [ ] Update all docs affected by this milestone
-- [ ] Verify all issues in this milestone are done
-- [ ] Close all completed issues
-- [ ] Commit with message: `milestone: M30 complete`
 - [ ] Push to main

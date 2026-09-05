@@ -1,25 +1,25 @@
 # v0.1.0 — WBS Part 13: Release Readiness
 
-**Milestones:** M32
+**Milestones:** M31
 
-## M32: Release Readiness
+## M31: Release Readiness
 
-> **Goal:** Final release readiness gate for v0.1.0. All issues are strictly sequential — each depends on the previous one completing successfully. No issue in M32 can close until the aggregate pre-release gate passes.
+> **Goal:** Final release readiness gate for v0.1.0. All issues are strictly sequential — each depends on the previous one completing successfully. No issue in M31 can close until the aggregate pre-release gate passes.
 
-**Execution order:** M32.1 → M32.2 → M32.3 → M32.4 → M32.5 → M32.6
+**Execution order:** M31.1 → M31.2 → M31.3 → M31.4 → M31.5 → M31.6
 
 | Issue | Title | Area | Complexity |
 |-------|-------|------|------------|
-| M32.1 | Security scan — truffleHog, dependency audit, secret detection | security | low |
-| M32.2 | All tests passing — full deterministic suite + field test confirmed green | testing | medium |
-| M32.3 | Field test report finalized — results document, scorecards, verdict deltas | docs/field-test | medium |
-| M32.4 | Docs sweep — README, CHANGELOG, release notes, all docs | docs | medium |
-| M32.5 | Packaging & PyPI release — build, dist, Dockerfile pin, upload | release | medium |
-| M32.6 | Release tags and milestone closure — git tag, GitHub release, close all v0.1.0 milestones | release | low |
+| M31.1 | Security scan — truffleHog, dependency audit, secret detection | security | low |
+| M31.2 | All tests passing — full deterministic suite + field test confirmed green | testing | medium |
+| M31.3 | Field test report finalized — results document, scorecards, verdict deltas | docs/field-test | medium |
+| M31.4 | Docs sweep — README, CHANGELOG, release notes, all docs | docs | medium |
+| M31.5 | Packaging & PyPI release — build, dist, Dockerfile pin, upload | release | medium |
+| M31.6 | Release tags and milestone closure — git tag, GitHub release, close all v0.1.0 milestones | release | low |
 
 ---
 
-### M32.1 — Security scan — truffleHog, dependency audit, secret detection
+### M31.1 — Security scan — truffleHog, dependency audit, secret detection
 
 **Problem:** Before shipping v0.1.0, the release must pass a security scan. Any leaked secrets, vulnerable dependencies, or security regressions must be caught before the tag is created.
 
@@ -40,7 +40,7 @@
 
 ---
 
-### M32.2 — All tests passing — full deterministic suite + field test confirmed green
+### M31.2 — All tests passing — full deterministic suite + field test confirmed green
 
 **Problem:** All code merged in M1-M31 must pass the full test suite. This includes the deterministic tests, the field test sweep, and the Docker integration test. No test failures are acceptable at release time.
 
@@ -62,7 +62,7 @@
 
 ---
 
-### M32.3 — Field test report finalized — results document, scorecards, verdict deltas
+### M31.3 — Field test report finalized — results document, scorecards, verdict deltas
 
 **Problem:** The M31 field test produces raw results. These must be compiled into a finalized field test report document with scorecards, verdict delta analysis, and operational benchmark results.
 
@@ -83,7 +83,7 @@
 
 ---
 
-### M32.4 — Docs sweep — README, CHANGELOG, release notes, all docs
+### M31.4 — Docs sweep — README, CHANGELOG, release notes, all docs
 
 **Problem:** All documentation must be current for the v0.1.0 release. This includes the README, CHANGELOG, release notes, and all design docs.
 
@@ -92,7 +92,7 @@
 - CHANGELOG: add v0.1.0 entry with all M1-M31 changes
 - Release notes: create `docs/release/v0.1.0/release-notes.md`
 - Design docs: confirm all PRD, design, and WBS docs are current
-- Field test results document: finalized (see M32.3)
+- Field test results document: finalized (see M31.3)
 - Confirm no stale-doc contradictions
 
 **Version bump locations:**
@@ -117,7 +117,7 @@
 
 ---
 
-### M32.5 — Packaging & PyPI release — build, dist, Dockerfile pin, upload
+### M31.5 — Packaging & PyPI release — build, dist, Dockerfile pin, upload
 
 **Problem:** The v0.1.0 release must be packaged and published to PyPI. This includes building distribution artifacts, pinning the Dockerfile, and uploading to PyPI.
 
@@ -139,30 +139,30 @@
 
 ---
 
-### M32.6 — Release tags and milestone closure — git tag, GitHub release, close all v0.1.0 milestones
+### M31.6 — Release tags and milestone closure — git tag, GitHub release, close all v0.1.0 milestones
 
 **Problem:** The final step of the release process: create the git tag, publish the GitHub release, and close all v0.1.0 milestones (M1-M31).
 
 **Prerequisites (all must be green before this issue starts):**
-- [ ] M32.1 Security scan clean
-- [ ] M32.2 All tests passing
-- [ ] M32.3 Field test report finalized
-- [ ] M32.4 Docs sweep complete
-- [ ] M32.5 PyPI release published
+- [ ] M31.1 Security scan clean
+- [ ] M31.2 All tests passing
+- [ ] M31.3 Field test report finalized
+- [ ] M31.4 Docs sweep complete
+- [ ] M31.5 PyPI release published
 
 **Completion checklist:**
 - [ ] Git tag v0.1.0 created and pushed
 - [ ] GitHub release published with release notes
-- [ ] All v0.1.0 milestones closed (M1-M32)
+- [ ] All v0.1.0 milestones closed (M1-M31)
 - [ ] No open issues remain in v0.1.0 scope
 - [ ] Deferred issues (v0.1.1+) remain open with documented rationale
 - [ ] Announcement ready (dev.to article or crosslinks)
 
 ---
 
-### M32 Closure Gate
+### M31 Closure Gate
 
-Before M32 closes, the following must be true:
+Before M31 closes, the following must be true:
 
 #### Standard milestone exit gate
 - [ ] Run all tests: `pytest` — all pass
@@ -171,12 +171,12 @@ Before M32 closes, the following must be true:
 - [ ] Update all docs affected by this milestone
 - [ ] Verify all issues in this milestone are done
 - [ ] Close all completed issues
-- [ ] Commit with message: `milestone: M32 complete`
+- [ ] Commit with message: `milestone: M31 complete`
 - [ ] Push to main
 
-#### Pre-Release Aggregate Gate (M32-specific)
+#### Pre-Release Aggregate Gate (M31-specific)
 
-All of the following must be green before M32.6 tags:
+All of the following must be green before M31.6 tags:
 
 - [ ] Code review: clean on the full release diff
 - [ ] All testcases green: full suite, zero unexplained skips
@@ -193,7 +193,7 @@ All of the following must be green before M32.6 tags:
 
 - [ ] GitHub release published with release notes link
 - [ ] PyPI page shows v0.1.0
-- [ ] All v0.1.0 milestones closed (M1-M32)
+- [ ] All v0.1.0 milestones closed (M1-M31)
 - [ ] v0.1.1+ deferred issues remain open with documented rationale
 - [ ] `main` branch is up to date
 - [ ] Announcement published (dev.to, social, or internal)
