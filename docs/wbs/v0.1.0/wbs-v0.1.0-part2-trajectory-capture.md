@@ -29,19 +29,19 @@
 
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
-| 5.1 | Redaction engine | `src/cauterule/redaction/engine.py` | Strips secrets from trajectory before LLM extraction | ⬜ |
-| 5.2 | Built-in secret patterns | `src/cauterule/redaction/patterns.py` | AWS keys, GitHub tokens, JWTs, generic API keys, passwords | ⬜ |
-| 5.3 | Custom pattern config | `src/cauterule/redaction/config.py` | User-defined patterns via `cauterule.toml` | ⬜ |
-| 5.4 | Redaction flag on trajectory | `src/cauterule/redaction/flag.py` | Sets `redacted: true` on trajectory metadata | ⬜ |
-| 5.5 | Redaction corpus test | `tests/redaction/test_corpus.py` | 100% success on redaction corpus | ⬜ |
+| 5.1 | Redaction engine | `src/cauterule/redaction/engine.py` | Strips secrets from trajectory before LLM extraction | ✅ |
+| 5.2 | Built-in secret patterns | `src/cauterule/redaction/patterns.py` | AWS keys, GitHub tokens, JWTs, generic API keys, passwords | ✅ |
+| 5.3 | Custom pattern config | `src/cauterule/redaction/config.py` | User-defined patterns via `cauterule.toml` | ✅ |
+| 5.4 | Redaction flag on trajectory | `src/cauterule/redaction/flag.py` | Sets `redacted: true` on trajectory metadata | ✅ |
+| 5.5 | Redaction corpus test | `tests/redaction/test_corpus.py` | 100% success on redaction corpus | ✅ |
 
 ### M5 Exit Gate
 
-- [ ] Run all tests: `pytest` — all pass
-- [ ] Lint strict clean: `ruff check` + `mypy src/` — zero errors
-- [ ] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing`
-- [ ] Update all docs affected by this milestone
-- [ ] Verify all issues in this milestone are done
-- [ ] Close all completed issues
-- [ ] Commit with message: `milestone: M5 complete`
-- [ ] Push to main
+- [x] Run all tests: `pytest` — all pass (128 passed)
+- [x] Lint strict clean: `ruff check` + `mypy src/` — zero errors
+- [x] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing` — 99.04%
+- [x] Update all docs affected by this milestone
+- [x] Verify all issues in this milestone are done
+- [x] Close all completed issues
+- [x] Commit with message: `milestone: M5 complete`
+- [x] Push to main
