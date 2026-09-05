@@ -1,0 +1,25 @@
+id: R-101
+when:
+  trigger: git push rejected (non-fast-forward)
+  context:
+    - shared branch
+do:
+  directive: Run `git pull --rebase origin <branch>` then push again
+  because: Non-fast-forward pushes are rejected; rebasing onto remote history avoids merge commits
+confidence: 0.92
+provenance:
+  source_trajectory: packs/pack-git/R-101
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - git
+  - push
+  - rebase
+taxonomy: git/push/rejected
+pack: pack-git

@@ -1,0 +1,26 @@
+id: R-109
+when:
+  trigger: git cherry-pick reports conflicts
+  context:
+    - target branch
+    - source commit
+do:
+  directive: Resolve conflicts, `git add <resolved-files>`, then `git cherry-pick --continue`
+  because: Cherry-pick conflicts pause the operation; resolving and continuing applies the intended changes
+confidence: 0.90
+provenance:
+  source_trajectory: packs/pack-git/R-109
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - git
+  - cherry-pick
+  - conflict
+taxonomy: git/cherry-pick/conflict
+pack: pack-git

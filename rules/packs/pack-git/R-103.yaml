@@ -1,0 +1,25 @@
+id: R-103
+when:
+  trigger: git push rejected by pre-push hook
+  context:
+    - remote
+do:
+  directive: Inspect hook output, fix the reported issue, then push again
+  because: Pre-push hooks enforce repository policies and must pass before push is accepted
+confidence: 0.88
+provenance:
+  source_trajectory: packs/pack-git/R-103
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - git
+  - push
+  - hooks
+taxonomy: git/push/hook-rejected
+pack: pack-git

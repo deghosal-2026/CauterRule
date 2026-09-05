@@ -1,0 +1,25 @@
+id: R-104
+when:
+  trigger: git rebase stops with conflicts
+  context:
+    - rebase target
+do:
+  directive: Resolve conflicts, `git add <resolved-files>`, then `git rebase --continue`
+  because: Rebase conflicts pause the operation; resolving and continuing completes the rebase
+confidence: 0.93
+provenance:
+  source_trajectory: packs/pack-git/R-104
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - git
+  - rebase
+  - conflict
+taxonomy: git/rebase/conflict
+pack: pack-git

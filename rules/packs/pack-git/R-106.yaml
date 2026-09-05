@@ -1,0 +1,25 @@
+id: R-106
+when:
+  trigger: git stash pop reports conflicts
+  context:
+    - working directory
+do:
+  directive: Resolve conflicts manually in affected files, then `git reset` if needed
+  because: Stash pop conflicts leave the working tree in a conflicted state that requires manual resolution
+confidence: 0.87
+provenance:
+  source_trajectory: packs/pack-git/R-106
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - git
+  - stash
+  - conflict
+taxonomy: git/stash/conflict
+pack: pack-git

@@ -1,0 +1,25 @@
+id: R-108
+when:
+  trigger: git push fails with "repository not found" or authentication failure
+  context:
+    - remote
+do:
+  directive: Verify remote URL with `git remote -v` and update with `git remote set-url origin <correct-url>`
+  because: Invalid remote URLs are the most common cause of push failures after repository moves or credential changes
+confidence: 0.84
+provenance:
+  source_trajectory: packs/pack-git/R-108
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - git
+  - remote
+  - authentication
+taxonomy: git/remote/not-found
+pack: pack-git
