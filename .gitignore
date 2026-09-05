@@ -27,3 +27,11 @@ scenarios/
 # Environment
 .env
 .env.local
+
+# Coverage / test artifacts
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

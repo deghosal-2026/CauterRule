@@ -1,0 +1,16 @@
+# Ruff config — mirror of [tool.ruff] in pyproject.toml for task 1.2 compliance.
+# Primary config lives in pyproject.toml; this file exists for tooling that
+# expects .ruff.toml (per WBS M1 task 1.2: `ruff check` clean).
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RET", "ARG", "PTH", "TRY", "ANN", "D", "RUF"]
+ignore = []
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.per-file-ignores]
+"tests/**" = ["D", "ANN", "S101", "ARG", "PLR2004"]
