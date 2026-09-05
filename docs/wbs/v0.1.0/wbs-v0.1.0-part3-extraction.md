@@ -6,20 +6,20 @@
 
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
-| 6.1 | Similarity scorer | `src/cauterule/extraction/clustering/similarity.py` | Compares failure class, tool sequence, error message | ⬜ |
-| 6.2 | Clusterer | `src/cauterule/extraction/clustering/clusterer.py` | Groups similar failures; one extraction per cluster | ⬜ |
-| 6.3 | Cluster config | `src/cauterule/extraction/clustering/config.py` | Similarity threshold (default 0.85), enabled/disabled | ⬜ |
+| 6.1 | Similarity scorer | `src/cauterule/extraction/clustering/similarity.py` | Compares failure class, tool sequence, error message | ✅ |
+| 6.2 | Clusterer | `src/cauterule/extraction/clustering/clusterer.py` | Groups similar failures; one extraction per cluster | ✅ |
+| 6.3 | Cluster config | `src/cauterule/extraction/clustering/config.py` | Similarity threshold (default 0.85), enabled/disabled | ✅ |
 
 ### M6 Exit Gate
 
-- [ ] Run all tests: `pytest` — all pass
-- [ ] Lint strict clean: `ruff check` + `mypy src/` — zero errors
-- [ ] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing`
-- [ ] Update all docs affected by this milestone
-- [ ] Verify all issues in this milestone are done
-- [ ] Close all completed issues
-- [ ] Commit with message: `milestone: M6 complete`
-- [ ] Push to main
+- [x] Run all tests: `pytest` — all pass (144 passed)
+- [x] Lint strict clean: `ruff check` + `mypy src/` — zero errors
+- [x] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing` — 98.81%
+- [x] Update all docs affected by this milestone
+- [x] Verify all issues in this milestone are done
+- [x] Close all completed issues
+- [x] Commit with message: `milestone: M6 complete`
+- [x] Push to main
 
 ## M7: Single-Pass Extraction
 
