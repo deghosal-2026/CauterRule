@@ -35,7 +35,6 @@ def compute_scores(
     if prevented == 0 and broken == 0:
         verdict = "inconclusive"
     elif broken > 0:
-        verdict = "fail" if precision < 0.8 else "fail"
         # If any success broken, verdict is fail regardless of precision (conservative)
         verdict = "fail"
     else:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
@@ -51,12 +52,14 @@ class BakeoffHarness:
         results: dict[str, list[ModelResult]] = {name: [] for name in self.models}
         for traj in trajectories:
             for name, extractor in self.models.items():
+                t0 = time.perf_counter()
                 candidate = extractor(traj)
+                elapsed_ms = (time.perf_counter() - t0) * 1000.0
                 results[name].append(
                     ModelResult(
                         model_name=name,
                         candidate=candidate,
-                        extraction_time_ms=0.0,
+                        extraction_time_ms=elapsed_ms,
                         confidence=candidate.confidence if candidate else 0.0,
                         extraction_error=None if candidate else "extraction returned None",
                     )

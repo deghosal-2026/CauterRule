@@ -11,8 +11,13 @@ from cauterule.models.rule import StandingRule
 from .redaction import redact_export
 
 
-def export(rules: list[StandingRule]) -> str:
-    """Format *rules* as an aider.conf.yml YAML string."""
+def export(rules: list[StandingRule], include_retired: bool = False) -> str:
+    """Format *rules* as an aider.conf.yml YAML string.
+
+    Only active rules are exported unless *include_retired* is ``True``.
+    """
+    if not include_retired:
+        rules = [r for r in rules if r.status == "active"]
     if not rules:
         return "# No rules\nrules: []\n"
 

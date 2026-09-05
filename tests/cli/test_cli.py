@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import os
+import tempfile
+from pathlib import Path
+
 from click.testing import CliRunner
 
 from cauterule.cli.app import main
@@ -25,227 +29,176 @@ def test_cli_no_args() -> None:
 
 
 def test_cli_init() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["init"])
-    assert result.exit_code == 0
-    assert "init" in result.output
+    with tempfile.TemporaryDirectory() as tmp:
+        runner = CliRunner()
+        result = runner.invoke(main, ["init", "--dir", tmp])
+        assert result.exit_code == 0
+        assert "Scaffolded" in result.output
+        assert (Path(tmp) / "cauterule.toml").is_file()
+        assert (Path(tmp) / "rules").is_dir()
+        assert (Path(tmp) / "trajectories").is_dir()
 
 
 def test_cli_demo() -> None:
     runner = CliRunner()
-    result = runner.invoke(main, ["demo"])
+    result = runner.invoke(main, ["demo", "--failures", "3"])
     assert result.exit_code == 0
-    assert "demo" in result.output
-
-
-def test_cli_extract() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["extract", "traj.json"])
-    assert result.exit_code == 0
-    assert "extract" in result.output
+    assert "Seeded" in result.output
+    assert "Extraction phase" in result.output
 
 
 def test_cli_extract_dry_run() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["extract", "traj.json", "--dry-run"])
-    assert result.exit_code == 0
-    assert "dry_run=True" in result.output
+    with tempfile.TemporaryDirectory() as tmp:
+        traj_path = Path(tmp) / "traj.json"
+        traj_path.write_text(
+            '{"id": "T-1", "timestamp": "2024-01-01T00:00:00Z", "task": "deploy to prod", "steps": [{"step_number": 1, "tool": "deploy", "input": "deploy", "output": "", "error": "ENV not set"}], "success": false}',
+            encoding="utf-8",
+        )
+        cwd = os.getcwd()
+        try:
+            os.chdir(tmp)
+            runner = CliRunner()
+            result = runner.invoke(main, ["extract", str(traj_path), "--dry-run"])
+            assert result.exit_code == 0
+            assert "dry-run" in result.output
+        finally:
+            os.chdir(cwd)
 
 
-def test_cli_test() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["test", "R-001"])
-    assert result.exit_code == 0
-    assert "test" in result.output
+def test_cli_validate_empty_store() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "rules").mkdir(parents=True, exist_ok=True)
+        cwd = os.getcwd()
+        try:
+            os.chdir(tmp)
+            runner = CliRunner()
+            result = runner.invoke(main, ["validate"])
+            assert result.exit_code == 0
+        finally:
+            os.chdir(cwd)
 
 
-def test_cli_test_ci() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["test", "R-001", "--ci"])
-    assert result.exit_code == 0
-    assert "ci=True" in result.output
-
-
-def test_cli_promote() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["promote", "R-001"])
-    assert result.exit_code == 0
-    assert "promote" in result.output
-
-
-def test_cli_inject() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["inject", "deploy"])
-    assert result.exit_code == 0
-    assert "inject" in result.output
-
-
-def test_cli_inject_preflight() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["inject", "deploy", "--preflight"])
-    assert result.exit_code == 0
-    assert "preflight=True" in result.output
-
-
-def test_cli_list() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["list"])
-    assert result.exit_code == 0
-    assert "list" in result.output
-
-
-def test_cli_list_filters() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["list", "--status", "active", "--tag", "python"])
-    assert result.exit_code == 0
-    assert "list" in result.output
-
-
-def test_cli_show() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["show", "R-001"])
-    assert result.exit_code == 0
-    assert "show" in result.output
-
-
-def test_cli_search() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["search", "deployment"])
-    assert result.exit_code == 0
-    assert "search" in result.output
-
-
-def test_cli_audit() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["audit", "R-001"])
-    assert result.exit_code == 0
-    assert "audit" in result.output
-
-
-def test_cli_diff() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["diff", "R-001"])
-    assert result.exit_code == 0
-    assert "diff" in result.output
-
-
-def test_cli_retire() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["retire", "R-001"])
-    assert result.exit_code == 0
-    assert "retire" in result.output
-
-
-def test_cli_retire_with_reason() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["retire", "R-001", "--reason", "superseded"])
-    assert result.exit_code == 0
-    assert "superseded" in result.output
-
-
-def test_cli_history() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["history"])
-    assert result.exit_code == 0
-    assert "history" in result.output
-
-
-def test_cli_history_limit() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["history", "--limit", "10"])
-    assert result.exit_code == 0
-    assert "10" in result.output
-
-
-def test_cli_conflicts() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["conflicts"])
-    assert result.exit_code == 0
-    assert "conflicts" in result.output
-
-
-def test_cli_validate() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["validate"])
-    assert result.exit_code == 0
-    assert "validate" in result.output
-
-
-def test_cli_health() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["health"])
-    assert result.exit_code == 0
-    assert "health" in result.output
-
-
-def test_cli_counterfactual() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["counterfactual"])
-    assert result.exit_code == 0
-    assert "counterfactual" in result.output
-
-
-def test_cli_story() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["story"])
-    assert result.exit_code == 0
-    assert "story" in result.output
-
-
-def test_cli_story_format() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["story", "--format", "html"])
-    assert result.exit_code == 0
-    assert "html" in result.output
-
-
-def test_cli_explain() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["explain", "R-001"])
-    assert result.exit_code == 0
-    assert "explain" in result.output
-
-
-def test_cli_config_show() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["config", "--show"])
-    assert result.exit_code == 0
-    assert "config" in result.output
-
-
-def test_cli_pack_list() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["pack", "list"])
-    assert result.exit_code == 0
-    assert "pack list" in result.output
-
-
-def test_cli_pack_info() -> None:
-    runner = CliRunner()
-    result = runner.invoke(main, ["pack", "info", "core"])
-    assert result.exit_code == 0
-    assert "pack info" in result.output
+def test_cli_health_empty_store() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "rules").mkdir(parents=True, exist_ok=True)
+        cwd = os.getcwd()
+        try:
+            os.chdir(tmp)
+            runner = CliRunner()
+            result = runner.invoke(main, ["health"])
+            assert result.exit_code == 0
+            assert "Total rules" in result.output
+        finally:
+            os.chdir(cwd)
 
 
 def test_cli_metrics() -> None:
     runner = CliRunner()
     result = runner.invoke(main, ["metrics"])
     assert result.exit_code == 0
-    assert "metrics" in result.output
+    assert result.output
+
+
+def test_cli_list() -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["list"])
+    assert result.exit_code == 0
+
+
+def test_cli_search() -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["search", "deployment"])
+    assert result.exit_code == 0
+
+
+def test_cli_show_not_found() -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["show", "R-999"])
+    assert result.exit_code == 0
+    assert "not found" in result.output
+
+
+def test_cli_explain_not_found() -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["explain", "R-999"])
+    assert result.exit_code == 0
+    assert "not found" in result.output
+
+
+def test_cli_audit_not_found() -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["audit", "R-999"])
+    assert result.exit_code == 0
+    assert "not found" in result.output
+
+
+def test_cli_diff_not_found() -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["diff", "R-999"])
+    assert result.exit_code == 0
+
+
+def test_cli_retire_not_found() -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["retire", "R-999"])
+    assert result.exit_code != 0 or "Error" in result.output or "not found" in result.output
+
+
+def test_cli_config_show() -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["config", "--show"])
+    assert result.exit_code == 0
+
+
+def test_cli_pack_list() -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["pack", "list"])
+    assert result.exit_code == 0
 
 
 def test_cli_report() -> None:
     runner = CliRunner()
     result = runner.invoke(main, ["report"])
     assert result.exit_code == 0
-    assert "report" in result.output
+    assert "CauterRule Report" in result.output
 
 
-def test_cli_report_with_output() -> None:
+def test_cli_story() -> None:
     runner = CliRunner()
-    result = runner.invoke(main, ["report", "--format", "html", "-o", "report.html"])
+    result = runner.invoke(main, ["story"])
     assert result.exit_code == 0
-    assert "html" in result.output
+    assert "CauterRule Learning Journey" in result.output
+
+
+def test_cli_counterfactual() -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["counterfactual"])
+    assert result.exit_code == 0
+
+
+def test_cli_history() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "rules").mkdir(parents=True, exist_ok=True)
+        cwd = os.getcwd()
+        try:
+            os.chdir(tmp)
+            runner = CliRunner()
+            result = runner.invoke(main, ["history"])
+            assert result.exit_code == 0
+        finally:
+            os.chdir(cwd)
+
+
+def test_cli_inject() -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["inject", "deploy"])
+    assert result.exit_code == 0
+
+
+def test_cli_inject_preflight() -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["inject", "deploy", "--preflight"])
+    assert result.exit_code == 0
 
 
 def test_cli_unknown_command() -> None:

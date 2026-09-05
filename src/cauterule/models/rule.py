@@ -181,6 +181,9 @@ class StandingRule:
     taxonomy: str | None = None
     template: str | None = None
     pack: str | None = None
+    retired_at: str | None = None
+    retirement_reason: str | None = None
+    superseded_by: str | None = None
 
     def __post_init__(self) -> None:
         _require_nonblank(self.id, "id")
@@ -215,6 +218,12 @@ class StandingRule:
             d["template"] = self.template
         if self.pack is not None:
             d["pack"] = self.pack
+        if self.retired_at is not None:
+            d["retired_at"] = self.retired_at
+        if self.retirement_reason is not None:
+            d["retirement_reason"] = self.retirement_reason
+        if self.superseded_by is not None:
+            d["superseded_by"] = self.superseded_by
         return d
 
     @classmethod
@@ -234,4 +243,7 @@ class StandingRule:
             taxonomy=data.get("taxonomy"),
             template=data.get("template"),
             pack=data.get("pack"),
+            retired_at=data.get("retired_at"),
+            retirement_reason=data.get("retirement_reason"),
+            superseded_by=data.get("superseded_by"),
         )

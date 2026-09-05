@@ -6,10 +6,12 @@ from cauterule.linter.orchestrator import LinterResult
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.conflict import ConflictReport
 from cauterule.models.decision import PromotionDecision
+from cauterule.models.evidence import EvidenceReport
 
 
 def auto_promote(
     candidate: CandidateRule,
+    evidence: EvidenceReport,
     linter_result: LinterResult,
     conflict_reports: list[ConflictReport] | None = None,
 ) -> PromotionDecision:
@@ -22,6 +24,7 @@ def auto_promote(
 
     Args:
         candidate: The candidate rule under review.
+        evidence: Replay-evidence report for the candidate.
         linter_result: Result from the linter orchestrator.
         conflict_reports: Optional list of conflict reports; defaults to
             empty.
@@ -36,10 +39,12 @@ def auto_promote(
     for c in conflicts:
         conflict_warnings.append(f"{c.type}: rules {list(c.rules)}")
 
-    if linter_result.passed and not conflicts:
+    evidence_ok = evidence.verdict == "pass" and len(evidence.failures_prevented) >= 1
+
+    if linter_result.passed and not conflicts and evidence_ok:
         return PromotionDecision(
             verdict="promote",
-            evidence_summary=f"Auto-promote: linter clean, no conflicts; candidate confidence={candidate.confidence}",
+            evidence_summary=f"Auto-promote: linter clean, no conflicts, evidence={evidence.verdict}; candidate confidence={candidate.confidence}",
             approver="auto",
         )
 
@@ -48,7 +53,8 @@ def auto_promote(
         evidence_summary=(
             f"Auto-reject: confidence={candidate.confidence:.2f}, "
             f"linter_passed={linter_result.passed}, "
-            f"conflicts={len(conflicts)}"
+            f"conflicts={len(conflicts)}, "
+            f"evidence_verdict={evidence.verdict}"
         ),
         approver="auto",
         linter_warnings=linter_result.warnings,

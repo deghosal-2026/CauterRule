@@ -13,8 +13,8 @@ from cauterule.models.rule import StandingRule
 class IndexManager:
     """Read/write the rule-store index file.
 
-    The index is a YAML mapping of ``{rule_id: {metadata...}}`` stored at
-    ``<base_dir>/index.yaml``.
+    The index is a YAML mapping with a single ``rules`` key containing a
+    list of rule entries: ``{rules: [{id, status, summary, tags, taxonomy, hit_count, last_match, pack}]}``.
     """
 
     def __init__(self, base_dir: str = "rules") -> None:
@@ -41,16 +41,18 @@ class IndexManager:
         """
         path = self._index_path
         if not path.is_file():
-            return {}
+            return {"rules": []}
         with path.open(encoding="utf-8") as fh:
             data = yaml.safe_load(fh)
-        return data if isinstance(data, dict) else {}
+        if isinstance(data, dict) and "rules" in data:
+            return data
+        return {"rules": []}
 
     def save_index(self, entries: dict[str, Any]) -> None:
         """Write *entries* to ``index.yaml``.
 
         Args:
-            entries: A serializable dict.
+            entries: A serializable dict with a ``rules`` key.
         """
         self._ensure_dir()
         with self._index_path.open("w", encoding="utf-8") as fh:
@@ -63,12 +65,20 @@ class IndexManager:
             rule: The rule whose metadata to index.
         """
         index = self.load_index()
-        index[rule.id] = {
+        rules_list: list[dict[str, Any]] = index.get("rules", [])
+        entry: dict[str, Any] = {
+            "id": rule.id,
             "status": rule.status,
-            "confidence": rule.confidence,
-            "promoted_at": rule.promoted_at,
-            "tags": list(rule.tags),
+            "summary": f"when={rule.when.trigger!r} do={rule.do.directive!r}",
+            "tags": list(rule.tags) if rule.tags else [],
+            "hit_count": rule.hit_count,
+            "last_match": rule.last_match,
+            "pack": rule.pack,
         }
+        if rule.taxonomy is not None:
+            entry["taxonomy"] = rule.taxonomy
+        rules_list.append(entry)
+        index["rules"] = rules_list
         self.save_index(index)
 
     def remove_entry(self, rule_id: str) -> None:
@@ -78,7 +88,8 @@ class IndexManager:
             rule_id: Id of the entry to remove.
         """
         index = self.load_index()
-        index.pop(rule_id, None)
+        rules_list: list[dict[str, Any]] = index.get("rules", [])
+        index["rules"] = [e for e in rules_list if e.get("id") != rule_id]
         self.save_index(index)
 
     def update_entry(self, rule: StandingRule) -> None:
@@ -87,4 +98,24 @@ class IndexManager:
         Args:
             rule: The rule whose metadata to update in the index.
         """
-        self.add_entry(rule)
+        index = self.load_index()
+        rules_list: list[dict[str, Any]] = index.get("rules", [])
+        entry: dict[str, Any] = {
+            "id": rule.id,
+            "status": rule.status,
+            "summary": f"when={rule.when.trigger!r} do={rule.do.directive!r}",
+            "tags": list(rule.tags) if rule.tags else [],
+            "hit_count": rule.hit_count,
+            "last_match": rule.last_match,
+            "pack": rule.pack,
+        }
+        if rule.taxonomy is not None:
+            entry["taxonomy"] = rule.taxonomy
+        for i, existing in enumerate(rules_list):
+            if existing.get("id") == rule.id:
+                rules_list[i] = entry
+                break
+        else:
+            rules_list.append(entry)
+        index["rules"] = rules_list
+        self.save_index(index)

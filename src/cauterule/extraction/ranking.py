@@ -33,7 +33,7 @@ def rank_candidates(
     if len(candidates) != len(evidences):
         raise ValueError("candidates and evidences must be same length")
 
-    paired = list(zip(candidates, evidences, strict=False))
+    paired = list(zip(candidates, evidences, strict=True))
 
     def sort_key(pair: tuple[CandidateRule, EvidenceReport]) -> tuple[float, float, float, int]:
         cand, ev = pair

@@ -22,6 +22,7 @@ def _rule(
     rid: str,
     status: Status = "active",
     tags: tuple[str, ...] = (),
+    last_match: str | None = None,
 ) -> StandingRule:
     return StandingRule(
         id=rid,
@@ -38,6 +39,7 @@ def _rule(
         promoted_at="2025-01-02T00:00:00",
         hit_count=5,
         tags=tags,
+        last_match=last_match,
     )
 
 
@@ -133,7 +135,7 @@ def test_supersede_rule_not_found(tmp_path: Path) -> None:
 # ------------------------------------------------------------------
 def test_index_empty(tmp_path: Path) -> None:
     idx = IndexManager(str(tmp_path / "rules"))
-    assert idx.load_index() == {}
+    assert idx.load_index() == {"rules": []}
 
 
 def test_index_add_entry(tmp_path: Path) -> None:
@@ -141,21 +143,22 @@ def test_index_add_entry(tmp_path: Path) -> None:
     rule = _rule("R-010")
     idx.add_entry(rule)
     data = idx.load_index()
-    assert "R-010" in data
-    assert data["R-010"]["status"] == "active"
+    assert "rules" in data
+    assert data["rules"][0]["id"] == "R-010"
+    assert data["rules"][0]["status"] == "active"
 
 
 def test_index_remove_entry(tmp_path: Path) -> None:
     idx = IndexManager(str(tmp_path / "rules"))
     idx.add_entry(_rule("R-010"))
     idx.remove_entry("R-010")
-    assert "R-010" not in idx.load_index()
+    assert idx.load_index() == {"rules": []}
 
 
 def test_index_remove_missing(tmp_path: Path) -> None:
     idx = IndexManager(str(tmp_path / "rules"))
     idx.remove_entry("R-GHOST")
-    assert idx.load_index() == {}
+    assert idx.load_index() == {"rules": []}
 
 
 def test_index_update_entry(tmp_path: Path) -> None:
@@ -163,12 +166,12 @@ def test_index_update_entry(tmp_path: Path) -> None:
     idx.add_entry(_rule("R-010", status="active"))
     idx.update_entry(_rule("R-010", status="retired"))
     data = idx.load_index()
-    assert data["R-010"]["status"] == "retired"
+    assert data["rules"][0]["status"] == "retired"
 
 
 def test_index_save_index(tmp_path: Path) -> None:
     idx = IndexManager(str(tmp_path / "rules"))
-    entries = {"R-A": {"status": "active", "confidence": 0.9}}
+    entries = {"rules": [{"id": "R-A", "status": "active", "summary": "test"}]}
     idx.save_index(entries)
     loaded = idx.load_index()
     assert loaded == entries
@@ -264,8 +267,8 @@ def test_validate_store_missing_provenance(tmp_path: Path) -> None:
 def test_health_report(tmp_path: Path) -> None:
     base = str(tmp_path / "rules")
     m = StoreManager(base)
-    m.add_rule(_rule("R-H01", tags=("git",)))
-    m.add_rule(_rule("R-H02", tags=("git",)))
+    m.add_rule(_rule("R-H01", tags=("git",), last_match="2026-09-01T00:00:00+00:00"))
+    m.add_rule(_rule("R-H02", tags=("git",), last_match="2026-09-01T00:00:00+00:00"))
     m.add_rule(_rule("R-H03", status="retired"))
     report = health_report(base)
     assert report["total_rules"] == 3
@@ -302,6 +305,7 @@ def test_health_report_stale(tmp_path: Path) -> None:
             status="active",
             promoted_at="2025-01-02T00:00:00",
             hit_count=0,
+            last_match="2020-01-01T00:00:00+00:00",
             tags=("old",),
         )
     )
@@ -309,15 +313,13 @@ def test_health_report_stale(tmp_path: Path) -> None:
     assert "R-STALE" in report["stale_rules"]
 
 
-def test_health_report_coverage_gaps(tmp_path: Path) -> None:
+def test_health_report_conflict_count(tmp_path: Path) -> None:
     base = str(tmp_path / "rules")
     m = StoreManager(base)
-    m.add_rule(_rule("R-GAP", tags=("rare-tag",)))
-    m.add_rule(_rule("R-COM", tags=("common",)))
-    m.add_rule(_rule("R-COM2", tags=("common",)))
+    m.add_rule(_rule("R-A", last_match="2026-09-01T00:00:00+00:00"))
+    m.add_rule(_rule("R-B", last_match="2026-09-01T00:00:00+00:00"))
     report = health_report(base)
-    assert "rare-tag" in report["coverage_gaps"]
-    assert "common" not in report["coverage_gaps"]
+    assert report["conflict_count"] == 1
 
 
 # ------------------------------------------------------------------

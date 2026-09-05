@@ -16,7 +16,7 @@ class _InjectLLM:
     def __init__(self, candidate_json: str) -> None:
         self._json = candidate_json
 
-    def complete(self, prompt: str) -> str:
+    def complete(self, prompt: str, **kwargs: Any) -> str:
         return self._json
 
 

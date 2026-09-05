@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import threading
 
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.evidence import EvidenceReport
@@ -16,6 +17,7 @@ class ReplayCache:
 
     def __init__(self) -> None:
         self._cache: dict[str, EvidenceReport] = {}
+        self._lock = threading.Lock()
 
     def _key(self, candidate: CandidateRule, trajectories: list[Trajectory]) -> str:
         ids = sorted(t.id for t in trajectories)
@@ -35,15 +37,19 @@ class ReplayCache:
     def get(self, candidate: CandidateRule, trajectories: list[Trajectory]) -> EvidenceReport:
         """Return cached or computed replay result."""
         key = self._key(candidate, trajectories)
-        if key in self._cache:
-            return self._cache[key]
+        with self._lock:
+            if key in self._cache:
+                return self._cache[key]
         report = deterministic_replay(candidate, trajectories)
-        self._cache[key] = report
+        with self._lock:
+            self._cache[key] = report
         return report
 
     def clear(self) -> None:
         """Clear the cache."""
-        self._cache.clear()
+        with self._lock:
+            self._cache.clear()
 
     def __len__(self) -> int:
-        return len(self._cache)
+        with self._lock:
+            return len(self._cache)

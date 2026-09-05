@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 
 from cauterule.extraction.multipass import multipass_extract
@@ -9,10 +11,11 @@ class FakeLLM:
     def __init__(self, texts: list[str]) -> None:
         self.texts = texts
         self.calls = 0
+        self.temperatures: list[float] = []
 
-    def complete(self, prompt: str) -> LLMResponse:
-        _ = prompt
+    def complete(self, prompt: str, **kwargs: object) -> LLMResponse:
         text = self.texts[self.calls % len(self.texts)]
+        self.temperatures.append(kwargs.get("temperature", 0.5))  # type: ignore[arg-type]
         self.calls += 1
         return LLMResponse(text=text, model="fake", provider="fake")
 
@@ -41,3 +44,13 @@ def test_multipass_custom_temps() -> None:
     llm = FakeLLM([payload])
     cands = multipass_extract(_traj(), llm, temperatures=(0.1, 0.9))
     assert len(cands) == 2
+    assert llm.temperatures == [0.1, 0.9], f"Expected [0.1, 0.9], got {llm.temperatures}"
+
+
+def test_multipass_default_temps() -> None:
+    payload = json.dumps({"when": {"trigger": "t"}, "do": {"directive": "d"}, "confidence": 0.8})
+    llm = FakeLLM([payload, payload, payload])
+    cands = multipass_extract(_traj(), llm)
+    assert len(cands) == 3
+    # Default temperatures are (0.2, 0.5, 0.8)
+    assert llm.temperatures == [0.2, 0.5, 0.8], f"Expected [0.2, 0.5, 0.8], got {llm.temperatures}"

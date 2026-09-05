@@ -12,6 +12,7 @@ from cauterule.capture.metadata import enrich_trajectory
 from cauterule.capture.step import StepCollector
 from cauterule.capture.writer import write_trajectory
 from cauterule.models.trajectory import Trajectory
+from cauterule.redaction.engine import redact_trajectory
 
 
 def watch(
@@ -62,6 +63,7 @@ def watch(
                     failure_class=detect_failure_class(steps),
                 )
                 traj = enrich_trajectory(traj)
+                traj = redact_trajectory(traj)
                 write_trajectory(traj, base_dir=base_dir)
                 return result
             except Exception as exc:
@@ -82,6 +84,7 @@ def watch(
                     failure_class=detect_failure_class(steps),
                 )
                 traj = enrich_trajectory(traj)
+                traj = redact_trajectory(traj)
                 write_trajectory(traj, base_dir=base_dir)
                 raise
 

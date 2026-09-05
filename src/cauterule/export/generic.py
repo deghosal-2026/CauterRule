@@ -10,8 +10,13 @@ from cauterule.models.rule import StandingRule
 from .redaction import redact_export
 
 
-def export_markdown(rules: list[StandingRule]) -> str:
-    """Format *rules* as generic Markdown."""
+def export_markdown(rules: list[StandingRule], include_retired: bool = False) -> str:
+    """Format *rules* as generic Markdown.
+
+    Only active rules are exported unless *include_retired* is ``True``.
+    """
+    if not include_retired:
+        rules = [r for r in rules if r.status == "active"]
     lines: list[str] = ["# Rules", ""]
     for i, rule in enumerate(rules, 1):
         trigger = redact_export(rule.when.trigger)
@@ -56,7 +61,12 @@ def _serialize_rule(rule: StandingRule) -> dict[str, Any]:
     return d
 
 
-def export_json(rules: list[StandingRule]) -> str:
-    """Format *rules* as a JSON string."""
+def export_json(rules: list[StandingRule], include_retired: bool = False) -> str:
+    """Format *rules* as a JSON string.
+
+    Only active rules are exported unless *include_retired* is ``True``.
+    """
+    if not include_retired:
+        rules = [r for r in rules if r.status == "active"]
     data = [_serialize_rule(r) for r in rules]
     return json.dumps(data, indent=2, ensure_ascii=False) + "\n"

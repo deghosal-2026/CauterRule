@@ -11,8 +11,9 @@ class FakeLLM:
     def __init__(self, text: str) -> None:
         self.text = text
 
-    def complete(self, prompt: str) -> LLMResponse:
+    def complete(self, prompt: str, **kwargs: object) -> LLMResponse:
         _ = prompt
+        _ = kwargs
         return LLMResponse(text=self.text, model="fake", provider="fake")
 
 
@@ -57,8 +58,9 @@ def test_extract_candidate_with_extra_text() -> None:
 def test_extract_candidate_string_response() -> None:
     # LLM returns plain string, not LLMResponse
     class StringLLM:
-        def complete(self, prompt: str) -> str:
+        def complete(self, prompt: str, **kwargs: object) -> str:
             _ = prompt
+            _ = kwargs
             return json.dumps({"when": {"trigger": "t"}, "do": {"directive": "d"}, "confidence": 0.7})
 
     candidate = extract_candidate(_traj(), StringLLM())

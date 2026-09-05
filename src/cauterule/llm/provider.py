@@ -50,23 +50,22 @@ class OpenAIProvider(LLMProvider):
         return "openai"
 
     def complete(self, prompt: str, **kwargs: Any) -> LLMResponse:
-        try:
-            import openai
-        except ImportError as exc:
-            raise ImportError("openai package required for OpenAIProvider; pip install openai") from exc
+        import openai
 
         client_kwargs: dict[str, Any] = {}
         if self._api_key:
             client_kwargs["api_key"] = self._api_key
         if self._base_url:
             client_kwargs["base_url"] = self._base_url
-        # The actual API call is intentionally not executed in tests; we return the prompt
-        # for deterministic behavior when OPENAI_API_KEY is not set. Real call would be:
-        # client = openai.OpenAI(**client_kwargs); resp = client.chat.completions.create(...)
-        _ = openai  # suppress unused
-        _ = client_kwargs
-        _ = kwargs
-        return LLMResponse(text=f"[openai:{self._model}] {prompt[:100]}", model=self._model, provider=self.name)
+        temperature = kwargs.get("temperature", 0.5)
+        client = openai.OpenAI(**client_kwargs)
+        resp = client.chat.completions.create(
+            model=self._model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=temperature,
+        )
+        text = resp.choices[0].message.content or ""
+        return LLMResponse(text=text, model=self._model, provider=self.name)
 
 
 class AnthropicProvider(LLMProvider):
@@ -82,13 +81,23 @@ class AnthropicProvider(LLMProvider):
         return "anthropic"
 
     def complete(self, prompt: str, **kwargs: Any) -> LLMResponse:
-        try:
-            import anthropic
-        except ImportError as exc:
-            raise ImportError("anthropic package required for AnthropicProvider; pip install anthropic") from exc
-        _ = anthropic
-        _ = kwargs
-        return LLMResponse(text=f"[anthropic:{self._model}] {prompt[:100]}", model=self._model, provider=self.name)
+        import anthropic
+
+        client_kwargs: dict[str, Any] = {}
+        if self._api_key:
+            client_kwargs["api_key"] = self._api_key
+        if self._base_url:
+            client_kwargs["base_url"] = self._base_url
+        temperature = kwargs.get("temperature", 0.5)
+        client = anthropic.Anthropic(**client_kwargs)
+        resp = client.messages.create(
+            model=self._model,
+            max_tokens=4096,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=temperature,
+        )
+        text = "".join(block.text if hasattr(block, "text") else str(block) for block in resp.content)
+        return LLMResponse(text=text, model=self._model, provider=self.name)
 
 
 class OllamaProvider(LLMProvider):
@@ -103,9 +112,17 @@ class OllamaProvider(LLMProvider):
         return "ollama"
 
     def complete(self, prompt: str, **kwargs: Any) -> LLMResponse:
-        # No SDK required; would use HTTP to Ollama. Deterministic stub for now.
-        _ = kwargs
-        return LLMResponse(text=f"[ollama:{self._model}] {prompt[:100]}", model=self._model, provider=self.name)
+        import requests
+
+        temperature = kwargs.get("temperature", 0.5)
+        resp = requests.post(
+            f"{self._base_url}/api/generate",
+            json={"model": self._model, "prompt": prompt, "temperature": temperature, "stream": False},
+            timeout=120,
+        )
+        resp.raise_for_status()
+        text = resp.json().get("response", "")
+        return LLMResponse(text=text, model=self._model, provider=self.name)
 
 
 class LiteLLMProvider(LLMProvider):
@@ -121,10 +138,14 @@ class LiteLLMProvider(LLMProvider):
         return "litellm"
 
     def complete(self, prompt: str, **kwargs: Any) -> LLMResponse:
-        try:
-            import litellm
-        except ImportError as exc:
-            raise ImportError("litellm package required for LiteLLMProvider; pip install litellm") from exc
-        _ = litellm
-        _ = kwargs
-        return LLMResponse(text=f"[litellm:{self._model}] {prompt[:100]}", model=self._model, provider=self.name)
+        import litellm
+
+        temperature = kwargs.get("temperature", 0.5)
+        completion_kwargs: dict[str, Any] = {"model": self._model, "messages": [{"role": "user", "content": prompt}], "temperature": temperature}
+        if self._api_key:
+            completion_kwargs["api_key"] = self._api_key
+        if self._base_url:
+            completion_kwargs["api_base"] = self._base_url
+        resp = litellm.completion(**completion_kwargs)
+        text = resp.choices[0].message.content or ""
+        return LLMResponse(text=text, model=self._model, provider=self.name)

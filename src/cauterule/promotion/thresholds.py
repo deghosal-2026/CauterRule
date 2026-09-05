@@ -10,25 +10,25 @@ from typing import Any
 
 _THRESHOLD_PRESETS: dict[str, dict[str, float]] = {
     "conservative": {
-        "min_confidence": 0.95,
-        "min_precision": 0.90,
-        "min_recall": 0.80,
+        "precision": 1.0,
+        "recall": 1.0,
+        "min_confidence": 0.85,
+        "min_history": 5,
         "linter_warning_limit": 0,
-        "conflict_tolerance": 0,
     },
     "balanced": {
-        "min_confidence": 0.80,
-        "min_precision": 0.75,
-        "min_recall": 0.70,
-        "linter_warning_limit": 1,
-        "conflict_tolerance": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "min_confidence": 0.7,
+        "min_history": 3,
+        "linter_warning_limit": 0,
     },
     "aggressive": {
-        "min_confidence": 0.60,
-        "min_precision": 0.50,
-        "min_recall": 0.50,
-        "linter_warning_limit": 3,
-        "conflict_tolerance": 1,
+        "precision": 1.0,
+        "recall": 0,
+        "min_confidence": 0.5,
+        "min_history": 1,
+        "linter_warning_limit": 0,
     },
 }
 
@@ -42,8 +42,8 @@ def get_thresholds(mode: str) -> dict[str, Any]:
         mode: One of ``"conservative"``, ``"balanced"``, or ``"aggressive"``.
 
     Returns:
-        A dict with keys ``min_confidence``, ``min_precision``,
-        ``min_recall``, ``linter_warning_limit``, ``conflict_tolerance``.
+        A dict with keys ``precision``, ``recall``, ``min_confidence``,
+        ``min_history``, ``linter_warning_limit``.
 
     Raises:
         ValueError: If *mode* is not recognised.

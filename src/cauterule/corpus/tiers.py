@@ -96,7 +96,11 @@ def _make_trajectory(
     )
 
 
-def build_tiered_corpus(base_dir: str, tiers: dict[str, int]) -> dict[str, list[Trajectory]]:
+def build_tiered_corpus(
+    base_dir: str,
+    tiers: dict[str, int],
+    seed: int | None = None,
+) -> dict[str, list[Trajectory]]:
     """Build a stratified corpus with balanced success/failure per tier.
 
     Each tier gets *count* trajectories (roughly half success, half failure),
@@ -105,10 +109,14 @@ def build_tiered_corpus(base_dir: str, tiers: dict[str, int]) -> dict[str, list[
     Args:
         base_dir: Base path for corpus storage (unused in generation).
         tiers: Mapping of tier name to desired count.
+        seed: Optional seed for deterministic generation.
 
     Returns:
         Dict mapping tier name to list of :class:`Trajectory`.
     """
+    if seed is not None:
+        random.seed(seed)
+
     result: dict[str, list[Trajectory]] = {}
     for tier_name, count in tiers.items():
         trajectories: list[Trajectory] = []

@@ -70,21 +70,22 @@ def _failing_evidence() -> EvidenceReport:
 
 def test_get_thresholds_conservative() -> None:
     t = get_thresholds("conservative")
-    assert t["min_confidence"] == 0.95
+    assert t["min_confidence"] == 0.85
     assert t["linter_warning_limit"] == 0
-    assert t["conflict_tolerance"] == 0
+    assert t["precision"] == 1.0
 
 
 def test_get_thresholds_balanced() -> None:
     t = get_thresholds("balanced")
-    assert t["min_confidence"] == 0.80
-    assert t["min_precision"] == 0.75
+    assert t["min_confidence"] == 0.7
+    assert t["precision"] == 1.0
 
 
 def test_get_thresholds_aggressive() -> None:
     t = get_thresholds("aggressive")
-    assert t["min_confidence"] == 0.60
-    assert t["conflict_tolerance"] == 1
+    assert t["min_confidence"] == 0.5
+    assert t["precision"] == 1.0
+    assert t["recall"] == 0
 
 
 def test_get_thresholds_invalid_mode() -> None:
@@ -98,14 +99,14 @@ def test_get_thresholds_invalid_mode() -> None:
 # ---------------------------------------------------------------------------
 
 def test_auto_promote_clean() -> None:
-    result = auto_promote(_candidate(), _clean_linter(), _empty_conflict_list())
+    result = auto_promote(_candidate(), _passing_evidence(), _clean_linter(), _empty_conflict_list())
     assert result.verdict == "promote"
     assert result.approver == "auto"
     assert result.linter_warnings == ()
 
 
 def test_auto_promote_linter_warnings() -> None:
-    result = auto_promote(_candidate(), _dirty_linter(), _empty_conflict_list())
+    result = auto_promote(_candidate(), _passing_evidence(), _dirty_linter(), _empty_conflict_list())
     assert result.verdict == "reject"
     assert result.evidence_summary is not None
     assert "linter_passed=False" in result.evidence_summary
@@ -113,14 +114,21 @@ def test_auto_promote_linter_warnings() -> None:
 
 
 def test_auto_promote_conflicts() -> None:
-    result = auto_promote(_candidate(), _clean_linter(), _conflict_report())
+    result = auto_promote(_candidate(), _passing_evidence(), _clean_linter(), _conflict_report())
     assert result.verdict == "reject"
     assert len(result.conflicts) == 1
 
 
 def test_auto_promote_empty_conflict_none() -> None:
-    result = auto_promote(_candidate(), _clean_linter(), None)
+    result = auto_promote(_candidate(), _passing_evidence(), _clean_linter(), None)
     assert result.verdict == "promote"
+
+
+def test_auto_promote_failing_evidence_rejected() -> None:
+    result = auto_promote(_candidate(), _failing_evidence(), _clean_linter(), None)
+    assert result.verdict == "reject"
+    assert result.evidence_summary is not None
+    assert "evidence_verdict=fail" in result.evidence_summary
 
 
 # ---------------------------------------------------------------------------
@@ -257,8 +265,9 @@ def test_execute_promotion_writes_index(tmp_path: Path) -> None:
     index_path = rules_dir / "index.yaml"
     assert index_path.exists()
     entries = yaml.safe_load(index_path.read_text(encoding="utf-8"))
-    assert isinstance(entries, list)
-    assert entries[0]["id"] == "R-001"
+    assert isinstance(entries, dict)
+    assert "rules" in entries
+    assert entries["rules"][0]["id"] == "R-001"
 
 
 def test_execute_promotion_missing_config_key() -> None:

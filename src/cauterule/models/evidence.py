@@ -16,6 +16,7 @@ class EvidenceReport:
     failures_prevented: tuple[str, ...] = field(default_factory=tuple)
     successes_broken: tuple[str, ...] = field(default_factory=tuple)
     near_misses: tuple[str, ...] = field(default_factory=tuple)
+    failures_missed: tuple[str, ...] = field(default_factory=tuple)
     precision: float = 0.0
     recall: float = 0.0
     verdict: Verdict = "inconclusive"
@@ -35,6 +36,7 @@ class EvidenceReport:
             "failures_prevented": list(self.failures_prevented),
             "successes_broken": list(self.successes_broken),
             "near_misses": list(self.near_misses),
+            "failures_missed": list(self.failures_missed),
             "precision": self.precision,
             "recall": self.recall,
             "verdict": self.verdict,
@@ -48,6 +50,7 @@ class EvidenceReport:
             failures_prevented=tuple(data.get("failures_prevented", [])),
             successes_broken=tuple(data.get("successes_broken", [])),
             near_misses=tuple(data.get("near_misses", [])),
+            failures_missed=tuple(data.get("failures_missed", [])),
             precision=float(data.get("precision", 0.0)),
             recall=float(data.get("recall", 0.0)),
             verdict=data.get("verdict", "inconclusive"),

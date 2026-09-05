@@ -31,8 +31,8 @@ class TestLeaderboard:
         lines = [l for l in rendered.splitlines() if l.startswith("|")]
         # header + separator + 3 data rows
         assert len(lines) == 5
-        assert lines[3].startswith("| m2")  # highest first
-        assert lines[5].startswith("| m3")  # lowest last
+        assert lines[2].startswith("| m2")  # highest first
+        assert lines[4].startswith("| m3")  # lowest last
 
     def test_sort_by_custom_key(self) -> None:
         lb = Leaderboard("Test")
@@ -44,9 +44,9 @@ class TestLeaderboard:
         lb.sort(key="rank", reverse=False)
         rendered = lb.render()
         lines = [l for l in rendered.splitlines() if l.startswith("|")]
-        assert "b" in lines[3]
-        assert "c" in lines[4]
-        assert "a" in lines[5]
+        assert "b" in lines[2]
+        assert "c" in lines[3]
+        assert "a" in lines[4]
 
     def test_extra_fields_appear_as_columns(self) -> None:
         lb = Leaderboard("Test")

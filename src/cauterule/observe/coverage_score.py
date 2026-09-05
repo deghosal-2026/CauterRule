@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from cauterule.store.manager import StoreManager
 
 
@@ -25,7 +27,12 @@ def compute_coverage_score(store: StoreManager) -> float:
     ]
     precision_pct = sum(precisions) / len(precisions) if precisions else 0.0
 
-    non_stale_pct = sum(1 for r in active if r.hit_count > 0) / len(active)
+    now = datetime.now(UTC)
+    non_stale_pct = sum(
+        1 for r in active
+        if r.last_match is not None
+        and (now - datetime.fromisoformat(r.last_match).replace(tzinfo=UTC)).days < 30
+    ) / len(active)
 
     score = 0.4 * coverage_pct + 0.4 * precision_pct + 0.2 * non_stale_pct
     return round(score, 4)

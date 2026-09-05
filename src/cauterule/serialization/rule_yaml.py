@@ -50,7 +50,8 @@ def load_rules_from_dir(directory: str | Path) -> list[StandingRule]:
         return rules
     for pattern in ("*.yaml", "*.yml"):
         for p in d.glob(pattern):
-            # Skip index files or archived subdirs if present.
+            if p.stem == "index":
+                continue
             if p.is_file():
                 rules.append(load_rule_from_file(p))
     return rules

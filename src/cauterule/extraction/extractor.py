@@ -56,6 +56,7 @@ def extract_candidate(
     llm: Any,
     template: str | None = None,
     extraction_pass: int = 1,
+    temperature: float = 0.5,
 ) -> CandidateRule:
     """Call LLM to extract a candidate rule from *trajectory*.
 
@@ -64,19 +65,17 @@ def extract_candidate(
         llm: LLM provider with ``complete(prompt)`` method.
         template: Optional template hint.
         extraction_pass: Pass number (1-indexed).
+        temperature: LLM temperature for this pass.
 
     Raises:
         ValueError: If LLM output cannot be parsed or fails quality checks with hard fail
             (caller may decide to fallback to human review).
     """
     prompt = build_extraction_prompt(trajectory, template=template)
-    # llm.complete may accept prompt as first arg; handle both LLMResponse and str.
-    result = llm.complete(prompt)
+    result = llm.complete(prompt, temperature=temperature)
     text = result.text if hasattr(result, "text") else str(result)
     candidate = _parse_candidate_json(text, extraction_pass=extraction_pass, template=template)
 
-    # Quality checks are soft; we still return candidate but caller can inspect warnings.
-    # Hard validation is via dataclass __post_init__ (confidence range, non-blank).
     _ = check_quality(candidate, trajectory)
     return candidate
 
@@ -86,10 +85,11 @@ def extract_candidate_safe(
     llm: Any,
     template: str | None = None,
     extraction_pass: int = 1,
+    temperature: float = 0.5,
 ) -> tuple[CandidateRule | None, str | None]:
     """Safe wrapper that returns (candidate, error) instead of raising."""
     try:
-        candidate = extract_candidate(trajectory, llm, template=template, extraction_pass=extraction_pass)
+        candidate = extract_candidate(trajectory, llm, template=template, extraction_pass=extraction_pass, temperature=temperature)
         return candidate, None
     except Exception as exc:
         return None, str(exc)

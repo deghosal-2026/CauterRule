@@ -31,14 +31,21 @@ def git_commit(message: str, base_dir: str = "rules") -> str | None:
             check=True,
             cwd=repo if repo.is_dir() else repo.parent,
         )
-        result = subprocess.run(
+        subprocess.run(
             ["git", "commit", "-m", message, "--allow-empty"],
             capture_output=True,
             text=True,
             check=True,
             cwd=repo if repo.is_dir() else repo.parent,
         )
-        return _extract_hash(result.stdout)
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=repo if repo.is_dir() else repo.parent,
+        )
+        return result.stdout.strip()
     except subprocess.CalledProcessError:
         _log.warning("git_commit failed — not in a git repo or git not available")
         return None

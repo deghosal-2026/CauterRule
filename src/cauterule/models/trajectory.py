@@ -58,8 +58,6 @@ class Environment:
             d["os"] = self.os
         if self.ci is not None:
             d["ci"] = self.ci
-        # Preserve any extra keys that may be present in raw data by storing them
-        # in the dict representation if they were passed via from_dict extra handling.
         return d
 
     @classmethod

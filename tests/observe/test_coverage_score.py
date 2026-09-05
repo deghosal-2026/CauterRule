@@ -61,9 +61,9 @@ def test_compute_coverage_score_all_hits(tmp_path: Path) -> None:
     store.add_rule(_rule("R-001", hit_count=5, precision=0.9))
     store.add_rule(_rule("R-002", hit_count=3, precision=0.8))
     score = compute_coverage_score(store)
-    # coverage_pct=1.0, precision_pct=0.85, non_stale_pct=1.0
-    # 0.4*1.0 + 0.4*0.85 + 0.2*1.0 = 0.4 + 0.34 + 0.2 = 0.94
-    assert score == 0.94
+    # coverage_pct=1.0, precision_pct=0.85, non_stale_pct=0.0 (no last_match)
+    # 0.4*1.0 + 0.4*0.85 + 0.2*0.0 = 0.4 + 0.34 + 0.0 = 0.74
+    assert score == 0.74
 
 
 def test_compute_coverage_score_no_hits(tmp_path: Path) -> None:
@@ -82,9 +82,9 @@ def test_compute_coverage_score_retired_excluded(tmp_path: Path) -> None:
     store.add_rule(_rule("R-002", hit_count=0, status="retired"))
     score = compute_coverage_score(store)
     # Only active rules count: 1 active with hits
-    # coverage_pct=1.0, precision_pct=0.9, non_stale_pct=1.0
-    # 0.4*1.0 + 0.4*0.9 + 0.2*1.0 = 0.4 + 0.36 + 0.2 = 0.96
-    assert score == 0.96
+    # coverage_pct=1.0, precision_pct=0.9, non_stale_pct=0.0 (no last_match)
+    # 0.4*1.0 + 0.4*0.9 + 0.2*0.0 = 0.4 + 0.36 + 0.0 = 0.76
+    assert score == 0.76
 
 
 def test_compute_coverage_score_stale(tmp_path: Path) -> None:
@@ -93,6 +93,6 @@ def test_compute_coverage_score_stale(tmp_path: Path) -> None:
     store.add_rule(_rule("R-002", hit_count=0, precision=0.0))
     store.add_rule(_rule("R-003", hit_count=0, precision=0.0))
     score = compute_coverage_score(store)
-    # coverage_pct=1/3≈0.3333, precision_pct=1.0 (only R-001 has evidence), non_stale_pct=1/3≈0.3333
-    # 0.4*0.3333 + 0.4*1.0 + 0.2*0.3333 = 0.1333 + 0.4 + 0.0667 = 0.6
-    assert score == 0.6
+    # coverage_pct=1/3≈0.3333, precision_pct=1.0 (only R-001 has evidence), non_stale_pct=0/3=0.0
+    # 0.4*0.3333 + 0.4*1.0 + 0.2*0.0 = 0.1333 + 0.4 + 0.0 = 0.5333
+    assert score == 0.5333

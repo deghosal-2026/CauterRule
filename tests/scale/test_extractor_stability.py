@@ -14,7 +14,7 @@ class DeterministicLLM:
     def __init__(self, text: str) -> None:
         self.text = text
 
-    def complete(self, prompt: str) -> LLMResponse:
+    def complete(self, prompt: str, **kwargs: Any) -> LLMResponse:
         _ = prompt
         return LLMResponse(text=self.text, model="fake", provider="fake")
 
@@ -68,7 +68,7 @@ def test_stability_with_varying_confidence() -> None:
             self.texts = texts
             self.idx = 0
 
-        def complete(self, prompt: str) -> LLMResponse:
+        def complete(self, prompt: str, **kwargs: Any) -> LLMResponse:
             text = self.texts[self.idx % len(self.texts)]
             self.idx += 1
             _ = prompt

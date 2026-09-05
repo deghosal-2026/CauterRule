@@ -17,12 +17,15 @@ def _context_matches(task: str, rule: StandingRule, **context: Any) -> bool:
         return True
     for ctx_item in rule.when.context:
         ctx_lower = ctx_item.lower()
-        if ctx_lower in task.lower():
-            return True
-        for val in context.values():
-            if isinstance(val, str) and ctx_lower in val.lower():
-                return True
-    return False
+        found = ctx_lower in task.lower()
+        if not found:
+            for val in context.values():
+                if isinstance(val, str) and ctx_lower in val.lower():
+                    found = True
+                    break
+        if not found:
+            return False
+    return True
 
 
 def _tool_matches(rule: StandingRule, **context: Any) -> bool:
@@ -30,12 +33,12 @@ def _tool_matches(rule: StandingRule, **context: Any) -> bool:
     if tool is None:
         return True
     if not rule.when.context:
-        return True
+        return False
     tool_lower = str(tool).lower()
     for ctx_item in rule.when.context:
         if ctx_item.lower() == tool_lower:
             return True
-    return True
+    return False
 
 
 def _error_matches(rule: StandingRule, **context: Any) -> bool:

@@ -16,7 +16,7 @@ def test_defaults_no_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
     assert cfg.llm.provider == "openai"
     assert cfg.llm.model == "gpt-4o"
     assert cfg.paths.rules == "rules"
-    assert cfg.promotion.mode == "auto"
+    assert cfg.promotion.mode == "hybrid"
     assert cfg.extraction.passes == 3
 
 

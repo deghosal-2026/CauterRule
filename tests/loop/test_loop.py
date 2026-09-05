@@ -1,6 +1,8 @@
 """Tests for the loop package."""
 from __future__ import annotations
 
+import json
+
 from cauterule.loop.errors import (
     handle_extraction_error,
     handle_git_error,
@@ -9,6 +11,17 @@ from cauterule.loop.errors import (
 )
 from cauterule.loop.orchestrator import LoopConfig, run_loop
 from cauterule.models.trajectory import Step, Trajectory
+
+
+class FakeLLM:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def complete(self, prompt: str, **kwargs: object) -> object:
+        self.calls += 1
+        payload = json.dumps({"when": {"trigger": "git push fails", "context": ["shared branch"]}, "do": {"directive": "pull --rebase first", "because": "non-fast-forward rejected"}, "confidence": 0.9, "reasoning": "prevents push rejection"})
+        from types import SimpleNamespace
+        return SimpleNamespace(text=payload, model="fake", provider="fake")
 
 
 def _trajectory() -> Trajectory:
@@ -22,16 +35,43 @@ def _trajectory() -> Trajectory:
     )
 
 
+def _traj_hist(id: str, task: str, success: bool) -> Trajectory:
+    return Trajectory(
+        id=id, timestamp="t", task=task,
+        steps=(Step(1, "bash", error="err"),) if not success else (),
+        success=success,
+    )
+
+
 # ── orchestrator ─────────────────────────────────────────────────────
 
 
-def test_run_loop_default() -> None:
+def test_run_loop_promotes_rule() -> None:
+    llm = FakeLLM()
+    traj = _trajectory()
+    historical = [
+        _traj_hist("H-1", "git push rejected", False),
+        _traj_hist("H-2", "docker build fails", False),
+        _traj_hist("H-3", "git push ok", True),
+    ]
+    config = LoopConfig(llm=llm, historical_trajectories=tuple(historical))
+    result = run_loop(traj, config)
+    assert result is not None
+    assert result.startswith("R-T-001-")
+
+
+def test_run_loop_no_llm_returns_none() -> None:
     result = run_loop(_trajectory(), LoopConfig())
     assert result is None
 
 
-def test_run_loop_with_config() -> None:
-    config = LoopConfig(max_iterations=3, replay_enabled=False, promotion_mode="manual")
+def test_run_loop_no_candidates() -> None:
+    class FailingLLM:
+        def complete(self, prompt: str, **kwargs: object) -> object:
+            from types import SimpleNamespace
+            return SimpleNamespace(text="not json", model="fake", provider="fake")
+
+    config = LoopConfig(llm=FailingLLM())
     result = run_loop(_trajectory(), config)
     assert result is None
 
@@ -42,6 +82,9 @@ def test_loop_config_defaults() -> None:
     assert config.replay_enabled is True
     assert config.promotion_mode == "auto"
     assert config.extract_template is None
+    assert config.llm is None
+    assert config.historical_trajectories == ()
+    assert config.existing_rules == ()
     assert config.extra == {}
 
 

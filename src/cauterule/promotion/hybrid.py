@@ -9,6 +9,7 @@ from cauterule.models.decision import PromotionDecision
 from cauterule.models.evidence import EvidenceReport
 from cauterule.promotion.auto import auto_promote
 from cauterule.promotion.human import human_review
+from cauterule.promotion.thresholds import get_thresholds
 
 
 def hybrid_promote(
@@ -16,7 +17,8 @@ def hybrid_promote(
     evidence_report: EvidenceReport,
     linter_result: LinterResult,
     conflict_reports: list[ConflictReport] | None = None,
-    threshold: float = 0.8,
+    threshold: float | None = None,
+    threshold_mode: str | None = None,
 ) -> PromotionDecision:
     """Decide promotion for *candidate* in hybrid mode.
 
@@ -31,14 +33,22 @@ def hybrid_promote(
         conflict_reports: Optional list of conflict reports.
         threshold: Confidence threshold for auto promotion (default 0.8).
             Must be in ``[0.0, 1.0]``.
+        threshold_mode: Optional preset mode name (``"conservative"``,
+            ``"balanced"``, ``"aggressive"``).  If provided, overrides
+            *threshold* with the preset's ``min_confidence``.
 
     Returns:
         A :class:`PromotionDecision` based on the candidate's confidence.
     """
+    if threshold_mode is not None:
+        thresholds = get_thresholds(threshold_mode)
+        threshold = float(thresholds["min_confidence"])
+    if threshold is None:
+        threshold = 0.8
     if not 0.0 <= threshold <= 1.0:
         raise ValueError(f"threshold must be in [0.0, 1.0], got {threshold}")
 
     if candidate.confidence >= threshold:
-        return auto_promote(candidate, linter_result, conflict_reports)
+        return auto_promote(candidate, evidence_report, linter_result, conflict_reports)
 
     return human_review(candidate, evidence_report, linter_result)

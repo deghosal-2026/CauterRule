@@ -2,7 +2,38 @@
 from __future__ import annotations
 
 from cauterule.injection.ordering import order_by_specificity
-from cauterule.models.rule import StandingRule
+from cauterule.models.rule import RuleDo, RuleWhen, StandingRule
+
+
+def _compress_rule(rule: StandingRule) -> StandingRule:
+    """Return a compressed version with trigger + directive only."""
+    return StandingRule(
+        id=rule.id,
+        when=RuleWhen(trigger=rule.when.trigger, context=()),
+        do=RuleDo(directive=rule.do.directive, because=None),
+        confidence=rule.confidence,
+        provenance=rule.provenance,
+        status=rule.status,
+        promoted_at=rule.promoted_at,
+        tags=(),
+        taxonomy=None,
+    )
+
+
+def _one_liner(rule: StandingRule) -> StandingRule:
+    """Return a one-liner version: 'When {trigger} → Do {directive}'."""
+    one_line = f"When {rule.when.trigger} → Do {rule.do.directive}"
+    return StandingRule(
+        id=rule.id,
+        when=RuleWhen(trigger=rule.when.trigger, context=()),
+        do=RuleDo(directive=one_line, because=None),
+        confidence=rule.confidence,
+        provenance=rule.provenance,
+        status=rule.status,
+        promoted_at=rule.promoted_at,
+        tags=(),
+        taxonomy=None,
+    )
 
 
 def _rule_token_estimate(rule: StandingRule) -> int:
@@ -23,6 +54,9 @@ def optimize_budget(rules: list[StandingRule], max_tokens: int = 4096) -> list[S
 
     Rules are first ranked by specificity (most specific first) and then
     greedily selected until the estimated token budget is exhausted.
+    Rules that do not fit are compressed to trigger + directive only.
+    If still too tight after compression, they are rendered as a one-liner.
+    If still too tight, the rule is dropped.
 
     Args:
         rules: List of standing rules to consider.
@@ -38,5 +72,17 @@ def optimize_budget(rules: list[StandingRule], max_tokens: int = 4096) -> list[S
         cost = _rule_token_estimate(rule)
         if running_total + cost <= max_tokens:
             selected.append(rule)
+            running_total += cost
+            continue
+        compressed = _compress_rule(rule)
+        cost = _rule_token_estimate(compressed)
+        if running_total + cost <= max_tokens:
+            selected.append(compressed)
+            running_total += cost
+            continue
+        mini = _one_liner(rule)
+        cost = _rule_token_estimate(mini)
+        if running_total + cost <= max_tokens:
+            selected.append(mini)
             running_total += cost
     return selected

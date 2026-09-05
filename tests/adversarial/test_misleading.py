@@ -14,7 +14,7 @@ class _FakeLLM:
     def __init__(self, text: str) -> None:
         self.text = text
 
-    def complete(self, prompt: str) -> str:
+    def complete(self, prompt: str, **kwargs: Any) -> str:
         return self.text
 
 

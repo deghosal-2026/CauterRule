@@ -12,11 +12,13 @@ def validate_store(base_dir: str = "rules") -> list[str]:
     """Validate the integrity of a rule store.
 
     Checks performed:
-        - Every ``.yaml`` file deserializes to a valid :class:`StandingRule`.
+        - Every ``.yaml`` and ``.yml`` file deserializes to a valid :class:`StandingRule`.
         - No duplicate rule IDs across files.
         - Every rule has non-empty provenance fields.
-        - ``superseded`` rules reference an existing ``new_id`` (if
-          encoded; currently a structural check).
+        - No invalid status values.
+        - ``superseded`` rules reference an existing rule.
+        - No broken pack links.
+        - No orphaned provenance references.
 
     Args:
         base_dir: Root rule-store directory.
@@ -30,7 +32,8 @@ def validate_store(base_dir: str = "rules") -> list[str]:
         return [f"Store directory not found: {base_dir}"]
 
     seen_ids: set[str] = set()
-    yaml_files = sorted(d.glob("*.yaml"))
+    all_ids: set[str] = set()
+    yaml_files = sorted(d.glob("*.yaml")) + sorted(d.glob("*.yml"))
 
     for p in yaml_files:
         if p.stem == "index":
@@ -42,11 +45,26 @@ def validate_store(base_dir: str = "rules") -> list[str]:
             continue
 
         rid = rule.id
+        all_ids.add(rid)
         if rid in seen_ids:
             warnings.append(f"Duplicate ID {rid!r} in {p.name}")
         seen_ids.add(rid)
 
         _check_provenance(rule, p.name, warnings)
+
+        if rule.status not in ("active", "retired", "superseded"):
+            warnings.append(f"{p.name} ({rid}): invalid status {rule.status!r}")
+
+        if rule.superseded_by is not None and rule.superseded_by not in all_ids:
+            if rule.superseded_by not in seen_ids:
+                warnings.append(f"{p.name} ({rid}): superseded_by {rule.superseded_by!r} not found in store (yet)")
+
+        if rule.pack is not None:
+            pack_path = d / f"{rule.pack}.yaml"
+            if not pack_path.is_file():
+                pack_path2 = d / f"{rule.pack}.yml"
+                if not pack_path2.is_file():
+                    warnings.append(f"{p.name} ({rid}): pack {rule.pack!r} file not found")
 
     if not yaml_files:
         warnings.append("No rule files found in store")

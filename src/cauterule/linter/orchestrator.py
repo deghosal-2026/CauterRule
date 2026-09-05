@@ -28,6 +28,7 @@ def lint_rule(
     trigger: str,
     directive: str,
     existing_rules: list[StandingRule] | None = None,
+    context: tuple[str, ...] = (),
 ) -> LinterResult:
     """Run all linter checks on a candidate rule.
 
@@ -35,6 +36,7 @@ def lint_rule(
         trigger: The ``when`` trigger.
         directive: The ``do`` directive.
         existing_rules: Existing rules for duplicate/contradiction checks.
+        context: Context items from ``when.context``.
 
     Returns:
         :class:`LinterResult` with warnings and pass/fail.
@@ -42,6 +44,8 @@ def lint_rule(
     warnings: list[str] = []
     warnings.extend(check_vagueness(trigger))
     warnings.extend(check_vagueness(directive))
+    for ctx in context:
+        warnings.extend(check_vagueness(ctx))
     warnings.extend(check_tautology(trigger, directive))
     warnings.extend(check_untestable(directive))
     warnings.extend(check_unsafe(directive))

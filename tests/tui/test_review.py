@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.rule import RuleDo, RuleWhen
+from cauterule.store.manager import StoreManager
 from cauterule.tui.review import ReviewScreen
 
 
@@ -20,9 +24,11 @@ def test_screen_instantiates() -> None:
     assert screen is not None
 
 
-def test_queue_label() -> None:
-    screen = ReviewScreen()
-    assert hasattr(screen, "query_one")
+def test_screen_with_store() -> None:
+    with TemporaryDirectory() as tmp:
+        store = StoreManager(base_dir=tmp)
+        screen = ReviewScreen(store=store)
+        assert screen._store is store
 
 
 def test_empty_queue_shows_no_candidates() -> None:
@@ -63,3 +69,36 @@ def test_reject_current_removes_candidate() -> None:
     screen.reject_current()
     assert len(screen._candidates) == 1
     assert screen._current_index == 0
+
+
+def test_populate_from_store_empty() -> None:
+    with TemporaryDirectory() as tmp:
+        store = StoreManager(base_dir=tmp)
+        screen = ReviewScreen(store=store)
+        screen._populate_candidates()
+        assert len(screen._candidates) == 0
+
+
+def test_populate_from_store_with_rules() -> None:
+    with TemporaryDirectory() as tmp:
+        store = StoreManager(base_dir=tmp)
+        from cauterule.models.rule import Provenance, StandingRule
+        rule = StandingRule(
+            id="R-001",
+            when=RuleWhen(trigger="deploy fails"),
+            do=RuleDo(directive="check env"),
+            confidence=0.9,
+            provenance=Provenance(
+                source_trajectory="T-1",
+                extracted_by="test",
+                extract_timestamp="2024-01-01T00:00:00Z",
+                extraction_pass=1,
+            ),
+            status="active",
+            promoted_at="2024-01-01T00:00:00Z",
+        )
+        store.add_rule(rule)
+        screen = ReviewScreen(store=store)
+        screen._populate_candidates()
+        assert len(screen._candidates) == 1
+        assert screen._candidates[0].when.trigger == "deploy fails"

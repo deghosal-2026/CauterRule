@@ -28,6 +28,9 @@ def load_gold_families(path: str) -> list[GoldRuleFamily]:
     Each JSONL file in *path* is loaded as a single gold family. The filename
     (without extension) becomes the ``scenario_id``.
 
+    If a sidecar ``<scenario_id>.rules.yaml`` file exists alongside the JSONL,
+    it is loaded as the family's ``acceptable_rules``.
+
     Args:
         path: Directory path containing ``*.jsonl`` files, one per family.
 
@@ -35,6 +38,8 @@ def load_gold_families(path: str) -> list[GoldRuleFamily]:
         List of :class:`GoldRuleFamily` instances.
     """
     from pathlib import Path
+
+    from cauterule.serialization.rule_yaml import load_rule_from_file
 
     p = Path(path)
     if not p.is_dir():
@@ -44,5 +49,13 @@ def load_gold_families(path: str) -> list[GoldRuleFamily]:
     for fpath in sorted(p.glob("*.jsonl")):
         trajectories = list(load_trajectories(fpath))
         scenario_id = fpath.stem
-        families.append(GoldRuleFamily(scenario_id=scenario_id, trajectories=trajectories))
+        sidecar = fpath.with_name(f"{scenario_id}.rules.yaml")
+        acceptable_rules: list[StandingRule] = []
+        if sidecar.is_file():
+            acceptable_rules.append(load_rule_from_file(sidecar))
+        families.append(GoldRuleFamily(
+            scenario_id=scenario_id,
+            trajectories=trajectories,
+            acceptable_rules=acceptable_rules,
+        ))
     return families

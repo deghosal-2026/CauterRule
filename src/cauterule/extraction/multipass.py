@@ -30,12 +30,10 @@ def multipass_extract(
     """
     candidates: list[CandidateRule] = []
     for idx, temp in enumerate(temperatures, start=1):
-        # Pass temperature via llm kwargs if supported; here we just vary extraction_pass.
         candidate, error = extract_candidate_safe(
-            trajectory, llm, template=template, extraction_pass=idx
+            trajectory, llm, template=template, extraction_pass=idx, temperature=temp
         )
         if candidate is not None:
-            # Annotate with temperature via reasoning if needed (no field, so keep as is).
             candidates.append(candidate)
         else:
             _ = error

@@ -35,9 +35,8 @@ def enrich_trajectory(
         inferred_domain = trajectory.failure_class.split("/")[0]
     elif inferred_domain is None and trajectory.steps:
         # Fallback to taxonomy from first error step.
-        first = trajectory.steps[0] if trajectory.steps else None
-        if first is not None:
-            inferred_domain = classify_taxonomy(first.tool, first.error, first.output).split("/")[0]
+        first = trajectory.steps[0]
+        inferred_domain = classify_taxonomy(first.tool, first.error, first.output).split("/")[0]
 
     # Infer severity: high if failure, medium if steps>1, low otherwise.
     inferred_severity: str | None = trajectory.severity

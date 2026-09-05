@@ -17,6 +17,14 @@ def _format_single(rule: StandingRule, index: int) -> str:
         lines.append(f"- **Tags**: {', '.join(rule.tags)}")
     if rule.taxonomy:
         lines.append(f"- **Taxonomy**: {rule.taxonomy}")
+    if rule.provenance.source_trajectory:
+        lines.append(f"- **Source**: Learned from {rule.provenance.source_trajectory} ({rule.promoted_at})")
+    if rule.provenance.replay_evidence:
+        ev = rule.provenance.replay_evidence
+        n = len(ev.failures_prevented)
+        m = len(ev.successes_broken)
+        pct = f"{ev.precision:.0%}" if ev.precision > 0 else "N/A"
+        lines.append(f"- **Evidence**: prevented {n}, broke {m} (precision {pct})")
     lines.append(f"- **Confidence**: {rule.confidence}")
     lines.append("")
     return "\n".join(lines)

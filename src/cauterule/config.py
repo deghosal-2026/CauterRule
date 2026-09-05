@@ -22,15 +22,15 @@ precision = 0.8
 recall = 0.5
 
 [promotion]
-mode = "auto"  # auto | human-review | hybrid
+mode = "hybrid"  # auto | human-review | hybrid
 
 [redaction]
 patterns = []  # additional regex patterns
 
 [extraction]
 passes = 3
-temperatures = [0.0, 0.7, 1.0]
-confidence_threshold = 0.5
+temperatures = [0.2, 0.5, 0.8]
+confidence_threshold = 0.6
 ```
 """
 
@@ -68,7 +68,7 @@ class PathsConfig:
 class ThresholdsConfig:
     """Replay/promotion thresholds."""
 
-    precision: float = 0.8
+    precision: float = 1.0
     recall: float = 0.5
 
 
@@ -76,7 +76,7 @@ class ThresholdsConfig:
 class PromotionConfig:
     """Promotion mode."""
 
-    mode: str = "auto"  # auto | human-review | hybrid
+    mode: str = "hybrid"  # auto | human-review | hybrid
 
 
 @dataclass(frozen=True)
@@ -138,13 +138,13 @@ def _paths_from_dict(data: dict[str, Any]) -> PathsConfig:
 
 def _thresholds_from_dict(data: dict[str, Any]) -> ThresholdsConfig:
     return ThresholdsConfig(
-        precision=float(data.get("precision", 0.8)),
+        precision=float(data.get("precision", 1.0)),
         recall=float(data.get("recall", 0.5)),
     )
 
 
 def _promotion_from_dict(data: dict[str, Any]) -> PromotionConfig:
-    mode = str(data.get("mode", "auto"))
+    mode = str(data.get("mode", "hybrid"))
     if mode not in {"auto", "human-review", "hybrid"}:
         raise ValueError(f"promotion.mode must be auto|human-review|hybrid, got {mode!r}")
     return PromotionConfig(mode=mode)
@@ -161,14 +161,14 @@ def _extraction_from_dict(data: dict[str, Any]) -> ExtractionConfig:
     passes = int(data.get("passes", 3))
     if passes < 1:
         raise ValueError(f"extraction.passes must be >=1, got {passes}")
-    temps_raw = data.get("temperatures", [0.0, 0.7, 1.0])
+    temps_raw = data.get("temperatures", [0.2, 0.5, 0.8])
     if not isinstance(temps_raw, list):
         raise ValueError("extraction.temperatures must be a list")
     temps = tuple(float(t) for t in temps_raw)
     return ExtractionConfig(
         passes=passes,
         temperatures=temps,
-        confidence_threshold=float(data.get("confidence_threshold", 0.5)),
+        confidence_threshold=float(data.get("confidence_threshold", 0.6)),
     )
 
 

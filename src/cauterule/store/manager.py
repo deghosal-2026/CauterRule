@@ -74,7 +74,7 @@ class StoreManager:
         dump_rule_to_file(rule, self._rule_path(rule.id))
         return rule.id
 
-    def retire_rule(self, rule_id: str, reason: str) -> None:  # noqa: ARG002
+    def retire_rule(self, rule_id: str, reason: str) -> None:
         """Mark a rule as retired and update its ``id`` to include a suffix.
 
         Args:
@@ -83,6 +83,7 @@ class StoreManager:
                     a status flag — currently the rule is re-written with
                     status ``"retired"``).
         """
+        import time
         rule = self.get_rule(rule_id)
         if rule is None:
             msg = f"Rule {rule_id!r} not found"
@@ -90,6 +91,7 @@ class StoreManager:
         if rule.status != "active":
             msg = f"Cannot retire rule {rule_id!r}: status is {rule.status!r}"
             raise ValueError(msg)
+        now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         retired = StandingRule(
             id=rule.id,
             when=rule.when,
@@ -104,10 +106,12 @@ class StoreManager:
             taxonomy=rule.taxonomy,
             template=rule.template,
             pack=rule.pack,
+            retired_at=now,
+            retirement_reason=reason,
         )
         dump_rule_to_file(retired, self._rule_path(rule_id))
 
-    def supersede_rule(self, rule_id: str, new_id: str) -> None:  # noqa: ARG002
+    def supersede_rule(self, rule_id: str, new_id: str) -> None:
         """Mark *rule_id* as superseded by *new_id*.
 
         The existing rule is re-written with status ``"superseded"``.
@@ -116,10 +120,12 @@ class StoreManager:
             rule_id: Id of the rule to supersede.
             new_id: Id of the rule that replaces it.
         """
+        import time
         rule = self.get_rule(rule_id)
         if rule is None:
             msg = f"Rule {rule_id!r} not found"
             raise ValueError(msg)
+        now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         superseded = StandingRule(
             id=rule.id,
             when=rule.when,
@@ -134,5 +140,7 @@ class StoreManager:
             taxonomy=rule.taxonomy,
             template=rule.template,
             pack=rule.pack,
+            retired_at=now,
+            superseded_by=new_id,
         )
         dump_rule_to_file(superseded, self._rule_path(rule_id))

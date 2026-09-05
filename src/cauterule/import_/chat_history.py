@@ -19,11 +19,6 @@ _RULE_PATTERN = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 
-_INSTRUCTION_PATTERN = re.compile(
-    r"(?:do|always|never|must|should|please|remember to)\s+(.+?)(?:\n|\.|$)",
-    re.IGNORECASE | re.DOTALL,
-)
-
 
 def import_chat_history(path: str) -> list[CandidateRule]:
     """Parse *path* (a chat history file) into CandidateRules.

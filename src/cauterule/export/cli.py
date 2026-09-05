@@ -20,12 +20,16 @@ from cauterule.models.candidate import CandidateRule
 from cauterule.models.rule import StandingRule
 
 
-def export_rules(rules: list[StandingRule], fmt: str) -> str:
+def export_rules(rules: list[StandingRule], fmt: str, include_retired: bool = False) -> str:
     """Export *rules* in the requested *fmt*.
+
+    Only active rules are exported unless *include_retired* is ``True``.
 
     Supported formats: ``cursorrules``, ``claude``, ``agents``, ``windsurf``,
     ``aider``, ``markdown``, ``json``.
     """
+    if not include_retired:
+        rules = [r for r in rules if r.status == "active"]
     exporters = {
         "cursorrules": export_cursorrules,
         "claude": export_claude_md,

@@ -28,7 +28,7 @@ def update_last_match(
         raise ValueError(msg)
 
     if timestamp is None:
-        timestamp = datetime.now(UTC).isoformat()
+        timestamp = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     updated = StandingRule(
         id=rule.id,

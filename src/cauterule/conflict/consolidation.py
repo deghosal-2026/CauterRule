@@ -12,6 +12,15 @@ def _normalize(s: str) -> str:
     return " ".join(s.lower().strip().split())
 
 
+def _overlap_score(a: str, b: str) -> float:
+    """Compute a simple word-overlap score in ``[0.0, 1.0]``."""
+    wa = set(_normalize(a).split())
+    wb = set(_normalize(b).split())
+    if not wa or not wb:
+        return 0.0
+    return len(wa & wb) / min(len(wa), len(wb))
+
+
 def consolidate(
     rules: list[StandingRule],
 ) -> tuple[list[StandingRule], list[ConflictReport]]:
@@ -22,7 +31,9 @@ def consolidate(
       2. For each conflict, keep the more specific rule (higher specificity
          determined heuristically by context count + trigger word count) and
          supersede the other.
-      3. Return the modified rule list and conflict reports.
+      3. For equal-specificity non-contradictory overlapping rules, merge
+         by keeping the rule with higher hit_count.
+      4. Return the modified rule list and conflict reports.
     """
     reports: list[ConflictReport] = []
     merged: dict[str, StandingRule] = {r.id: r for r in rules}
@@ -52,6 +63,28 @@ def consolidate(
             if loser.id not in merged or merged[loser.id].status != "active":
                 continue
 
+            if a_spec == b_spec:
+                # Equal specificity — check for overlap vs contradiction
+                overlap = _overlap_score(a.do.directive, b.do.directive)
+                if overlap >= 0.5:
+                    # Non-contradictory overlap — merge by keeping higher hit_count
+                    if b.hit_count > a.hit_count:
+                        winner, loser = b, a
+                    merged[loser.id] = replace(loser, status="superseded")
+                    reports.append(
+                        ConflictReport(
+                            type="overlap",
+                            rules=(winner.id, loser.id),
+                            trigger=winner.when.trigger,
+                            resolution=(
+                                f"Merged overlap: '{loser.id}' superseded by '{winner.id}' "
+                                f"(equal specificity, overlap={overlap:.2f})"
+                            ),
+                        )
+                    )
+                    continue
+
+            # Contradiction path (different specificity or low overlap)
             merged[loser.id] = replace(loser, status="superseded")
             reports.append(
                 ConflictReport(

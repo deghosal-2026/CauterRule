@@ -18,7 +18,7 @@ class CostTrackingLLM:
         self.text = text
         self.call_count: int = 0
 
-    def complete(self, prompt: str) -> LLMResponse:
+    def complete(self, prompt: str, **kwargs: Any) -> LLMResponse:
         self.call_count += 1
         return LLMResponse(text=self.text, model="gpt-4o", provider="openai")
 
@@ -54,7 +54,7 @@ def test_cost_per_extraction() -> None:
             self.text = text
             self.call_count: int = 0
 
-        def complete(self, prompt: str) -> LLMResponse:
+        def complete(self, prompt: str, **kwargs: Any) -> LLMResponse:
             self.call_count += 1
             _ = prompt
             return LLMResponse(text=self.text, model="gpt-4o", provider="openai")
@@ -75,7 +75,7 @@ def test_cost_multiple_extractions() -> None:
             self.text = text
             self.call_count: int = 0
 
-        def complete(self, prompt: str) -> LLMResponse:
+        def complete(self, prompt: str, **kwargs: Any) -> LLMResponse:
             self.call_count += 1
             _ = prompt
             return LLMResponse(text=self.text, model="gpt-4o", provider="openai")
@@ -97,7 +97,7 @@ def test_cost_estimate_output() -> None:
             self.text = text
             self.call_count: int = 0
 
-        def complete(self, prompt: str) -> LLMResponse:
+        def complete(self, prompt: str, **kwargs: Any) -> LLMResponse:
             self.call_count += 1
             _ = prompt
             return LLMResponse(text=self.text, model="gpt-4o", provider="openai")

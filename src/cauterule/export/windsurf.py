@@ -10,8 +10,13 @@ from cauterule.models.rule import StandingRule
 from .redaction import redact_export
 
 
-def export(rules: list[StandingRule]) -> str:
-    """Format *rules* as a .windsurfrules Markdown string."""
+def export(rules: list[StandingRule], include_retired: bool = False) -> str:
+    """Format *rules* as a .windsurfrules Markdown string.
+
+    Only active rules are exported unless *include_retired* is ``True``.
+    """
+    if not include_retired:
+        rules = [r for r in rules if r.status == "active"]
     lines: list[str] = ["## Standing Rules", "", "These rules are active for this session:", ""]
     for i, rule in enumerate(rules, 1):
         trigger = redact_export(rule.when.trigger)
