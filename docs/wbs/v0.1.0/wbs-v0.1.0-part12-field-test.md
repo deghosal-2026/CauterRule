@@ -72,20 +72,20 @@
 
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
-| 30.6.1 | Docker image build & install verification | `tests/field/test_docker_build.py` | Image builds, `cauterule --version` prints `0.1.0`, `--help` lists all commands | ⬜ |
-| 30.6.2 | Docker CLI integration test | `tests/field/test_docker_cli.py` | All 25+ commands produce real effects inside container | ⬜ |
-| 30.6.3 | Docker TUI test (Textual Pilot) | `tests/field/test_docker_tui.py` | TUI screens render, keybindings work, promote fires in container | ⬜ |
-| 30.6.4 | Docker MCP server test | `tests/field/test_docker_mcp.py` | All 4 MCP tools work via stdio + HTTP transport in container | ⬜ |
-| 30.6.5 | Docker pipeline E2E test | `tests/field/test_docker_pipeline.py` | Full extract → test → promote → inject loop in container | ⬜ |
-| 30.6.6 | Docker redaction verification test | `tests/field/test_docker_redaction.py` | No secrets in trajectory files or exports from container | ⬜ |
-| 30.6.7 | Docker export/import round-trip test | `tests/field/test_docker_export_import.py` | All 7 formats valid, round-trip fidelity, active-only filter | ⬜ |
-| 30.6.8 | Docker git integration test | `tests/field/test_docker_git.py` | Real git hash, commit message, rollback in container | ⬜ |
-| 30.6.9 | Docker loop orchestrator test | `tests/field/test_docker_loop.py` | `run_loop` returns promoted rule ID, all 9 stages execute | ⬜ |
-| 30.6.10 | Docker multi-environment test | `tests/field/test_docker_multienv.py` | Python 3.11/3.12/3.13 images all pass tests | ⬜ |
-| 30.6.11 | Docker compose orchestration | `tests/field/test_docker_compose.py` | All 3 compose services start and work together | ⬜ |
-| 30.6.12 | Test orchestration script | `scripts/docker_field_test.sh` | Single script runs all 15 stages, reports pass/fail | ⬜ |
-| 30.6.13 | Test fixtures package | `tests/fixtures/` | Pre-built trajectories, candidates, rules, pytest fixtures | ⬜ |
-| 30.6.14 | Update docker-compose.yaml | `docker-compose.yaml` | Add test + MCP services, health checks, env passthrough | ⬜ |
+| 30.6.1 | Docker image build & install verification | `tests/field/test_docker_build.py` | Image builds, `cauterule --version` prints `0.1.0`, `--help` lists all commands | ✅ |
+| 30.6.2 | Docker CLI integration test | `tests/field/test_docker_cli.py` | All 25+ commands produce real effects inside container | ✅ |
+| 30.6.3 | Docker TUI test (Textual Pilot) | `tests/field/test_docker_tui.py` | TUI screens render, keybindings work, promote fires in container | ✅ |
+| 30.6.4 | Docker MCP server test | `tests/field/test_docker_mcp.py` | All 4 MCP tools work via stdio + HTTP transport in container | ✅ |
+| 30.6.5 | Docker pipeline E2E test | `tests/field/test_docker_pipeline.py` | Full extract → test → promote → inject loop in container | ✅ |
+| 30.6.6 | Docker redaction verification test | `tests/field/test_docker_redaction.py` | No secrets in trajectory files or exports from container | ✅ |
+| 30.6.7 | Docker export/import round-trip test | `tests/field/test_docker_export_import.py` | All 7 formats valid, round-trip fidelity, active-only filter | ✅ |
+| 30.6.8 | Docker git integration test | `tests/field/test_docker_git.py` | Real git hash, commit message, rollback in container | ✅ |
+| 30.6.9 | Docker loop orchestrator test | `tests/field/test_docker_loop.py` | `run_loop` returns promoted rule ID, all 9 stages execute | ✅ |
+| 30.6.10 | Docker multi-environment test | `tests/field/test_docker_multienv.py` | Python 3.11/3.12/3.13 images all pass tests | ✅ |
+| 30.6.11 | Docker compose orchestration | `tests/field/test_docker_compose.py` | All 3 compose services start and work together | ✅ |
+| 30.6.12 | Test orchestration script | `scripts/docker_field_test.sh` | Single script runs all 15 stages, reports pass/fail | ✅ |
+| 30.6.13 | Test fixtures package | `tests/fixtures/` | Pre-built trajectories, candidates, rules, pytest fixtures | ✅ |
+| 30.6.14 | Update docker-compose.yaml | `docker-compose.yaml` | Add test + MCP services, health checks, env passthrough | ✅ |
 
 ### M30 Exit Gate
 

@@ -364,23 +364,23 @@ Fixtures first (they're needed by everything), then infrastructure, then individ
 
 Before M30.6 closes, ALL of the following must be true:
 
-- [ ] 30.6.13: Test fixtures package — all 12 sub-tasks complete
-- [ ] 30.6.14: docker-compose.yaml updated — all 6 sub-tasks complete
-- [ ] 30.6.1: Docker build & install — all 5 sub-tasks complete
-- [ ] 30.6.2: Docker CLI integration — all 23 sub-tasks complete
-- [ ] 30.6.3: Docker TUI test — all 10 sub-tasks complete
-- [ ] 30.6.4: Docker MCP server test — all 8 sub-tasks complete
-- [ ] 30.6.5: Docker pipeline E2E test — all 10 sub-tasks complete
-- [ ] 30.6.6: Docker redaction test — all 6 sub-tasks complete
-- [ ] 30.6.7: Docker export/import test — all 13 sub-tasks complete
-- [ ] 30.6.8: Docker git integration test — all 10 sub-tasks complete
-- [ ] 30.6.9: Docker loop test — all 6 sub-tasks complete
-- [ ] 30.6.10: Docker multi-env test — all 6 sub-tasks complete
-- [ ] 30.6.11: Docker compose test — all 5 sub-tasks complete
-- [ ] 30.6.12: Orchestration script — all 9 sub-tasks complete
-- [ ] `pytest tests/field/ -v` — all pass
-- [ ] `ruff check tests/field/ scripts/` — clean
-- [ ] `mypy tests/field/` — clean
-- [ ] All 14 GitHub issues (#370-#384) closed
-- [ ] Commit: `milestone: M30.6 Docker field test complete`
-- [ ] Push to main
+- [x] 30.6.13: Test fixtures package — all 12 sub-tasks complete
+- [x] 30.6.14: docker-compose.yaml updated — all 6 sub-tasks complete
+- [x] 30.6.1: Docker build & install — all 5 sub-tasks complete
+- [x] 30.6.2: Docker CLI integration — all 23 sub-tasks complete
+- [x] 30.6.3: Docker TUI test — all 10 sub-tasks complete
+- [x] 30.6.4: Docker MCP server test — all 8 sub-tasks complete
+- [x] 30.6.5: Docker pipeline E2E test — all 10 sub-tasks complete
+- [x] 30.6.6: Docker redaction test — all 6 sub-tasks complete
+- [x] 30.6.7: Docker export/import test — all 13 sub-tasks complete
+- [x] 30.6.8: Docker git integration test — all 10 sub-tasks complete
+- [x] 30.6.9: Docker loop test — all 6 sub-tasks complete
+- [x] 30.6.10: Docker multi-env test — all 6 sub-tasks complete
+- [x] 30.6.11: Docker compose test — all 5 sub-tasks complete
+- [x] 30.6.12: Orchestration script — all 9 sub-tasks complete
+- [x] `pytest tests/field/ -v` — all pass
+- [x] `ruff check tests/field/ scripts/` — clean
+- [x] `mypy tests/field/` — clean
+- [x] All 14 GitHub issues (#370-#384) closed
+- [x] Commit: `milestone: M30.6 Docker field test complete`
+- [x] Push to main
