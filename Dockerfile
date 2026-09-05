@@ -3,7 +3,7 @@ FROM python:3.12-slim AS builder
 WORKDIR /build
 COPY . .
 
-RUN pip install build && python -m build --wheel
+RUN pip install --upgrade pip setuptools wheel && pip install build && python -m build --wheel
 
 FROM python:3.12-slim AS runtime
 

@@ -8,7 +8,6 @@ version = "0.1.0"
 description = "Automated standing-rule extraction from agent failures — extract, test, promote."
 readme = "README.md"
 license = {text = "MIT"}
-long_description_content_type = "text/markdown"
 authors = [{name = "Debashish Ghosal"}]
 maintainers = [{name = "Debashish Ghosal"}]
 requires-python = ">=3.11"
@@ -113,6 +112,7 @@ testpaths = ["tests"]
 addopts = "-q --strict-config --strict-markers"
 markers = [
     "slow: marks tests as slow",
+    "docker: marks tests that require Docker",
 ]
 
 [tool.coverage.run]

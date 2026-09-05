@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   cauterule-demo:
     build:
@@ -10,3 +8,53 @@ services:
     volumes:
       - ./rules:/app/rules
       - ./corpus:/app/corpus
+    environment:
+      - CAUTERULE_LLM_PROVIDER
+      - CAUTERULE_MODEL
+      - OPENAI_API_KEY
+    healthcheck:
+      test: ["CMD-SHELL", "cauterule --help > /dev/null && exit 0 || exit 1"]
+      interval: 30s
+      retries: 3
+
+  cauterule-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cauterule-test
+    command: pytest tests/ -v -m "not slow"
+    volumes:
+      - ./tests:/app/tests
+      - ./src:/app/src
+      - ./rules:/app/rules
+    environment:
+      - CAUTERULE_LLM_PROVIDER
+      - CAUTERULE_MODEL
+      - OPENAI_API_KEY
+    depends_on:
+      - cauterule-demo
+    healthcheck:
+      test: ["CMD-SHELL", "cauterule --help > /dev/null && exit 0 || exit 1"]
+      interval: 30s
+      retries: 3
+
+  cauterule-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cauterule-mcp
+    command: mcp --transport stdio
+    volumes:
+      - ./rules:/app/rules
+    environment:
+      - CAUTERULE_LLM_PROVIDER
+      - CAUTERULE_MODEL
+      - OPENAI_API_KEY
+    depends_on:
+      - cauterule-demo
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'cauterule mcp' > /dev/null && exit 0 || exit 1"]
+      interval: 30s
+      retries: 3
+    ports:
+      - "8025:8025"

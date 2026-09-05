@@ -43,7 +43,7 @@ def export_rules(rules: list[StandingRule], fmt: str, include_retired: bool = Fa
     if exporter is None:
         msg = f"Unknown export format: {fmt!r}. Supported: {', '.join(sorted(exporters))}"
         raise ValueError(msg)
-    return exporter(rules)
+    return exporter(rules, include_retired=include_retired)
 
 
 def import_rules(path: str) -> list[CandidateRule]:
