@@ -20,6 +20,7 @@ from cauterule.cli.pack import pack
 from cauterule.cli.promote import promote
 from cauterule.cli.report import report
 from cauterule.cli.retire import retire
+from cauterule.cli.review import review
 from cauterule.cli.search import search
 from cauterule.cli.show import show
 from cauterule.cli.story import story
@@ -56,6 +57,7 @@ main.add_command(pack)
 main.add_command(promote)
 main.add_command(report)
 main.add_command(retire)
+main.add_command(review)
 main.add_command(search)
 main.add_command(show)
 main.add_command(story)
