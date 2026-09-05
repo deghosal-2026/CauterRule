@@ -18,3 +18,5 @@ convention = "google"
 "src/cauterule/config.py" = ["TRY003", "TRY004", "E501"]
 "src/cauterule/serialization/**" = ["TRY003", "TRY004"]
 "src/cauterule/llm/**" = ["TRY003", "E501", "ANN401", "D"]
+"src/cauterule/capture/**" = ["ANN401", "D", "TRY003", "TRY004", "TRY300", "UP", "SIM", "I", "RUF"]
+"src/cauterule/adapter/**" = ["ANN401", "D", "D301", "UP035", "TRY300", "TRY003", "E501"]
