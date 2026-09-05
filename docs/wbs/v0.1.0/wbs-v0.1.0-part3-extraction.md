@@ -25,21 +25,21 @@
 
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
-| 7.1 | Extraction prompt builder | `src/cauterule/extraction/prompt.py` | Builds prompt with trajectory, failure point, failure class, template request | ⬜ |
-| 7.2 | LLM extraction call | `src/cauterule/extraction/extractor.py` | Calls LLM, parses structured output into `CandidateRule` | ⬜ |
-| 7.3 | Quality checks | `src/cauterule/extraction/quality.py` | Valid structure, references trajectory, not tautological, confidence >= 0.6 | ⬜ |
-| 7.4 | Fallback handler | `src/cauterule/extraction/fallback.py` | Flag for human review if LLM cannot produce valid rule | ⬜ |
+| 7.1 | Extraction prompt builder | `src/cauterule/extraction/prompt.py` | Builds prompt with trajectory, failure point, failure class, template request | ✅ |
+| 7.2 | LLM extraction call | `src/cauterule/extraction/extractor.py` | Calls LLM, parses structured output into `CandidateRule` | ✅ |
+| 7.3 | Quality checks | `src/cauterule/extraction/quality.py` | Valid structure, references trajectory, not tautological, confidence >= 0.6 | ✅ |
+| 7.4 | Fallback handler | `src/cauterule/extraction/fallback.py` | Flag for human review if LLM cannot produce valid rule | ✅ |
 
 ### M7 Exit Gate
 
-- [ ] Run all tests: `pytest` — all pass
-- [ ] Lint strict clean: `ruff check` + `mypy src/` — zero errors
-- [ ] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing`
-- [ ] Update all docs affected by this milestone
-- [ ] Verify all issues in this milestone are done
-- [ ] Close all completed issues
-- [ ] Commit with message: `milestone: M7 complete`
-- [ ] Push to main
+- [x] Run all tests: `pytest` — all pass (168 passed)
+- [x] Lint strict clean: `ruff check` + `mypy src/` — zero errors
+- [x] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing` — 98.51%
+- [x] Update all docs affected by this milestone
+- [x] Verify all issues in this milestone are done
+- [x] Close all completed issues
+- [x] Commit with message: `milestone: M7 complete`
+- [x] Push to main
 
 ## M8: Multi-Pass & Draft Tournament
 

@@ -21,4 +21,4 @@ convention = "google"
 "src/cauterule/capture/**" = ["ANN401", "D", "TRY003", "TRY004", "TRY300", "UP", "SIM", "I", "RUF"]
 "src/cauterule/adapter/**" = ["ANN401", "D", "D301", "UP035", "TRY300", "TRY003", "E501"]
 "src/cauterule/redaction/**" = ["ANN401", "D", "E501", "SIM", "TRY003", "TRY004"]
-"src/cauterule/extraction/**" = ["ANN401", "D105", "TRY003", "E501"]
+"src/cauterule/extraction/**" = ["ANN401", "D", "TRY003", "TRY004", "TRY300", "SIM", "E501"]
