@@ -49,20 +49,20 @@
 
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
-| 3.1 | YAML serialization for rules | `src/cauterule/serialization/rule_yaml.py` | `StandingRule` ↔ YAML file, round-trip | ⬜ |
-| 3.2 | JSONL serialization for trajectories | `src/cauterule/serialization/trajectory_jsonl.py` | `Trajectory` ↔ JSONL, streamable | ⬜ |
-| 3.3 | Config dataclass + `cauterule.toml` parser | `src/cauterule/config.py` | LLM provider, model, thresholds, mode, paths, redaction patterns, extraction passes/temperatures | ⬜ |
-| 3.4 | Environment variable support | `src/cauterule/config.py` | `CAUTERULE_LLM_PROVIDER`, `CAUTERULE_MODEL`, etc. override config | ⬜ |
-| 3.5 | LLM provider abstraction | `src/cauterule/llm/provider.py` | OpenAI, Anthropic, Ollama, LiteLLM — unified interface | ⬜ |
-| 3.6 | LLM provider factory | `src/cauterule/llm/factory.py` | `get_llm(config)` returns provider instance | ⬜ |
+| 3.1 | YAML serialization for rules | `src/cauterule/serialization/rule_yaml.py` | `StandingRule` ↔ YAML file, round-trip | ✅ |
+| 3.2 | JSONL serialization for trajectories | `src/cauterule/serialization/trajectory_jsonl.py` | `Trajectory` ↔ JSONL, streamable | ✅ |
+| 3.3 | Config dataclass + `cauterule.toml` parser | `src/cauterule/config.py` | LLM provider, model, thresholds, mode, paths, redaction patterns, extraction passes/temperatures | ✅ |
+| 3.4 | Environment variable support | `src/cauterule/config.py` | `CAUTERULE_LLM_PROVIDER`, `CAUTERULE_MODEL`, etc. override config | ✅ |
+| 3.5 | LLM provider abstraction | `src/cauterule/llm/provider.py` | OpenAI, Anthropic, Ollama, LiteLLM — unified interface | ✅ |
+| 3.6 | LLM provider factory | `src/cauterule/llm/factory.py` | `get_llm(config)` returns provider instance | ✅ |
 
 ### M3 Exit Gate
 
-- [ ] Run all tests: `pytest` — all pass
-- [ ] Lint strict clean: `ruff check` + `mypy src/` — zero errors
-- [ ] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing`
-- [ ] Update all docs affected by this milestone
-- [ ] Verify all issues in this milestone are done
-- [ ] Close all completed issues
-- [ ] Commit with message: `milestone: M3 complete`
-- [ ] Push to main
+- [x] Run all tests: `pytest` — all pass (78 passed)
+- [x] Lint strict clean: `ruff check` + `mypy src/` — zero errors
+- [x] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing` — 98.91%
+- [x] Update all docs affected by this milestone
+- [x] Verify all issues in this milestone are done
+- [x] Close all completed issues
+- [x] Commit with message: `milestone: M3 complete`
+- [x] Push to main
