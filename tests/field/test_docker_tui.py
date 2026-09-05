@@ -222,11 +222,15 @@ def test_approve_promotes() -> None:
             screen = ReviewScreen(store=store)
             screen._candidates = [_make_candidate("deploy fails")]
             screen._current_index = 0
-            screen._populate_candidates = MagicMock()
-            setattr(screen, "push_screen", MagicMock())
+
+            def _fake_push(_target: Any, callback: Any = None) -> None:
+                if callback is not None:
+                    callback({"category": "logic_error", "tags": (), "comment": "ok"})
+
             async with CauterRuleApp().run_test() as pilot:
                 pilot.app.push_screen(screen)
                 await pilot.pause()
+                setattr(screen, "push_screen", MagicMock(side_effect=_fake_push))
                 screen.approve_current()
                 assert mock_promo.called
 

@@ -2,10 +2,23 @@
 
 from __future__ import annotations
 
-from cauterule.mcp.launch import launch_mcp
-from cauterule.mcp.server import CauteruleMCPServer
+from typing import TYPE_CHECKING
 
-__all__ = [
-    "CauteruleMCPServer",
-    "launch_mcp",
-]
+if TYPE_CHECKING:
+    from cauterule.mcp.launch import launch_mcp
+    from cauterule.mcp.server import CauteruleMCPServer
+
+__all__ = ["CauteruleMCPServer", "launch_mcp"]
+
+
+def __getattr__(name: str):  # type: ignore[no-untyped-def]
+    if name == "CauteruleMCPServer":
+        from cauterule.mcp.server import CauteruleMCPServer
+
+        return CauteruleMCPServer
+    if name == "launch_mcp":
+        from cauterule.mcp.launch import launch_mcp
+
+        return launch_mcp
+    msg = f"module 'cauterule.mcp' has no attribute {name!r}"
+    raise AttributeError(msg)

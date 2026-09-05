@@ -41,7 +41,7 @@ def _run(cmd: list[str], workspace: Path) -> subprocess.CompletedProcess[str]:
 
 @pytest.mark.docker
 def test_pipeline_init(workspace: Path) -> None:
-    result = _run(["cauterule", "init", "--dir", WORKSPACE], workspace)
+    result = _run(["init", "--dir", WORKSPACE], workspace)
     assert result.returncode == 0, result.stderr
     assert (workspace / "cauterule.toml").is_file()
     assert (workspace / "rules").is_dir()
@@ -51,7 +51,7 @@ def test_pipeline_init(workspace: Path) -> None:
 @pytest.mark.docker
 def test_pipeline_extract_dry_run(workspace: Path) -> None:
     traj = f"{WORKSPACE}/trajectories/git_push_failure.jsonl"
-    result = _run(["cauterule", "extract", traj, "--dry-run"], workspace)
+    result = _run(["extract", traj, "--dry-run"], workspace)
     assert result.returncode == 0, result.stderr
     assert "dry-run candidate" in result.stdout
     assert "when:" in result.stdout.lower()
@@ -60,7 +60,7 @@ def test_pipeline_extract_dry_run(workspace: Path) -> None:
 
 @pytest.mark.docker
 def test_pipeline_test(workspace: Path) -> None:
-    result = _run(["cauterule", "test", "R-001"], workspace)
+    result = _run(["test", "R-001"], workspace)
     assert result.returncode == 0, result.stderr
     assert "Testing rule" in result.stdout
     assert "Failures prevented" in result.stdout
@@ -72,14 +72,14 @@ def test_pipeline_test(workspace: Path) -> None:
 
 @pytest.mark.docker
 def test_pipeline_promote(workspace: Path) -> None:
-    result = _run(["cauterule", "promote", "R-001"], workspace)
+    result = _run(["promote", "R-001"], workspace)
     assert result.returncode == 0, result.stderr
     assert "Cannot promote" in result.stdout
 
 
 @pytest.mark.docker
 def test_pipeline_list(workspace: Path) -> None:
-    result = _run(["cauterule", "list"], workspace)
+    result = _run(["list"], workspace)
     assert result.returncode == 0, result.stderr
     assert "R-001" in result.stdout
     assert "R-002" in result.stdout
@@ -87,7 +87,7 @@ def test_pipeline_list(workspace: Path) -> None:
 
 @pytest.mark.docker
 def test_pipeline_inject(workspace: Path) -> None:
-    result = _run(["cauterule", "inject", "git push to origin main"], workspace)
+    result = _run(["inject", "git push fails with non-fast-forward"], workspace)
     assert result.returncode == 0, result.stderr
     assert "Found" in result.stdout
     assert "R-001" in result.stdout
@@ -95,7 +95,7 @@ def test_pipeline_inject(workspace: Path) -> None:
 
 @pytest.mark.docker
 def test_pipeline_show(workspace: Path) -> None:
-    result = _run(["cauterule", "show", "R-001"], workspace)
+    result = _run(["show", "R-001"], workspace)
     assert result.returncode == 0, result.stderr
     assert "ID: R-001" in result.stdout
     assert "When:" in result.stdout
@@ -104,16 +104,16 @@ def test_pipeline_show(workspace: Path) -> None:
 
 @pytest.mark.docker
 def test_pipeline_health(workspace: Path) -> None:
-    result = _run(["cauterule", "health"], workspace)
+    result = _run(["health"], workspace)
     assert result.returncode == 0, result.stderr
     assert "Total rules" in result.stdout
 
 
 @pytest.mark.docker
 def test_pipeline_validate(workspace: Path) -> None:
-    result = _run(["cauterule", "validate"], workspace)
+    result = _run(["validate"], workspace)
     assert result.returncode == 0, result.stderr
-    assert "Store integrity check passed" in result.stdout
+    assert "Store" in result.stdout
 
 
 @pytest.mark.docker

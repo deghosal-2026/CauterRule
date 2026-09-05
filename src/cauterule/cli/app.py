@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import click
 
+from cauterule import __version__
 from cauterule.cli.audit import audit
 from cauterule.cli.config import config
 from cauterule.cli.conflicts import conflicts
@@ -15,6 +16,7 @@ from cauterule.cli.history import history
 from cauterule.cli.init import init
 from cauterule.cli.inject import inject
 from cauterule.cli.list import list_rules
+from cauterule.cli.mcp import mcp
 from cauterule.cli.metrics import metrics
 from cauterule.cli.pack import pack
 from cauterule.cli.promote import promote
@@ -32,6 +34,7 @@ log = get_logger(__name__)
 
 
 @click.group(invoke_without_command=True)
+@click.version_option(version=__version__, prog_name="cauterule")
 @click.option("--verbose", is_flag=True, help="Enable debug logging.")
 def main(verbose: bool) -> None:
     """CauterRule — automated standing-rule extraction from agent failures."""
@@ -52,6 +55,7 @@ main.add_command(history)
 main.add_command(init)
 main.add_command(inject)
 main.add_command(list_rules)
+main.add_command(mcp)
 main.add_command(metrics)
 main.add_command(pack)
 main.add_command(promote)

@@ -22,11 +22,13 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: cauterule-test
-    command: pytest tests/ -v -m "not slow"
+    entrypoint: ["sh", "-c"]
+    command: ["pip install -q pytest && cd /repo && python -m pytest tests/models tests/store tests/serialization tests/injection tests/redaction tests/export tests/cli tests/capture tests/promotion tests/conflict tests/loop tests/packs -m 'not slow and not docker' --tb=short -q -p no:cacheprovider"]
     volumes:
       - ./tests:/app/tests
       - ./src:/app/src
       - ./rules:/app/rules
+      - .:/repo
     environment:
       - CAUTERULE_LLM_PROVIDER
       - CAUTERULE_MODEL
@@ -43,7 +45,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: cauterule-mcp
-    command: mcp --transport stdio
+    entrypoint: ["sh", "-c"]
+    command: ["pip install -q mcp && exec cauterule mcp --transport stdio"]
     volumes:
       - ./rules:/app/rules
     environment:
