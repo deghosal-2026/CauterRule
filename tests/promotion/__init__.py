@@ -1,0 +1,1 @@
+"""Promotion gate tests."""

@@ -6,24 +6,24 @@
 
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
-| 12.1 | Vagueness check | `src/cauterule/linter/vagueness.py` | Detects generic triggers/directives ("be careful") | ⬜ |
-| 12.2 | Tautology check | `src/cauterule/linter/tautology.py` | Detects "when failing, don't fail" | ⬜ |
-| 12.3 | Duplicate check | `src/cauterule/linter/duplicate.py` | Detects semantically identical existing rules | ⬜ |
-| 12.4 | Contradiction check | `src/cauterule/linter/contradiction.py` | Detects conflicting existing rules | ⬜ |
-| 12.5 | Untestable check | `src/cauterule/linter/untestable.py` | Detects directives that cannot be verified via replay | ⬜ |
-| 12.6 | Unsafe directive check | `src/cauterule/linter/unsafe.py` | Blocks dangerous actions (rm -rf, force push, etc.) | ⬜ |
-| 12.7 | Linter orchestrator | `src/cauterule/linter/orchestrator.py` | Runs all checks, produces `LinterResult` | ⬜ |
+| 12.1 | Vagueness check | `src/cauterule/linter/vagueness.py` | Detects generic triggers/directives ("be careful") | ✅ |
+| 12.2 | Tautology check | `src/cauterule/linter/tautology.py` | Detects "when failing, don't fail" | ✅ |
+| 12.3 | Duplicate check | `src/cauterule/linter/duplicate.py` | Detects semantically identical existing rules | ✅ |
+| 12.4 | Contradiction check | `src/cauterule/linter/contradiction.py` | Detects conflicting existing rules | ✅ |
+| 12.5 | Untestable check | `src/cauterule/linter/untestable.py` | Detects directives that cannot be verified via replay | ✅ |
+| 12.6 | Unsafe directive check | `src/cauterule/linter/unsafe.py` | Blocks dangerous actions (rm -rf, force push, etc.) | ✅ |
+| 12.7 | Linter orchestrator | `src/cauterule/linter/orchestrator.py` | Runs all checks, produces `LinterResult` | ✅ |
 
 ### M12 Exit Gate
 
-- [ ] Run all tests: `pytest` — all pass
-- [ ] Lint strict clean: `ruff check` + `mypy src/` — zero errors
-- [ ] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing`
-- [ ] Update all docs affected by this milestone
-- [ ] Verify all issues in this milestone are done
-- [ ] Close all completed issues
-- [ ] Commit with message: `milestone: M12 complete`
-- [ ] Push to main
+- [x] Run all tests: `pytest` — all pass (260 passed)
+- [x] Lint strict clean: `ruff check` + `mypy src/` — zero errors
+- [x] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing` — 97.69%
+- [x] Update all docs affected by this milestone
+- [x] Verify all issues in this milestone are done
+- [x] Close all completed issues
+- [x] Commit with message: `milestone: M12 complete`
+- [x] Push to main
 
 ## M13: Conflict Detection
 

@@ -1,0 +1,26 @@
+"""Export to .windsurfrules format.
+
+.windsurfrules is a Markdown file Windsurf reads to apply standing rules.
+"""
+
+from __future__ import annotations
+
+from cauterule.models.rule import StandingRule
+
+from .redaction import redact_export
+
+
+def export(rules: list[StandingRule]) -> str:
+    """Format *rules* as a .windsurfrules Markdown string."""
+    lines: list[str] = ["## Standing Rules", "", "These rules are active for this session:", ""]
+    for i, rule in enumerate(rules, 1):
+        trigger = redact_export(rule.when.trigger)
+        directive = redact_export(rule.do.directive)
+        lines.append(f"{i}. When `{trigger}` then **{directive}**")
+        if rule.do.because:
+            because = redact_export(rule.do.because)
+            lines.append(f"   - Rationale: {because}")
+        if rule.tags:
+            lines.append(f"   - Categories: {', '.join(rule.tags)}")
+        lines.append("")
+    return "\n".join(lines)
