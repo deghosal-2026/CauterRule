@@ -6,44 +6,44 @@
 
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
-| 1.1 | Initialize project structure | `pyproject.toml`, `src/cauterule/__init__.py` | `pip install -e .` works | ⬜ |
-| 1.2 | Set up ruff config | `.ruff.toml` | `ruff check` clean | ⬜ |
-| 1.3 | Set up mypy config | `mypy.ini` | `mypy src/` zero errors | ⬜ |
-| 1.4 | Configure structured logging | `src/cauterule/log.py` | JSON logging with levels | ⬜ |
-| 1.5 | Add CI workflow | `.github/workflows/ci.yaml` | lint + type-check + test on PR | ⬜ |
+| 1.1 | Initialize project structure | `pyproject.toml`, `src/cauterule/__init__.py` | `pip install -e .` works | ✅ |
+| 1.2 | Set up ruff config | `.ruff.toml` | `ruff check` clean | ✅ |
+| 1.3 | Set up mypy config | `mypy.ini` | `mypy src/` zero errors | ✅ |
+| 1.4 | Configure structured logging | `src/cauterule/log.py` | JSON logging with levels | ✅ |
+| 1.5 | Add CI workflow | `.github/workflows/ci.yaml` | lint + type-check + test on PR | ✅ |
 
 ### M1 Exit Gate
 
-- [ ] Run all tests: `pytest` — all pass
-- [ ] Lint strict clean: `ruff check` + `mypy src/` — zero errors
-- [ ] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing`
-- [ ] Update all docs affected by this milestone
-- [ ] Verify all issues in this milestone are done
-- [ ] Close all completed issues
-- [ ] Commit with message: `milestone: M1 complete`
-- [ ] Push to main
+- [x] Run all tests: `pytest` — all pass (18 passed)
+- [x] Lint strict clean: `ruff check` + `mypy src/` — zero errors
+- [x] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing` — 100%
+- [x] Update all docs affected by this milestone
+- [x] Verify all issues in this milestone are done
+- [x] Close all completed issues
+- [x] Commit with message: `milestone: M1 complete` (304026a)
+- [x] Push to main
 
 ## M2: Core Data Models
 
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
-| 2.1 | Define `StandingRule` dataclass | `src/cauterule/models/rule.py` | Full schema: id, when, do, tags, taxonomy, template, confidence, provenance, status, hit_count, last_match, pack | ⬜ |
-| 2.2 | Define `Trajectory` + `Step` dataclasses | `src/cauterule/models/trajectory.py` | Full schema: id, timestamp, task, steps, failure_point, failure_class, success, quality_label, domain, severity, tags, agent_config, environment, redacted | ⬜ |
-| 2.3 | Define `CandidateRule` dataclass | `src/cauterule/models/candidate.py` | when, do, confidence, reasoning, extraction_pass, template | ⬜ |
-| 2.4 | Define `EvidenceReport` dataclass | `src/cauterule/models/evidence.py` | failures_prevented, successes_broken, near_misses, precision, recall, verdict, replay_trace | ⬜ |
-| 2.5 | Define `PromotionDecision` dataclass | `src/cauterule/models/decision.py` | verdict, evidence_summary, approver, linter_warnings, conflicts | ⬜ |
-| 2.6 | Define `ConflictReport` dataclass | `src/cauterule/models/conflict.py` | type, rules, trigger, resolution, specificity_scores | ⬜ |
+| 2.1 | Define `StandingRule` dataclass | `src/cauterule/models/rule.py` | Full schema: id, when, do, tags, taxonomy, template, confidence, provenance, status, hit_count, last_match, pack | ✅ |
+| 2.2 | Define `Trajectory` + `Step` dataclasses | `src/cauterule/models/trajectory.py` | Full schema: id, timestamp, task, steps, failure_point, failure_class, success, quality_label, domain, severity, tags, agent_config, environment, redacted | ✅ |
+| 2.3 | Define `CandidateRule` dataclass | `src/cauterule/models/candidate.py` | when, do, confidence, reasoning, extraction_pass, template | ✅ |
+| 2.4 | Define `EvidenceReport` dataclass | `src/cauterule/models/evidence.py` | failures_prevented, successes_broken, near_misses, precision, recall, verdict, replay_trace | ✅ |
+| 2.5 | Define `PromotionDecision` dataclass | `src/cauterule/models/decision.py` | verdict, evidence_summary, approver, linter_warnings, conflicts | ✅ |
+| 2.6 | Define `ConflictReport` dataclass | `src/cauterule/models/conflict.py` | type, rules, trigger, resolution, specificity_scores | ✅ |
 
 ### M2 Exit Gate
 
-- [ ] Run all tests: `pytest` — all pass
-- [ ] Lint strict clean: `ruff check` + `mypy src/` — zero errors
-- [ ] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing`
-- [ ] Update all docs affected by this milestone
-- [ ] Verify all issues in this milestone are done
-- [ ] Close all completed issues
-- [ ] Commit with message: `milestone: M2 complete`
-- [ ] Push to main
+- [x] Run all tests: `pytest` — all pass (43 passed)
+- [x] Lint strict clean: `ruff check` + `mypy src/` — zero errors
+- [x] Test coverage total > 95%: `pytest --cov=src/cauterule --cov-report=term-missing` — 98.48%
+- [x] Update all docs affected by this milestone
+- [x] Verify all issues in this milestone are done
+- [x] Close all completed issues
+- [x] Commit with message: `milestone: M2 complete`
+- [x] Push to main
 
 ## M3: Serialization & Config
 

@@ -8,7 +8,7 @@ def test_version_fallback(monkeypatch: MonkeyPatch) -> None:
     """Cover the ``except Exception`` branch in ``__init__.py``."""
 
     def fake_version(_name: str) -> str:
-        raise RuntimeError("not installed")  # noqa: TRY003
+        raise RuntimeError("not installed")
 
     monkeypatch.setattr("importlib.metadata.version", fake_version)
     # Re-import under patched version.
