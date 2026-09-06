@@ -10,14 +10,15 @@
 
 **Execution order:** M31.1 → M31.2 → M31.3 → M31.4 → M31.5 → M31.6 → M31.7
 
-| Issue | Title | Area | Complexity |
-|-------|-------|------|------------|
-| M31.1 | Security scan — truffleHog, dependency audit, secret detection | security | low |
-| M31.2 | All tests passing — full deterministic suite + field test confirmed green | testing | medium |
-| M31.3 | Field test report finalized — results document, scorecards, verdict deltas | docs/field-test | medium |
-| M31.4 | Docs sweep — README, CHANGELOG, release notes, all docs | docs | medium |
-| M31.5 | Packaging & PyPI release — build, dist, Dockerfile pin, upload | release | medium |
-| M31.6 | Release tags and milestone closure — git tag, GitHub release, close all v0.1.0 milestones | release | low |
+| Issue | Title | Area | Status |
+|-------|-------|------|--------|
+| M31.1 | Security scan — truffleHog, dependency audit, secret detection | security | ✅ |
+| M31.2 | All tests passing — full deterministic suite + field test confirmed green | testing | ✅ |
+| M31.2.1 | PyPI publish config | release | ✅ |
+| M31.3 | Field test report finalized — results document, scorecards, verdict deltas | docs/field-test | ✅ |
+| M31.4 | Docs sweep — README, CHANGELOG, release notes, all docs | docs | ✅ |
+| M31.5 | Packaging & PyPI release — build, dist, Dockerfile pin, upload | release | ⬜ |
+| M31.6 | Release tags and milestone closure — git tag, GitHub release, close all v0.1.0 milestones | release | ⬜ |
 
 ---
 
@@ -66,6 +67,8 @@
 
 ### M31.2.1 — PyPI publish config
 
+**Status:** ✅ Complete
+
 **Problem:** `pip install cauterule` must work before packaging.
 
 **Scope:**
@@ -74,13 +77,17 @@
 - Add `build` and `twine` to dev dependencies
 
 **Completion checklist:**
-- [ ] `pyproject.toml` has all required fields
-- [ ] `scripts/build.sh` exists and is executable
-- [ ] Build + twine deps in pyproject.toml
+- [x] `pyproject.toml` has all required fields
+- [x] `scripts/build.sh` exists and is executable
+- [x] Build + twine deps in pyproject.toml
 
 ---
 
 ### M31.2.2 — Homebrew formula
+
+**Status:** ➡️ Deferred to v0.2.0
+
+**Status:** ➡️ Deferred to v0.2.0
 
 **Problem:** `brew install cauterule` must work on macOS.
 
@@ -93,6 +100,8 @@
 ---
 
 ### M31.2.3 — Docker image
+
+**Status:** ➡️ Deferred to v0.2.0
 
 **Problem:** `docker run cauterule demo` must work.
 
@@ -108,6 +117,8 @@
 
 ### M31.2.4 — Standalone binary
 
+**Status:** ➡️ Deferred to v0.2.0
+
 **Problem:** Users should be able to run cauterule without Python installed.
 
 **Scope:**
@@ -122,6 +133,8 @@
 
 ### M31.2.5 — GitHub badge endpoint
 
+**Status:** ➡️ Deferred to v0.2.0
+
 **Problem:** A shields.io-style badge showing "N rules learned" for README.
 
 **Scope:**
@@ -134,6 +147,8 @@
 
 ### M31.2.6 — GitHub Action
 
+**Status:** ➡️ Deferred to v0.2.0
+
 **Problem:** CI integration — run extraction on CI failures.
 
 **Scope:**
@@ -145,6 +160,8 @@
 ---
 
 ### M31.2.7 — Webhook on promotion
+
+**Status:** ➡️ Deferred to v0.2.0
 
 **Problem:** Notify Slack/Discord/GitHub when a rule is promoted.
 
@@ -160,6 +177,8 @@
 
 ### M31.2.8 — OpenTelemetry exporter
 
+**Status:** ➡️ Deferred to v0.2.0
+
 **Problem:** Emit rule hit/promotion/extraction events as OTel spans.
 
 **Scope:**
@@ -171,6 +190,8 @@
 ---
 
 ### M31.2.9 — Official benchmark leaderboard
+
+**Status:** ➡️ Deferred to v0.2.0
 
 **Problem:** Publish model + prompt results on public corpus.
 
