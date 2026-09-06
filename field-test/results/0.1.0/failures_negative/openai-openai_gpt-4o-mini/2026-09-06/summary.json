@@ -10,15 +10,15 @@
     "target_trajectories": 10,
     "reference_trajectories": 84
   },
-  "elapsed_seconds": 0.3,
+  "elapsed_seconds": 5.0,
   "total": 10,
-  "done": 0,
-  "skipped": 10,
-  "total_candidates": 0,
-  "avg_precision": 0.0,
-  "avg_recall": 0.0,
+  "done": 10,
+  "skipped": 0,
+  "total_candidates": 10,
+  "avg_precision": 0.06,
+  "avg_recall": 0.014,
   "passing": 0,
-  "failing": 0,
-  "inconclusive": 0,
-  "updated_at": "2026-09-06T02:57:33Z"
+  "failing": 6,
+  "inconclusive": 4,
+  "updated_at": "2026-09-06T03:08:22Z"
 }

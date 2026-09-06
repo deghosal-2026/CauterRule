@@ -1,0 +1,14 @@
+{"trajectory_id": "N-002-opinion", "status": "no_candidates", "candidates": []}
+{"trajectory_id": "N-001-success-git-push", "status": "no_candidates", "candidates": []}
+{"trajectory_id": "N-001-git-nm-001-auth-vs-ff", "status": "no_candidates", "candidates": []}
+{"trajectory_id": "N-002-python-002-different-import", "status": "no_candidates", "candidates": []}
+{"trajectory_id": "N-003-docker-03-docker-cpu-vs-mem", "status": "no_candidates", "candidates": []}
+{"trajectory_id": "N-003-cosmetic", "status": "no_candidates", "candidates": []}
+{"trajectory_id": "N-004-env--task-different-tool", "status": "no_candidates", "candidates": []}
+{"trajectory_id": "N-004-env-info", "status": "no_candidates", "candidates": []}
+{"trajectory_id": "N-005-normal-log", "status": "no_candidates", "candidates": []}
+{"trajectory_id": "N-006-warning-only", "status": "no_candidates", "candidates": []}
+{"trajectory_id": "N-007-intermittent", "status": "no_candidates", "candidates": []}
+{"trajectory_id": "N-008-operator-error", "status": "no_candidates", "candidates": []}
+{"trajectory_id": "N-009-feature-request", "status": "no_candidates", "candidates": []}
+{"trajectory_id": "N-010-flaky-pass", "status": "no_candidates", "candidates": []}
