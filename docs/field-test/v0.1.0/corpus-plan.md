@@ -36,6 +36,78 @@ This document defines what corpus we need, where to get it, how to collect it, a
 | Manual corrections | Any domain | Highest-value for human-correction feature. These are real "why didn't you just X" moments |
 | Cross-session repeats | Any recurring type | Most valuable for measuring repeat-failure reduction. If it happened twice, it will happen again |
 
+### 2.3 Real Corpus Spread Target
+
+This is the concrete target spread for the first real field-test corpus. The goal is not just volume, but balanced representation of the failure modes CauterRule is expected to learn from.
+
+| Bucket | Target Count | Primary Source | Secondary Source | Why It Matters |
+|--------|--------------|----------------|------------------|----------------|
+| Git failures | 8 | OpenCode sessions | Manual corrections | High recurrence, clear reusable lessons |
+| Python/runtime failures | 6 | OpenCode sessions | Sibling repo runs | Common coding-agent mistakes |
+| Docker/build failures | 4 | CI logs | OpenCode sessions | Strong field relevance for deployment workflows |
+| Test/CI failures | 4 | GitHub Actions CI | Sibling repo runs | Deterministic and easy to replay |
+| Deploy/env/shell failures | 3 | OpenCode sessions | Corrections | Important operational rules |
+| Workflow/agent-process failures | 3 | OpenCode sessions | Corrections | Valuable for OpenCode-specific behavioral rules |
+| Success trajectories | 20 | OpenCode sessions | Sibling repo runs | Needed to measure regressions and broken successes |
+| Near-miss trajectories | 10 | Derived from failures | Public synthetic corpus | Needed for precision and trigger specificity |
+| Noisy/misleading trajectories | 5 | Derived from failures | OpenCode sessions | Tests robustness of extraction |
+| Human-correction examples | 5 | Corrections | OpenCode sessions | Tests correction-to-rule flow |
+| Golden trajectories | 10 | Best curated failures | N/A | Regression anchor across versions |
+
+### 2.4 Real Corpus Source Map
+
+This is the recommended mapping from real sources to corpus buckets.
+
+| Source | Raw Trajectory Target | Best For | Notes |
+|--------|------------------------|---------|-------|
+| OpenCode sessions on CauterRule | 25-30 | Git, Python, Docker, workflow, verification failures; success trajectories | Highest-value source because it matches actual user workflow |
+| GitHub Actions / CI logs | 10-15 | Test, lint, mypy, packaging, Docker, build failures | Clean and reproducible; ideal for replay and regression |
+| Sibling repo agent runs | 15-20 | Python, test, docker, deploy failures in different contexts | Tests transferability of rules across repos |
+| Manual corrections | 5-8 | Human-correction examples, workflow rules | Especially useful for 30.3.8 |
+| Cross-session repeats | 5-8 | Repeat-failure measurement, persistence testing | Critical for proving memory and reduction claims |
+
+### 2.5 Gap Closure Plan
+
+Instead of treating these as open-ended gaps, this is the concrete acquisition plan to close them.
+
+| Asset To Acquire | Target | Primary Source | Closure Action |
+|------------------|--------|----------------|----------------|
+| OpenCode failure trajectories | 20 | OpenCode sessions on CauterRule | Mine the last 20-30 sessions, select clear failures, convert to JSONL in `corpus/raw/opencode/` |
+| OpenCode success trajectories | 10 | OpenCode sessions on CauterRule | Select matched successful tasks from the same domains, convert to JSONL in `corpus/raw/opencode/` |
+| CI-derived JSONL trajectories | 8 | GitHub Actions logs | Download failed run logs, parse with `scripts/parse_ci_log.py`, save to `corpus/raw/ci/` |
+| Cross-session repeated failures | 5 | OpenCode + CI + sibling repos | Group by `failure_class`, select repeats appearing in 2+ sessions, save to `corpus/raw/cross-session/` |
+| Human-correction examples | 5 | Manual corrections from sessions | Extract correction moments, convert to JSONL in `corpus/raw/corrections/` |
+| Noisy/misleading trajectories | 3 | Derived from real failures | Clone 3 clear failures and add retries/irrelevant calls, save to `corpus/curated/noisy/` |
+| Golden trajectory set | 10 | Best curated failures | Select strongest curated failures, document expected rules, save to `corpus/golden/` |
+| Public-shareable subset | 20-30 | Curated trajectories | Redact and de-identify strong trajectories, publish to `corpus/public/` |
+
+### 2.6 Recommended First Collection Order
+
+To keep momentum high, collect in this order:
+
+1. OpenCode failures from CauterRule development sessions
+2. Matching OpenCode successes from the same domains
+3. GitHub Actions failures (lint, mypy, pytest, Docker)
+4. Manual correction examples already visible in project history
+5. Cross-session repeats identified from the above
+6. Near-miss and noisy variants derived from the real failures
+7. Golden set selected from the strongest curated failures
+
+### 2.7 Closure Milestones For Corpus Acquisition
+
+The corpus acquisition effort is considered materially complete for M30 when all of the following are true:
+
+- [ ] At least 20 real OpenCode failure trajectories are collected
+- [ ] At least 10 real OpenCode success trajectories are collected
+- [ ] At least 8 CI-derived failure trajectories are collected
+- [ ] At least 5 cross-session repeat failures are identified and labeled
+- [ ] At least 5 human-correction examples are captured
+- [ ] At least 3 noisy/misleading variants are created from real failures
+- [ ] A 10-trajectory golden set is created and documented
+- [ ] A 20-30 trajectory public-shareable subset is prepared
+- [ ] `corpus/catalog.yaml` reflects actual collected counts
+- [ ] Validation script passes on the curated corpus
+
 ---
 
 ## 3. Corpus Structure

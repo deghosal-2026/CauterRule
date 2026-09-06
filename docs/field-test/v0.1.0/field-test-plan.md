@@ -1635,3 +1635,13 @@ With parallelization: **~10-12 hours** of wall-clock time.
 | **NEW** | 30.7.1-30.7.14 | 6 | Advanced & Edge Cases (14 tasks) |
 
 **Phase 6 issues to create:** 14 new GitHub issues (30.7.1 through 30.7.14)
+
+---
+
+## 19. Phase 7: Real Corpus Field Tests (30.8)
+
+Phase 7 has been split into a dedicated document for readability:
+
+**See:** [`corpus-test-plan.md`](corpus-test-plan.md) — Real Corpus Field Test Plan
+
+**Summary:** 12 tests (30.8.1-30.8.12), issues #399-#410, using OMLX (local, free) + gpt-4o-mini (cheap cloud). Total cost ~$2. Duration ~2.5 hours.
