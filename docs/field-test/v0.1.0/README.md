@@ -63,9 +63,9 @@ field-test/v0.1.0/               ← Execution artifacts, results, corpus (in re
 
 | Path | Content | Count |
 |------|---------|-------|
-| `field-test/v0.1.0/corpus/golden/` | Golden trajectories with expected rules | 10 |
-| `field-test/v0.1.0/corpus/golden/golden-manifest.json` | Mapping of trajectory to expected rule | 1 |
-| `field-test/v0.1.0/corpus/curated/failures/negative/` | Negative trajectories (should NOT produce rules) | 10 |
+| `field-test/corpus/golden/` | Golden trajectories with expected rules | 10 |
+| `field-test/corpus/golden/golden-manifest.json` | Mapping of trajectory to expected rule | 1 |
+| `field-test/corpus/curated/failures/negative/` | Negative trajectories (should NOT produce rules) | 10 |
 
 ---
 

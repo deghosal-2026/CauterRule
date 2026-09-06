@@ -14,7 +14,7 @@ import json
 import sys
 from pathlib import Path
 
-CORPUS_DIR = Path("field-test/v0.1.0/corpus")
+CORPUS_DIR = Path("field-test/corpus")
 FIXTURES_DIR = Path("tests/fixtures")
 GOLDEN_DIR = CORPUS_DIR / "golden"
 VALID_DOMAINS = {"git", "python", "docker", "test", "ci", "deploy", "shell", "env", "workflow", "coding", "devops", "support", "discussion", "environments", "networking", "testing", "generic", "browser", "research", "browser_automation"}

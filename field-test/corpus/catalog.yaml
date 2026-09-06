@@ -1,0 +1,50 @@
+curated:
+  corrections:
+    count: 5
+    path: curated/corrections
+  failures_negative:
+    count: 10
+    path: curated/failures/negative
+  failures_positive:
+    count: 30
+    path: curated/failures/positive
+  golden:
+    count: 10
+    path: golden
+  nearmiss:
+    count: 14
+    path: curated/nearmiss
+  noisy:
+    count: 5
+    path: curated/noisy
+  successes:
+    count: 20
+    path: curated/successes
+generated: '2026-09-06T01:17:29Z'
+seed: 42
+sources:
+  ci:
+    capture_method: Downloaded CI run logs, converted to JSONL
+    count: 110
+    description: GitHub Actions CI failures from CauterRule repo
+  corrections:
+    capture_method: Extracted from conversation history
+    count: 5
+    description: Manual correction transcripts from development sessions
+  cross-session:
+    capture_method: Duplicate selection from raw/opencode
+    count: 5
+    description: Same failure type across different sessions
+  opencode:
+    capture_method: Manual extraction from session logs
+    count: 25
+    description: Trajectories from OpenCode sessions on CauterRule repo
+  sibling-repos:
+    capture_method: Toy agent runs + synthetic harness trajectories
+    count: 10
+    description: Agent runs on sibling repos
+  synthetic:
+    capture_method: Generated via generator script
+    count: 145
+    description: Generated synthetic trajectories via scripts/generate-corpus.py
+version: '1.0'

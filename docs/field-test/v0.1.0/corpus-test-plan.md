@@ -11,7 +11,7 @@
 
 These tests exercise the **real corpus** collected per `corpus-plan.md`. They are the ultimate proof that CauterRule learns from real agent work, not just synthetic fixtures. While Phases 1-6 of the main field test plan use synthetic or mock data, Phase 7 uses real trajectories from OpenCode sessions, CI logs, and sibling repo agent runs.
 
-**Corpus:** `field-test/v0.1.0/corpus/curated/` (30 failures, 20 successes, 10 near-miss, 5 noisy, 5 corrections, 10 golden)
+**Corpus:** `field-test/corpus/curated/` (30 failures, 20 successes, 10 near-miss, 5 noisy, 5 corrections, 10 golden)
 **LLM:** OMLX (local, free) for all extraction. gpt-4o-mini for golden set comparison only.
 **Cost:** $0-2 total (OMLX is free; gpt-4o-mini only for golden set)
 **Duration:** ~2.5 hours
@@ -64,7 +64,7 @@ Tests must run in this order — each depends on the previous one:
 
 **What:** Validate every real trajectory in the curated corpus is well-formed, redacted, and correctly labeled.
 
-**Corpus:** `field-test/v0.1.0/corpus/curated/` (all 70 trajectories)
+**Corpus:** `field-test/corpus/curated/` (all 70 trajectories)
 **LLM:** None
 **Duration:** <5 minutes
 
@@ -82,7 +82,7 @@ Tests must run in this order — each depends on the previous one:
 - [ ] All 70 trajectories pass validation
 - [ ] 0 secrets detected in any file
 - [ ] Domain and quality label distributions within ±5% of target
-- [ ] Validation report saved to `field-test/v0.1.0/corpus-validation.md`
+- [ ] Validation report saved to `field-test/corpus-validation.md`
 
 ### 4.2 Task 30.8.2: Real Corpus Extraction with OMLX (#400)
 

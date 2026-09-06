@@ -160,7 +160,7 @@ To ensure the corpus represents not just one agent harness, the field-test corpu
 ### 3.1 Directory Layout
 
 ```
-field-test/v0.1.0/corpus/
+field-test/corpus/
 ├── README.md                          # This file
 ├── catalog.yaml                       # Master catalog of all trajectories
 │
@@ -552,7 +552,7 @@ def create_trajectory():
         "notes": "",
     }
 
-    outpath = f"field-test/v0.1.0/corpus/raw/{source}/{tid}.jsonl"
+    outpath = f"field-test/corpus/raw/{source}/{tid}.jsonl"
     with open(outpath, "w") as f:
         f.write(json.dumps(trajectory) + "\n")
     print(f"\nSaved to {outpath}")
@@ -647,7 +647,7 @@ if __name__ == "__main__":
         print("Usage: python parse_ci_log.py <ci-log-file.txt>")
         sys.exit(1)
     traj = parse_ci_log(sys.argv[1])
-    outpath = f"field-test/v0.1.0/corpus/raw/ci/{traj['trajectory_id']}.jsonl"
+    outpath = f"field-test/corpus/raw/ci/{traj['trajectory_id']}.jsonl"
     Path(outpath).parent.mkdir(parents=True, exist_ok=True)
     with open(outpath, "w") as f:
         f.write(json.dumps(traj) + "\n")
@@ -695,7 +695,7 @@ VALID_LABELS = {'clear','ambiguous','multi-causal','misleading','operator-induce
 VALID_SOURCES = {'opencode','ci','sibling-repos','corrections'}
 
 errors = []
-for f in Path('field-test/v0.1.0/corpus/curated').rglob('*.jsonl'):
+for f in Path('field-test/corpus/curated').rglob('*.jsonl'):
     try:
         traj = json.loads(f.read_text())
         tid = traj.get('trajectory_id', 'unknown')
@@ -792,7 +792,7 @@ Save to `corpus/public/` with README explaining the corpus format.
 After corpus acquisition, the following files exist:
 
 ```
-field-test/v0.1.0/corpus/
+field-test/corpus/
 ├── README.md
 ├── catalog.yaml
 ├── raw/                       # 68+ trajectories from 5 sources

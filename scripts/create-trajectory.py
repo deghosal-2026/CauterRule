@@ -19,7 +19,7 @@ VALID_DOMAINS = {"git", "python", "docker", "test", "ci", "deploy", "shell", "en
 VALID_LABELS = {"clear", "ambiguous", "multi-causal", "misleading", "operator-induced"}
 VALID_SEVERITIES = {"low", "medium", "high"}
 VALID_SOURCES = {"opencode", "ci", "sibling-repos", "corrections", "manual"}
-CORPUS_DIR = Path("field-test/v0.1.0/corpus")
+CORPUS_DIR = Path("field-test/corpus")
 
 
 def _next_id(source: str, domain: str) -> str:

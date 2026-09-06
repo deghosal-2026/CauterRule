@@ -58,7 +58,7 @@ These are NOT field tests. They are regression, benchmark, infra, and validation
 | 30.7.7 | Concurrent agents | `field-test/v0.1.0/concurrent.md` | 5 simultaneous trajectories, no dupes, no data loss | ⬜ | #391 |
 | 30.7.8 | LLM provider fallback | `field-test/v0.1.0/fallback.md` | Primary LLM down → fallback → recovery | ⬜ | #392 |
 | 30.7.9 | Negative tests | `field-test/v0.1.0/negative-test-plan.md` | 10 inputs that should NOT produce rules | ✅ | #393 |
-| 30.7.10 | Golden trajectory set | `field-test/v0.1.0/corpus/golden/` | 10 trajectories with known expected rules | ✅ | #394 |
+| 30.7.10 | Golden trajectory set | `field-test/corpus/golden/` | 10 trajectories with known expected rules | ✅ | #394 |
 | 30.7.11 | Rule quality scoring | `field-test/v0.1.0/rule-quality-scores.md` | Score 20 rules on readability, specificity, actionability | ⬜ | #395 |
 | 30.7.12 | Time-to-value | `field-test/v0.1.0/time-to-value.md` | Install → first prevented failure <15 min | ✅ | #396 |
 | 30.7.13 | CI integration | `src/cauterule/cli/test.py` | `cauterule test --ci` produces valid JUnit XML | ✅ | #397 |

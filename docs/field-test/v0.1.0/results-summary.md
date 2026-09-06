@@ -61,8 +61,8 @@
 | 30.7.6 | Upgrade path | ⬜ | Not yet run | — |
 | 30.7.7 | Concurrent agents | ⬜ | Not yet run | — |
 | 30.7.8 | LLM provider fallback | ⬜ | Not yet run | — |
-| 30.7.9 | Negative tests | ✅ | 10 negative trajectories created | `field-test/v0.1.0/corpus/curated/failures/negative/` |
-| 30.7.10 | Golden trajectory set | ✅ | 10 golden trajectories + manifest created | `field-test/v0.1.0/corpus/golden/` |
+| 30.7.9 | Negative tests | ✅ | 10 negative trajectories created | `field-test/corpus/curated/failures/negative/` |
+| 30.7.10 | Golden trajectory set | ✅ | 10 golden trajectories + manifest created | `field-test/corpus/golden/` |
 | 30.7.11 | Rule quality scoring | ⬜ | Not yet run | — |
 | 30.7.12 | Time-to-value | ✅ | Targets documented. Measurement script created. | `field-test/v0.1.0/time-to-value.md` |
 | 30.7.13 | CI integration | ✅ | JUnit XML output function + tests created | `tests/field/test_ci_integration.py` |
@@ -220,8 +220,8 @@
 | `field-test/v0.1.0/time-to-value.md` | Time-to-value targets and measurement |
 | `field-test/v0.1.0/negative-test-plan.md` | 10 negative test trajectory descriptions |
 | `field-test/v0.1.0/docker-test-results.md` | Docker field test results (104 tests) |
-| `field-test/v0.1.0/corpus/golden/golden-manifest.json` | Golden trajectory manifest |
-| `field-test/v0.1.0/corpus/curated/failures/negative/` | 10 negative JSONL trajectories |
+| `field-test/corpus/golden/golden-manifest.json` | Golden trajectory manifest |
+| `field-test/corpus/curated/failures/negative/` | 10 negative JSONL trajectories |
 
 ### Scripts Created
 

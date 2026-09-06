@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "corpus_type": "golden",
+    "timestamp": "20260906T013330Z",
+    "llm_provider": "openai",
+    "llm_model": "lLlama-3.2-3B-Instruct-4bit",
+    "llm_base_url": "http://localhost:8000/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2,0.5",
+    "target_trajectories": 10,
+    "reference_trajectories": 84
+  },
+  "elapsed_seconds": 0.5,
+  "total": 10,
+  "done": 0,
+  "skipped": 10,
+  "total_candidates": 0,
+  "avg_precision": 0.0,
+  "avg_recall": 0.0,
+  "passing": 0,
+  "failing": 0,
+  "updated_at": "2026-09-06T01:33:31Z"
+}

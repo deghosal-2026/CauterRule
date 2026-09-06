@@ -19,8 +19,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-RAW_DIR = Path("field-test/v0.1.0/corpus/raw")
-GOLDEN_DIR = Path("field-test/v0.1.0/corpus/golden")
+RAW_DIR = Path("field-test/corpus/raw")
+GOLDEN_DIR = Path("field-test/corpus/golden")
 SEED = 42
 
 # ── Scenario Definitions ─────────────────────────────────────────────────
