@@ -6,7 +6,9 @@ from cauterule.models.candidate import CandidateRule
 from cauterule.models.trajectory import Trajectory
 
 # Triggers shorter than this are considered too generic to match reliably.
-_MIN_TRIGGER_WORDS = 2
+# Set to 1 to allow single-word triggers like "docker" or "deploy" while still
+# providing a floor for truly empty or meaningless triggers.
+_MIN_TRIGGER_WORDS = 1
 
 
 def _tokenize(text: str) -> set[str]:
@@ -48,11 +50,13 @@ def rule_matches(candidate: CandidateRule, trajectory: Trajectory) -> bool:
     if len(trigger_words) < _MIN_TRIGGER_WORDS and not candidate.when.context:
         return False
 
-    # Match: either substring or >=50% token overlap
+    # Match: substring match preferred. For longer triggers (>=4 words),
+    # fall back to token overlap as a tolerance for small model output variation.
+    # Require >=75% overlap to avoid false positives from short generic triggers.
     trigger_match = trigger in haystack
-    if not trigger_match and trigger_words:
+    if not trigger_match and len(trigger_words) >= 4:
         overlap = len(trigger_words & haystack_words)
-        if overlap < max(1, len(trigger_words) // 2):
+        if overlap < max(3, len(trigger_words) // 2):
             return False
     elif not trigger_match:
         return False
