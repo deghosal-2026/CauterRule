@@ -42,13 +42,13 @@ Phase 1: Foundations (30.1) ──> Phase 2: Performance + Corpus (30.7.1, 30.7.
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
 | 30.1.1 | Establish baseline metrics | `field-test/v0.1.0/baseline.md` | Measure current repeat-failure rate, rule-store size, replay precision, coverage scores before running any field tests | ⬜ |
-| 30.1.2 | Run hermetic non-LLM CI suite | `tests/field/hermetic.py` | All replay, store, linter, conflict, and injection tests pass without LLM calls (zero external dependencies) | ⬜ |
-| 30.1.3 | Validate sentinel regression benchmark | `tests/benchmark/sentinel.py` | Core replay determinism, counterexample rejection, and success-regression benchmarks all pass | ⬜ |
-| 30.1.4 | Run adversarial edit injection test | `tests/field/adversarial.py` | All 6 adversarial corpora pass (injection, misleading, contradiction, unsafe, poisoning, leakage) | ⬜ |
-| 30.1.5 | Test rollback with a real promoted rule | `tests/field/rollback.py` | Promote a rule, verify it appears in store, rollback via git, verify it is removed, re-promote | ⬜ |
-| 30.1.6 | Run MCP server field test | `tests/field/mcp.py` | Start MCP server, connect client, call all 4 tools, verify responses match expected rule store state | ⬜ |
-| 30.1.7 | Run export/import field test | `tests/field/export.py` | Export to all 7 formats, verify each file is valid, re-import from each format, verify round-trip fidelity | ⬜ |
-| 30.1.8 | Run `@cauterule.watch` adapter test | `tests/field/adapter.py` | Wrap a toy agent, run tasks that fail, verify trajectory capture, extraction, and promotion | ⬜ |
+| 30.1.2 | Run hermetic non-LLM CI suite | `tests/field/hermetic.py` | All replay, store, linter, conflict, and injection tests pass without LLM calls (zero external dependencies) | ✅ |
+| 30.1.3 | Validate sentinel regression benchmark | `tests/benchmark/sentinel.py` | Core replay determinism, counterexample rejection, and success-regression benchmarks all pass | ✅ |
+| 30.1.4 | Run adversarial edit injection test | `tests/field/adversarial.py` | All 6 adversarial corpora pass (injection, misleading, contradiction, unsafe, poisoning, leakage) | ✅ |
+| 30.1.5 | Test rollback with a real promoted rule | `tests/field/rollback.py` | Promote a rule, verify it appears in store, rollback via git, verify it is removed, re-promote | ✅ |
+| 30.1.6 | Run MCP server field test | `tests/field/mcp.py` | Start MCP server, connect client, call all 4 tools, verify responses match expected rule store state | ✅ |
+| 30.1.7 | Run export/import field test | `tests/field/export.py` | Export to all 7 formats, verify each file is valid, re-import from each format, verify round-trip fidelity | ✅ |
+| 30.1.8 | Run `@cauterule.watch` adapter test | `tests/field/adapter.py` | Wrap a toy agent, run tasks that fail, verify trajectory capture, extraction, and promotion | ✅ |
 
 ---
 
@@ -66,12 +66,12 @@ Phase 1: Foundations (30.1) ──> Phase 2: Performance + Corpus (30.7.1, 30.7.
 
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
-| 30.2.1 | Validate tiered corpus completeness | `tests/corpus/validate.py` | tiny (25), small (100), medium (1k), large (10k+) — all trajectories have required metadata, balanced success/failure | ⬜ |
+| 30.2.1 | Validate tiered corpus completeness | `tests/corpus/validate.py` | tiny (25), small (100), medium (1k), large (10k+) — all trajectories have required metadata, balanced success/failure | ✅ |
 | 30.2.2 | Validate gold rule families | `tests/corpus/gold.py` | Each benchmark scenario has >=2 acceptable rule abstractions documented | ⬜ |
 | 30.2.3 | Run model bake-off | `tests/benchmark/bakeoff.py` | Compare Llama 3.1 (local), gpt-4o-mini (cheap), gpt-4o (better) on same corpus; document extraction quality and cost | ⬜ |
 | 30.2.4 | Run prompt bake-off | `tests/benchmark/prompts.py` | Compare 3 extractor prompt variants; measure replay pass rate, not just readability | ⬜ |
 | 30.2.5 | Measure coverage vs target | `tests/benchmark/coverage.py` | Rule coverage score >= 80%, domain coverage >= 60%, failure-class coverage >= 60% | ⬜ |
-| 30.2.6 | Run scale benchmarks | `tests/benchmark/scale.py` | Replay latency, injection latency, conflict detection time, memory footprint all within targets | ⬜ |
+| 30.2.6 | Run scale benchmarks | `tests/benchmark/scale.py` | Replay latency, injection latency, conflict detection time, memory footprint all within targets | ✅ |
 | 30.2.7 | Document cost-per-iteration | `field-test/v0.1.0/cost.md` | Measure and document LLM cost per extracted candidate, per promoted rule, per prevented failure | ⬜ |
 
 ---
