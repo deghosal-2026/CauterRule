@@ -1,0 +1,15 @@
+name: pack-git
+version: 1.0.0
+description: Pre-built standing rules for common Git workflows and failure modes
+author: CauterRule
+rules:
+  - R-101
+  - R-102
+  - R-103
+  - R-104
+  - R-105
+  - R-106
+  - R-107
+  - R-108
+  - R-109
+  - R-110

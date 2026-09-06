@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "corpus_type": "raw/opencode",
+    "timestamp": "2026-09-06",
+    "llm_provider": "openai",
+    "llm_model": "openai/gpt-4o-mini",
+    "llm_base_url": "https://openrouter.ai/api/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2",
+    "target_trajectories": 25,
+    "reference_trajectories": 84
+  },
+  "elapsed_seconds": 12.0,
+  "total": 25,
+  "done": 25,
+  "skipped": 0,
+  "total_candidates": 25,
+  "avg_precision": 0.516,
+  "avg_recall": 0.02,
+  "passing": 12,
+  "failing": 3,
+  "inconclusive": 10,
+  "updated_at": "2026-09-06T03:08:58Z"
+}

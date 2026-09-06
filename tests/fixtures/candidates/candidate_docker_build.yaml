@@ -1,0 +1,6 @@
+when:
+  trigger: when docker build fails with missing dependency
+do:
+  directive: install the missing dependency before building
+confidence: 0.8
+extraction_pass: 1

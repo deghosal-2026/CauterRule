@@ -1,0 +1,45 @@
+{
+  "tool": "cauterule",
+  "version": "0.1.0",
+  "timestamp": "2026-09-06T00:22:16Z",
+  "iterations": 3,
+  "threshold_ms": 500,
+  "results": [
+    {
+      "command": "cauterule list",
+      "iterations": 3,
+      "min_ms": 63.6,
+      "avg_ms": 65.4,
+      "max_ms": 66.9,
+      "passed": true,
+      "threshold_ms": 500
+    },
+    {
+      "command": "cauterule health",
+      "iterations": 3,
+      "min_ms": 64.1,
+      "avg_ms": 64.4,
+      "max_ms": 64.7,
+      "passed": true,
+      "threshold_ms": 500
+    },
+    {
+      "command": "cauterule validate",
+      "iterations": 3,
+      "min_ms": 63.3,
+      "avg_ms": 64.5,
+      "max_ms": 65.4,
+      "passed": true,
+      "threshold_ms": 500
+    },
+    {
+      "command": "cauterule inject --task 'git push'",
+      "iterations": 3,
+      "min_ms": 64.6,
+      "avg_ms": 65.7,
+      "max_ms": 67.2,
+      "passed": true,
+      "threshold_ms": 500
+    }
+  ]
+}

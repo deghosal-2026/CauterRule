@@ -1,0 +1,36 @@
+# Ruff config — mirror of [tool.ruff] in pyproject.toml for task 1.2 compliance.
+# Primary config lives in pyproject.toml; this file exists for tooling that
+# expects .ruff.toml (per WBS M1 task 1.2: `ruff check` clean).
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RET", "ARG", "PTH", "TRY", "ANN", "D", "RUF"]
+ignore = []
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.per-file-ignores]
+"tests/**" = ["D", "ANN", "S101", "ARG", "PLR2004", "TRY003", "E501", "RUF043"]
+"src/cauterule/models/**" = ["D105", "TRY003"]
+"src/cauterule/config.py" = ["TRY003", "TRY004", "E501"]
+"src/cauterule/serialization/**" = ["TRY003", "TRY004"]
+"src/cauterule/llm/**" = ["TRY003", "E501", "ANN401", "D"]
+"src/cauterule/capture/**" = ["ANN401", "D", "TRY003", "TRY004", "TRY300", "UP", "SIM", "I", "RUF"]
+"src/cauterule/adapter/**" = ["ANN401", "D", "D301", "UP035", "TRY300", "TRY003", "E501"]
+"src/cauterule/redaction/**" = ["ANN401", "D", "E501", "SIM", "TRY003", "TRY004"]
+"src/cauterule/extraction/**" = ["ANN401", "D", "TRY003", "TRY004", "TRY300", "SIM", "E501", "B007", "I001", "ARG001"]
+"src/cauterule/replay/**" = ["ANN401", "D", "SIM", "RUF", "ARG001", "TRY003", "E501"]
+"src/cauterule/linter/**" = ["ANN401", "D", "TRY003", "E501", "W292"]
+"src/cauterule/promotion/**" = ["ANN401", "D", "TRY003", "E501", "W292"]
+"src/cauterule/packs/**" = ["D105", "TRY003", "TRY004", "ANN401"]
+"src/cauterule/injection/**" = ["ANN401", "D", "TRY003", "E501"]
+"src/cauterule/observe/**" = ["D", "TRY003", "E501"]
+"src/cauterule/loop/**" = ["ANN401", "D", "TRY003", "E501"]
+"src/cauterule/corpus/**" = ["D105", "D107", "TRY003", "E501", "ANN401", "ARG001"]
+"src/cauterule/cli/**" = ["D"]
+"src/cauterule/tui/**" = ["D"]
+"src/cauterule/benchmark/**" = ["D", "TRY003", "E501", "W292"]
+"src/cauterule/integrations/**" = ["D", "TRY003", "E501"]

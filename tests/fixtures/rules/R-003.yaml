@@ -1,0 +1,15 @@
+id: R-003
+when:
+  trigger: git merge conflicts occur
+do:
+  directive: resolve conflicts manually
+confidence: 0.6
+provenance:
+  source_trajectory: T-020
+  extracted_by: test
+  extract_timestamp: '2026-09-05T11:00:00Z'
+  extraction_pass: 1
+status: superseded
+promoted_at: '2026-09-05T11:30:00Z'
+hit_count: 0
+superseded_by: R-004

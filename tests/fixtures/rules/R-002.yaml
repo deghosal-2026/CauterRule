@@ -1,0 +1,16 @@
+id: R-002
+when:
+  trigger: any command fails unexpectedly
+do:
+  directive: check the error message and retry
+confidence: 0.3
+provenance:
+  source_trajectory: T-010
+  extracted_by: test
+  extract_timestamp: '2026-09-05T10:00:00Z'
+  extraction_pass: 1
+status: retired
+promoted_at: '2026-09-05T10:30:00Z'
+hit_count: 0
+retired_at: '2026-09-05T15:00:00Z'
+retirement_reason: too vague

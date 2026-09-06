@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "corpus_type": "failures/negative",
+    "timestamp": "2026-09-06",
+    "llm_provider": "openai",
+    "llm_model": "Llama-3.2-3B-Instruct-4bit",
+    "llm_base_url": "http://localhost:8000/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2",
+    "target_trajectories": 10,
+    "reference_trajectories": 84
+  },
+  "elapsed_seconds": 11.9,
+  "total": 10,
+  "done": 9,
+  "skipped": 1,
+  "total_candidates": 9,
+  "avg_precision": 0.296,
+  "avg_recall": 0.035,
+  "passing": 1,
+  "failing": 6,
+  "inconclusive": 2,
+  "updated_at": "2026-09-06T02:59:58Z"
+}

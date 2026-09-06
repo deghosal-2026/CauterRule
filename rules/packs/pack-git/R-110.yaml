@@ -1,0 +1,25 @@
+id: R-110
+when:
+  trigger: git submodule update fails or returns non-zero
+  context:
+    - submodule
+do:
+  directive: Run `git submodule update --init --recursive` and retry the parent operation
+  because: Uninitialized or unpulled submodules cause dependent operations to fail; --init --recursive handles nested submodules
+confidence: 0.86
+provenance:
+  source_trajectory: packs/pack-git/R-110
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - git
+  - submodule
+  - update
+taxonomy: git/submodule/update-failed
+pack: pack-git

@@ -24,6 +24,17 @@ trajectories/
 scenarios/
 *.jsonl
 
+# But track field-test corpus JSONL files
+!field-test/**/*.jsonl
+
 # Environment
 .env
 .env.local
+
+# Coverage / test artifacts
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/field-test/results/

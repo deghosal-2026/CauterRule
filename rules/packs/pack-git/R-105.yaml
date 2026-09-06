@@ -1,0 +1,25 @@
+id: R-105
+when:
+  trigger: git commit message fails conventional-commit format
+  context:
+    - commit
+do:
+  directive: "Rewrite message as `<type>(<scope>): <description>` and retry the commit"
+  because: Conventional commit messages enable changelog generation and semantic versioning
+confidence: 0.85
+provenance:
+  source_trajectory: packs/pack-git/R-105
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - git
+  - commit
+  - conventional
+taxonomy: git/commit/format
+pack: pack-git

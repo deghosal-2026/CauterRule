@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "corpus_type": "failures/negative",
+    "timestamp": "2026-09-06",
+    "llm_provider": "openai",
+    "llm_model": "Qwen3-4B-Instruct-2507-4bit",
+    "llm_base_url": "http://localhost:8000/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2",
+    "target_trajectories": 10,
+    "reference_trajectories": 84
+  },
+  "elapsed_seconds": 27.0,
+  "total": 10,
+  "done": 10,
+  "skipped": 0,
+  "total_candidates": 10,
+  "avg_precision": 0.16,
+  "avg_recall": 0.02,
+  "passing": 1,
+  "failing": 5,
+  "inconclusive": 4,
+  "updated_at": "2026-09-06T02:32:36Z"
+}

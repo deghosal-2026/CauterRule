@@ -1,0 +1,193 @@
+"""Trajectory and Step data models.
+
+Schema per ``docs/design/trajectory-schema-design.md``.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any, Literal
+
+QualityLabel = Literal["clear", "ambiguous", "multi-causal", "misleading", "operator-induced"]
+Severity = Literal["low", "medium", "high"]
+
+_VALID_QUALITY_LABELS: frozenset[str] = frozenset(
+    {"clear", "ambiguous", "multi-causal", "misleading", "operator-induced"}
+)
+_VALID_SEVERITIES: frozenset[str] = frozenset({"low", "medium", "high"})
+
+
+def _require_nonblank(value: str, name: str) -> None:
+    if not value or not value.strip():
+        raise ValueError(f"{name} must be a non-blank string")
+
+
+@dataclass(frozen=True)
+class AgentConfig:
+    """Agent configuration at time of execution."""
+
+    model: str | None = None
+    tools: tuple[str, ...] = field(default_factory=tuple)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable dict."""
+        d: dict[str, Any] = {}
+        if self.model is not None:
+            d["model"] = self.model
+        if self.tools:
+            d["tools"] = list(self.tools)
+        return d
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> AgentConfig:
+        """Create from a dict produced by :meth:`to_dict`."""
+        return cls(model=data.get("model"), tools=tuple(data.get("tools", [])))
+
+
+@dataclass(frozen=True)
+class Environment:
+    """Environment context for a trajectory."""
+
+    os: str | None = None
+    ci: bool | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable dict."""
+        d: dict[str, Any] = {}
+        if self.os is not None:
+            d["os"] = self.os
+        if self.ci is not None:
+            d["ci"] = self.ci
+        return d
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Environment:
+        """Create from a dict produced by :meth:`to_dict`."""
+        return cls(os=data.get("os"), ci=data.get("ci"))
+
+
+@dataclass(frozen=True)
+class Step:
+    """A single step within a trajectory."""
+
+    step_number: int
+    tool: str
+    input: str | None = None
+    output: str | None = None
+    error: str | None = None
+    state: dict[str, Any] | None = None
+
+    def __post_init__(self) -> None:
+        if self.step_number < 1:
+            raise ValueError(f"step_number must be >=1, got {self.step_number}")
+        _require_nonblank(self.tool, "step.tool")
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable dict."""
+        d: dict[str, Any] = {"step_number": self.step_number, "tool": self.tool}
+        if self.input is not None:
+            d["input"] = self.input
+        if self.output is not None:
+            d["output"] = self.output
+        if self.error is not None:
+            d["error"] = self.error
+        if self.state is not None:
+            d["state"] = self.state
+        return d
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Step:
+        """Create from a dict produced by :meth:`to_dict`."""
+        return cls(
+            step_number=int(data.get("step_number", 1)),
+            tool=data.get("tool", ""),
+            input=data.get("input"),
+            output=data.get("output"),
+            error=data.get("error"),
+            state=data.get("state"),
+        )
+
+
+@dataclass(frozen=True)
+class Trajectory:
+    """An execution trajectory with steps and metadata."""
+
+    id: str
+    timestamp: str
+    task: str
+    steps: tuple[Step, ...]
+    success: bool
+    failure_point: str | None = None
+    failure_class: str | None = None
+    quality_label: QualityLabel | None = None
+    domain: str | None = None
+    severity: Severity | None = None
+    tags: tuple[str, ...] = field(default_factory=tuple)
+    agent_config: AgentConfig | None = None
+    environment: Environment | None = None
+    redacted: bool = False
+
+    def __post_init__(self) -> None:
+        _require_nonblank(self.id, "trajectory.id")
+        _require_nonblank(self.timestamp, "trajectory.timestamp")
+        _require_nonblank(self.task, "trajectory.task")
+        if self.quality_label is not None and self.quality_label not in _VALID_QUALITY_LABELS:
+            raise ValueError(f"quality_label must be one of {_VALID_QUALITY_LABELS}")
+        if self.severity is not None and self.severity not in _VALID_SEVERITIES:
+            raise ValueError(f"severity must be one of {_VALID_SEVERITIES}")
+        for t in self.tags:
+            _require_nonblank(t, "tags item")
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable dict."""
+        d: dict[str, Any] = {
+            "trajectory_id": self.id,
+            "timestamp": self.timestamp,
+            "task": self.task,
+            "steps": [s.to_dict() for s in self.steps],
+            "success": self.success,
+            "redacted": self.redacted,
+        }
+        if self.failure_point is not None:
+            d["failure_point"] = self.failure_point
+        if self.failure_class is not None:
+            d["failure_class"] = self.failure_class
+        if self.quality_label is not None:
+            d["quality_label"] = self.quality_label
+        if self.domain is not None:
+            d["domain"] = self.domain
+        if self.severity is not None:
+            d["severity"] = self.severity
+        if self.tags:
+            d["tags"] = list(self.tags)
+        if self.agent_config is not None:
+            d["agent_config"] = self.agent_config.to_dict()
+        if self.environment is not None:
+            d["environment"] = self.environment.to_dict()
+        return d
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Trajectory:
+        """Create from a dict produced by :meth:`to_dict`."""
+        # Accept both 'id' and 'trajectory_id' for flexibility.
+        tid = data.get("trajectory_id") or data.get("id", "")
+        steps_raw = data.get("steps", [])
+        steps = tuple(Step.from_dict(s) for s in steps_raw if isinstance(s, dict))
+        ac_raw = data.get("agent_config")
+        env_raw = data.get("environment")
+        return cls(
+            id=str(tid),
+            timestamp=str(data.get("timestamp", "")),
+            task=str(data.get("task", "")),
+            steps=steps,
+            success=bool(data.get("success", False)),
+            failure_point=data.get("failure_point"),
+            failure_class=data.get("failure_class"),
+            quality_label=data.get("quality_label"),
+            domain=data.get("domain"),
+            severity=data.get("severity"),
+            tags=tuple(data.get("tags", [])),
+            agent_config=AgentConfig.from_dict(ac_raw) if isinstance(ac_raw, dict) else None,
+            environment=Environment.from_dict(env_raw) if isinstance(env_raw, dict) else None,
+            redacted=bool(data.get("redacted", False)),
+        )

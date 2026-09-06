@@ -1,0 +1,26 @@
+id: R-102
+when:
+  trigger: git merge produces conflicts
+  context:
+    - feature branch
+    - target branch
+do:
+  directive: Resolve conflicts in each file, `git add <resolved-files>`, then `git commit`
+  because: Merge conflicts require manual resolution before the merge can complete
+confidence: 0.95
+provenance:
+  source_trajectory: packs/pack-git/R-102
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - git
+  - merge
+  - conflict
+taxonomy: git/merge/conflict
+pack: pack-git

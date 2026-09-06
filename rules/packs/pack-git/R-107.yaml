@@ -1,0 +1,25 @@
+id: R-107
+when:
+  trigger: git HEAD is detached (not on a branch)
+  context:
+    - commit
+do:
+  directive: Create a branch with `git checkout -b <branch-name>` before committing new work
+  because: Committing in detached HEAD risks losing work when switching contexts
+confidence: 0.91
+provenance:
+  source_trajectory: packs/pack-git/R-107
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - git
+  - detached
+  - branch
+taxonomy: git/head/detached
+pack: pack-git

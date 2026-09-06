@@ -1,0 +1,11 @@
+{
+  "corpus_type": "successes",
+  "timestamp": "2026-09-06",
+  "llm_provider": "openai",
+  "llm_model": "Qwen3-4B-Instruct-2507-4bit",
+  "llm_base_url": "http://localhost:8000/v1",
+  "extraction_passes": 2,
+  "temperatures": "0.2",
+  "target_trajectories": 20,
+  "reference_trajectories": 84
+}

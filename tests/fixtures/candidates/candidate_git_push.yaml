@@ -1,0 +1,6 @@
+when:
+  trigger: when git push fails with non-fast-forward
+do:
+  directive: pull latest changes before pushing
+confidence: 0.85
+extraction_pass: 1
