@@ -132,9 +132,10 @@ def extract_candidates(
     """Run multi-pass extraction using the CauterRule library directly.
 
     Returns a list of candidate dicts with keys:
-        when, do, confidence, extraction_pass, reasoning
+        when, do, confidence, extraction_pass, reasoning, llm_response
     """
-    from cauterule.extraction.extractor import extract_candidate_safe
+    from cauterule.extraction.extractor import _parse_candidate_json
+    from cauterule.extraction.prompt import build_extraction_prompt
     from cauterule.models.trajectory import Trajectory
 
     llm = _get_llm(llm_provider, llm_model, llm_base_url)
@@ -143,22 +144,28 @@ def extract_candidates(
     candidates: list[dict] = []
     for idx, temp in enumerate(temperatures, start=1):
         try:
-            candidate, error = extract_candidate_safe(
-                traj, llm, extraction_pass=idx, temperature=temp,
+            prompt = build_extraction_prompt(traj)
+            result = llm.complete(prompt, temperature=temp)
+            raw_text = result.text if hasattr(result, "text") else str(result)
+
+            candidate = _parse_candidate_json(
+                raw_text, extraction_pass=idx, template=None,
             )
-            if candidate is not None:
-                candidates.append({
-                    "when": candidate.when.trigger,
-                    "do": candidate.do.directive,
-                    "confidence": candidate.confidence,
-                    "extraction_pass": candidate.extraction_pass,
-                    "reasoning": candidate.reasoning,
-                    "temperature": temp,
-                })
-            else:
-                _ = error  # swallow; just skip this pass
+
+            from cauterule.extraction.quality import check_quality
+            _ = check_quality(candidate, traj)
+
+            candidates.append({
+                "when": candidate.when.trigger,
+                "do": candidate.do.directive,
+                "confidence": candidate.confidence,
+                "extraction_pass": candidate.extraction_pass,
+                "reasoning": candidate.reasoning,
+                "temperature": temp,
+                "llm_response": raw_text,
+            })
         except Exception as exc:
-            print(f"    [warn] extraction pass {idx} (temp={temp}) failed: {exc}")
+            print(f"NO CANDIDATE (pass {idx}, temp={temp}): {exc}")
 
     return candidates
 
