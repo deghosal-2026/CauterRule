@@ -11,22 +11,26 @@ Output structure: {output-dir}/{corpus-type}/{llm_provider}-{llm_model}/{timesta
 
 Usage:
   # Run golden corpus with local OMLX (Llama via OpenAI-compatible endpoint)
-  python scripts/run-field-test.py golden \\
-    --llm-provider openai --llm-model llama-3.2-3b-instruct \\
-    --llm-base-url http://localhost:8000/v1 \\
+  CAUTERULE_LLM_API_KEY=dummy \
+  python scripts/run-field-test.py golden \
+    --llm-provider openai --llm-model llama-3.2-3b-instruct \
+    --llm-base-url http://localhost:8000/v1 \
     --output-dir field-test/results
   # Output: field-test/results/golden/openai-llama-3.2-3b-instruct/<ts>/
 
-  # Run curated failures with cloud GPT-4o-mini
-  CAUTERULE_LLM_API_KEY=sk-... \\
-  python scripts/run-field-test.py failures/positive \\
-    --llm-provider openai --llm-model gpt-4o-mini \\
+  # Run curated failures with cloud GPT-4o-mini via OpenRouter
+  CAUTERULE_LLM_API_KEY=sk-or-... \
+  python scripts/run-field-test.py failures/positive \
+    --llm-provider openai --llm-model openai/gpt-4o-mini \
+    --llm-base-url https://openrouter.ai/api/v1 \
     --output-dir field-test/results
-  # Output: field-test/results/failures_positive/openai-gpt-4o-mini/<ts>/
+  # Output: field-test/results/failures_positive/openai-openai_gpt-4o-mini/<ts>/
 
   # Run all corpus types (serially, one after another)
-  python scripts/run-field-test.py --all \\
-    --llm-provider openai --llm-model gpt-4o-mini \\
+  CAUTERULE_LLM_API_KEY=sk-or-... \
+  python scripts/run-field-test.py --all \
+    --llm-provider openai --llm-model openai/gpt-4o-mini \
+    --llm-base-url https://openrouter.ai/api/v1 \
     --output-dir field-test/results
 """
 from __future__ import annotations
@@ -82,6 +86,126 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
+# ── LLM + extraction (library calls, no subprocess) ────────────────────
+
+_LLM_CACHE: dict[str, Any] = {}
+
+
+def _get_llm(provider: str, model: str, base_url: str):
+    """Build or return cached LLM provider instance."""
+    cache_key = f"{provider}/{model}/{base_url}"
+    if cache_key in _LLM_CACHE:
+        return _LLM_CACHE[cache_key]
+
+    from cauterule.config import (
+        Config, LLMConfig, PathsConfig, ThresholdsConfig,
+        PromotionConfig, RedactionConfig, ExtractionConfig,
+    )
+    from cauterule.llm.factory import get_llm
+
+    api_key = os.getenv("CAUTERULE_LLM_API_KEY", "")
+    cfg = Config(
+        llm=LLMConfig(
+            provider=provider,
+            model=model,
+            api_key=api_key,
+            base_url=base_url,
+        ),
+        paths=PathsConfig(),
+        thresholds=ThresholdsConfig(),
+        promotion=PromotionConfig(),
+        redaction=RedactionConfig(),
+        extraction=ExtractionConfig(),
+    )
+    llm = get_llm(cfg)
+    _LLM_CACHE[cache_key] = llm
+    return llm
+
+
+def extract_candidates(
+    trajectory: dict,
+    llm_provider: str,
+    llm_model: str,
+    llm_base_url: str,
+    temperatures: list[float],
+) -> list[dict]:
+    """Run multi-pass extraction using the CauterRule library directly.
+
+    Returns a list of candidate dicts with keys:
+        when, do, confidence, extraction_pass, reasoning
+    """
+    from cauterule.extraction.extractor import extract_candidate_safe
+    from cauterule.models.trajectory import Trajectory
+
+    llm = _get_llm(llm_provider, llm_model, llm_base_url)
+    traj = Trajectory.from_dict(trajectory)
+
+    candidates: list[dict] = []
+    for idx, temp in enumerate(temperatures, start=1):
+        try:
+            candidate, error = extract_candidate_safe(
+                traj, llm, extraction_pass=idx, temperature=temp,
+            )
+            if candidate is not None:
+                candidates.append({
+                    "when": candidate.when.trigger,
+                    "do": candidate.do.directive,
+                    "confidence": candidate.confidence,
+                    "extraction_pass": candidate.extraction_pass,
+                    "reasoning": candidate.reasoning,
+                    "temperature": temp,
+                })
+            else:
+                _ = error  # swallow; just skip this pass
+        except Exception as exc:
+            print(f"    [warn] extraction pass {idx} (temp={temp}) failed: {exc}")
+
+    return candidates
+
+
+# ── Replay testing (library calls) ──────────────────────────────────────
+
+def replay_test_candidate(
+    candidate: dict,
+    reference_trajs: list[dict],
+) -> dict:
+    """Test candidate against reference trajectories using the replay engine."""
+    from cauterule.models.candidate import CandidateRule
+    from cauterule.models.rule import RuleDo, RuleWhen
+    from cauterule.models.trajectory import Trajectory
+    from cauterule.replay.report import build_evidence_report
+
+    cand = CandidateRule(
+        when=RuleWhen(trigger=candidate["when"]),
+        do=RuleDo(directive=candidate["do"]),
+        confidence=candidate["confidence"],
+        reasoning=candidate.get("reasoning"),
+        extraction_pass=candidate.get("extraction_pass", 1),
+    )
+
+    traj_objs: list[Trajectory] = []
+    for t in reference_trajs:
+        try:
+            traj_objs.append(Trajectory.from_dict(t))
+        except Exception:
+            pass
+
+    report = build_evidence_report(cand, traj_objs)
+
+    return {
+        "candidate": candidate,
+        "failures_prevented": list(report.failures_prevented),
+        "successes_broken": list(report.successes_broken),
+        "near_misses": list(report.near_misses),
+        "precision": report.precision,
+        "recall": report.recall,
+        "verdict": report.verdict,
+        "replay_trace": [dict(r) for r in report.replay_trace],
+    }
+
+
+# ── Corpus loading ──────────────────────────────────────────────────────
+
 def load_trajectories(dir_path: Path) -> list[dict]:
     """Load all JSONL trajectories from *dir_path*."""
     if not dir_path.is_dir():
@@ -103,114 +227,7 @@ def load_trajectory(file_path: Path) -> dict | None:
         return None
 
 
-def extract_candidates(
-    trajectory: dict,
-    llm_provider: str,
-    llm_model: str,
-    llm_base_url: str,
-    temperatures: list[float],
-) -> list[dict]:
-    """Run extraction via subprocess (isolated LLM config per call)."""
-    import subprocess
-    import tempfile
-
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
-        json.dump(trajectory, f)
-        traj_path = f.name
-
-    env = os.environ.copy()
-    env["CAUTERULE_LLM_PROVIDER"] = llm_provider
-    env["CAUTERULE_MODEL"] = llm_model
-    if llm_base_url:
-        env["CAUTERULE_LLM_BASE_URL"] = llm_base_url
-
-    candidates: list[dict] = []
-    for temp in temperatures:
-        env["CAUTERULE_LLM_TEMPERATURE"] = str(temp)
-        try:
-            result = subprocess.run(
-                [sys.executable, "-m", "cauterule.cli.app", "extract", traj_path, "--dry-run"],
-                capture_output=True, text=True, timeout=120, env=env,
-            )
-            if result.returncode == 0:
-                when = do = confidence = None
-                for line in result.stdout.splitlines():
-                    if line.startswith("dry-run candidate when:"):
-                        when = line.split(":", 1)[1].strip()
-                    elif line.startswith("dry-run candidate do:"):
-                        do = line.split(":", 1)[1].strip()
-                    elif line.startswith("dry-run confidence:"):
-                        confidence = float(line.split(":", 1)[1].strip())
-                if when and do and confidence is not None:
-                    candidates.append({"when": when, "do": do, "confidence": confidence, "temperature": temp, "reasoning": result.stdout})
-        except Exception as exc:
-            print(f"    [warn] extraction pass temp={temp:.1f} failed: {exc}")
-
-    try:
-        os.unlink(traj_path)
-    except OSError:
-        pass
-    return candidates
-
-
-def replay_test_candidate(
-    candidate: dict,
-    reference_trajs: list[dict],
-    llm_provider: str,
-    llm_model: str,
-    llm_base_url: str,
-) -> dict:
-    """Test candidate against reference trajectories."""
-    failures_prevented = 0
-    successes_broken = 0
-    results: list[dict] = []
-
-    for ref in reference_trajs:
-        prevented = False
-        broken = False
-        trigger = candidate["when"].lower()
-        task = ref.get("task", "").lower()
-        failure_point = (ref.get("failure_point") or "").lower()
-
-        if not ref.get("success", True):
-            if trigger in task or trigger in failure_point:
-                prevented = True
-        else:
-            if trigger in task:
-                broken = True
-
-        if prevented:
-            failures_prevented += 1
-        if broken:
-            successes_broken += 1
-
-        results.append({
-            "trajectory_id": ref.get("trajectory_id", "?"),
-            "success": ref.get("success", True),
-            "outcome": "prevented" if prevented else ("broken" if broken else "neutral"),
-        })
-
-    total_failures = sum(1 for t in reference_trajs if not t.get("success", True))
-    total_successes = sum(1 for t in reference_trajs if t.get("success", False))
-    precision = failures_prevented / (failures_prevented + successes_broken) if (failures_prevented + successes_broken) > 0 else 0.0
-    recall = failures_prevented / total_failures if total_failures > 0 else 0.0
-    if failures_prevented > 0 and successes_broken == 0 and precision >= 0.8:
-        verdict = "pass"
-    elif successes_broken > 0:
-        verdict = "fail"
-    else:
-        verdict = "inconclusive"
-
-    return {
-        "candidate": candidate,
-        "failures_prevented": failures_prevented,
-        "successes_broken": successes_broken,
-        "precision": round(precision, 3),
-        "recall": round(recall, 3),
-        "verdict": verdict,
-        "results": results,
-    }
-
+# ── Per-trajectory processing ───────────────────────────────────────────
 
 def process_one_trajectory(
     traj_path: Path,
@@ -240,10 +257,10 @@ def process_one_trajectory(
 
     test_results = []
     for cand in candidates:
-        test_result = replay_test_candidate(cand, reference_trajs, args.llm_provider, args.llm_model, args.llm_base_url)
+        test_result = replay_test_candidate(cand, reference_trajs)
         test_results.append(test_result)
 
-    best = max(test_results, key=lambda r: r["failures_prevented"] * r["precision"]) if test_results else {}
+    best = max(test_results, key=lambda r: r["precision"] * r["recall"]) if test_results else {}
     print(f"{len(candidates)} candidates, best: precision={best.get('precision',0):.2f} recall={best.get('recall',0):.2f} verdict={best.get('verdict','?')}")
 
     return {
@@ -255,6 +272,40 @@ def process_one_trajectory(
         "best": best,
     }
 
+
+# ── Summary writer (incremental) ───────────────────────────────────────
+
+def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_time: float) -> None:
+    """Write a live summary that gets updated after each trajectory."""
+    done = [r for r in results if r.get("status") == "done"]
+    skipped = [r for r in results if r.get("status") != "done"]
+    total_candidates = sum(r.get("candidate_count", 0) for r in done)
+
+    best_results = [r.get("best", {}) for r in done if r.get("best")]
+    avg_precision = sum(r.get("precision", 0) for r in best_results) / len(best_results) if best_results else 0.0
+    avg_recall = sum(r.get("recall", 0) for r in best_results) / len(best_results) if best_results else 0.0
+    passing = sum(1 for r in best_results if r.get("verdict") == "pass")
+    failing = sum(1 for r in best_results if r.get("verdict") == "fail")
+    inconclusive = sum(1 for r in best_results if r.get("verdict") == "inconclusive")
+
+    summary = {
+        "meta": meta,
+        "elapsed_seconds": round(time.time() - start_time, 1),
+        "total": len(results),
+        "done": len(done),
+        "skipped": len(skipped),
+        "total_candidates": total_candidates,
+        "avg_precision": round(avg_precision, 3),
+        "avg_recall": round(avg_recall, 3),
+        "passing": passing,
+        "failing": failing,
+        "inconclusive": inconclusive,
+        "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+    summary_file.write_text(json.dumps(summary, indent=2))
+
+
+# ── Main per-corpus runner ──────────────────────────────────────────────
 
 def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
     """Run field test for one corpus type. Returns number of trajectories processed."""
@@ -288,8 +339,8 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
         return 0
     print(f"  Target corpus: {len(traj_files)} trajectories\n")
 
-    # Output directory
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    # Output directory: {output-dir}/{corpus-type}/{llm_provider}-{llm_model}/{timestamp}/
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     llm_label = f"{args.llm_provider}-{args.llm_model}".replace("/", "_")
     out_dir = Path(args.output_dir) / corpus_type.replace("/", "_") / llm_label / timestamp
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -329,7 +380,7 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
 
                 # Write incrementally: append to results.jsonl
                 with open(results_file, "a") as fh:
-                    fh.write(json.dumps(result) + "\n")
+                    fh.write(json.dumps(result, default=str) + "\n")
 
                 # Write incremental summary
                 _write_summary(results, summary_file, meta, start_time)
@@ -341,34 +392,6 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
     print(f"\n  Done: {len(results)}/{len(traj_files)} processed in {elapsed:.0f}s")
     print(f"  Results: {results_file}")
     return len(results)
-
-
-def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_time: float) -> None:
-    """Write a live summary that gets updated after each trajectory."""
-    done = [r for r in results if r.get("status") == "done"]
-    skipped = [r for r in results if r.get("status") != "done"]
-    total_candidates = sum(r.get("candidate_count", 0) for r in done)
-
-    best_results = [r.get("best", {}) for r in done if r.get("best")]
-    avg_precision = sum(r.get("precision", 0) for r in best_results) / len(best_results) if best_results else 0.0
-    avg_recall = sum(r.get("recall", 0) for r in best_results) / len(best_results) if best_results else 0.0
-    passing = sum(1 for r in best_results if r.get("verdict") == "pass")
-    failing = sum(1 for r in best_results if r.get("verdict") == "fail")
-
-    summary = {
-        "meta": meta,
-        "elapsed_seconds": round(time.time() - start_time, 1),
-        "total": len(results),
-        "done": len(done),
-        "skipped": len(skipped),
-        "total_candidates": total_candidates,
-        "avg_precision": round(avg_precision, 3),
-        "avg_recall": round(avg_recall, 3),
-        "passing": passing,
-        "failing": failing,
-        "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-    }
-    summary_file.write_text(json.dumps(summary, indent=2))
 
 
 def main() -> None:
