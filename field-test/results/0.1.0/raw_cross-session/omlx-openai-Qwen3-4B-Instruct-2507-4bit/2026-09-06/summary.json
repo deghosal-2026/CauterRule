@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "corpus_type": "raw/cross-session",
+    "timestamp": "2026-09-06",
+    "llm_provider": "openai",
+    "llm_model": "Qwen3-4B-Instruct-2507-4bit",
+    "llm_base_url": "http://localhost:8000/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2",
+    "target_trajectories": 5,
+    "reference_trajectories": 84
+  },
+  "elapsed_seconds": 14.4,
+  "total": 5,
+  "done": 5,
+  "skipped": 0,
+  "total_candidates": 5,
+  "avg_precision": 0.442,
+  "avg_recall": 0.059,
+  "passing": 1,
+  "failing": 2,
+  "inconclusive": 2,
+  "updated_at": "2026-09-06T02:47:12Z"
+}

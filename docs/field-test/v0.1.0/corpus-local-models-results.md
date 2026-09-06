@@ -6,6 +6,8 @@
 **LLM Backend:** OMLX (local, Apple Silicon)
 **Runner:** `scripts/run-field-test.py` with `--temperatures 0.2` (single pass)
 
+**Status after fixes:** parser, prompt, matcher, and same-day result-reset fixes were applied and the corpus was rerun.
+
 ---
 
 ## Methodology
@@ -47,7 +49,7 @@ Execution notes:
 - The API key was a dummy value because OMLX does not require a real key.
 - The runner used one explicit temperature value: `0.2`.
 - Results in this document are taken from on-disk `results.jsonl` and `summary.json` files.
-- Counts in this document reflect raw operational files, not a cleaned export.
+- Counts in this document reflect current on-disk run files after the rerun with parser and runner fixes.
 
 ## Metric Definitions
 
@@ -59,8 +61,8 @@ Execution notes:
 
 ## Limitations
 
-1. **Same-day rerun contamination**
-   The runner currently appends to date-based result files. Repeating a run on the same day can duplicate rows.
+1. **Completed rerun supersedes the earlier contaminated snapshot**
+   The runner now clears `results.jsonl` and `summary.json` at run start, so same-day reruns no longer append stale rows into the same file.
 
 2. **Single-temperature evaluation**
    These results only reflect `--temperatures 0.2`. They do not characterize broader temperature behavior.
@@ -72,14 +74,17 @@ Execution notes:
    Replay verdicts come from the current simulator and evidence builder, not manual expert grading.
 
 5. **Raw counts over canonical counts**
-   This document reports current on-disk results, which is useful operationally but not yet ideal for publication-quality benchmarking.
+   This document still reports current on-disk results, which is useful operationally but not yet ideal for publication-quality benchmarking.
+
+6. **Historical raw timestamp issue is now fixed**
+   The earlier missing-timestamp problem in `raw/synthetic` harness trajectories and `raw/sibling-repos` was repaired, and those corpora have now been rerun successfully.
 
 ## Models
 
 | Model | Params | Ran | Reason Skipped |
 |---|---|---|---|
-| Llama-3.2-3B-Instruct-4bit | 3.2B | ✅ All 7 corpus types | — |
-| Qwen3-4B-Instruct-2507-4bit | 4B | ✅ All 7 corpus types | — |
+| Llama-3.2-3B-Instruct-4bit | 3.2B | ✅ All curated corpora + most raw corpora | — |
+| Qwen3-4B-Instruct-2507-4bit | 4B | ✅ All curated corpora + most raw corpora | — |
 | Qwen3.5-4B-4bit | 4B | ❌ Started, aborted | ~3-4× slower than Qwen3-4B |
 
 Results directories: `field-test/results/0.1.0/{corpus_type}/omlx-openai-{model}/2026-09-06/`
@@ -88,71 +93,152 @@ Results directories: `field-test/results/0.1.0/{corpus_type}/omlx-openai-{model}
 
 ## Result Summary
 
-**Important note:** the current runner writes into date-only directories and appends to `results.jsonl`. Because `golden` was rerun on the same day for Llama, that one file contains a duplicate row and shows 11 rows for a 10-trajectory corpus. Counts below reflect the current on-disk files as they exist today, not a deduped canonical dataset.
+**Update:** the earlier same-day append contamination issue was fixed. The tables below reflect the rerun after fixes, not the earlier contaminated snapshot.
+
+## Before And After Fixes
+
+The earlier observations and learnings are still worth preserving because they correctly identified real problems in the pipeline at the time. The difference now is that some of those issues have been fixed and the benchmark behavior changed materially after the rerun.
+
+### What changed after fixes
+
+| Area | Before | After |
+|---|---|---|
+| Result-file isolation | Same-day reruns could contaminate counts by appending duplicate rows | Same-day reruns now reset `results.jsonl` and `summary.json` at run start |
+| JSON extraction | Many responses failed on trailing commentary or multi-object outputs | First balanced JSON object extraction made most valid responses recoverable |
+| `when.context` validation | Blank context entries caused hard parse failure | Blank context entries are filtered before validation |
+| Prompt clarity | Minimal output example encouraged inconsistent formatting | Concrete filled example plus explicit “JSON only” instruction improved compliance |
+| Curated corpus parse reliability | Severe parse failure rates on both local models | Near-zero parse failures across most curated corpora |
+| Raw corpus completeness | `raw/synthetic` harness items and `raw/sibling-repos` were blocked by missing timestamps | Timestamp issue was fixed and those corpora now run end to end |
+
+### Which earlier learnings still stand unchanged
+
+- Safety corpora still matter most for quality conclusions.
+- Cloud baselines are still useful for stronger quality comparisons.
+- Replay quality is still a real bottleneck even after parsing improves.
+- Stronger local models are still worth testing.
+
+### Which earlier learnings changed after the fixes
+
+- Earlier: formatting reliability was the dominant problem.
+  Now: formatting is much less of a blocker on valid inputs; replay quality and corpus hygiene matter more.
+- Earlier: corrections looked especially bad because of parsing.
+  Now: corrections parse fine, but their semantic/replay quality is still mixed.
+- Earlier: the benchmark was hard to trust because of file contamination.
+  Now: rerun isolation is better, so current counts are more trustworthy.
 
 ### Llama-3.2-3B-Instruct-4bit
 
 | Corpus | Trajs | Candidates | Pass | Inconclusive | Fail | Parse Error Rate |
 |---|---|---|---|---|---|---|
-| golden | 11 | 3 | 1 | 2 | 0 | 72.7% |
-| failures/positive | 30 | 12 | 4 | 7 | 1 | 60.0% |
-| failures/negative | 10 | 4 | 0 | 1 | 3 | 60.0% |
-| successes | 20 | 11 | 0 | 5 | 6 | 45.0% |
-| nearmiss | 14 | 4 | 1 | 1 | 2 | 71.4% |
-| noisy | 5 | 5 | 4 | 0 | 1 | 0% |
-| corrections | 5 | 1 | 0 | 0 | 1 | 80.0% |
+| golden | 10 | 10 | 8 | 0 | 2 | 0.0% |
+| failures/positive | 30 | 30 | 15 | 3 | 12 | 0.0% |
+| failures/negative | 10 | 8 | 1 | 2 | 5 | 20.0% |
+| successes | 20 | 19 | 1 | 16 | 2 | 5.0% |
+| nearmiss | 14 | 14 | 4 | 4 | 6 | 0.0% |
+| noisy | 5 | 5 | 1 | 3 | 1 | 0.0% |
+| corrections | 5 | 5 | 2 | 2 | 1 | 0.0% |
 
 ### Qwen3-4B-Instruct-2507-4bit
 
 | Corpus | Trajs | Candidates | Pass | Inconclusive | Fail | Parse Error Rate |
 |---|---|---|---|---|---|---|
-| golden | 10 | 3 | 0 | 3 | 0 | 70% |
-| failures/positive | 30 | 9 | 0 | 9 | 0 | 70.0% |
-| failures/negative | 10 | 5 | 0 | 5 | 0 | 50% |
-| successes | 20 | 7 | 0 | 7 | 0 | 65.0% |
-| nearmiss | 14 | 7 | 0 | 7 | 0 | 50.0% |
-| noisy | 5 | 2 | 0 | 2 | 0 | 60.0% |
-| corrections | 5 | 1 | 0 | 1 | 0 | 80% |
+| golden | 10 | 10 | 3 | 4 | 3 | 0.0% |
+| failures/positive | 30 | 30 | 15 | 9 | 6 | 0.0% |
+| failures/negative | 10 | 10 | 1 | 4 | 5 | 0.0% |
+| successes | 20 | 20 | 2 | 8 | 10 | 0.0% |
+| nearmiss | 14 | 14 | 5 | 5 | 4 | 0.0% |
+| noisy | 5 | 5 | 4 | 1 | 0 | 0.0% |
+| corrections | 5 | 5 | 2 | 1 | 2 | 0.0% |
+
+### Raw corpus rerun coverage
+
+These runs were added after the earlier version of this document and materially change the evaluation picture.
+
+#### Llama-3.2-3B-Instruct-4bit
+
+| Corpus | Trajs | Candidates | Pass | Inconclusive | Fail | Parse Error Rate |
+|---|---|---|---|---|---|---|
+| raw/opencode | 25 | 24 | 13 | 2 | 9 | 4.0% |
+| raw/synthetic | 145 | 145 | 18 | 101 | 26 | 0.0% |
+| raw/ci | 110 | 109 | 8 | 49 | 52 | 0.9% |
+| raw/corrections | 5 | 5 | 2 | 2 | 1 | 0.0% |
+| raw/cross-session | 5 | 5 | 2 | 1 | 2 | 0.0% |
+| raw/sibling-repos | 10 | 10 | 0 | 9 | 1 | 0.0% |
+
+#### Qwen3-4B-Instruct-2507-4bit
+
+| Corpus | Trajs | Candidates | Pass | Inconclusive | Fail | Parse Error Rate |
+|---|---|---|---|---|---|---|
+| raw/opencode | 25 | 25 | 13 | 7 | 5 | 0.0% |
+| raw/synthetic | 145 | 145 | 36 | 87 | 22 | 0.0% |
+| raw/ci | 110 | 110 | 9 | 90 | 11 | 0.0% |
+| raw/corrections | 5 | 5 | 3 | 1 | 1 | 0.0% |
+| raw/cross-session | 5 | 5 | 1 | 2 | 2 | 0.0% |
+| raw/sibling-repos | 10 | 10 | 0 | 9 | 1 | 0.0% |
 
 ---
 
 ## Observations
 
-### 1. Extreme JSON parse failure rate
+### 1. The parser and prompt fixes worked
 
-Both 3-4B models fail to produce valid JSON in ~60% of extraction attempts. The most common errors:
+Compared with the earlier run, parse reliability improved dramatically.
+
+- Llama `golden` improved from severe parse failure to **10/10 parsed candidates**.
+- Qwen `golden` improved from severe parse failure to **10/10 parsed candidates**.
+- Most curated corpora now parse at or near 100% for both local models.
+- The same-day rerun contamination issue was fixed: current tables no longer show duplicated rows from date-based append behavior.
+
+The earlier dominant parser failures were reduced substantially:
 
 - **`when.context item must be a non-blank string`** — the model emits a JSON array with empty strings, e.g. `"context": [""]`. The `RuleWhen` validator rejects blank context entries.
 - **`Extra data: line N column M`** — the model emits valid JSON followed by additional commentary or a second JSON object. The parser (`json.loads`) rejects trailing data.
 - **`No JSON object found in LLM output`** — the model returns plain text with no JSON at all, e.g. a narrative sentence explaining what rule to write.
 - **`Invalid \escape`** — the model emits unescaped control characters inside JSON strings.
 
-These are primarily formatting failures, not pure semantic failures. The models often appear to identify the right kind of lesson, but they cannot reliably satisfy the extractor's strict JSON and validation requirements.
+What was fixed in code:
 
-### 2. Parsed candidates are sometimes plausible, but replay quality is still weak
+- first balanced JSON object extraction instead of naive first-`{`/last-`}` slicing
+- blank-context filtering before `RuleWhen` validation
+- stronger prompt with a fully filled JSON example and explicit "JSON only" instruction
+- reset of same-day output files before reruns
 
-Spot-checking the `llm_response` fields shows many parsed candidates are directionally reasonable, but the replay results do not support the stronger claim that they are generally correct. A large share of parsed outputs are still `fail` or `inconclusive`, especially on `successes`, `corrections`, and `failures/negative`. The `context` field format is still one of the biggest false-negative sources, but parse success alone is not enough.
+Net result: formatting is no longer the main blocker on curated corpora.
 
-### 3. Replay scores are poor but expected
+### 2. The bottleneck moved from parsing to replay quality and dataset quality
 
-Most candidates score precision=0.00 or 0.50 because:
+Now that candidates parse reliably, the remaining weakness is mostly downstream:
+
+- over-broad triggers still fail or go inconclusive in replay
+- safety-sensitive corpora (`successes`, `failures/negative`, `nearmiss`) still expose overgeneralization
+- raw corpora reveal data-quality problems, especially missing timestamps
+
+### 3. Replay scores improved, but safety and specificity are still uneven
+
+Replay is now measuring real extracted candidates far more often, which is progress. But scores are still constrained by:
 - Golden manifest rules are specific ("when git push fails with non-fast-forward")
 - Extracted triggers are generic ("when a command fails") — correct but too broad to pass replay
-- The simple substring-match simulator inflates false positives
+- The matcher and simulator are still heuristic and can over- or under-fire on substring/token overlap
 
-### 4. Noisy corpus had the best local-model pass rate
+### 4. Model behavior diverged more clearly after parsing was fixed
 
-Llama produced passing candidates on 4/5 noisy trajectories. This suggests the noisy set contains failures with especially explicit surface signals, making them easier for small local models to summarize into rules.
+- Llama became much stronger on `golden` and `failures/positive` than the earlier snapshot suggested.
+- Qwen became much stronger on `noisy` and raw synthetic breadth, with 0 parse failures on processed rows.
+- The earlier narrative that both local models were mostly blocked by formatting is now only partially true; after the fixes, they are mostly limited by rule quality, safety, and missing raw fields.
 
-### 5. Corrections corpus had the worst local-model effectiveness
+### 5. Corrections improved materially after the prompt/parser fixes
 
-Only 1/5 correction trajectories produced a parsed candidate for each tested local model. The presence of both trajectory evidence and explicit human advice seems to push small models into commentary-style output instead of strict rule JSON.
+Both models now parse **5/5** correction trajectories in curated and raw correction sets. The corrections corpus is no longer blocked primarily by output formatting. It is still a quality discriminator, but it is no longer the worst parsing case.
 
-### 6. Safety-oriented corpora remain weak
+### 6. Safety-oriented corpora remain the hardest meaningful benchmark
 
 `successes`, `failures/negative`, and parts of `nearmiss` are where bad extraction behavior becomes most visible. These sets matter disproportionately because they tell us whether the system can avoid inventing harmful or noisy rules.
 
-### 7. The current benchmark mixes several failure modes together
+### 7. Raw corpus completeness issue was real and is now resolved for this run
+
+The missing-timestamp issue in `raw/synthetic` harness trajectories and `raw/sibling-repos` was an input/corpus problem, not an LLM problem. After fixing those files, both corpora ran successfully end to end.
+
+### 8. The current benchmark still mixes several failure modes together
 
 Each end-to-end run currently measures multiple things at once:
 
@@ -167,19 +253,21 @@ That is useful operationally, but it means a poor headline score does not isolat
 
 ## Learnings
 
-1. **Format constraints must match model capability.** The `RuleWhen.context` array with non-blank validation is too strict for 3-4B models. Consider relaxing to `context: list[str]` with optional entries, or adding a JSON schema validation step that provides a second-chance parse.
+1. **The parser and prompt fixes were worth doing.** They unlocked most curated-corpus evaluation and turned the benchmark from a formatting test into a more meaningful quality test.
 
-2. **Multi-temperature passes are not justified yet for small models.** At 0.2 temperature, both tested local models already fail mainly on formatting and validation. More passes at higher temperatures are likely to add cost and noise before they add value.
+2. **Single-pass low-temperature evaluation is now viable.** At `0.2`, both models can produce parseable outputs reliably enough on curated corpora to support comparative evaluation.
 
-3. **The extraction prompt should include an explicit JSON schema example.** Current prompt shows the structure but small models benefit from a concrete filled-in example.
+3. **A concrete example in the extraction prompt materially helped.** This should remain part of the prompt unless stronger evidence suggests otherwise.
 
-4. **Speed and reliability both matter.** Qwen3.5-4B was slow enough in early execution that we stopped the run. Even before quality comparison, that makes it a poor default for broad corpus sweeps.
+4. **Speed and reliability both still matter.** Qwen3.5-4B was slow enough in early execution that we stopped the run. Qwen3-4B remains usable but noticeably slower than Llama across broad sweeps.
 
-5. **Date-only output folders need run-level reset or dedupe.** The current runner appends into the same day's `results.jsonl`, which contaminated at least one summary with duplicate rows after reruns.
+5. **Result-reset on rerun was necessary and worked.** The earlier duplicate-row contamination is no longer visible in the rerun outputs.
 
-6. **Safety corpora should remain first-class even if they lower aggregate scores.** `successes`, `failures/negative`, and `nearmiss` are exactly where an unsafe extractor should struggle if it overgeneralizes.
+6. **Safety corpora should remain first-class even if they lower aggregate scores.** `successes`, `failures/negative`, and `nearmiss` are still where unsafe overgeneralization is most visible.
 
-7. **The benchmark needs a cleaner split between format compliance and semantic quality.** Right now those are coupled tightly enough that local-model evaluation can look worse than the underlying reasoning quality really is.
+7. **The benchmark still needs a cleaner split between format compliance and semantic quality.** But after the fixes, that split is less urgent than corpus hygiene and replay calibration.
+
+8. **Raw corpus validation should happen before LLM evaluation starts.** Even though the timestamp issue is now fixed, missing required fields like `timestamp` should be caught in a validation stage, not discovered half-way through a long model run.
 
 ---
 
@@ -187,11 +275,11 @@ That is useful operationally, but it means a poor headline score does not isolat
 
 | Takeaway | Implication |
 |---|---|
-| Small local models (3-4B) are not yet reliable enough for end-to-end corpus extraction | They may be useful for cheap exploratory runs, but not for headline benchmark numbers |
-| Parse and validation failures dominate | Improving output handling may unlock more value than changing replay logic first |
+| Parser and prompt fixes unlocked most local-model evaluation | Earlier low scores were partly tooling artifacts, not just model weakness |
+| Small local models are now usable for broader corpus evaluation | They are still not strong enough alone for publication-quality quality claims |
 | Noisy trajectories are currently the most effective local-model test set | Keep them in the loop for fast regression checks |
-| Corrections and safety-sensitive corpora are weak spots | These need better prompting or stronger models before claims are credible |
-| Runner output handling affects trust in the metrics | Same-day reruns must not silently append into the same aggregate files |
+| Safety-sensitive corpora remain the real hard gate | `successes`, `negative`, and `nearmiss` should drive safety conclusions |
+| Raw corpus validation is still required even after the fix | Input hygiene problems can waste long model runs if not caught early |
 
 ---
 
@@ -205,7 +293,7 @@ Interpretation:
 
 - Good for testing rule specificity.
 - Bad performance here is especially meaningful.
-- Current local-model results show that formatting reliability is preventing a fair read on semantic quality for many cases.
+- Current local-model results are now good enough to measure semantic quality more directly on curated corpora.
 
 ### `failures/positive`
 
@@ -215,7 +303,7 @@ Interpretation:
 
 - This is the best corpus for measuring practical extraction throughput.
 - Llama's pass count here was the strongest signal that some local extraction is possible.
-- Qwen3-4B still underperformed because formatting failures remained dominant.
+- Qwen3-4B no longer appears formatting-limited on curated corpora; its remaining issues are mostly quality and specificity.
 
 ### `failures/negative`
 
@@ -233,7 +321,7 @@ Purpose: protect against regression-inducing or unnecessary rule extraction.
 Interpretation:
 
 - This may be the most important safety check in the set.
-- Weak local-model performance here means over-triggering and overgeneralization remain real concerns.
+- Local-model performance here still shows over-triggering and overgeneralization are real concerns.
 
 ### `nearmiss`
 
@@ -242,7 +330,7 @@ Purpose: check trigger precision in lookalike scenarios.
 Interpretation:
 
 - This corpus reveals whether the extractor preserves the exact failure signature.
-- Better performance here would be a good sign that larger models are producing more specific triggers.
+- Better performance here remains a good sign that larger models are producing more specific triggers.
 
 ### `noisy`
 
@@ -264,26 +352,26 @@ Interpretation:
 
 ## Test Effectiveness
 
-The corpus field tests were still useful, even with weak local-model performance.
+The corpus field tests were useful before the fixes, and they are substantially more useful after the fixes.
 
 What the tests did well:
 
-- They exposed that extraction is bottlenecked more by output format compliance than by raw model availability.
-- They identified which corpora stress small local models the most: `corrections`, `successes`, and `failures/negative`.
+- They exposed that extraction had been bottlenecked by output format compliance, and confirmed that the parser/prompt fixes removed much of that bottleneck.
+- They identified which corpora stress small local models the most now: `successes`, `failures/negative`, `nearmiss`, and broad raw CI/synthetic sets.
 - They showed the runner needed better observability: surfacing raw LLM responses and parse errors was necessary to make failures diagnosable.
 - They produced a realistic floor baseline for local OMLX models.
 
 What the tests did not yet prove:
 
-- They did not prove that the current extraction prompt is robust across realistic local models.
+- They still do not prove that the current extraction prompt is robust across all realistic local models.
 - They did not prove that parsed local-model candidates are strong enough for promotion-quality replay performance.
-- They did not produce clean apples-to-apples metrics for rerun-contaminated folders without deduplication.
+- They now produce cleaner apples-to-apples metrics for reruns, but not yet for incomplete raw assets.
 
-Overall, the tests were effective as a system-debugging tool, but only partially effective as a benchmark of final extraction quality.
+Overall, the tests are now effective both as a system-debugging tool and as a first-pass comparative benchmark for local models, though not yet a publication-quality benchmark.
 
 ## Local Model Effectiveness
 
-Local 3-4B models were useful in a narrow sense and weak in the broader one.
+Local 3-4B models are more useful after the fixes than the earlier document suggested.
 
 Where they were useful:
 
@@ -294,12 +382,12 @@ Where they were useful:
 
 Where they were not effective enough:
 
-- Producing stable structured JSON across all corpora
-- Generating high-confidence replay-passing candidates consistently
+- Producing stable structured JSON across all valid curated corpora is now mostly working
+- Generating high-confidence replay-passing candidates consistently on safety-sensitive corpora
 - Handling correction-heavy or subtle corpora
 - Serving as the main model for publishable field-test numbers
 
-Practical conclusion: local 3-4B models are good for infrastructure shakedown and low-cost experimentation, but not yet good enough as the primary extraction benchmark for CauterRule.
+Practical conclusion: local 3-4B models are now good enough for broad internal corpus evaluation and regression tracking, but still not strong enough as the only basis for public quality claims.
 
 ## Issue Breakdown
 
@@ -309,15 +397,13 @@ This run exposed three different classes of problems. Separating them matters, b
 
 These are failures caused mainly by the model output itself.
 
-- The model frequently emitted malformed JSON.
-  Examples: trailing commentary after the JSON object, invalid escape sequences, or no JSON object at all.
-- The model often emitted structurally valid-looking output that still violated schema constraints.
-  Most common case: `when.context` included blank strings.
+- The model can still emit malformed JSON or non-object structures on some raw trajectories.
+- The model still sometimes emits over-broad triggers or weak directives even when the output parses.
 - Small local models often produced triggers that were too broad to replay well.
   Example pattern: extracting `when a command fails` instead of preserving the concrete failure signature.
 - The corrections corpus appeared especially hard for local models because they tended to answer conversationally instead of returning strict rule JSON.
 
-Interpretation: these are primarily model capability and output-discipline problems. A stronger model should reduce them, though not eliminate every one.
+Interpretation: LLM output-discipline is no longer the dominant failure mode on curated corpora, but model quality and specificity still are.
 
 ### Corpus issues
 
@@ -326,26 +412,24 @@ These are problems in the dataset or test assets themselves.
 - The corpora are not equally difficult. `noisy` appears easier for local models than `corrections`, `successes`, or `failures/negative`.
 - Some trajectory names and generated curated filenames are messy or lossy, which makes manual inspection harder.
   Examples: truncated or awkward filenames such as `F-024-coding-ython_import_failure`.
-- The current summary is based on operational run files rather than a deduped canonical evaluation export.
-  That makes it easier for reruns to contaminate interpretation.
+- Some raw trajectories were structurally incomplete earlier, but the timestamp issue has now been repaired and rerun.
 - The benchmark currently mixes several goals at once: parsing reliability, semantic extraction quality, and replay suitability.
   That is useful operationally, but it can blur root cause attribution.
 
-Interpretation: the corpus is usable, but it would benefit from cleaner canonical naming, deduped evaluation snapshots, and clearer separation between format-validation tasks and semantic-quality tasks.
+Interpretation: the corpus is now fully runnable for the local-model sweep, but it still needs pre-run validation so future asset issues are caught earlier.
 
 ### Code issues
 
 These are problems in the runner or extraction contract.
 
-- The runner appends into date-only `results.jsonl` files, so reruns on the same day can duplicate rows and contaminate summaries.
-- The extraction contract is strict in ways that amplify local-model failure rates.
-  The clearest case is rejecting blank items in `when.context` rather than recovering or normalizing them.
+- The runner append contamination issue was fixed by clearing same-day result files at run start.
+- The extraction contract was improved by filtering blank context entries and extracting the first balanced JSON object.
 - The earlier runner version swallowed extraction errors, which made diagnosis much harder.
   This was improved during the session, but it was a real contributor to confusion.
 - The benchmark path still depends on strict parser success before replay can even begin.
   That means many potentially useful responses are thrown away before semantic evaluation.
 
-Interpretation: code changes can materially improve observed success rates even without changing models, especially around parsing resilience, result isolation, and normalization of near-valid outputs.
+Interpretation: code changes already materially improved observed success rates. The next code-focused work should target replay calibration and pre-run raw corpus validation.
 
 ## Will Cloud LLMs Really Be Useful?
 
@@ -364,7 +448,7 @@ What cloud LLMs will not solve automatically:
 - Weak replay heuristics can still mark plausible rules as `fail` or `inconclusive`.
 - Same-day append behavior in results can still contaminate metrics.
 
-Best interpretation: cloud LLMs are very likely to make these tests more useful, but they do not replace fixing the runner and extraction contract.
+Best interpretation: cloud LLMs are still likely to help, but the recent rerun shows local-model results were being understated by tooling issues. Cloud models should now be compared against a much cleaner baseline.
 
 ## Representative Failure Examples
 
@@ -407,18 +491,18 @@ Representative bad-but-interesting pattern:
 
 **Recommended next steps:**
 
-1. Fix same-day rerun contamination by clearing or versioning `results.jsonl` per run.
-2. Recompute the local-model summary from deduped per-trajectory results.
+1. Add a raw-corpus validation stage that rejects trajectories missing required fields before LLM evaluation starts.
+2. Recompute a fully updated local-model summary that includes both curated and raw corpus results.
 3. Run the same corpora on one stronger local model, ideally a 7B-9B class model.
-4. Run a cloud baseline, preferably OpenRouter-hosted `openai/gpt-4o-mini`, to measure how much improvement comes from model quality versus parser strictness.
-5. If cloud results are much better, keep local small models for smoke tests and use cloud or larger local models for benchmark reporting.
+4. Run a cloud baseline, preferably OpenRouter-hosted `openai/gpt-4o-mini`, against the same now-cleaner benchmark.
+5. If cloud results are much better on safety corpora, use cloud or larger local models for benchmark reporting and keep 3B-4B models for regression tracking.
 
 ## Comparative Model Table
 
 | Model | Speed | Parse reliability | Replay usefulness | Operational cost | Recommended use |
 |---|---|---|---|---|---|
-| Llama-3.2-3B-Instruct-4bit | Fastest of the completed local runs | Weak | Limited but non-zero | Very low | Smoke tests, runner validation, cheap experiments |
-| Qwen3-4B-Instruct-2507-4bit | Moderate | Weak | Mostly inconclusive | Very low | Secondary local comparison, prompt/parser experiments |
+| Llama-3.2-3B-Instruct-4bit | Fastest of the completed local runs | Strong on valid curated inputs after fixes | Moderate, especially on `golden` and `failures/positive` | Very low | Broad internal regression testing and low-cost evaluation |
+| Qwen3-4B-Instruct-2507-4bit | Moderate | Strong on valid curated inputs after fixes | Moderate, with broader but still mixed replay quality | Very low | Secondary local benchmark and comparison run |
 | Qwen3.5-4B-4bit | Too slow for this batch run | Unknown from incomplete run | Unknown | Low, but time-expensive | Skip for broad sweeps unless speed improves |
 | OpenRouter `openai/gpt-4o-mini` | Slower wall-clock than tiny local, but operationally predictable | Likely much stronger | Likely materially stronger | Low-to-moderate | Cloud baseline, benchmark reporting |
 | Larger local 7B-9B class model | Slower and heavier than 3B/4B | Likely stronger | Likely stronger | Medium local resource cost | Main local benchmark candidate |
@@ -431,11 +515,12 @@ Current recommendation by use case:
 |---|---|---|
 | Smoke tests for runner wiring | Yes | Use Llama-3.2-3B |
 | Prompt iteration and parser debugging | Yes | Use local models first to keep costs down |
-| Corpus-level benchmark reporting | No | Use stronger local 7B-9B or cloud baseline |
+| Internal corpus-level benchmark tracking | Yes | Use Llama and Qwen as a local baseline pair |
+| Corpus-level benchmark reporting | Not by themselves | Use stronger local 7B-9B or cloud baseline |
 | Promotion gating / publishable quality claims | No | Require stronger model and cleaner metrics |
 | Safety-sensitive evaluation (`successes`, `negative`, `nearmiss`) | Not by themselves | Keep local runs, but validate with stronger model |
 
-Bottom line: local 3B-4B models are useful as development infrastructure tools, but not sufficient as the primary evidence source for CauterRule field-test quality claims.
+Bottom line: local 3B-4B models are now useful as real internal benchmark tools across the full currently-available corpus, not just infrastructure smoke tests. But they are still not sufficient as the sole evidence source for public CauterRule field-test quality claims.
 
 ---
 

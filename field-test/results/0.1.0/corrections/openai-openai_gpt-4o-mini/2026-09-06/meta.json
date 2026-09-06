@@ -1,0 +1,11 @@
+{
+  "corpus_type": "corrections",
+  "timestamp": "2026-09-06",
+  "llm_provider": "openai",
+  "llm_model": "openai/gpt-4o-mini",
+  "llm_base_url": "https://openrouter.ai/api/v1",
+  "extraction_passes": 2,
+  "temperatures": "0.2",
+  "target_trajectories": 5,
+  "reference_trajectories": 84
+}
