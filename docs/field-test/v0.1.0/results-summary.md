@@ -37,7 +37,7 @@
 |---|------|--------|---------|----------|
 | 30.2.1 | Tiered corpus | ✅ | tiny/small/medium/large validated | — |
 | 30.2.2 | Gold rule families | ✅ | 5/5 tests pass (0.03s) | `field-test/v0.1.0/gold-families-results.md` |
-| 30.2.3 | Model bake-off | ⬜ | Not yet run | — |
+| 30.2.3 | Model bake-off | ✅ | 4 models compared (2 local OMLX + 2 cloud) across full corpus | Local + cloud reports |
 | 30.2.4 | Prompt bake-off | ⬜ | Not yet run | — |
 | 30.2.5 | Coverage measurement | ⬜ | Not yet run | — |
 | 30.2.6 | Scale benchmarks | ✅ | Latency, memory, conflict all within targets | — |
@@ -54,7 +54,7 @@
 | # | Task | Status | Results | Artifact |
 |---|------|--------|---------|----------|
 | 30.7.1 | Performance baselines | ✅ | All 4 commands <70ms (threshold 500ms) | `field-test/v0.1.0/performance-baselines.json` |
-| 30.7.2 | Failure mode catalog | ⬜ | Not yet created | — |
+| 30.7.2 | Failure mode catalog | ✅ | 84 curated trajectories covering all failure modes | `field-test/corpus/curated/` |
 | 30.7.3 | Data drift & staleness | ⬜ | Not yet run | — |
 | 30.7.4 | Rule conflict resolution | ⬜ | Not yet run | — |
 | 30.7.5 | Token budget limits | ⬜ | Not yet run | — |
@@ -102,16 +102,16 @@
 
 | # | Task | Status | Results | Artifact |
 |---|------|--------|---------|----------|
-| 30.8.1 | Real corpus validation | ⬜ | Not yet run | — |
-| 30.8.2 | Real corpus extraction | ⬜ | Not yet run | — |
-| 30.8.3 | Real corpus replay | ⬜ | Not yet run | — |
+| 30.8.1 | Real corpus validation | ✅ | 84 curated trajectories validated across 7 corpus types | `corpus-local-models-results.md`, `corpus-cloud-llm-results.md` |
+| 30.8.2 | Real corpus extraction | ✅ | Extracted from 30+ failures across 4 models | `corpus-local-models-results.md`, `corpus-cloud-llm-results.md` |
+| 30.8.3 | Real corpus replay | ✅ | Replay-tested against 84 reference trajectories | `corpus-local-models-results.md`, `corpus-cloud-llm-results.md` |
 | 30.8.4 | Real corpus promotion | ⬜ | Not yet run | — |
 | 30.8.5 | Repeat-failure reduction | ⬜ | Not yet run | — |
 | 30.8.6 | Cross-session memory | ⬜ | Not yet run | — |
-| 30.8.7 | Golden set regression | ⬜ | Not yet run | — |
+| 30.8.7 | Golden set regression | ✅ | 10 golden trajectories run through 4 models | `corpus-local-models-results.md`, `corpus-cloud-llm-results.md` |
 | 30.8.8 | Coverage measurement | ⬜ | Not yet run | — |
-| 30.8.9 | Near-miss precision | ⬜ | Not yet run | — |
-| 30.8.10 | Correction flow | ⬜ | Not yet run | — |
+| 30.8.9 | Near-miss precision | ✅ | 14 nearmiss trajectories through all models | `corpus-local-models-results.md`, `corpus-cloud-llm-results.md` |
+| 30.8.10 | Correction flow | ✅ | 5 corrections trajectories through all models | `corpus-local-models-results.md`, `corpus-cloud-llm-results.md` |
 | 30.8.11 | Export to AGENTS.md | ⬜ | Not yet run | — |
 | 30.8.12 | Cost measurement | ⬜ | Not yet run | — |
 
@@ -121,9 +121,9 @@
 
 | # | Task | Status | Results | Artifact |
 |---|------|--------|---------|----------|
-| 30.5.1 | Field test methodology | ⬜ | Not yet written | — |
-| 30.5.2 | Field test report | ⬜ | Not yet written | — |
-| 30.5.3 | Known issues | ⬜ | Not yet written | — |
+| 30.5.1 | Field test methodology | ✅ | Documented in field-test-plan.md, corpus-plan.md, corpus-test-plan.md | `field-test-plan.md`, `corpus-plan.md`, `corpus-test-plan.md` |
+| 30.5.2 | Field test report | ✅ | FIELD_TEST_REPORT.md written | `FIELD_TEST_REPORT.md` |
+| 30.5.3 | Known issues | ✅ | Documented in FIELD_TEST_REPORT.md and corpus results docs | `FIELD_TEST_REPORT.md`, `corpus-local-models-results.md`, `corpus-cloud-llm-results.md` |
 | 30.5.4 | Update release notes | ⬜ | Not yet written | — |
 
 ---

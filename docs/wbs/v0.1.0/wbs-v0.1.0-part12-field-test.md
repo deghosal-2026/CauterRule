@@ -33,7 +33,7 @@ These are NOT field tests. They are regression, benchmark, infra, and validation
 |---|------|-------|----------|--------|-------|
 | 30.2.1 | Tiered corpus validation | `tests/corpus/` | tiny/small/medium/large — balanced success/failure, valid metadata | ✅ | #239 |
 | 30.2.2 | Gold rule families validation | `tests/corpus/` | Each scenario has ≥2 acceptable rule abstractions | ✅ | #240 |
-| 30.2.3 | Model bake-off | `tests/benchmark/` | Compare OMLX (local), gpt-4o-mini (cheap), gpt-4o (better) on extraction quality | ⬜ | #241 |
+| 30.2.3 | Model bake-off | `tests/benchmark/` | Compare OMLX (local), gpt-4o-mini (cheap), gpt-4o (better) on extraction quality | ✅ | #241 |
 | 30.2.4 | Prompt bake-off | `tests/benchmark/` | Compare 3 prompt variants by replay pass rate | ⬜ | #242 |
 | 30.2.5 | Coverage measurement | `src/cauterule/observe/` | Rule coverage ≥80%, domain ≥60%, failure-class ≥60% | ⬜ | #243 |
 | 30.2.6 | Scale benchmarks | `tests/scale/` | Latency, memory, conflict detection within targets | ✅ | #244 |
@@ -50,7 +50,7 @@ These are NOT field tests. They are regression, benchmark, infra, and validation
 | # | Task | Files | Behavior | Status | Issue |
 |---|------|-------|----------|--------|-------|
 | 30.7.1 | Performance baselines | `field-test/v0.1.0/performance-baselines.json` | Capture 12 baseline metrics for regression tracking | ✅ | #385 |
-| 30.7.2 | Failure mode catalog | `field-test/v0.1.0/trajectories/` | 20 hand-crafted trajectories covering all failure modes | ⬜ | #386 |
+| 30.7.2 | Failure mode catalog | `field-test/v0.1.0/trajectories/` | 20 hand-crafted trajectories covering all failure modes | ✅ | #386 |
 | 30.7.3 | Data drift & staleness | `field-test/v0.1.0/staleness.md` | Old rules flagged stale, retired correctly | ⬜ | #387 |
 | 30.7.4 | Rule conflict resolution | `field-test/v0.1.0/conflicts.md` | 5 conflict scenarios: contradictions blocked, overlaps resolved/merged | ⬜ | #388 |
 | 30.7.5 | Token budget limits | `field-test/v0.1.0/budget.md` | 100/500/1000 rules with compression tiers | ⬜ | #389 |
@@ -102,16 +102,16 @@ See: `corpus-test-plan.md` for full details.
 
 | # | Task | Corpus | LLM | Status | Issue |
 |---|------|--------|-----|--------|-------|
-| 30.8.1 | Real corpus validation | 70 trajectories | None | ⬜ | #399 |
-| 30.8.2 | Real corpus extraction | 30 failures | OMLX | ⬜ | #400 |
-| 30.8.3 | Real corpus replay testing | 50 trajectories | None | ⬜ | #401 |
+| 30.8.1 | Real corpus validation | 70 trajectories | None | ✅ | #399 |
+| 30.8.2 | Real corpus extraction | 30 failures | OMLX | ✅ | #400 |
+| 30.8.3 | Real corpus replay testing | 50 trajectories | None | ✅ | #401 |
 | 30.8.4 | Real corpus promotion & injection | Passing candidates | None | ⬜ | #402 |
 | 30.8.5 | Real corpus repeat-failure reduction | 30F + 20S | OMLX | ⬜ | #403 |
 | 30.8.6 | Real corpus cross-session memory | 10 failures | OMLX | ⬜ | #404 |
-| 30.8.7 | Real corpus golden set regression | 10 golden | OMLX + gpt-4o-mini | ⬜ | #405 |
+| 30.8.7 | Real corpus golden set regression | 10 golden | OMLX + gpt-4o-mini | ✅ | #405 |
 | 30.8.8 | Real corpus coverage measurement | 30 failures | None | ⬜ | #406 |
-| 30.8.9 | Real corpus near-miss precision | 10 near-miss | None | ⬜ | #407 |
-| 30.8.10 | Real corpus correction flow | 5 corrections | OMLX | ⬜ | #408 |
+| 30.8.9 | Real corpus near-miss precision | 10 near-miss | None | ✅ | #407 |
+| 30.8.10 | Real corpus correction flow | 5 corrections | OMLX | ✅ | #408 |
 | 30.8.11 | Real corpus export to AGENTS.md | Promoted rules | None | ⬜ | #409 |
 | 30.8.12 | Real corpus cost measurement | 30 failures | OMLX + gpt-4o-mini | ⬜ | #410 |
 
@@ -123,9 +123,9 @@ See: `corpus-test-plan.md` for full details.
 
 | # | Task | Files | Behavior | Status | Issue |
 |---|------|-------|----------|--------|-------|
-| 30.5.1 | Document field test methodology | `field-test/v0.1.0/methodology.md` | Test harness, corpus, environment, success criteria, limitations | ⬜ | #261 |
-| 30.5.2 | Generate field test report | `field-test/v0.1.0/FIELD_TEST_REPORT.md` | Comprehensive report: baseline vs results, metrics, costs, findings | ⬜ | #262 |
-| 30.5.3 | Document known issues | `field-test/v0.1.0/known-issues.md` | Issues found during field testing with severity and workaround | ⬜ | #263 |
+| 30.5.1 | Document field test methodology | `field-test/v0.1.0/methodology.md` | Test harness, corpus, environment, success criteria, limitations | ✅ | #261 |
+| 30.5.2 | Generate field test report | `field-test/v0.1.0/FIELD_TEST_REPORT.md` | Comprehensive report: baseline vs results, metrics, costs, findings | ✅ | #262 |
+| 30.5.3 | Document known issues | `field-test/v0.1.0/known-issues.md` | Issues found during field testing with severity and workaround | ✅ | #263 |
 | 30.5.4 | Update release notes | `docs/release/v0.1.0/release-notes.md` | Append field test results to release notes | ⬜ | #264 |
 
 ---
@@ -152,17 +152,17 @@ Before M30 closes, ALL of the following must be true:
 
 ### Pre-Field Validation
 - [x] 30.1: System validation — all 8 tasks complete (✅ 30.1.1-30.1.8)
-- [x] 30.2: Corpus & benchmark validation — partial (✅ 30.2.1, 30.2.2, 30.2.6; ⬜ 30.2.3-30.2.5, 30.2.7)
+- [x] 30.2: Corpus & benchmark validation — partial (✅ 30.2.1, 30.2.2, 30.2.3, 30.2.6; ⬜ 30.2.4, 30.2.5, 30.2.7)
 - [x] 30.6: Docker validation — all 14 tasks complete (✅)
-- [x] 30.7: Advanced validation — partial (✅ 30.7.1, 30.7.9, 30.7.10, 30.7.12, 30.7.13, 30.7.14; ⬜ 30.7.2-30.7.8, 30.7.11)
+- [x] 30.7: Advanced validation — partial (✅ 30.7.1, 30.7.2, 30.7.9, 30.7.10, 30.7.12, 30.7.13, 30.7.14; ⬜ 30.7.3-30.7.8, 30.7.11)
 
 ### Field Tests
 - [ ] 30.3: Single-agent — all 11 tasks complete
 - [ ] 30.4: Multi-environment — all 5 tasks complete
-- [ ] 30.8: Real corpus — all 12 tasks complete
+- [x] 30.8: Real corpus — partial (✅ 30.8.1, 30.8.2, 30.8.3, 30.8.7, 30.8.9, 30.8.10; ⬜ 30.8.4, 30.8.5, 30.8.6, 30.8.8, 30.8.11, 30.8.12)
 
 ### Reporting
-- [ ] 30.5: Reporting — all 4 tasks complete
+- [x] 30.5: Reporting — partial (✅ 30.5.1, 30.5.2, 30.5.3; ⬜ 30.5.4)
 
 ### Quality Gates
 - [ ] `pytest tests/` — all pass
