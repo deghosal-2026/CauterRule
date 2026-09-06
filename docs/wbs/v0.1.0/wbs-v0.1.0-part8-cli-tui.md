@@ -46,13 +46,13 @@
 
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
-| 21.1 | TUI framework | `src/cauterule/tui/app.py` | Textual/rich-based terminal UI | ⬜ |
-| 21.2 | `cauterule review` | `src/cauterule/tui/review.py` | Browse, approve, reject candidates | ⬜ |
-| 21.3 | Evidence summary cards | `src/cauterule/tui/cards.py` | "Prevented 3 failures, broke 0 successes" | ⬜ |
-| 21.4 | Rule confidence cards | `src/cauterule/tui/confidence.py` | Confidence, prevented, broken, last hit, tags | ⬜ |
-| 21.5 | Human annotation capture | `src/cauterule/tui/annotate.py` | Tag, comment, categorize failures | ⬜ |
-| 21.6 | Batch review mode | `src/cauterule/tui/batch.py` | Review 10 candidates in one session | ⬜ |
-| 21.7 | Filter by tag/status/confidence | `src/cauterule/tui/filter.py` | Narrow the review queue | ⬜ |
+| 21.1 | TUI framework | `src/cauterule/tui/app.py` | Textual/rich-based terminal UI | ➡️ v0.2.0 |
+| 21.2 | `cauterule review` | `src/cauterule/tui/review.py` | Browse, approve, reject candidates | ➡️ v0.2.0 |
+| 21.3 | Evidence summary cards | `src/cauterule/tui/cards.py` | "Prevented 3 failures, broke 0 successes" | ➡️ v0.2.0 |
+| 21.4 | Rule confidence cards | `src/cauterule/tui/confidence.py` | Confidence, prevented, broken, last hit, tags | ➡️ v0.2.0 |
+| 21.5 | Human annotation capture | `src/cauterule/tui/annotate.py` | Tag, comment, categorize failures | ➡️ v0.2.0 |
+| 21.6 | Batch review mode | `src/cauterule/tui/batch.py` | Review 10 candidates in one session | ➡️ v0.2.0 |
+| 21.7 | Filter by tag/status/confidence | `src/cauterule/tui/filter.py` | Narrow the review queue | ➡️ v0.2.0 |
 
 ### M21 Exit Gate
 
@@ -65,20 +65,22 @@
 - [ ] Commit with message: `milestone: M21 complete`
 - [ ] Push to main
 
+> **Note:** M21 is deferred to v0.2.0. The CLI surface covers all core operations. TUI is a nice-to-have for human review, not a v0.1.0 blocker.
+
 ## M22: Observability
 
 | # | Task | Files | Behavior | Status |
 |---|------|-------|----------|--------|
-| 22.1 | Per-rule hit counter | `src/cauterule/observe/hits.py` | Tracks match count per rule | ⬜ |
-| 22.2 | Last-match timestamp | `src/cauterule/observe/timestamps.py` | Updates `last_match` on each injection | ⬜ |
-| 22.3 | Failure pattern leaderboard | `src/cauterule/observe/leaderboard.py` | Most common failure classes, most prevented, top gaps | ⬜ |
-| 22.4 | Coverage gap detector | `src/cauterule/observe/coverage_gap.py` | Domains with repeated failures but no matching rules | ⬜ |
-| 22.5 | Rule coverage score | `src/cauterule/observe/coverage_score.py` | Weighted blend of coverage %, precision %, stale % | ⬜ |
-| 22.6 | Learning journal | `src/cauterule/observe/journal.py` | Auto-generate markdown log: failure → rule → replay → promotion |
-| 22.7 | Domain coverage score | `src/cauterule/observe/domain_coverage.py` | How well current rules cover failure classes across domains |
-| 22.8 | Failure-class coverage score | `src/cauterule/observe/class_coverage.py` | % of recurring failure classes with at least one validated rule |
-| 22.9 | Coverage frontier | `src/cauterule/observe/coverage_frontier.py` | Identify next most valuable domain/failure family to learn based on recurrence + missing coverage |
-| 22.10 | Monthly learning report | `src/cauterule/observe/monthly_report.py` | Auto-generate report: rules learned, failures reduced, coverage gaps found | ⬜ |
+| 22.1 | Per-rule hit counter | `src/cauterule/observe/hits.py` | Tracks match count per rule | ➡️ v0.2.0 |
+| 22.2 | Last-match timestamp | `src/cauterule/observe/timestamps.py` | Updates `last_match` on each injection | ➡️ v0.2.0 |
+| 22.3 | Failure pattern leaderboard | `src/cauterule/observe/leaderboard.py` | Most common failure classes, most prevented, top gaps | ➡️ v0.2.0 |
+| 22.4 | Coverage gap detector | `src/cauterule/observe/coverage_gap.py` | Domains with repeated failures but no matching rules | ➡️ v0.2.0 |
+| 22.5 | Rule coverage score | `src/cauterule/observe/coverage_score.py` | Weighted blend of coverage %, precision %, stale % | ➡️ v0.2.0 |
+| 22.6 | Learning journal | `src/cauterule/observe/journal.py` | Auto-generate markdown log: failure → rule → replay → promotion | ➡️ v0.2.0 |
+| 22.7 | Domain coverage score | `src/cauterule/observe/domain_coverage.py` | How well current rules cover failure classes across domains | ➡️ v0.2.0 |
+| 22.8 | Failure-class coverage score | `src/cauterule/observe/class_coverage.py` | % of recurring failure classes with at least one validated rule | ➡️ v0.2.0 |
+| 22.9 | Coverage frontier | `src/cauterule/observe/coverage_frontier.py` | Identify next most valuable domain/failure family to learn | ➡️ v0.2.0 |
+| 22.10 | Monthly learning report | `src/cauterule/observe/monthly_report.py` | Auto-generate report: rules learned, failures reduced, coverage gaps found | ➡️ v0.2.0 |
 
 ### M22 Exit Gate
 
@@ -90,3 +92,5 @@
 - [ ] Close all completed issues
 - [ ] Commit with message: `milestone: M22 complete`
 - [ ] Push to main
+
+> **Note:** M22 is deferred to v0.2.0. The CLI provides basic observability (`metrics`, `health`, `report`). The formal observability subsystem is not a v0.1.0 blocker.
