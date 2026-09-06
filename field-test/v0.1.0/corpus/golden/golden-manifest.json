@@ -1,0 +1,77 @@
+{
+  "version": "1.0",
+  "generated": "2026-09-05",
+  "description": "Golden trajectory set for CauterRule v0.1.0 regression testing",
+  "trajectories": {
+    "G-001-git-push-non-ff": {
+      "file": "G-001-git-push-non-ff.jsonl",
+      "domain": "git",
+      "failure_class": "git/push/non-fast-forward",
+      "expected_rule": "when git push fails with non-fast-forward, pull latest changes before pushing"
+    },
+    "G-002-python-import": {
+      "file": "G-002-python-import.jsonl",
+      "domain": "python",
+      "failure_class": "python/import/module-not-found",
+      "expected_rule": "when python import fails with ModuleNotFoundError, install the missing package"
+    },
+    "G-003-docker-build": {
+      "file": "G-003-docker-build.jsonl",
+      "domain": "docker",
+      "failure_class": "docker/build/package-not-found",
+      "expected_rule": "when docker build fails with package not found, add apt-get install to Dockerfile"
+    },
+    "G-004-pip-conflict": {
+      "file": "G-004-pip-conflict.jsonl",
+      "domain": "python",
+      "failure_class": "python/pip/version-conflict",
+      "expected_rule": "when pip install fails with version conflict, pin compatible versions in requirements"
+    },
+    "G-005-kubectl-crd": {
+      "file": "G-005-kubectl-crd.jsonl",
+      "domain": "deploy",
+      "failure_class": "deploy/kubectl/crd-not-found",
+      "expected_rule": "when kubectl apply fails with NotFound, install the CRD first"
+    },
+    "G-006-test-assertion": {
+      "file": "G-006-test-assertion.jsonl",
+      "domain": "test",
+      "failure_class": "test/pytest/assertion-error",
+      "expected_rule": "when test assertion fails, compare expected and actual values to identify the mismatch"
+    },
+    "G-007-api-rate-limit": {
+      "file": "G-007-api-rate-limit.jsonl",
+      "domain": "deploy",
+      "failure_class": "deploy/api/rate-limit",
+      "expected_rule": "when API returns 429, implement exponential backoff before retrying"
+    },
+    "G-008-terraform-lock": {
+      "file": "G-008-terraform-lock.jsonl",
+      "domain": "deploy",
+      "failure_class": "deploy/terraform/state-lock",
+      "expected_rule": "when terraform plan fails with state lock, run terraform force-unlock to release the lock"
+    },
+    "G-009-selenium-element": {
+      "file": "G-009-selenium-element.jsonl",
+      "domain": "test",
+      "failure_class": "test/selenium/element-not-found",
+      "expected_rule": "when browser element not found, wait for page load or check selector for correctness"
+    },
+    "G-010-deploy-timeout": {
+      "file": "G-010-deploy-timeout.jsonl",
+      "domain": "deploy",
+      "failure_class": "deploy/health-check/timeout",
+      "expected_rule": "when deployment health check times out, check the endpoint directly and increase timeout if needed"
+    }
+  },
+  "summary": {
+    "total": 10,
+    "domains": {
+      "git": 1,
+      "python": 2,
+      "docker": 1,
+      "deploy": 4,
+      "test": 2
+    }
+  }
+}
