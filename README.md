@@ -11,6 +11,8 @@ After every failure, CauterRule:
 
 No more corrections dying in chat. No more 134 hand-written standing rules. No more vague reflection paragraphs nobody re-reads. Rules are actionable, tested, and permanent.
 
+**Status:** v0.1.0 — Field test complete. [Read the full report](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md).
+
 ---
 
 ## Why
@@ -36,7 +38,7 @@ CauterRule automates the extract → test → promote loop. Same pattern as CI/C
 
 ## v0.1.0 Feature Set
 
-**Status:** Pre-release / in development. 32 milestones, 241 tasks, 270+ issues.
+**Status:** v0.1.0 released. [Field test report](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md). [Release notes](docs/release/v0.1.0/release-notes.md).
 
 ### Core Loop
 - Trajectory capture with secret redaction
@@ -242,7 +244,7 @@ See [docs/design/prd/05-features.md](docs/design/prd/05-features.md) for the ful
 
 ---
 
-## Quick Start (Coming Soon)
+## Quick Start
 
 ```bash
 pip install cauterule
@@ -260,6 +262,17 @@ cauterule health        # rule store health report
 cauterule counterfactual # "if you had these rules, you'd have avoided X failures"
 cauterule story         # generate narrative of your agent's learning journey
 ```
+
+## Field Test Results
+
+The full v0.1.0 field test evaluated 4 models (2 local OMLX, 2 cloud) across 13 corpus types totaling 394 trajectories. Key findings:
+
+- **Parser and prompt fixes** dramatically improved benchmark reliability
+- **Local 3B-4B models** are now viable for internal regression tracking
+- **Cloud models** (especially `meta-llama/llama-3.1-8b-instruct`) provide stronger quality ceilings
+- **Safety corpora** (`successes`, `failures/negative`, `nearmiss`) remain the hardest unsolved area
+
+Read the full report: [`docs/field-test/v0.1.0/FIELD_TEST_REPORT.md`](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md)
 
 ---
 
@@ -311,6 +324,10 @@ CauterRule is the **learning layer** in an open-source agent infrastructure stac
 
 ## Documentation
 
+- [User Guide](docs/USER_GUIDE.md)
+- [Field Test Report](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md)
+- [Release Notes](docs/release/v0.1.0/release-notes.md)
+- [Changelog](CHANGELOG.md)
 - [Docs Index](docs/README.md)
 - [PRD: Why](docs/design/prd/01-why.md)
 - [Feature Breakdown](docs/design/prd/05-features.md)
@@ -319,7 +336,7 @@ CauterRule is the **learning layer** in an open-source agent infrastructure stac
 - [Roadmap](docs/design/prd/09-roadmap.md)
 - [Success Metrics](docs/design/prd/07-success-metrics.md)
 - [Risks](docs/design/prd/08-risks.md)
-- [WBS v0.1.0](docs/wbs/v0.1.0/wbs-v0.1.0-index.md) — 32 milestones, 241 tasks
+- [WBS v0.1.0](docs/wbs/v0.1.0/wbs-v0.1.0-index.md)
 
 ---
 
