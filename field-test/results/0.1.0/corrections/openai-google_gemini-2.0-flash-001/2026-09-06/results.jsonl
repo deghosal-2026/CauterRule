@@ -1,5 +1,0 @@
-{"trajectory_id": "C-004-docker-cor-004-check-port", "status": "no_candidates", "candidates": []}
-{"trajectory_id": "C-001-git-001-pull-before-push", "status": "no_candidates", "candidates": []}
-{"trajectory_id": "C-002-python-nstall-before-import", "status": "no_candidates", "candidates": []}
-{"trajectory_id": "C-003-python-or-003-activate-venv", "status": "no_candidates", "candidates": []}
-{"trajectory_id": "C-005-deploy-5-check-config-first", "status": "no_candidates", "candidates": []}

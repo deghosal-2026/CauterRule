@@ -1,5 +1,0 @@
-{"trajectory_id": "cor-001-pull-before-push", "status": "no_candidates", "candidates": []}
-{"trajectory_id": "cor-004-check-port", "status": "no_candidates", "candidates": []}
-{"trajectory_id": "cor-003-activate-venv", "status": "no_candidates", "candidates": []}
-{"trajectory_id": "cor-002-install-before-import", "status": "no_candidates", "candidates": []}
-{"trajectory_id": "cor-005-check-config-first", "status": "no_candidates", "candidates": []}
