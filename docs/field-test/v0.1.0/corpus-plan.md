@@ -108,6 +108,51 @@ The corpus acquisition effort is considered materially complete for M30 when all
 - [ ] `corpus/catalog.yaml` reflects actual collected counts
 - [ ] Validation script passes on the curated corpus
 
+### 2.8 Real Variety Still To Add For Field Testing
+
+The current corpus now has enough total volume, but the field test still benefits from more **real** variety. The goal is not just more trajectories, but better coverage of real agent behavior across harnesses, sessions, and environments.
+
+| Real Corpus Type | Target To Add | Best Source | Why It Improves Field Testing |
+|------------------|---------------|-------------|-------------------------------|
+| OpenCode failure trajectories | 20-30 | Real OpenCode work on CauterRule and sibling repos | Highest-value data because it matches the user's actual workflow |
+| OpenCode success trajectories | 10-20 | Successful OpenCode task runs in same domains | Needed for replay safety and regression detection |
+| Manual correction trajectories | 5-10 | Real corrections from development sessions | Best source for testing correction-to-rule flow |
+| Cross-session repeat failures | 5-10 | Failures seen on multiple days or repos | Core proof for repeat-failure reduction and memory persistence |
+| Public-repo CI failures | 30-50 | Popular public repos with GitHub Actions failures | Adds real lint, type-check, test, docs, build, packaging variety |
+| Sibling-repo agent failures | 15-25 | Public repos like `agent-self-edit`, `planner-critic-engine`, `agent-tooltrust`, `agent-eval-forge`, `mcp-fabric`, `adversarial-debate` | Tests rule transferability across AI-agent codebases |
+| Real near-miss trajectories | 10 | Derived from real failures | Needed to test trigger precision and avoid false positives |
+| Real noisy/misleading trajectories | 5-10 | Real sessions with retries, distractions, or misleading surface errors | Needed to test robustness under messy traces |
+
+### 2.9 Recommended Real Corpus Expansion Mix
+
+This is the next target mix to improve the quality of the field test corpus beyond the current baseline.
+
+| Bucket | Add Now | Source |
+|--------|---------|--------|
+| OpenCode failures | 20 | Real OpenCode sessions on CauterRule |
+| OpenCode successes | 12 | Real OpenCode successful runs |
+| Manual corrections | 8 | Development session corrections |
+| Cross-session repeats | 8 | OpenCode + CI + sibling repos |
+| Public-repo CI failures | 25 | `pytest-dev/pytest`, `psf/black`, `ansible/ansible`, `django/django`, `pandas-dev/pandas`, `scikit-learn/scikit-learn`, `requests/requests`, `fastapi/fastapi`, `pallets/flask`, `langchain-ai/langchain` |
+| Public sibling-repo failures | 15 | `agent-self-edit`, `planner-critic-engine`, `agent-tooltrust`, `agent-eval-forge`, `mcp-fabric`, `adversarial-debate` |
+| Near-miss | 10 | Derived from real failures |
+| Noisy/misleading | 5 | Derived from real failures |
+
+### 2.10 Harness Variety For Field Tests
+
+To ensure the corpus represents not just one agent harness, the field-test corpus should include trajectories associated with multiple tool conventions.
+
+| Harness | Corpus Type To Add | Example Failure Types |
+|---------|--------------------|-----------------------|
+| OpenCode | Real failures + successes + corrections | wrong-file edits, no verification, AGENTS.md not followed |
+| Cursor | Public or manually reproduced failures | `.cursorrules` not applied, hallucinated file/API, wrong file targeting |
+| Claude Code | Public or manually reproduced failures | `CLAUDE.md` not followed, context omission, over-broad edits |
+| Aider | Public or manually reproduced failures | wrong patch application, file targeting, missing tests |
+| Windsurf | Public or manually reproduced failures | `.windsurfrules` ignored, wrong repo assumptions |
+| Cline / Continue | Public or manually reproduced failures | missing repo context, no verification, tool misuse |
+
+**Note:** The highest-value harness remains OpenCode because it is the user's actual runtime. Other harnesses improve generalization and export-validation coverage.
+
 ---
 
 ## 3. Corpus Structure
