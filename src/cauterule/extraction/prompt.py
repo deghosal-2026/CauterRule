@@ -38,7 +38,20 @@ def build_extraction_prompt(trajectory: Trajectory, template: str | None = None)
         f"Steps:\n{steps_str}\n"
         f"Tags: {', '.join(trajectory.tags) if trajectory.tags else 'none'}\n"
         f"{template_hint}\n"
-        f"Produce a JSON object with keys: when (trigger, context), do (directive, because), "
-        f"confidence (0.0-1.0), reasoning, template.\n"
-        f"Example: {{\"when\": {{\"trigger\": \"when X\"}}, \"do\": {{\"directive\": \"do Y\"}}, \"confidence\": 0.85}}"
+        f"\nExtract a single standing rule from this failure. "
+        f"Return ONLY a JSON object with these exact keys:\n"
+        f"- when: object with \"trigger\" (string) and \"context\" (array of strings)\n"
+        f"- do: object with \"directive\" (string) and \"because\" (string)\n"
+        f"- confidence: number between 0.0 and 1.0\n"
+        f"- reasoning: string\n"
+        f"\nDo not include any text before or after the JSON object.\n"
+        f"Context entries must be non-empty strings or omit the context array entirely.\n"
+        f"\nExample output:\n"
+        f'{{"when": {{"trigger": "when git push fails with non-fast-forward", '
+        f'"context": ["git", "push", "rejected"]}}, '
+        f'"do": {{"directive": "pull latest changes before pushing", '
+        f'"because": "remote has commits not in local branch"}}, '
+        f'"confidence": 0.85, '
+        f'"reasoning": "The push was rejected because the remote branch has newer commits. '
+        f'Pulling first would fast-forward the local branch and allow the push to succeed."}}'
     )

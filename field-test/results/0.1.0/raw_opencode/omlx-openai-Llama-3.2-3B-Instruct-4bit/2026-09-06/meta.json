@@ -1,0 +1,11 @@
+{
+  "corpus_type": "raw/opencode",
+  "timestamp": "2026-09-06",
+  "llm_provider": "openai",
+  "llm_model": "Llama-3.2-3B-Instruct-4bit",
+  "llm_base_url": "http://localhost:8000/v1",
+  "extraction_passes": 2,
+  "temperatures": "0.2",
+  "target_trajectories": 25,
+  "reference_trajectories": 84
+}

@@ -56,6 +56,12 @@ CORPUS_TYPES: dict[str, Path] = {
     "nearmiss":                CORPUS_ROOT / "curated" / "nearmiss",
     "noisy":                   CORPUS_ROOT / "curated" / "noisy",
     "corrections":             CORPUS_ROOT / "curated" / "corrections",
+    "raw/opencode":            CORPUS_ROOT / "raw" / "opencode",
+    "raw/synthetic":           CORPUS_ROOT / "raw" / "synthetic",
+    "raw/ci":                  CORPUS_ROOT / "raw" / "ci",
+    "raw/sibling-repos":       CORPUS_ROOT / "raw" / "sibling-repos",
+    "raw/corrections":         CORPUS_ROOT / "raw" / "corrections",
+    "raw/cross-session":       CORPUS_ROOT / "raw" / "cross-session",
 }
 
 # Reference corpus loaded for replay-testing every candidate
@@ -359,6 +365,10 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
     results_file = out_dir / "results.jsonl"
     summary_file = out_dir / "summary.json"
     meta_file = out_dir / "meta.json"
+
+    # Clear previous results from same-day reruns to avoid contamination
+    results_file.write_text("")
+    summary_file.write_text("{}")
 
     # Write run metadata
     meta = {
