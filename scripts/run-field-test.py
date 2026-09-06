@@ -76,7 +76,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--llm-provider", default="openai", help="LLM provider (openai, anthropic, ollama, litellm)")
     parser.add_argument("--llm-model", default="gpt-4o-mini", help="Model name")
     parser.add_argument("--llm-base-url", default="", help="Base URL for custom endpoints (e.g. OMLX)")
-    parser.add_argument("--output-dir", default="field-test/results", help="Output directory for results")
+    parser.add_argument("--output-dir", default="field-test/results/0.1.0", help="Output directory for results")
     parser.add_argument("--max-workers", type=int, default=4, help="Parallel trajectories per corpus type")
     parser.add_argument("--extraction-passes", type=int, default=2, help="Multi-pass extraction passes")
     parser.add_argument("--temperatures", default="0.2,0.5", help="Comma-separated temperatures for multi-pass")
@@ -348,7 +348,11 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
 
     # Output directory: {output-dir}/{corpus-type}/{llm_provider}-{llm_model}/{timestamp}/
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    llm_label = f"{args.llm_provider}-{args.llm_model}".replace("/", "_")
+    if args.llm_base_url and "localhost" in args.llm_base_url:
+        llm_label = f"omlx-{args.llm_provider}-{args.llm_model}"
+    else:
+        llm_label = f"{args.llm_provider}-{args.llm_model}"
+    llm_label = llm_label.replace("/", "_")
     out_dir = Path(args.output_dir) / corpus_type.replace("/", "_") / llm_label / timestamp
     out_dir.mkdir(parents=True, exist_ok=True)
 

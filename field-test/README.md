@@ -29,24 +29,24 @@ CAUTERULE_LLM_API_KEY=dummy \
 python scripts/run-field-test.py golden \
   --llm-provider openai --llm-model llama-3.2-3b-instruct \
   --llm-base-url http://localhost:8000/v1 \
-  --output-dir field-test/results
+  --output-dir field-test/results/0.1.0
 
 # Curated failures — the headline metric (30 trajectories)
 CAUTERULE_LLM_API_KEY=dummy \
 python scripts/run-field-test.py failures/positive \
   --llm-provider openai --llm-model llama-3.2-3b-instruct \
   --llm-base-url http://localhost:8000/v1 \
-  --output-dir field-test/results
+  --output-dir field-test/results/0.1.0
 
 # Full sweep — all 7 corpus types
 CAUTERULE_LLM_API_KEY=dummy \
 python scripts/run-field-test.py --all \
   --llm-provider openai --llm-model llama-3.2-3b-instruct \
   --llm-base-url http://localhost:8000/v1 \
-  --output-dir field-test/results
+  --output-dir field-test/results/0.1.0
 ```
 
-Output: `field-test/results/{corpus_type}/openai-llama-3.2-3b-instruct/{timestamp}/`
+Output: `field-test/results/0.1.0/{corpus_type}/omlx-openai-llama-3.2-3b-instruct/{date}/`
 
 ### Cloud LLM (OpenRouter)
 
@@ -60,31 +60,31 @@ CAUTERULE_LLM_API_KEY=sk-or-... \
 python scripts/run-field-test.py golden \
   --llm-provider openai --llm-model openai/gpt-4o-mini \
   --llm-base-url https://openrouter.ai/api/v1 \
-  --output-dir field-test/results
+  --output-dir field-test/results/0.1.0
 
 # Curated failures with Claude 3.5 Sonnet via OpenRouter
 CAUTERULE_LLM_API_KEY=sk-or-... \
 python scripts/run-field-test.py failures/positive \
   --llm-provider openai --llm-model anthropic/claude-3.5-sonnet \
   --llm-base-url https://openrouter.ai/api/v1 \
-  --output-dir field-test/results
+  --output-dir field-test/results/0.1.0
 
 # All corpus types with GPT-4o-mini
 CAUTERULE_LLM_API_KEY=sk-or-... \
 python scripts/run-field-test.py --all \
   --llm-provider openai --llm-model openai/gpt-4o-mini \
   --llm-base-url https://openrouter.ai/api/v1 \
-  --output-dir field-test/results
+  --output-dir field-test/results/0.1.0
 ```
 
-Output: `field-test/results/{corpus_type}/openai-openai_gpt-4o-mini/{timestamp}/`
+Output: `field-test/results/0.1.0/{corpus_type}/openai-openai_gpt-4o-mini/{date}/`
 
 ### Local Ollama
 
 ```bash
 python scripts/run-field-test.py golden \
   --llm-provider ollama --llm-model llama3 \
-  --output-dir field-test/results
+  --output-dir field-test/results/0.1.0
 ```
 
 ## Per-corpus-type commands
@@ -133,22 +133,22 @@ python scripts/run-field-test.py corrections \
 python scripts/run-field-test.py golden \
   --llm-provider openai --llm-model openai/gpt-4o \
   --llm-base-url https://openrouter.ai/api/v1 \
-  --output-dir field-test/results
+  --output-dir field-test/results/0.1.0
 
 python scripts/run-field-test.py golden \
   --llm-provider openai --llm-model openai/gpt-4o-mini \
   --llm-base-url https://openrouter.ai/api/v1 \
-  --output-dir field-test/results
+  --output-dir field-test/results/0.1.0
 
 python scripts/run-field-test.py golden \
   --llm-provider openai --llm-model anthropic/claude-3.5-sonnet \
   --llm-base-url https://openrouter.ai/api/v1 \
-  --output-dir field-test/results
+  --output-dir field-test/results/0.1.0
 
 # Results land side-by-side:
-#   field-test/results/golden/openai-openai_gpt-4o/<ts>/
-#   field-test/results/golden/openai-openai_gpt-4o-mini/<ts>/
-#   field-test/results/golden/openai-anthropic_claude-3.5-sonnet/<ts>/
+#   field-test/results/0.1.0/golden/openai-openai_gpt-4o/<date>/
+#   field-test/results/0.1.0/golden/openai-openai_gpt-4o-mini/<date>/
+#   field-test/results/0.1.0/golden/openai-anthropic_claude-3.5-sonnet/<date>/
 ```
 
 ## Parallelism
@@ -158,42 +158,43 @@ python scripts/run-field-test.py golden \
 python scripts/run-field-test.py failures/positive \
   --llm-provider openai --llm-model gpt-4o-mini \
   --max-workers 8 \
-  --output-dir field-test/results
+  --output-dir field-test/results/0.1.0
 ```
 
 ## Output structure
 
 ```
-field-test/results/
+field-test/results/0.1.0/
   golden/
-    openai-openai_gpt-4o-mini/
-      20260905T120000Z/
+    omlx-openai-Llama-3.2-3B-Instruct-4bit/
+      2026-09-06/
         meta.json         # run config (LLM, corpus, timestamps)
         results.jsonl     # one result per trajectory (appended live)
         summary.json      # aggregate metrics (rewritten live)
-    openai-llama-3.2-3b-instruct/
-      20260905T121500Z/
+    openai-openai_gpt-4o-mini/
+      2026-09-06/
         ...
     openai-anthropic_claude-3.5-sonnet/
-      20260905T123000Z/
+      2026-09-06/
         ...
   failures_positive/
     openai-openai_gpt-4o-mini/
-      20260905T124500Z/
+      2026-09-06/
         ...
   successes/
     openai-openai_gpt-4o-mini/
-      ...
+      2026-09-06/
+        ...
 ```
 
 ## Watching progress mid-run
 
 ```bash
 # Tail the incremental summary
-tail -f field-test/results/golden/openai-openai_gpt-4o-mini/*/summary.json
+tail -f field-test/results/0.1.0/golden/omlx-openai-Llama-3.2-3B-Instruct-4bit/2026-09-06/summary.json
 
 # Watch results as they arrive
-tail -f field-test/results/golden/openai-openai_gpt-4o-mini/*/results.jsonl
+tail -f field-test/results/0.1.0/golden/omlx-openai-Llama-3.2-3B-Instruct-4bit/2026-09-06/results.jsonl
 ```
 
 ## Options
@@ -205,7 +206,7 @@ tail -f field-test/results/golden/openai-openai_gpt-4o-mini/*/results.jsonl
 | `--llm-provider` | `openai` | `openai`, `anthropic`, `ollama`, `litellm` |
 | `--llm-model` | `gpt-4o-mini` | Model name |
 | `--llm-base-url` | `""` | Base URL for custom endpoints (OMLX: `http://localhost:8000/v1`) |
-| `--output-dir` | `field-test/results` | Output directory root |
+| `--output-dir` | `field-test/results/0.1.0` | Output directory root |
 | `--max-workers` | `4` | Parallel trajectories per corpus type |
 | `--temperatures` | `0.2,0.5` | Comma-separated multi-pass temperatures |
 | `CAUTERULE_LLM_API_KEY` | env var | API key. Required for OpenRouter/OpenAI/Anthropic. Not needed for OMLX or Ollama — set to any dummy value for OMLX (e.g. `CAUTERULE_LLM_API_KEY=dummy`). |

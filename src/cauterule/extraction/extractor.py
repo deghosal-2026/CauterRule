@@ -12,14 +12,45 @@ from cauterule.models.rule import RuleDo, RuleWhen
 from cauterule.models.trajectory import Trajectory
 
 
+def _extract_first_json_object(text: str) -> str:
+    """Extract the first balanced JSON object from *text*.
+
+    Handles trailing commentary, multiple objects, and prose around JSON.
+    Returns the substring for the first complete ``{ ... }`` object.
+    Raises ``ValueError`` if no balanced object is found.
+    """
+    start = text.find("{")
+    if start == -1:
+        raise ValueError("No JSON object found in LLM output")
+
+    depth = 0
+    in_string = False
+    escape = False
+    for i in range(start, len(text)):
+        ch = text[i]
+        if escape:
+            escape = False
+            continue
+        if ch == "\\" and in_string:
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : i + 1]
+    raise ValueError("No balanced JSON object found in LLM output")
+
+
 def _parse_candidate_json(text: str, extraction_pass: int = 1, template: str | None = None) -> CandidateRule:
     """Parse LLM output JSON into a :class:`CandidateRule`."""
-    # Extract JSON object from text (find first { ... }).
-    start = text.find("{")
-    end = text.rfind("}")
-    if start == -1 or end == -1:
-        raise ValueError("No JSON object found in LLM output")
-    json_str = text[start : end + 1]
+    json_str = _extract_first_json_object(text)
     data = json.loads(json_str)
     if not isinstance(data, dict):
         raise ValueError("LLM output must be a JSON object")
@@ -29,9 +60,15 @@ def _parse_candidate_json(text: str, extraction_pass: int = 1, template: str | N
     if not isinstance(when_data, dict) or not isinstance(do_data, dict):
         raise ValueError("when/do must be objects")
 
+    # Filter out blank/None context entries before validation
+    raw_context = when_data.get("context", [])
+    if not isinstance(raw_context, list):
+        raw_context = []
+    context_items = tuple(str(c).strip() for c in raw_context if c and str(c).strip())
+
     when = RuleWhen(
         trigger=str(when_data.get("trigger", "")),
-        context=tuple(when_data.get("context", [])),
+        context=context_items,
     )
     do = RuleDo(
         directive=str(do_data.get("directive", "")),

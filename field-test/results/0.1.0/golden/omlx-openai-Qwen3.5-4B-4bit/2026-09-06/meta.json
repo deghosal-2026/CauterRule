@@ -1,0 +1,11 @@
+{
+  "corpus_type": "golden",
+  "timestamp": "2026-09-06",
+  "llm_provider": "openai",
+  "llm_model": "Qwen3.5-4B-4bit",
+  "llm_base_url": "http://localhost:8000/v1",
+  "extraction_passes": 2,
+  "temperatures": "0.2",
+  "target_trajectories": 10,
+  "reference_trajectories": 84
+}
