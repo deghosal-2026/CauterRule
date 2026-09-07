@@ -1,0 +1,57 @@
+---
+name: Field test finding
+description: Report a finding, gap, or improvement identified during field testing
+title: "Field test: <brief description>"
+labels: ["enhancement", "field-test"]
+projects: []
+assignees: []
+---
+
+## Field Test Finding
+
+<!-- Describe the finding or gap identified during field testing. -->
+
+## Evidence
+
+<!-- Include data, tables, or specific results from the field test that support this finding. -->
+
+| Signal | Expected | Actual | Interpretation |
+|--------|----------|--------|-----------------|
+|        |          |        |                 |
+
+## Root Cause Analysis
+
+<!-- What is the underlying cause of this finding? Is it a product issue, a benchmark issue, or a methodology issue? -->
+
+## What Needs to Change
+
+<!-- Describe the proposed change or improvement. -->
+
+1.
+2.
+3.
+
+## Acceptance Criteria
+
+- [ ] Change implemented
+- [ ] Tests added that validate the change
+- [ ] Field test re-run confirms the fix
+- [ ] Code review passed
+- [ ] Lint strict clean (`ruff check .` + `mypy src/ tests/`)
+- [ ] Code coverage > 95%
+- [ ] All necessary documents updated
+
+## Source
+
+<!-- Where was this finding identified? Link to the field test report, article, or comment. -->
+
+## Related Issues
+
+<!-- Link to related issues, if any. -->
+
+## Exit Gate
+
+- [ ] Code review passed
+- [ ] Lint strict clean
+- [ ] Code coverage > 95%
+- [ ] All necessary documents updated
