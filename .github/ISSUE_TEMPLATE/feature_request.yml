@@ -1,0 +1,63 @@
+---
+name: Feature request
+description: Propose a new feature or enhancement for CauterRule
+title: "Feature: <brief description>"
+labels: ["enhancement"]
+projects: []
+assignees: []
+---
+
+## Problem
+
+<!-- What problem does this feature solve? Why is it needed? -->
+
+## Proposed Solution
+
+<!-- Describe the feature or enhancement you'd like. -->
+
+## Alternatives Considered
+
+<!-- What alternatives have you considered? Why are they insufficient? -->
+
+## Design Sketch (optional)
+
+<!--
+If you have ideas about how this should work, describe:
+- Data structures or schema changes
+- New CLI commands or flags
+- Configuration options
+- Integration points
+-->
+
+## Scope
+
+- [ ] Core loop (extract → test → promote)
+- [ ] Replay engine
+- [ ] Rule store
+- [ ] Rule injection
+- [ ] CLI / TUI
+- [ ] Corpus
+- [ ] Benchmarks
+- [ ] Observability
+- [ ] Distribution / packaging
+- [ ] MCP server
+- [ ] Export / import
+- [ ] Documentation
+- [ ] Other: <!-- specify -->
+
+## Acceptance Criteria
+
+- [ ] Feature implemented
+- [ ] Tests added (unit + integration)
+- [ ] Code review passed
+- [ ] Lint strict clean (`ruff check .` + `mypy src/ tests/`)
+- [ ] Code coverage > 95%
+- [ ] All necessary documents updated
+- [ ] CHANGELOG entry added
+
+## Exit Gate
+
+- [ ] Code review passed
+- [ ] Lint strict clean
+- [ ] Code coverage > 95%
+- [ ] All necessary documents updated
