@@ -1,0 +1,65 @@
+---
+name: Rule pack or corpus contribution
+description: Propose a new rule pack, corpus, or benchmark contribution
+title: "Contribution: <brief description>"
+labels: ["enhancement"]
+projects: []
+assignees: []
+---
+
+## Contribution Type
+
+- [ ] Rule pack (e.g., pack-git, pack-docker, pack-python)
+- [ ] Corpus (curated trajectories with known expected rules)
+- [ ] Benchmark scenario
+- [ ] Adversarial test case
+- [ ] Other: <!-- specify -->
+
+## Description
+
+<!-- What are you contributing? Describe the pack, corpus, or scenario. -->
+
+## Corpus / Pack Details
+
+- **Name:** <!-- e.g., pack-docker, corpus-k8s-failures -->
+- **Domain:** <!-- git, python, docker, k8s, ci, browser, research, support -->
+- **Trajectory count:** <!-- number of trajectories -->
+- **Success/failure balance:** <!-- e.g., 10 success, 30 failure -->
+- **Format:** <!-- JSONL with metadata schema -->
+
+## Expected Rules (for corpus contributions)
+
+<!-- List the rules you expect a healthy extraction to produce from this corpus. -->
+
+1.
+2.
+3.
+
+## Negative Cases (for adversarial / safety corpora)
+
+<!-- List trajectories that should NOT produce rules, and why. -->
+
+## Certification Checklist (for rule packs)
+
+- [ ] All rules pass linter (no vagueness, tautology, contradiction, unsafe)
+- [ ] All rules pass replay on the pack's own corpus
+- [ ] Provenance documented (source, author, version)
+- [ ] No secrets or PII in trajectories
+- [ ] Pack manifest valid
+
+## Acceptance Criteria
+
+- [ ] Contribution reviewed and approved
+- [ ] Added to the appropriate directory (`rules/packs/`, `corpus/`, `tests/`)
+- [ ] Tests pass with the new contribution
+- [ ] Code review passed
+- [ ] Lint strict clean
+- [ ] Code coverage > 95%
+- [ ] All necessary documents updated (CONTRIBUTING.md, corpus guide)
+
+## Exit Gate
+
+- [ ] Code review passed
+- [ ] Lint strict clean
+- [ ] Code coverage > 95%
+- [ ] All necessary documents updated
