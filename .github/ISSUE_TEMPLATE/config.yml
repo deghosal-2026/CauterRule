@@ -1,0 +1,9 @@
+# Issue template configuration for CauterRule
+blank_issues_enabled: false
+contact_links:
+  - name: CauterRule Documentation
+    url: https://github.com/deghosal-2026/CauterRule/blob/main/docs/README.md
+    about: Read the docs index, user guide, and field test reports.
+  - name: CauterRule Discussions
+    url: https://github.com/deghosal-2026/CauterRule/discussions
+    about: Ask questions, share ideas, or discuss use cases before opening an issue.
