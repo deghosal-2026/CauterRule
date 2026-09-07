@@ -1,0 +1,75 @@
+---
+name: Bug report
+description: Report a defect, crash, or unexpected behavior in CauterRule
+title: "Bug: <brief description>"
+labels: ["bug"]
+projects: []
+assignees: []
+---
+
+## Description
+
+<!-- A clear and concise description of the bug. -->
+
+## Steps to Reproduce
+
+1.
+2.
+3.
+
+## Expected Behavior
+
+<!-- What you expected to happen. -->
+
+## Actual Behavior
+
+<!-- What actually happened. Include error messages, stack traces, or screenshots. -->
+
+## Environment
+
+- **CauterRule version:** <!-- `cauterule --version` -->
+- **Python version:**
+- **OS:** <!-- macOS / Linux / Docker -->
+- **LLM provider:** <!-- OpenAI / Anthropic / Ollama / LiteLLM / None -->
+- **Model:** <!-- e.g., gpt-4o-mini, llama-3.1-8b-instruct -->
+
+## Minimal Reproducible Example
+
+<!--
+Provide the smallest input or command sequence that triggers the bug.
+Remove PII, secrets, and API keys before sharing.
+-->
+
+```bash
+# Command or code that reproduces the issue
+```
+
+## Trajectory or Corpus (if applicable)
+
+<!--
+If the bug involves extraction or replay, attach or link to the trajectory file.
+Ensure secrets are redacted before sharing.
+-->
+
+## Output
+
+```
+<!-- Paste relevant output, logs, or error messages here. -->
+```
+
+## Severity
+
+- [ ] Critical — crashes, data loss, or security vulnerability
+- [ ] High — incorrect results or broken core feature
+- [ ] Medium — unexpected behavior with workaround
+- [ ] Low — cosmetic or minor inconvenience
+
+## Acceptance Criteria
+
+- [ ] Bug reproduced and root cause identified
+- [ ] Fix implemented
+- [ ] Test added that catches the regression
+- [ ] Code review passed
+- [ ] Lint strict clean (`ruff check .` + `mypy src/ tests/`)
+- [ ] Code coverage > 95%
+- [ ] All necessary documents updated
