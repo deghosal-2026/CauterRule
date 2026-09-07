@@ -1,0 +1,71 @@
+---
+name: Security / adversarial finding
+description: Report a security vulnerability, adversarial input, or safety concern
+title: "Security: <brief description>"
+labels: ["security", "enhancement"]
+projects: []
+assignees: []
+---
+
+## Description
+
+<!-- Describe the security concern or adversarial input. -->
+
+## Attack Vector
+
+<!-- How could this be exploited? What's the threat model? -->
+
+## Impact
+
+- [ ] Secret leakage
+- [ ] Prompt injection
+- [ ] Data poisoning
+- [ ] Instruction leakage
+- [ ] Unsafe rule promotion
+- [ ] Other: <!-- specify -->
+
+## Reproduction
+
+<!--
+Steps to reproduce the security concern.
+DO NOT include actual secrets, credentials, or sensitive data.
+Use redacted or synthetic examples only.
+-->
+
+1.
+2.
+3.
+
+## Severity
+
+- [ ] Critical — remote code execution, secret leakage, or data loss
+- [ ] High — unsafe rule promoted or security bypass
+- [ ] Medium — defense-in-depth improvement
+- [ ] Low — hardening recommendation
+
+## Proposed Mitigation
+
+<!-- How should this be addressed? -->
+
+## Acceptance Criteria
+
+- [ ] Vulnerability confirmed and documented
+- [ ] Mitigation implemented
+- [ ] Adversarial test added that catches this vector
+- [ ] Redaction / validation / linter updated (if applicable)
+- [ ] Code review passed
+- [ ] Lint strict clean (`ruff check .` + `mypy src/ tests/`)
+- [ ] Code coverage > 95%
+- [ ] SECURITY.md updated
+- [ ] All necessary documents updated
+
+## Disclosure
+
+<!-- Is this publicly disclosed? Coordinated disclosure timeline? -->
+
+## Exit Gate
+
+- [ ] Code review passed
+- [ ] Lint strict clean
+- [ ] Code coverage > 95%
+- [ ] All necessary documents updated
