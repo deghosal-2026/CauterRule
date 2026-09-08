@@ -1,0 +1,27 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.5, pytest-9.0.3, pluggy-1.6.0
+rootdir: /Users/deghosal/Desktop/code/github/CauterRule
+configfile: pyproject.toml
+plugins: snapshot-0.9.0, cov-7.1.0, logfire-4.39.0, xdist-3.8.0, devtools-0.12.2, asyncio-1.4.0, langsmith-0.9.3, httpx-0.36.2, mock-3.14.0, requests-mock-1.12.1, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 60 items
+
+tests/benchmark/test_ablation.py ...                                     [  5%]
+tests/benchmark/test_bakeoff.py ....                                     [ 11%]
+tests/benchmark/test_calibration.py ...                                  [ 16%]
+tests/benchmark/test_calibration_loop.py ......                          [ 26%]
+tests/benchmark/test_counterexample.py ..                                [ 30%]
+tests/benchmark/test_determinism.py ....                                 [ 36%]
+tests/benchmark/test_gold_family.py ..                                   [ 40%]
+tests/benchmark/test_harness.py .........                                [ 55%]
+tests/benchmark/test_human_vs_llm.py ....                                [ 61%]
+tests/benchmark/test_leaderboard.py ........                             [ 75%]
+tests/benchmark/test_mutation.py ...                                     [ 80%]
+tests/benchmark/test_nearmiss.py ..                                      [ 83%]
+tests/benchmark/test_prompts.py ....                                     [ 90%]
+tests/benchmark/test_regression.py ..                                    [ 93%]
+tests/benchmark/test_safety_ranking.py ....                              [100%]
+
+- generated xml file: /Users/deghosal/Desktop/code/github/CauterRule/field-test/results/0.2.0/validation/2026-09-08/sentinel_benchmark.xml -
+============================== 60 passed in 0.05s ==============================
+

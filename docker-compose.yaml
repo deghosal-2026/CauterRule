@@ -23,7 +23,7 @@ services:
       dockerfile: Dockerfile
     container_name: cauterule-test
     entrypoint: ["sh", "-c"]
-    command: ["pip install -q pytest && cd /repo && python -m pytest tests/models tests/store tests/serialization tests/injection tests/redaction tests/export tests/cli tests/capture tests/promotion tests/conflict tests/loop tests/packs -m 'not slow and not docker' --tb=short -q -p no:cacheprovider"]
+    command: ["pip install -q pytest && cd /repo && python -m pytest tests/models tests/store tests/serialization tests/injection tests/redaction tests/export tests/cli tests/capture tests/promotion tests/conflict tests/loop tests/packs tests/observe tests/review tests/release tests/benchmark tests/corpus tests/adversarial tests/extraction tests/replay tests/safety tests/test_preflight tests/mcp tests/tui -m 'not slow and not docker' --tb=short -q -p no:cacheprovider"]
     volumes:
       - ./tests:/app/tests
       - ./src:/app/src

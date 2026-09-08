@@ -11,14 +11,20 @@ from cauterule.cli.demo import demo
 from cauterule.cli.diff import diff
 from cauterule.cli.explain import explain
 from cauterule.cli.extract import extract
+from cauterule.cli.frontier import frontier
+from cauterule.cli.gaps import gaps
+from cauterule.cli.harness_health import harness_health_cli
 from cauterule.cli.health import health
 from cauterule.cli.history import history
 from cauterule.cli.init import init
 from cauterule.cli.inject import inject
+from cauterule.cli.journal import journal
+from cauterule.cli.leaderboard import leaderboard
 from cauterule.cli.list import list_rules
 from cauterule.cli.mcp import mcp
 from cauterule.cli.metrics import metrics
 from cauterule.cli.pack import pack
+from cauterule.cli.preflight import preflight
 from cauterule.cli.promote import promote
 from cauterule.cli.report import report
 from cauterule.cli.retire import retire
@@ -56,8 +62,14 @@ main.add_command(init)
 main.add_command(inject)
 main.add_command(list_rules)
 main.add_command(mcp)
+main.add_command(frontier)
+main.add_command(gaps)
+main.add_command(leaderboard)
+main.add_command(journal)
 main.add_command(metrics)
+main.add_command(harness_health_cli)
 main.add_command(pack)
+main.add_command(preflight)
 main.add_command(promote)
 main.add_command(report)
 main.add_command(retire)

@@ -1,0 +1,19 @@
+id: G-007-api-rate-limit-b
+when:
+  trigger: when API returns 429 rate limit, back off with exponential retry
+  context:
+  - research
+do:
+  directive: Add a sleep of retry_after seconds before retrying the request
+  because: API response includes retry_after header; honoring it is the simplest fix
+confidence: 0.95
+provenance:
+  source_trajectory: G-007-api-rate-limit
+  extracted_by: benchmark
+  extract_timestamp: '2026-09-07T20:50:09.966291+00:00'
+  extraction_pass: 1
+status: active
+promoted_at: '2026-09-07T20:50:09.966291+00:00'
+tags:
+- research
+- golden

@@ -8,6 +8,13 @@ from typing import Any, Literal
 Verdict = Literal["pass", "fail", "inconclusive"]
 _VALID_VERDICTS: frozenset[str] = frozenset({"pass", "fail", "inconclusive"})
 
+InconclusiveReason = Literal[
+    "broad_trigger", "matcher_gap", "corpus_mismatch", "ambiguous_evidence"
+]
+_VALID_REASONS: frozenset[str] = frozenset(
+    {"broad_trigger", "matcher_gap", "corpus_mismatch", "ambiguous_evidence"}
+)
+
 
 @dataclass(frozen=True)
 class EvidenceReport:
@@ -21,6 +28,7 @@ class EvidenceReport:
     recall: float = 0.0
     verdict: Verdict = "inconclusive"
     replay_trace: tuple[dict[str, Any], ...] = field(default_factory=tuple)
+    inconclusive_reason: InconclusiveReason | None = None
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.precision <= 1.0:
@@ -29,10 +37,14 @@ class EvidenceReport:
             raise ValueError(f"recall must be in [0.0, 1.0], got {self.recall}")
         if self.verdict not in _VALID_VERDICTS:
             raise ValueError(f"verdict must be one of {_VALID_VERDICTS}, got {self.verdict}")
+        reason = self.inconclusive_reason
+        if reason is not None and reason not in _VALID_REASONS:
+            msg = f"inconclusive_reason must be one of {_VALID_REASONS}, got {reason}"
+            raise ValueError(msg)
 
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-serializable dict."""
-        return {
+        d: dict[str, Any] = {
             "failures_prevented": list(self.failures_prevented),
             "successes_broken": list(self.successes_broken),
             "near_misses": list(self.near_misses),
@@ -42,6 +54,9 @@ class EvidenceReport:
             "verdict": self.verdict,
             "replay_trace": list(self.replay_trace),
         }
+        if self.inconclusive_reason is not None:
+            d["inconclusive_reason"] = self.inconclusive_reason
+        return d
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> EvidenceReport:
@@ -55,4 +70,5 @@ class EvidenceReport:
             recall=float(data.get("recall", 0.0)),
             verdict=data.get("verdict", "inconclusive"),
             replay_trace=tuple(data.get("replay_trace", [])),
+            inconclusive_reason=data.get("inconclusive_reason"),
         )

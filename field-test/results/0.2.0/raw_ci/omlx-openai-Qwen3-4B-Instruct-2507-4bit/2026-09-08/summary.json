@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "corpus_type": "raw/ci",
+    "timestamp": "2026-09-08",
+    "llm_provider": "openai",
+    "llm_model": "Qwen3-4B-Instruct-2507-4bit",
+    "llm_base_url": "http://localhost:8000/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2,0.5",
+    "target_trajectories": 110,
+    "reference_trajectories": 210,
+    "cost_per_request_usd": 0.01,
+    "gate_mode": "relaxed"
+  },
+  "elapsed_seconds": 512.6,
+  "total": 110,
+  "done": 110,
+  "gate_dropped": 0,
+  "skipped": 0,
+  "total_candidates": 220,
+  "total_llm_calls_avoided": 0,
+  "avg_precision": 0.02,
+  "avg_recall": 0.002,
+  "avg_match_score": 0.097,
+  "match_detail_count": 220,
+  "passing": 1,
+  "failing": 9,
+  "inconclusive": 100,
+  "safety": {
+    "total": 110,
+    "silence": 0,
+    "parse_failure": 0,
+    "rejected": 109,
+    "accepted": 1,
+    "silence_rate": 0.0,
+    "verdict": "pass"
+  },
+  "specificity_distribution": {
+    "specific": 296,
+    "moderate": 32,
+    "generic": 2
+  },
+  "inconclusive_breakdown": {
+    "broad_trigger": 0,
+    "matcher_gap": 203,
+    "corpus_mismatch": 0,
+    "ambiguous_evidence": 0
+  },
+  "updated_at": "2026-09-08T01:24:43Z"
+}

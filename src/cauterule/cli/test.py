@@ -49,6 +49,8 @@ def test(rule: str, ci: bool) -> None:
     click.echo(f"  Precision: {report_.precision:.2f}")
     click.echo(f"  Recall: {report_.recall:.2f}")
     click.echo(f"  Verdict: {report_.verdict}")
+    if report_.verdict == "inconclusive" and report_.inconclusive_reason:
+        click.echo(f"  Inconclusive reason: {report_.inconclusive_reason}")
     if report_.failures_prevented:
         click.echo(f"  Prevented: {', '.join(report_.failures_prevented)}")
     if report_.successes_broken:

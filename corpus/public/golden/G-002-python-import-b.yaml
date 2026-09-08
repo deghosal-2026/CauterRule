@@ -1,0 +1,20 @@
+id: G-002-python-import-b
+when:
+  trigger: when python import fails with ModuleNotFoundError, install the missing
+    package
+  context:
+  - python
+do:
+  directive: Add the missing dependency to requirements.txt then pip install -r
+  because: Dependencies should be tracked in requirements.txt for reproducibility
+confidence: 0.95
+provenance:
+  source_trajectory: G-002-python-import
+  extracted_by: benchmark
+  extract_timestamp: '2026-09-07T20:50:09.966291+00:00'
+  extraction_pass: 1
+status: active
+promoted_at: '2026-09-07T20:50:09.966291+00:00'
+tags:
+- python
+- golden

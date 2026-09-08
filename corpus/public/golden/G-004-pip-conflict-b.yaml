@@ -1,0 +1,20 @@
+id: G-004-pip-conflict-b
+when:
+  trigger: when pip install fails with dependency conflict, create a fresh virtualenv
+    and install
+  context:
+  - python
+do:
+  directive: Use pip install --no-deps for conflicting transitive dependencies
+  because: Minimizes upgrade ripple by pinning only direct dependencies
+confidence: 0.95
+provenance:
+  source_trajectory: G-004-pip-conflict
+  extracted_by: benchmark
+  extract_timestamp: '2026-09-07T20:50:09.966291+00:00'
+  extraction_pass: 1
+status: active
+promoted_at: '2026-09-07T20:50:09.966291+00:00'
+tags:
+- python
+- golden

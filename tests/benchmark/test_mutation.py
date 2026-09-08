@@ -57,7 +57,7 @@ def test_mutation_multiple_perturbations() -> None:
     )
     perturbations = [
         CandidateRule(when=RuleWhen(trigger="npm install fails", context=("wrong context",)), do=RuleDo(directive="x"), confidence=0.95),
-        CandidateRule(when=RuleWhen(trigger="npm install fails xyz"), do=RuleDo(directive="x"), confidence=0.95),
+        CandidateRule(when=RuleWhen(trigger="docker build fails"), do=RuleDo(directive="x"), confidence=0.95),
         CandidateRule(when=RuleWhen(trigger="npm"), do=RuleDo(directive="x"), confidence=0.95),
     ]
     trajs = [

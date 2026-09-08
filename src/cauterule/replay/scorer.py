@@ -1,4 +1,4 @@
-"""Evidence scorer."""
+"""Evidence scorer with broad-trigger penalty."""
 
 from __future__ import annotations
 
@@ -7,26 +7,27 @@ def compute_scores(
     prevented: int,
     broken: int,
     total_failures: int,
-    total_successes: int,  # noqa: ARG001
+    total_successes: int,
 ) -> tuple[float, float, str]:
     """Compute precision, recall, verdict.
+
+    Broad-trigger penalty: if a trigger matches successes it would break,
+    it is too broad. Triggers that break more successes than they prevent
+    failures are "fail". Triggers that break some but still prevent more
+    are "inconclusive" (broad, not dangerous).
 
     Args:
         prevented: Failures prevented.
         broken: Successes broken.
         total_failures: Total failures in corpus.
-        total_successes: Total successes (unused for now, but kept for API).
+        total_successes: Total successes in corpus.
 
     Returns:
         (precision, recall, verdict) where verdict is pass/fail/inconclusive.
     """
-    _ = total_successes
     denom = prevented + broken
     if denom == 0:
-        precision = 1.0 if prevented == 0 and broken == 0 else 0.0
-        # If no matches at all, treat as inconclusive unless there were no failures to prevent
-        if prevented == 0 and broken == 0:
-            precision = 0.0
+        precision = 0.0
     else:
         precision = prevented / denom
 
@@ -34,9 +35,12 @@ def compute_scores(
 
     if prevented == 0 and broken == 0:
         verdict = "inconclusive"
-    elif broken > 0:
-        # If any success broken, verdict is fail regardless of precision (conservative)
+    elif broken > prevented:
+        # More successes broken than failures prevented — dangerously broad
         verdict = "fail"
+    elif broken > 0:
+        # Some successes broken, but prevented more — broad but fixable
+        verdict = "inconclusive"
     else:
         # No successes broken
         if precision >= 0.8:

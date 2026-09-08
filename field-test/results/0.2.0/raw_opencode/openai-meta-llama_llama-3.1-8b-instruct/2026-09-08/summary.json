@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "corpus_type": "raw/opencode",
+    "timestamp": "2026-09-08",
+    "llm_provider": "openai",
+    "llm_model": "meta-llama/llama-3.1-8b-instruct",
+    "llm_base_url": "https://openrouter.ai/api/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2,0.5",
+    "target_trajectories": 25,
+    "reference_trajectories": 230,
+    "cost_per_request_usd": 0.01,
+    "gate_mode": "relaxed"
+  },
+  "elapsed_seconds": 42.5,
+  "total": 25,
+  "done": 25,
+  "gate_dropped": 0,
+  "skipped": 0,
+  "total_candidates": 50,
+  "total_llm_calls_avoided": 0,
+  "avg_precision": 0.774,
+  "avg_recall": 0.084,
+  "avg_match_score": 0.147,
+  "match_detail_count": 50,
+  "passing": 12,
+  "failing": 3,
+  "inconclusive": 10,
+  "safety": {
+    "total": 25,
+    "silence": 0,
+    "parse_failure": 0,
+    "rejected": 13,
+    "accepted": 12,
+    "silence_rate": 0.0,
+    "verdict": "pass"
+  },
+  "specificity_distribution": {
+    "specific": 61,
+    "moderate": 13,
+    "generic": 1
+  },
+  "inconclusive_breakdown": {
+    "broad_trigger": 1,
+    "matcher_gap": 0,
+    "corpus_mismatch": 0,
+    "ambiguous_evidence": 19
+  },
+  "updated_at": "2026-09-08T04:12:19Z"
+}

@@ -1,0 +1,13 @@
+{
+  "corpus_type": "failures/negative",
+  "timestamp": "2026-09-08",
+  "llm_provider": "openai",
+  "llm_model": "gpt-4o-mini",
+  "llm_base_url": "https://openrouter.ai/api/v1",
+  "extraction_passes": 2,
+  "temperatures": "0.2,0.5",
+  "target_trajectories": 60,
+  "reference_trajectories": 230,
+  "cost_per_request_usd": 0.01,
+  "gate_mode": "strict"
+}

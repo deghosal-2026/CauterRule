@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "parse_rate",
+      "passed": true,
+      "message": "Parse rate 100.0% (145/145)",
+      "value": 1.0,
+      "threshold": 0.7
+    },
+    {
+      "name": "completion_ratio",
+      "passed": true,
+      "message": "Completion 276/145 (190.3%)",
+      "value": 1.903448275862069,
+      "threshold": 0.9
+    }
+  ],
+  "warnings": []
+}

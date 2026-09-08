@@ -1,0 +1,21 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.5, pytest-9.0.3, pluggy-1.6.0
+rootdir: /Users/deghosal/Desktop/code/github/CauterRule
+configfile: pyproject.toml
+plugins: snapshot-0.9.0, cov-7.1.0, logfire-4.39.0, xdist-3.8.0, devtools-0.12.2, asyncio-1.4.0, langsmith-0.9.3, httpx-0.36.2, mock-3.14.0, requests-mock-1.12.1, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 24 items
+
+tests/scale/test_concurrent.py ...                                       [ 12%]
+tests/scale/test_conflict_scale.py ...                                   [ 25%]
+tests/scale/test_cost.py ...                                             [ 37%]
+tests/scale/test_extractor_stability.py ...                              [ 50%]
+tests/scale/test_indexing.py ...                                         [ 62%]
+tests/scale/test_injection_latency.py ..                                 [ 70%]
+tests/scale/test_memory.py ..                                            [ 79%]
+tests/scale/test_replay_latency.py ...                                   [ 91%]
+tests/scale/test_storage.py ..                                           [100%]
+
+- generated xml file: /Users/deghosal/Desktop/code/github/CauterRule/field-test/results/0.2.0/validation/2026-09-08/scale_benchmark.xml -
+======================== 24 passed in 94.06s (0:01:34) =========================
+

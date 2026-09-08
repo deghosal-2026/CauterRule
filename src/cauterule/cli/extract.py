@@ -7,6 +7,7 @@ import click
 
 from cauterule.config import load_config
 from cauterule.extraction.dryrun import dry_run as dry_run_fn
+from cauterule.extraction.gate import GateMode, run_gate
 from cauterule.extraction.multipass import multipass_extract
 from cauterule.extraction.tournament import run_tournament
 from cauterule.llm import get_llm
@@ -31,7 +32,15 @@ def extract(trajectory: str, dry_run: bool) -> None:
         traj = Trajectory.from_dict(raw) if isinstance(raw, dict) else Trajectory.from_dict({"id": "cli", "timestamp": "", "task": "", "steps": [], "success": False})
 
     cfg = load_config()
+    gate_mode: GateMode = (
+        "relaxed" if cfg.extraction.gate_mode == "relaxed" else "strict"
+    )
     if dry_run:
+        gate_result = run_gate(traj, mode=gate_mode)
+        if not gate_result.should_extract:
+            click.echo("pre-extraction drop: no failure signal (silence)")
+            click.echo(f"silence reason: {gate_result.reason}")
+            return
         info = dry_run_fn(traj, template=None)
         click.echo(f"dry-run candidate when: {info.when.trigger}")
         click.echo(f"dry-run candidate do: {info.do.directive}")
@@ -41,7 +50,13 @@ def extract(trajectory: str, dry_run: bool) -> None:
         return
 
     llm = get_llm(cfg)
-    candidates = multipass_extract(traj, llm, temperatures=cfg.extraction.temperatures)
+    gate_result = run_gate(traj, mode=gate_mode)
+    if not gate_result.should_extract:
+        click.echo("No candidates extracted (pre-extraction drop: no failure signal).")
+        return
+    candidates = multipass_extract(
+        traj, llm, temperatures=cfg.extraction.temperatures, gate_mode=cfg.extraction.gate_mode
+    )
     if not candidates:
         click.echo("No candidates extracted.")
         return

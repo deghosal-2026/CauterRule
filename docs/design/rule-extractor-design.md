@@ -23,6 +23,22 @@ Output: list[CandidateRule] {
 ### Normal Extraction
 Multi-pass: run extraction 3x with temperature variation (0.2, 0.5, 0.8). Collect all valid candidates. Deduplicate by semantic similarity. Pass all to the draft tournament.
 
+### Pre-Extraction Gate
+Before any LLM call, a deterministic null-hypothesis gate scans raw trajectory telemetry for failure evidence. If no failure signal is present on a successful trajectory, the gate drops the trajectory immediately — no LLM call, no candidate. This counters extractor completion bias (the LLM assuming a defect must exist whenever it is asked for a rule).
+
+Failure signals checked:
+1. Non-zero exit codes from step state
+2. Failed assertions (`state.assertion_failed`)
+3. Schema violations (`state.schema_violation`)
+4. Non-empty step error content
+5. Trajectory-level `failure_point` / `failure_class`
+
+Modes (configurable via `extraction.gate_mode` in `cauterule.toml`):
+- `strict` (default): drop clean successes; emit `silence` with reason `no_failure_signal`
+- `relaxed`: always proceed (for positive corpora where extraction is the goal)
+
+Dropped trajectories are counted as `pre_extraction_drops`, separate from model-produced silence.
+
 ### Dry-Run Extraction
 `cauterule extract --dry-run` — shows what would be extracted without making an LLM call. Uses cached results or pattern matching only. Saves cost.
 

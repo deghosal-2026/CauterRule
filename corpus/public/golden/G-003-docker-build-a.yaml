@@ -1,0 +1,20 @@
+id: G-003-docker-build-a
+when:
+  trigger: when docker build fails with package not found, add apt-get install to
+    Dockerfile
+  context:
+  - docker
+do:
+  directive: Add apt-get install command to Dockerfile before pip install
+  because: Base image lacks build dependencies; apt-get install must precede pip
+confidence: 0.95
+provenance:
+  source_trajectory: G-003-docker-build
+  extracted_by: benchmark
+  extract_timestamp: '2026-09-07T20:50:09.966291+00:00'
+  extraction_pass: 1
+status: active
+promoted_at: '2026-09-07T20:50:09.966291+00:00'
+tags:
+- docker
+- golden

@@ -7,7 +7,8 @@ from cauterule.store.manager import StoreManager
 
 @click.command("show")
 @click.argument("rule_id")
-def show(rule_id: str) -> None:
+@click.option("--hits", is_flag=True, help="Show hit count and last match")
+def show(rule_id: str, hits: bool) -> None:
     """Show full provenance view of a rule."""
     store = StoreManager()
     rule = store.get_rule(rule_id)
@@ -25,6 +26,14 @@ def show(rule_id: str) -> None:
     click.echo(f"Status: {rule.status}")
     click.echo(f"Promoted at: {rule.promoted_at}")
     click.echo(f"Hit count: {rule.hit_count}")
+    if rule.last_match:
+        click.echo(f"Last match: {rule.last_match}")
+    elif hits:
+        click.echo("Last match: never")
     click.echo(f"Tags: {', '.join(rule.tags) if rule.tags else 'none'}")
     if rule.taxonomy:
         click.echo(f"Taxonomy: {rule.taxonomy}")
+    if rule.provenance.replay_evidence:
+        ev = rule.provenance.replay_evidence
+        click.echo(f"Failures prevented: {len(ev.failures_prevented)}")
+        click.echo(f"Successes broken: {len(ev.successes_broken)}")

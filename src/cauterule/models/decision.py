@@ -18,6 +18,7 @@ class PromotionDecision:
     approver: str | None = None
     linter_warnings: tuple[str, ...] = field(default_factory=tuple)
     conflicts: tuple[str, ...] = field(default_factory=tuple)
+    safety_warnings: tuple[str, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         if self.verdict not in _VALID_VERDICTS:
@@ -36,6 +37,8 @@ class PromotionDecision:
             d["linter_warnings"] = list(self.linter_warnings)
         if self.conflicts:
             d["conflicts"] = list(self.conflicts)
+        if self.safety_warnings:
+            d["safety_warnings"] = list(self.safety_warnings)
         return d
 
     @classmethod
@@ -47,4 +50,5 @@ class PromotionDecision:
             approver=data.get("approver"),
             linter_warnings=tuple(data.get("linter_warnings", [])),
             conflicts=tuple(data.get("conflicts", [])),
+            safety_warnings=tuple(data.get("safety_warnings", [])),
         )

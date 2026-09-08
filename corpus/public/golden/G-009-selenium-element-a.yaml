@@ -1,0 +1,19 @@
+id: G-009-selenium-element-a
+when:
+  trigger: when Selenium fails to find element, add explicit wait before interaction
+  context:
+  - browser_automation
+do:
+  directive: Add WebDriverWait with expected_conditions before find_element
+  because: Dynamic pages load elements asynchronously; explicit wait handles timing
+confidence: 0.95
+provenance:
+  source_trajectory: G-009-selenium-element
+  extracted_by: benchmark
+  extract_timestamp: '2026-09-07T20:50:09.966291+00:00'
+  extraction_pass: 1
+status: active
+promoted_at: '2026-09-07T20:50:09.966291+00:00'
+tags:
+- browser_automation
+- golden

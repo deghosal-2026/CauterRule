@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from cauterule.extraction.multipass import multipass_extract
@@ -13,7 +13,6 @@ from cauterule.models.evidence import EvidenceReport
 from cauterule.models.rule import StandingRule
 from cauterule.models.trajectory import Trajectory
 from cauterule.redaction.engine import redact_trajectory
-from cauterule.replay.report import build_evidence_report
 
 
 @dataclass(frozen=True)
@@ -24,6 +23,7 @@ class LoopConfig:
     replay_enabled: bool = True
     promotion_mode: str = "auto"
     extract_template: str | None = None
+    gate_mode: str = "strict"
     llm: Any = None
     historical_trajectories: tuple[Trajectory, ...] = field(default_factory=tuple)
     existing_rules: tuple[StandingRule, ...] = field(default_factory=tuple)
@@ -64,9 +64,9 @@ def run_loop(trajectory: Trajectory, config: LoopConfig) -> str | None:
     all_failures = [redacted] + [t for t in config.historical_trajectories if not t.success]
     # Use single-pass extraction per trajectory for now; clustering integration pending.
 
-    # 4. Extract
+    # 4. Extract (pre-extraction gate runs inside multipass_extract)
     candidates: list[CandidateRule] = multipass_extract(
-        redacted, config.llm, template=config.extract_template
+        redacted, config.llm, template=config.extract_template, gate_mode=config.gate_mode
     )
     if not candidates:
         return None
@@ -106,7 +106,7 @@ def run_loop(trajectory: Trajectory, config: LoopConfig) -> str | None:
             return None
 
     # 9. Promote
-    promoted_id = f"R-{trajectory.id}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    promoted_id = f"R-{trajectory.id}-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
     # 10. Inject — mark as ready; actual injection done by caller.
     return promoted_id

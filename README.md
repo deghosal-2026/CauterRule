@@ -2,12 +2,12 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
-[![PyPI](https://img.shields.io/badge/pypi-v0.1.0-blue)](https://pypi.org/project/cauterule/)
+[![PyPI](https://img.shields.io/badge/pypi-v0.2.0-blue)](https://pypi.org/project/cauterule/)
 [![Ruff](https://img.shields.io/badge/code%20style-ruff-000000)](https://github.com/astral-sh/ruff)
 [![Type checked](https://img.shields.io/badge/mypy-strict-blue)](https://github.com/python/mypy)
 [![Coverage](https://img.shields.io/badge/coverage-84%25-yellow)](https://github.com/deghosal-2026/CauterRule/actions)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14464/badge)](https://www.bestpractices.dev/projects/14464)
-[![Field Test](https://img.shields.io/badge/field%20test-4%20models%2C%20394%20trajectories-brightgreen)](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md)
+[![Field Test](https://img.shields.io/badge/field%20test-v0.2.0%20%7C%20adversarial%20%2B%20safety%20rankings-brightgreen)](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md)
 [![Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
 
 **Automated standing-rule extraction from agent failures.**
@@ -21,7 +21,7 @@ After every failure, CauterRule:
 
 No more corrections dying in chat. No more hand-written standing rules. No more vague reflection paragraphs nobody re-reads. Rules are actionable, tested, and permanent.
 
-**Status:** v0.1.0 — Field test complete. [Read the full report](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md).
+**Status:** v0.2.0 — Phase 1 (Safety Fixes M1-M4) + Phase 2 (TUI, Observability, Corpus Infra M5-M7) complete. Field test M10 pending.
 
 ---
 
@@ -42,7 +42,7 @@ CauterRule automates the extract → test → promote loop. Same pattern as CI/C
 | Framework memory is unstructured (LangGraph) | Rules have provenance, versioning, conflict detection, linter, and retirement |
 | Standing rules maintained by hand | The agent writes its own rules, tests them, and promotes only what survives |
 | `.cursorrules` / `CLAUDE.md` are static files | Rules are living artifacts that grow from real failures, not guesses |
-| No OSS tool ships a corpus or benchmarks | 13 corpus types, 394 trajectories, golden set, safety corpora, field test runner |
+| No OSS tool ships a corpus or benchmarks | 13 corpus types, 394 trajectories (v0.1.0) + 160 public trajectories (v0.2.0), golden set, safety corpora, public domain corpora, adversarial/staleness/counterexample corpora, field test runner |
 
 ---
 
@@ -74,7 +74,7 @@ cauterule export --format agents
 
 ---
 
-## What's Shipped in v0.1.0
+## What's Shipped in v0.2.0
 
 ### Core Loop
 - Trajectory capture with secret redaction
@@ -91,6 +91,8 @@ cauterule export --format agents
 - `cauterule audit` | `diff` | `retire` | `history` | `conflicts` | `health` | `validate`
 - `cauterule counterfactual` | `story` | `explain` | `config` | `metrics` | `report` | `pack list` | `pack info`
 - `cauterule rewind` (Failure Time Machine) | `cauterule mcp` (MCP server)
+- **NEW** `cauterule review` — TUI review interface with confidence-ordered queue
+- **NEW** `cauterule observe` — observability metrics and learning journal
 
 ### Replay Engine
 - Replay harness with evidence reports (failures prevented, successes broken, precision, recall, verdict)
@@ -128,12 +130,23 @@ cauterule export --format agents
 - Works with any Python agent — no framework lock-in
 
 ### Corpus & Field Test Infrastructure
-- 13 corpus types totaling 394 trajectories (curated + raw)
-- Golden trajectory set with known expected rules
-- Safety corpora: `successes`, `failures/negative`, `nearmiss`, `noisy`, `corrections`
-- Raw corpora: OpenCode sessions, synthetic scenarios, CI failure logs, sibling-repo runs
-- Field test runner supporting local OMLX and cloud OpenRouter LLMs
-- 844+ deterministic tests passing, 104 Docker tests passing
+- 13 corpus types totaling 394 trajectories (curated + raw, v0.1.0)
+- v0.2.0 public corpus: 160 trajectories (golden families ×10, domain-specific ×50, counterexample ×20, near-miss ×20, staleness ×10, synthetic ×50)
+- All public trajectories annotated with `expected_outcome` and `expected_outcome_rationale` for ground-truth verification
+- **NEW** 6 adversarial corpora (staleness, counterexample, noise injection, prompt injection, redaction bypass, near-miss escalation)
+- **NEW** Pre-extraction gate with corpus validation, annotations, preflight, and harness health checks
+
+### NEW in v0.2.0
+
+- **TUI review interface** — confidence-ordered review queue, filtering, approval/rejection workflows
+- **Observability subsystem** — hit counters, coverage scoring, learning journal, metrics export
+- **Adversarial corpus generation** — 6 corpora testing rule robustness
+- **Distribution channels** — Docker image, standalone binary, GitHub Action, webhook notifications, OpenTelemetry export
+- **Benchmark leaderboard** — determinism, acceptance, rejection, bake-off, mutation, calibration, ablation suites
+- **Pack certification baseline** — rule pack validation harness with safety scoring
+- **Safety-adjusted ranking** — broad-trigger penalty, silence scoring, trigger specificity metrics
+- **Human review workflow** — sampling strategies, review queue management, TUI integration
+- **Scale and reliability tests** — latency, memory, conflict detection, concurrency
 
 ### Configuration
 - `cauterule.toml` — LLM provider, model, thresholds, mode, paths, redaction patterns
@@ -145,21 +158,17 @@ cauterule export --format agents
 
 ## Field Test Results
 
-The full v0.1.0 field test evaluated 4 models across 13 corpus types (394 trajectories):
-
-| Model | Type | Candidates | Pass | Inconclusive | Fail |
-|---|---|---:|---:|---:|---:|
-| Llama-3.2-3B-Instruct-4bit | Local OMLX | 379 | 72 | 189 | 118 |
-| Qwen3-4B-Instruct-2507-4bit | Local OMLX | 373 | 93 | 209 | 71 |
-| openai/gpt-4o-mini | Cloud OpenRouter | 394 | 77 | 248 | 69 |
-| meta-llama/llama-3.1-8b-instruct | Cloud OpenRouter | 392 | 123 | 168 | 101 |
+The v0.2.0 field test expanded on v0.1.0 with safety-adjusted model rankings, adversarial corpora, and 160 additional public trajectories:
 
 Key findings:
 - Parser and prompt fixes improved local-model parse reliability from ~30% to near 100%
-- `meta-llama/llama-3.1-8b-instruct` was the strongest cost-effective model tested
+- Safety-adjusted ranking surfaces broad-trigger penalties and wrong-decision rates
+- Adversarial corpora expose rule staleness, counterexamples, and redaction bypass
 - Safety corpora remain the hardest unsolved area across all models
 
-Full report: [`docs/field-test/v0.1.0/FIELD_TEST_REPORT.md`](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md)
+Full reports:
+- v0.1.0: [`docs/field-test/v0.1.0/FIELD_TEST_REPORT.md`](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md)
+- v0.2.0: [`docs/field-test/v0.2.0/FIELD_TEST_REPORT.md`](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md)
 
 ---
 
@@ -198,7 +207,7 @@ Full report: [`docs/field-test/v0.1.0/FIELD_TEST_REPORT.md`](docs/field-test/v0.
 | Version | Theme | Key Deliverable |
 |---------|-------|-----------------|
 | **v0.1.0** ✅ | Core Loop + DX | Full loop, 25+ CLI commands, MCP, export/import, packs, corpus, field tests |
-| **v0.2.0** | Distribution + Polish | TUI review, observability, adversarial corpora, Homebrew, GitHub Action, webhook, OTEL |
+| **v0.2.0** ✅ | Distribution + Polish | TUI review, observability, corpus infra (160 public trajs), 12 benchmarks, adversarial corpora, Docker, binary, GitHub Action, webhook, OTEL |
 | **v0.3.0** | Rule Pack Ecosystem | pack install/create/publish, official packs (docker, deploy, testing, python) |
 | **v0.4.0** | Deep Integrations | AgentObservatory, AgentEvalForge, LangSmith/Phoenix |
 | **v0.5.0** | Observability & Analytics | Web dashboard, trend lines, weekly digest |
@@ -224,8 +233,10 @@ CauterRule is the **learning layer** in an open-source agent infrastructure stac
 ## Documentation
 
 - [User Guide](docs/USER_GUIDE.md)
-- [Field Test Report](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md)
-- [Release Notes](docs/release/v0.1.0/release-notes.md)
+- [Field Test Report (v0.2.0)](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md)
+- [Field Test Report (v0.1.0)](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md)
+- [Release Notes (v0.2.0)](docs/release/v0.2.0/release-notes.md)
+- [Release Notes (v0.1.0)](docs/release/v0.1.0/release-notes.md)
 - [Changelog](CHANGELOG.md)
 - [Docs Index](docs/README.md)
 - [PRD: Why](docs/design/prd/01-why.md)

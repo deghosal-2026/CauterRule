@@ -11,7 +11,7 @@ def test_prevented_all() -> None:
 def test_mixed() -> None:
     prec, rec, verdict = compute_scores(prevented=3, broken=1, total_failures=5, total_successes=5)
     assert prec == 0.75
-    assert verdict == "fail"
+    assert verdict == "inconclusive"  # broad but fixable: broken < prevented
 
 
 def test_no_matches() -> None:

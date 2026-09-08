@@ -5,6 +5,7 @@ from __future__ import annotations
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.evidence import EvidenceReport
 from cauterule.models.trajectory import Trajectory
+from cauterule.replay.attribution import attribute_inconclusive
 from cauterule.replay.scorer import compute_scores
 from cauterule.replay.simulator import simulate
 
@@ -12,8 +13,16 @@ from cauterule.replay.simulator import simulate
 def build_evidence_report(
     candidate: CandidateRule,
     trajectories: list[Trajectory],
+    threshold: float | None = None,
 ) -> EvidenceReport:
-    """Build an :class:`EvidenceReport` for *candidate* against *trajectories*."""
+    """Build an :class:`EvidenceReport` for *candidate* against *trajectories*.
+
+    Args:
+        candidate: The candidate rule.
+        trajectories: Reference trajectories to test against.
+        threshold: Matcher threshold. If None, uses DEFAULT_THRESHOLD (0.6).
+            Use :func:`threshold_for_corpus` from matcher.py for corpus-aware tuning.
+    """
     prevented: list[str] = []
     broken: list[str] = []
     near_misses: list[str] = []
@@ -21,8 +30,12 @@ def build_evidence_report(
 
     total_failures = sum(1 for t in trajectories if not t.success)
 
+    kwargs = {}
+    if threshold is not None:
+        kwargs["threshold"] = threshold
+
     for traj in trajectories:
-        outcome = simulate(candidate, traj)
+        outcome = simulate(candidate, traj, **kwargs)
         trace.append({"trajectory_id": traj.id, "outcome": outcome})
         if outcome == "prevented":
             prevented.append(traj.id)
@@ -42,7 +55,7 @@ def build_evidence_report(
     if len(trajectories) < 3:
         verdict = "inconclusive"
 
-    return EvidenceReport(
+    report = EvidenceReport(
         failures_prevented=tuple(prevented),
         successes_broken=tuple(broken),
         near_misses=tuple(near_misses),
@@ -51,3 +64,7 @@ def build_evidence_report(
         verdict=verdict,  # type: ignore[arg-type]
         replay_trace=tuple(trace),
     )
+    if report.verdict == "inconclusive":
+        reason = attribute_inconclusive(candidate, trajectories, report)
+        object.__setattr__(report, "inconclusive_reason", reason)
+    return report

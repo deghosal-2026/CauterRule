@@ -1,0 +1,20 @@
+id: G-004-pip-conflict-a
+when:
+  trigger: when pip install fails with dependency conflict, create a fresh virtualenv
+    and install
+  context:
+  - python
+do:
+  directive: Create a virtualenv first, then pip install inside it
+  because: Dependency conflicts arise from global site-packages; virtualenv isolates
+confidence: 0.95
+provenance:
+  source_trajectory: G-004-pip-conflict
+  extracted_by: benchmark
+  extract_timestamp: '2026-09-07T20:50:09.966291+00:00'
+  extraction_pass: 1
+status: active
+promoted_at: '2026-09-07T20:50:09.966291+00:00'
+tags:
+- python
+- golden

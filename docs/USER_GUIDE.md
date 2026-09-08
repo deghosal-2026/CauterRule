@@ -62,6 +62,19 @@ cauterule extract field-test/corpus/golden/G-001-git-push-non-ff.jsonl \
 cauterule extract field-test/corpus/golden/G-001-git-push-non-ff.jsonl --dry-run
 ```
 
+### Pre-extraction gate (silence on clean trajectories)
+
+Before calling the LLM, `cauterule extract` runs a deterministic gate that checks the trajectory for failure evidence (exit codes, assertion failures, schema violations, step errors). If a successful trajectory has no failure signal, extraction is skipped — no LLM call, no candidate. This is reported as `silence` with reason `no_failure_signal`, which counts as a win on safety corpora.
+
+Configure the gate in `cauterule.toml`:
+
+```toml
+[extraction]
+gate_mode = "strict"  # strict (default) | relaxed
+```
+
+Use `relaxed` on positive corpora where extraction is always the goal.
+
 ---
 
 ## Running Field Tests
@@ -85,6 +98,26 @@ The field-test runner (`scripts/run-field-test.py`) runs extraction across entir
 | `raw/sibling-repos` | `field-test/corpus/raw/sibling-repos/` | 10 | Agent runs on sibling repos |
 | `raw/corrections` | `field-test/corpus/raw/corrections/` | 5 | Manual correction transcripts |
 | `raw/cross-session` | `field-test/corpus/raw/cross-session/` | 5 | Cross-session repeat failures |
+
+### v0.2.0 Public Corpus
+
+New in v0.2.0: a shareable public corpus under `corpus/public/` with trajectory metadata annotations, gold rule families, and adversarial/staleness test data.
+
+| Type | Path | Trajectories | Purpose |
+|------|------|-------------|---------|
+| `golden` | `corpus/public/golden/` | 10 | Gold families — 10 scenarios × ≥2 acceptable rule abstractions each |
+| `domain/coding` | `corpus/public/domains/coding.jsonl` | 10 | Coding-domain trajectories with known expected outcomes |
+| `domain/devops` | `corpus/public/domains/devops.jsonl` | 10 | DevOps/K8s-domain trajectories |
+| `domain/research` | `corpus/public/domains/research.jsonl` | 10 | Research/web-scrape-domain trajectories |
+| `domain/support` | `corpus/public/domains/support.jsonl` | 10 | Support/triage-domain trajectories |
+| `domain/browser` | `corpus/public/domains/browser_automation.jsonl` | 10 | Browser-automation-domain trajectories |
+| `counterexample` | `corpus/public/counterexample/counterexample.jsonl` | 20 | Expected rejection — plausible but wrong |
+| `nearmiss` | `corpus/public/nearmiss/nearmiss.jsonl` | 20 | Near-miss — looks like failure but isn't |
+| `staleness` | `corpus/public/staleness/staleness.jsonl` | 10 | Historical failures no longer relevant |
+| `synthetic` | `corpus/public/synthetic/synthetic.jsonl` | 50 | Shareable synthetic trajectories, no secrets |
+| **Total** | | **160** | |
+
+All public corpus trajectories include `expected_outcome` (`should_extract`, `should_silence`, `should_reject`) and `expected_outcome_rationale` metadata for automated ground-truth verification.
 
 ### With Local OMLX (Apple Silicon)
 
@@ -420,3 +453,93 @@ The runner now clears `results.jsonl` at the start of each run. If you rerun on 
 - Use a smaller corpus type
 - Use a local model instead of cloud
 - Set `--temperatures 0.2` (single pass instead of multiple)
+
+---
+
+## v0.2.0 Features
+
+### TUI Review Interface (`cauterule review`)
+
+Review candidate rules before promotion using a terminal UI:
+
+```bash
+cauterule review
+```
+
+The TUI presents a confidence-ordered queue — highest-impact candidates first. You can:
+
+- Filter by severity, origin, or status
+- Approve or reject rules with keyboard shortcuts
+- View rule details, trigger specificity, and replay evidence inline
+- Navigate with card-based pagination
+
+### Observability (`cauterule observe`)
+
+Track rule health and coverage over time:
+
+```bash
+cauterule observe          # show hit counters and coverage scores
+cauterule metrics          # detailed metrics report
+```
+
+Metrics include:
+
+- **Hit counters** — how often each rule fires during injection
+- **Coverage scoring** — which failure classes are covered by active rules
+- **Learning journal** — narrative view of rule evolution over time
+
+### Safety-Adjusted Ranking (`cauterule report`)
+
+Generate safety-adjusted model rankings from field-test results:
+
+```bash
+cauterule report --safety-adjusted
+```
+
+Produces a markdown table ranking models by safety-adjusted pass rate, with:
+
+- Broad-trigger penalty — rules that break successes are penalized
+- Violation rate — percentage of rules that violate safety constraints
+- Decision economics — pairwise model comparison with wrong-decision rate
+
+### Pre-Extraction Gate
+
+The pre-extraction gate prevents extraction from clean (no-failure) trajectories:
+
+```bash
+cauterule preflight <trajectory.jsonl>
+```
+
+Validates:
+
+- Corpus annotations (`expected_outcome`, `expected_outcome_rationale`)
+- Harness health (environment, dependencies)
+- Trajectory structure before extraction runs
+
+### Adversarial Testing
+
+Six adversarial corpora test rule robustness:
+
+| Corpus | What It Tests |
+|--------|---------------|
+| `adversarial/staleness` | Rules that become outdated as codebases evolve |
+| `adversarial/counterexample` | Cases where a correct rule produces wrong prevention |
+| `adversarial/noise` | Rule resilience to noisy/irrelevant trajectory content |
+| `adversarial/prompt-injection` | Rules that prevent vs. are exploited by injection attacks |
+| `adversarial/redaction-bypass` | Whether rules leak or circumvent secret redaction |
+| `adversarial/nearmiss-escalation` | Edge cases where near-misses should escalate |
+
+Run against any adversarial corpus:
+
+```bash
+cauterule extract field-test/corpus/adversarial/prompt-injection/*.jsonl
+cauterule test --corpus adversarial
+```
+
+### Distribution
+
+- **Docker:** `docker compose up cauterule-demo`
+- **Standalone binary:** `scripts/build_binary.sh`
+- **GitHub Action:** run `cauterule test --ci` in any CI workflow
+- **Webhook:** configure promotion webhook in `cauterule.toml`
+- **OpenTelemetry:** emit traces and metrics to any OTEL collector

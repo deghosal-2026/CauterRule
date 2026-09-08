@@ -1,33 +1,139 @@
+"""CLI command: cauterule report --safety-adjusted."""
+
 from __future__ import annotations
 
-import click
+import json
+import sys
 from pathlib import Path
 
-from cauterule.store.health import health_report
+import click
+
+from cauterule.benchmark.safety_ranking import ModelResult, rank_by_total, rank_by_safety_adjusted
 
 
 @click.command("report")
-@click.option("--format", "fmt", default="markdown", help="Output format (markdown/html/pdf).")
-@click.option("--output", "-o", help="Output file path.")
-def report(fmt: str, output: str | None) -> None:
-    """Generate a markdown report for sharing."""
-    report_data = health_report()
-    lines = [
-        "# CauterRule Report",
-        "",
-        f"- **Total rules**: {report_data['total_rules']}",
-        f"- **By status**: {report_data['by_status']}",
-        f"- **Avg confidence**: {report_data['avg_confidence']}",
-        f"- **Avg effectiveness**: {report_data['avg_effectiveness']}",
-        f"- **Conflict count**: {report_data['conflict_count']}",
-        "",
-    ]
-    if report_data['stale_rules']:
-        lines.append(f"**Stale rules**: {', '.join(report_data['stale_rules'])}")
-
-    body = "\n".join(lines)
-    if output:
-        Path(output).write_text(body, encoding="utf-8")
-        click.echo(f"Report written to {output}")
+@click.option(
+    "--safety-adjusted",
+    is_flag=True,
+    help="Produce safety-adjusted model ranking from field-test summary files",
+)
+@click.option(
+    "--results-dir",
+    default="field-test/results/0.2.0",
+    help="Directory containing per-corpus run subdirectories with summary.json files",
+)
+def report(safety_adjusted: bool, results_dir: str) -> None:
+    """Generate field-test reports."""
+    click.echo("# CauterRule Report")
+    click.echo("")
+    if safety_adjusted:
+        _build_safety_adjusted_ranking(results_dir)
     else:
-        click.echo(body)
+        click.echo("Pass --safety-adjusted to generate a safety-adjusted model ranking.")
+        click.echo(f"Results directory: {results_dir}")
+
+
+def _build_safety_adjusted_ranking(results_dir: str) -> None:
+    """Walk run directories and produce safety-adjusted ranking table."""
+    root = Path(results_dir)
+    if not root.is_dir():
+        print(f"Error: results directory not found: {root}", file=sys.stderr)
+        sys.exit(1)
+
+    # Collect summary.json files from run directories
+    # Structure: {results_dir}/{corpus_type}/{llm_label}/{date}/summary.json
+    model_results: dict[str, ModelResult] = {}
+    llm_labels: set[str] = set()
+
+    for summary_path in root.rglob("summary.json"):
+        try:
+            data = json.loads(summary_path.read_text())
+        except Exception as exc:
+            print(f"  [warn] skipping {summary_path}: {exc}", file=sys.stderr)
+            continue
+
+        meta = data.get("meta", {})
+        corpus_type = meta.get("corpus_type", "")
+        llm_provider = meta.get("llm_provider", "?")
+        llm_model = meta.get("llm_model", "?")
+        llm_label = f"{llm_provider}/{llm_model}"
+        llm_labels.add(llm_label)
+
+        passing = data.get("passing", 0)
+        safety = data.get("safety", {})
+        successes_pass = safety.get("accepted", 0) if corpus_type in ("successes", "failures/negative") else 0
+        failures_neg_pass = safety.get("accepted", 0) if corpus_type == "failures/negative" else 0
+        inconclusive = data.get("inconclusive", 0)
+        candidates = data.get("total_candidates", 0)
+        trajectories = data.get("done", 0) + data.get("gate_dropped", 0)
+        extraction_rate = round(candidates / trajectories, 2) if trajectories else 0.0
+
+        if llm_label not in model_results:
+            model_results[llm_label] = ModelResult(
+                model=llm_label,
+                total_pass=0,
+                successes_pass=0,
+                failures_negative_pass=0,
+                inconclusive=0,
+                extraction_rate=0.0,
+            )
+
+        mr = model_results[llm_label]
+        mr.total_pass += passing
+        mr.successes_pass += successes_pass
+        mr.failures_negative_pass += failures_neg_pass
+        mr.inconclusive += inconclusive
+
+    if not model_results:
+        print("No summary.json files found under", results_dir)
+        return
+
+    # Rankings
+    by_total = rank_by_total(list(model_results.values()))
+    by_safety = rank_by_safety_adjusted(list(model_results.values()))
+
+    # Output markdown table
+    print("\n## Safety-Adjusted Model Ranking\n")
+    header = "| Model | Total Pass | Safety-Adjusted Pass | Violation Rate | Inconclusive | Rank (Total) | Rank (Safety) |"
+    sep = "|-------|-----------|---------------------|----------------|-------------|-------------|--------------|"
+    print(header)
+    print(sep)
+
+    rank_total_map = {m.model: i + 1 for i, m in enumerate(by_total)}
+    rank_safety_map = {m.model: i + 1 for i, m in enumerate(by_safety)}
+
+    for m in sorted(model_results.values(), key=lambda x: x.safety_adjusted_pass, reverse=True):
+        vr = f"{m.safety_violation_rate * 100:.1f}%"
+        print(
+            f"| {m.model} | {m.total_pass} | {m.safety_adjusted_pass} | {vr} | {m.inconclusive} "
+            f"| #{rank_total_map.get(m.model, '?')} | #{rank_safety_map.get(m.model, '?')} |"
+        )
+
+    print()
+
+    # Pairwise comparison
+    if len(model_results) >= 2:
+        models = list(model_results.values())
+        print("## Decision Economics (Model Pairs)\n")
+        print("| Baseline → New | Resolved | New Pass | New Fail | Wrong-Decision Rate |")
+        print("|----------------|----------|----------|----------|---------------------|")
+        for i, baseline in enumerate(models):
+            for j in range(i + 1, len(models)):
+                new = models[j]
+                from cauterule.benchmark.safety_ranking import decision_economics
+
+                econ = decision_economics(
+                    baseline_inconclusive=baseline.inconclusive,
+                    new_pass=new.total_pass - baseline.total_pass if new.total_pass > baseline.total_pass else 0,
+                    new_fail=baseline.total_pass - new.total_pass if new.total_pass < baseline.total_pass else 0,
+                )
+                wrong = f"{econ['wrong_decision_rate'] * 100:.1f}%"
+                print(
+                    f"| {baseline.model} → {new.model} | {econ['resolved']} | {econ['new_pass']} | {econ['new_fail']} | {wrong} |"
+                )
+        print()
+
+    # Save to file
+    output_path = root / "safety-ranking.md"
+    output_path.write_text("".join(sys.stdout.getvalue()) if hasattr(sys.stdout, 'getvalue') else "")
+    print(f"\nRanking saved to: {output_path}")

@@ -1,0 +1,19 @@
+id: G-001-git-push-non-ff-b
+when:
+  trigger: when git push fails with non-fast-forward, pull latest changes before pushing
+  context:
+  - git
+do:
+  directive: Pull remote changes first via git pull --rebase, then retry push
+  because: Local branch is behind remote; rebase preserves commit history
+confidence: 0.95
+provenance:
+  source_trajectory: G-001-git-push-non-ff
+  extracted_by: benchmark
+  extract_timestamp: '2026-09-07T20:50:09.966291+00:00'
+  extraction_pass: 1
+status: active
+promoted_at: '2026-09-07T20:50:09.966291+00:00'
+tags:
+- git
+- golden

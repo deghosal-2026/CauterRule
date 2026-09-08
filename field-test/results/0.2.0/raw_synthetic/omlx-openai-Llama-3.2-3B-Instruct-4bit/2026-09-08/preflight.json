@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "provider_checks": [
+    {
+      "name": "api_key",
+      "passed": true,
+      "message": "API key present or not required"
+    },
+    {
+      "name": "model_id",
+      "passed": true,
+      "message": "Model ID: Llama-3.2-3B-Instruct-4bit"
+    },
+    {
+      "name": "endpoint",
+      "passed": true,
+      "message": "Endpoint check skipped (no probe)"
+    }
+  ],
+  "corpus_checks": [
+    {
+      "name": "corpus_ok",
+      "passed": true,
+      "message": "Corpus OK: 145 files, 145 trajectories"
+    }
+  ],
+  "cost_estimate_usd": 1.45,
+  "warnings": []
+}

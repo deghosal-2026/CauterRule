@@ -49,6 +49,19 @@ Same candidate + same corpus = same evidence report, always. No randomness in th
 | Helps 0 failures, breaks 0 successes | Inconclusive (insufficient data) |
 | Helps 0 failures, breaks >=1 success | Fail |
 
+## Inconclusive Attribution
+
+Every `inconclusive` verdict carries an `inconclusive_reason` root-cause category so summaries can tell you whether to fix the model, the matcher, or the corpus:
+
+| Reason | Meaning | Fix direction |
+|--------|---------|---------------|
+| `broad_trigger` | Trigger too generic to verify (≤2 content tokens) | Model — improve extraction specificity |
+| `matcher_gap` | Trigger specific but matcher recognized nothing | Engine — improve matcher vocabulary |
+| `corpus_mismatch` | Insufficient history (<3 trajectories) | Corpus — add more trajectories |
+| `ambiguous_evidence` | Near-misses or borderline precision, no decision | Corpus — clarify trajectories |
+
+`cauterule test` prints the reason for inconclusive verdicts. `summarize_inconclusive()` aggregates counts by reason for field-test summaries (e.g. "189 inconclusive = 72 broad_trigger + 61 matcher_gap + 38 corpus_mismatch + 18 ambiguous_evidence"). Track the rate over time: rising means judgment is degrading, falling means it is improving.
+
 ## Visualization
 
 ### Replay Visualization

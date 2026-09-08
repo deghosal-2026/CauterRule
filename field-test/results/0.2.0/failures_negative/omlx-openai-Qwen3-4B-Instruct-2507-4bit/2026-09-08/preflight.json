@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "provider_checks": [
+    {
+      "name": "api_key",
+      "passed": true,
+      "message": "API key present or not required"
+    },
+    {
+      "name": "model_id",
+      "passed": true,
+      "message": "Model ID: Qwen3-4B-Instruct-2507-4bit"
+    },
+    {
+      "name": "endpoint",
+      "passed": true,
+      "message": "Endpoint check skipped (no probe)"
+    }
+  ],
+  "corpus_checks": [
+    {
+      "name": "corpus_ok",
+      "passed": true,
+      "message": "Corpus OK: 60 files, 60 trajectories"
+    }
+  ],
+  "cost_estimate_usd": 0.6,
+  "warnings": []
+}

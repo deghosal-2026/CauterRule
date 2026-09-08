@@ -1,0 +1,21 @@
+id: G-010-deploy-timeout-a
+when:
+  trigger: when CI deploy times out, increase timeout or split deployment into smaller
+    batches
+  context:
+  - devops
+do:
+  directive: Increase CI deploy timeout in pipeline configuration
+  because: Long-running deployments hit default timeouts; raising the limit fixes
+    it
+confidence: 0.95
+provenance:
+  source_trajectory: G-010-deploy-timeout
+  extracted_by: benchmark
+  extract_timestamp: '2026-09-07T20:50:09.966291+00:00'
+  extraction_pass: 1
+status: active
+promoted_at: '2026-09-07T20:50:09.966291+00:00'
+tags:
+- devops
+- golden

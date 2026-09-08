@@ -213,8 +213,9 @@ def test_loop_empty_trajectory() -> None:
     )
     config = LoopConfig(llm=llm)
     result = run_loop(traj, config)
-    assert result is not None
-    assert isinstance(result, str)
+    # M1 pre-extraction gate (#428): clean success trajectory with no failure
+    # signal is dropped upstream → run_loop returns None (silence), no crash.
+    assert result is None
 
 
 @pytest.mark.docker

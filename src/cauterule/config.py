@@ -31,6 +31,7 @@ patterns = []  # additional regex patterns
 passes = 3
 temperatures = [0.2, 0.5, 0.8]
 confidence_threshold = 0.6
+gate_mode = "strict"  # strict | relaxed — pre-extraction null-hypothesis gate
 ```
 """
 
@@ -93,6 +94,7 @@ class ExtractionConfig:
     passes: int = 3
     temperatures: tuple[float, ...] = (0.0, 0.7, 1.0)
     confidence_threshold: float = 0.5
+    gate_mode: str = "strict"  # strict | relaxed
 
 
 @dataclass(frozen=True)
@@ -165,10 +167,14 @@ def _extraction_from_dict(data: dict[str, Any]) -> ExtractionConfig:
     if not isinstance(temps_raw, list):
         raise ValueError("extraction.temperatures must be a list")
     temps = tuple(float(t) for t in temps_raw)
+    gate_mode = str(data.get("gate_mode", "strict"))
+    if gate_mode not in {"strict", "relaxed"}:
+        raise ValueError(f"extraction.gate_mode must be strict|relaxed, got {gate_mode!r}")
     return ExtractionConfig(
         passes=passes,
         temperatures=temps,
         confidence_threshold=float(data.get("confidence_threshold", 0.6)),
+        gate_mode=gate_mode,
     )
 
 
@@ -275,5 +281,6 @@ def config_to_dict(config: Config) -> dict[str, Any]:
             "passes": config.extraction.passes,
             "temperatures": list(config.extraction.temperatures),
             "confidence_threshold": config.extraction.confidence_threshold,
+            "gate_mode": config.extraction.gate_mode,
         },
     }

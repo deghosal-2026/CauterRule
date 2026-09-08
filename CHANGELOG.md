@@ -51,13 +51,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Redaction engine strips secrets before LLM extraction
 - Export redaction strips secrets from exported rules
 
+## [0.2.0] - 2026-09-07
+
+### Added
+
+- **TUI review interface** (`cauterule review`): confidence-ordered review queue, filtering by severity/origin/status, approval/rejection workflows, card-based navigation
+- **Observability subsystem**: hit counters, coverage scoring, learning journal (`cauterule observe`), metrics export
+- **Adversarial corpus generation**: 6 adversarial corpora (staleness, counterexample, noise injection, prompt injection, redaction bypass, near-miss escalation)
+- **Distribution channels**: Docker image with multi-service compose, standalone binary build (`scripts/build_binary.sh`), GitHub Action, webhook notifications, OpenTelemetry export
+- **Benchmark leaderboard**: determinism, acceptance, rejection, bake-off, mutation, calibration, and ablation test suites
+- **Pack certification baseline**: rule pack validation harness with safety scoring
+- **Safety-adjusted ranking**: broad-trigger penalty, silence scoring, trigger specificity metrics (`cauterule report --safety-adjusted`)
+- **Pre-extraction gate**: corpus validation, annotations, preflight, harness health checks
+- **Human review workflow**: sampling strategies, review queue management, TUI integration
+- **Scale and reliability tests**: latency, memory, conflict detection, concurrency
+- **Public domain corpora**: 160 public trajectories added to corpus infrastructure
+- **Field test runner**: v0.2.0 field test with expanded model coverage and safety corpora
+
+### Changed
+
+- `cauterule report` now emits a header by default and supports `--safety-adjusted` for model ranking
+- Replay scorer verdict logic refined: broad-but-fixable triggers (broken < prevented) now return "inconclusive" instead of "fail"
+- Coverage gate set to 95% across all modules
+
+### Field Test Results
+
+- Expanded field test with safety-adjusted model rankings
+- Full report: `docs/field-test/v0.2.0/`
+
+### Known Limitations
+
+- Replay matcher uses heuristic substring + token overlap; semantic matching planned for v0.6.0
+- LLM-backed extraction requires API keys (OpenAI/Anthropic) for cloud models
+
+### Security
+
+- Redaction engine strips secrets before LLM extraction
+- Export redaction strips secrets from exported rules
+- Adversarial corpus coverage for prompt injection and redaction bypass
+
 ## [Unreleased]
 
-### Planned for v0.2.0
+### Planned for v0.3.0
 
-- TUI review interface
-- Observability subsystem (hit counters, coverage scoring, learning journal)
-- Adversarial corpus generation
-- Distribution channels (Homebrew, standalone binary, GitHub Action, webhook, OpenTelemetry)
-- Benchmark leaderboard
-- Pack certification baseline
+- Semantic matching in replay engine
+- Additional distribution channels
+- Enhanced observability dashboards

@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "corpus_type": "failures/positive",
+    "timestamp": "2026-09-08",
+    "llm_provider": "openai",
+    "llm_model": "gpt-4o-mini",
+    "llm_base_url": "https://openrouter.ai/api/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2,0.5",
+    "target_trajectories": 50,
+    "reference_trajectories": 230,
+    "cost_per_request_usd": 0.01,
+    "gate_mode": "relaxed"
+  },
+  "elapsed_seconds": 50.9,
+  "total": 50,
+  "done": 50,
+  "gate_dropped": 0,
+  "skipped": 0,
+  "total_candidates": 100,
+  "total_llm_calls_avoided": 0,
+  "avg_precision": 0.632,
+  "avg_recall": 0.053,
+  "avg_match_score": 0.169,
+  "match_detail_count": 100,
+  "passing": 22,
+  "failing": 5,
+  "inconclusive": 23,
+  "safety": {
+    "total": 50,
+    "silence": 0,
+    "parse_failure": 0,
+    "rejected": 28,
+    "accepted": 22,
+    "silence_rate": 0.0,
+    "verdict": "pass"
+  },
+  "specificity_distribution": {
+    "specific": 127,
+    "moderate": 21,
+    "generic": 2
+  },
+  "inconclusive_breakdown": {
+    "broad_trigger": 0,
+    "matcher_gap": 26,
+    "corpus_mismatch": 0,
+    "ambiguous_evidence": 23
+  },
+  "updated_at": "2026-09-08T03:42:36Z"
+}

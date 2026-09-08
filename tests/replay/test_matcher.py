@@ -1,7 +1,12 @@
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.rule import RuleDo, RuleWhen
 from cauterule.models.trajectory import Step, Trajectory
-from cauterule.replay.matcher import is_near_miss, rule_matches
+from cauterule.replay.matcher import (
+    is_near_miss,
+    match_detail,
+    match_score,
+    rule_matches,
+)
 
 
 def _cand(trigger: str, context: tuple[str, ...] = ()) -> CandidateRule:
@@ -52,3 +57,54 @@ def test_near_miss() -> None:
     # full context match is not near miss
     traj2 = _traj(task="git push on shared branch with multiple contributors")
     assert not is_near_miss(cand, traj2)
+
+
+def test_semantic_paraphrase_match() -> None:
+    # "non-fast-forward push is rejected" should match a trajectory whose
+    # error text is phrased differently ("remote contains work").
+    cand = _cand("when a non-fast-forward push is rejected")
+    traj = _traj(
+        task="deploy",
+        error="Updates were rejected because the remote contains work that you do not have locally",
+    )
+    assert rule_matches(cand, traj)
+    assert match_score(cand, traj) >= 0.5
+
+
+def test_stemming_match() -> None:
+    # "push fails" should match "push failed" via stemming.
+    cand = _cand("git push fails")
+    traj = _traj(task="git push failed", error="rejected")
+    assert rule_matches(cand, traj)
+
+
+def test_match_score_range() -> None:
+    cand = _cand("git push")
+    score = match_score(cand, _traj())
+    assert 0.0 <= score <= 1.0
+    assert score == 1.0  # exact substring
+
+
+def test_match_score_no_match() -> None:
+    cand = _cand("docker")
+    assert match_score(cand, _traj()) < 0.5
+
+
+def test_match_detail_contents() -> None:
+    cand = _cand("git push")
+    detail = match_detail(cand, _traj())
+    assert detail["score"] == 1.0
+    assert detail["exact_substring"] is True
+    assert "git" in detail["matched_tokens"]
+    assert detail["trigger_word_count"] == 2
+
+
+def test_threshold_param() -> None:
+    # Paraphrase matches at default threshold but not at a strict one.
+    cand = _cand("when a non-fast-forward push is rejected")
+    traj = _traj(
+        task="deploy",
+        error="Updates were rejected because the remote contains work that you do not have locally",
+    )
+    assert rule_matches(cand, traj, threshold=0.5)
+    assert not rule_matches(cand, traj, threshold=0.99)

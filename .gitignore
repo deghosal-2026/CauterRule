@@ -22,10 +22,6 @@ Thumbs.db
 # Data
 trajectories/
 scenarios/
-*.jsonl
-
-# But track field-test corpus JSONL files
-!field-test/**/*.jsonl
 
 # Environment
 .env

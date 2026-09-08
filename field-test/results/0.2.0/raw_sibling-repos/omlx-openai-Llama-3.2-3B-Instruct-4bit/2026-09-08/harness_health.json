@@ -1,0 +1,22 @@
+{
+  "passed": false,
+  "checks": [
+    {
+      "name": "parse_rate",
+      "passed": false,
+      "message": "Parse rate 0.0% (0/0) below threshold 70% \u2014 harness defect suspected",
+      "value": 0.0,
+      "threshold": 0.7
+    },
+    {
+      "name": "completion_ratio",
+      "passed": true,
+      "message": "Completion 0/0 (0.0%)",
+      "value": 0.0,
+      "threshold": 0.9
+    }
+  ],
+  "warnings": [
+    "Parse rate 0.0% (0/0) below threshold 70% \u2014 harness defect suspected"
+  ]
+}

@@ -49,3 +49,19 @@ def test_replay_determinism_reordering_same_result() -> None:
     r1 = deterministic_replay(cand, trajs)
     r2 = deterministic_replay(cand, list(reversed(trajs)))
     assert r1 == r2
+
+
+def test_replay_determinism_100_runs_identical() -> None:
+    """100 runs of the same candidate-corpus pair must be 100% identical."""
+    cand = _cand("git push fails")
+    trajs = [_traj("T-1", False), _traj("T-2", False), _traj("T-3", True)]
+    baseline: EvidenceReport = deterministic_replay(cand, trajs)
+    for _ in range(100):
+        report: EvidenceReport = deterministic_replay(cand, trajs)
+        assert report == baseline
+        assert report.precision == baseline.precision
+        assert report.recall == baseline.recall
+        assert report.verdict == baseline.verdict
+        assert report.failures_prevented == baseline.failures_prevented
+        assert report.successes_broken == baseline.successes_broken
+        assert report.replay_trace == baseline.replay_trace

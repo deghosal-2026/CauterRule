@@ -1,0 +1,19 @@
+id: G-007-api-rate-limit-a
+when:
+  trigger: when API returns 429 rate limit, back off with exponential retry
+  context:
+  - research
+do:
+  directive: Implement exponential backoff with tenacity retry decorator
+  because: 429 errors require retry with increasing delays; tenacity handles this
+confidence: 0.95
+provenance:
+  source_trajectory: G-007-api-rate-limit
+  extracted_by: benchmark
+  extract_timestamp: '2026-09-07T20:50:09.966291+00:00'
+  extraction_pass: 1
+status: active
+promoted_at: '2026-09-07T20:50:09.966291+00:00'
+tags:
+- research
+- golden

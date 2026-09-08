@@ -1,0 +1,21 @@
+id: G-008-terraform-lock-b
+when:
+  trigger: when terraform apply fails with state lock error, wait for lock to release
+    or force unlock
+  context:
+  - devops
+do:
+  directive: Use terraform force-unlock with the lock ID after verifying no active
+    run
+  because: Force-unlock releases a stuck lock; verify safety before doing so
+confidence: 0.95
+provenance:
+  source_trajectory: G-008-terraform-lock
+  extracted_by: benchmark
+  extract_timestamp: '2026-09-07T20:50:09.966291+00:00'
+  extraction_pass: 1
+status: active
+promoted_at: '2026-09-07T20:50:09.966291+00:00'
+tags:
+- devops
+- golden

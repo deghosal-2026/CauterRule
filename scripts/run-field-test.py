@@ -1,37 +1,51 @@
 #!/usr/bin/env python3
-"""Field-test runner for CauterRule corpora.
+"""Field-test runner for CauterRule corpora (v0.2.0).
 
 Run per corpus type with configurable LLM, output to dated subdirs.
 Writes results incrementally so you can tail progress mid-run.
 
 Output structure: {output-dir}/{corpus-type}/{llm_provider}-{llm_model}/{timestamp}/
-  meta.json       — run config
-  results.jsonl   — one result per trajectory (appended live)
-  summary.json    — aggregate metrics (rewritten live)
+  meta.json            — run config
+  preflight.json       — preflight check results
+  results.jsonl        — one result per trajectory (appended live)
+  summary.json         — aggregate metrics with safety-adjusted scoring (rewritten live)
+  harness_health.json  — harness health after sweep
+
+v0.2.0 additions:
+  — Pre-extraction gate (strict/relaxed modes per corpus type)
+  — Corpus-aware matcher thresholds (0.70 curated, 0.45 raw, 0.40 cross-repo)
+  — Safety-adjusted scoring (silence_rate, safety_summary)
+  — Trigger specificity distribution (specific/moderate/generic)
+  — Inconclusive attribution breakdown (broad_trigger/matcher_gap/corpus_mismatch/ambiguous_evidence)
+  — Preflight checks (provider, corpus, cost estimate)
+  — Harness health assertions (parse rate, completion ratio)
+  — LLM call avoidance tracking (gate savings)
+  — Validation suite runner: --run-validation runs all or a single hermetic suite
+    (#432 hermetic CI, #433 sentinel benchmarks, #434 adversarial, #435 corpus,
+     #437 scale, #443 TUI, #444 observability)
 
 Usage:
-  # Run golden corpus with local OMLX (Llama via OpenAI-compatible endpoint)
+  # Run golden corpus with local OMLX
   CAUTERULE_LLM_API_KEY=dummy \
   python scripts/run-field-test.py golden \
     --llm-provider openai --llm-model llama-3.2-3b-instruct \
     --llm-base-url http://localhost:8000/v1 \
-    --output-dir field-test/results
-  # Output: field-test/results/golden/openai-llama-3.2-3b-instruct/<ts>/
+    --output-dir field-test/results/0.2.0
 
-  # Run curated failures with cloud GPT-4o-mini via OpenRouter
-  CAUTERULE_LLM_API_KEY=sk-or-... \
-  python scripts/run-field-test.py failures/positive \
-    --llm-provider openai --llm-model openai/gpt-4o-mini \
-    --llm-base-url https://openrouter.ai/api/v1 \
-    --output-dir field-test/results
-  # Output: field-test/results/failures_positive/openai-openai_gpt-4o-mini/<ts>/
-
-  # Run all corpus types (serially, one after another)
+  # Run all corpus types
   CAUTERULE_LLM_API_KEY=sk-or-... \
   python scripts/run-field-test.py --all \
     --llm-provider openai --llm-model openai/gpt-4o-mini \
     --llm-base-url https://openrouter.ai/api/v1 \
-    --output-dir field-test/results
+    --output-dir field-test/results/0.2.0
+
+  # Run all hermetic validation suites (pre-field validation)
+  python scripts/run-field-test.py --run-validation \
+    --output-dir field-test/results/0.2.0
+
+  # Run a single validation suite
+  python scripts/run-field-test.py --run-validation --validation-suite sentinel_benchmark \
+    --output-dir field-test/results/0.2.0
 """
 from __future__ import annotations
 
@@ -45,78 +59,199 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-CORPUS_ROOT = Path("field-test/corpus")
+FIELD_TEST_ROOT = Path("field-test/corpus")
+PUBLIC_ROOT = Path("corpus/public")
 
-# ── corpus type → subdirectory under CORPUS_ROOT ──
+# ── corpus type → subdirectory ──
 CORPUS_TYPES: dict[str, Path] = {
-    "golden":                  CORPUS_ROOT / "golden",
-    "failures/positive":       CORPUS_ROOT / "curated" / "failures" / "positive",
-    "failures/negative":       CORPUS_ROOT / "curated" / "failures" / "negative",
-    "successes":               CORPUS_ROOT / "curated" / "successes",
-    "nearmiss":                CORPUS_ROOT / "curated" / "nearmiss",
-    "noisy":                   CORPUS_ROOT / "curated" / "noisy",
-    "corrections":             CORPUS_ROOT / "curated" / "corrections",
-    "raw/opencode":            CORPUS_ROOT / "raw" / "opencode",
-    "raw/synthetic":           CORPUS_ROOT / "raw" / "synthetic",
-    "raw/ci":                  CORPUS_ROOT / "raw" / "ci",
-    "raw/sibling-repos":       CORPUS_ROOT / "raw" / "sibling-repos",
-    "raw/corrections":         CORPUS_ROOT / "raw" / "corrections",
-    "raw/cross-session":       CORPUS_ROOT / "raw" / "cross-session",
+    # v0.1.0 curated corpora (field-test/corpus)
+    "golden":                  FIELD_TEST_ROOT / "golden",
+    "failures/positive":       FIELD_TEST_ROOT / "curated" / "failures" / "positive",
+    "failures/negative":       FIELD_TEST_ROOT / "curated" / "failures" / "negative",
+    "successes":               FIELD_TEST_ROOT / "curated" / "successes",
+    "nearmiss":                FIELD_TEST_ROOT / "curated" / "nearmiss",
+    "noisy":                   FIELD_TEST_ROOT / "curated" / "noisy",
+    "corrections":             FIELD_TEST_ROOT / "curated" / "corrections",
+    "raw/opencode":            FIELD_TEST_ROOT / "raw" / "opencode",
+    "raw/synthetic":           FIELD_TEST_ROOT / "raw" / "synthetic",
+    "raw/ci":                  FIELD_TEST_ROOT / "raw" / "ci",
+    "raw/sibling-repos":       FIELD_TEST_ROOT / "raw" / "sibling-repos",
+    "raw/corrections":         FIELD_TEST_ROOT / "raw" / "corrections",
+    "raw/cross-session":       FIELD_TEST_ROOT / "raw" / "cross-session",
+    # v0.2.0 public corpora (corpus/public)
+    "public/golden":           PUBLIC_ROOT / "golden",
+    "public/counterexample":   PUBLIC_ROOT / "counterexample",
+    "public/nearmiss":         PUBLIC_ROOT / "nearmiss",
+    "public/staleness":        PUBLIC_ROOT / "staleness",
+    "public/synthetic":        PUBLIC_ROOT / "synthetic",
+    "public/domains":          PUBLIC_ROOT / "domains",
+    "adversarial/injection":   PUBLIC_ROOT / "adversarial" / "injection",
+    "adversarial/misleading":  PUBLIC_ROOT / "adversarial" / "misleading",
+    "adversarial/contradiction": PUBLIC_ROOT / "adversarial" / "contradiction",
+    "adversarial/unsafe":      PUBLIC_ROOT / "adversarial" / "unsafe",
+    "adversarial/poisoning":   PUBLIC_ROOT / "adversarial" / "poisoning",
 }
 
-# Reference corpus loaded for replay-testing every candidate
+# Safety corpora use strict gate mode
+SAFETY_CORPORA: frozenset[str] = frozenset({"successes", "failures/negative", "negative"})
+
+# Corpus-aware matcher thresholds
+CORPUS_THRESHOLDS: dict[str, float] = {
+    "golden": 0.70,
+    "failures/positive": 0.70,
+    "failures/negative": 0.70,
+    "successes": 0.70,
+    "nearmiss": 0.70,
+    "noisy": 0.70,
+    "corrections": 0.70,
+    "raw/opencode": 0.45,
+    "raw/synthetic": 0.45,
+    "raw/ci": 0.45,
+    "raw/sibling-repos": 0.40,
+    "raw/corrections": 0.45,
+    "raw/cross-session": 0.45,
+    "public/golden": 0.70,
+    "public/counterexample": 0.70,
+    "public/nearmiss": 0.70,
+    "public/staleness": 0.70,
+    "public/synthetic": 0.60,
+    "public/domains": 0.60,
+    "adversarial/injection": 0.70,
+    "adversarial/misleading": 0.70,
+    "adversarial/contradiction": 0.70,
+    "adversarial/unsafe": 0.70,
+    "adversarial/poisoning": 0.70,
+}
+
+# Reference bucket paths (field-test/corpus curated)
 REFERENCE_BUCKETS = [
-    CORPUS_ROOT / "curated" / "failures" / "positive",
-    CORPUS_ROOT / "curated" / "failures" / "negative",
-    CORPUS_ROOT / "curated" / "successes",
-    CORPUS_ROOT / "curated" / "nearmiss",
-    CORPUS_ROOT / "curated" / "noisy",
-    CORPUS_ROOT / "curated" / "corrections",
+    FIELD_TEST_ROOT / "curated" / "failures" / "positive",
+    FIELD_TEST_ROOT / "curated" / "failures" / "negative",
+    FIELD_TEST_ROOT / "curated" / "successes",
+    FIELD_TEST_ROOT / "curated" / "nearmiss",
+    FIELD_TEST_ROOT / "curated" / "noisy",
+    FIELD_TEST_ROOT / "curated" / "corrections",
 ]
+
+GATE_MODE_STRICT = "strict"
+GATE_MODE_RELAXED = "relaxed"
+
+# ── v0.2.0 hermetic validation suites (pre-field validation, issues #432-#437) ──
+# Each maps to a section of field-test-plan.md §4. Suite → pytest target paths.
+VALIDATION_SUITES: dict[str, dict[str, str]] = {
+    "pre_extraction_gate": {
+        "issue": "#432 (hermetic CI)",
+        "targets": ["tests/extraction/test_gate.py"],
+    },
+    "replay_matcher": {
+        "issue": "#432",
+        "targets": ["tests/replay/test_matcher.py", "tests/replay/test_corpus_thresholds.py"],
+    },
+    "replay_safety": {
+        "issue": "#432",
+        "targets": ["tests/replay/test_safety.py"],
+    },
+    "replay_attribution": {
+        "issue": "#432",
+        "targets": ["tests/replay/test_attribution.py"],
+    },
+    "promotion_safety": {
+        "issue": "#432",
+        "targets": ["tests/promotion/test_safety.py"],
+    },
+    "extraction_specificity": {
+        "issue": "#432",
+        "targets": ["tests/extraction/test_specificity.py"],
+    },
+    "sentinel_benchmark": {
+        "issue": "#433 (sentinel regression)",
+        "targets": ["tests/benchmark/"],
+    },
+    "scale_benchmark": {
+        "issue": "#437 (scale benchmarks)",
+        "targets": ["tests/scale/"],
+    },
+    "adversarial": {
+        "issue": "#434 (adversarial validation)",
+        "targets": ["tests/adversarial/"],
+    },
+    "corpus": {
+        "issue": "#435 (corpus validation)",
+        "targets": ["tests/corpus/"],
+    },
+    "observe": {
+        "issue": "#444 (observability)",
+        "targets": ["tests/observe/"],
+    },
+    "tui": {
+        "issue": "#443 (TUI review)",
+        "targets": ["tests/tui/"],
+    },
+}
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="CauterRule field-test runner")
-    parser.add_argument("corpus_type", nargs="?", help="Corpus type to test (e.g. golden, failures/positive)")
+    parser = argparse.ArgumentParser(description="CauterRule field-test runner (v0.2.0)")
+    parser.add_argument("corpus_type", nargs="?", help="Corpus type to test")
     parser.add_argument("--all", action="store_true", help="Run all corpus types sequentially")
-    parser.add_argument("--llm-provider", default="openai", help="LLM provider (openai, anthropic, ollama, litellm)")
+    parser.add_argument("--llm-provider", default="openai", help="LLM provider")
     parser.add_argument("--llm-model", default="gpt-4o-mini", help="Model name")
-    parser.add_argument("--llm-base-url", default="", help="Base URL for custom endpoints (e.g. OMLX)")
-    parser.add_argument("--output-dir", default="field-test/results/0.1.0", help="Output directory for results")
-    parser.add_argument("--max-workers", type=int, default=4, help="Parallel trajectories per corpus type")
+    parser.add_argument("--llm-base-url", default="", help="Base URL for custom endpoints")
+    parser.add_argument("--output-dir", default="field-test/results/0.2.0", help="Output directory")
+    parser.add_argument("--max-workers", type=int, default=None, help="Parallel trajectories (default: 2 for local OMLX, otherwise 4)")
     parser.add_argument("--extraction-passes", type=int, default=2, help="Multi-pass extraction passes")
-    parser.add_argument("--temperatures", default="0.2,0.5", help="Comma-separated temperatures for multi-pass")
+    parser.add_argument("--temperatures", default="0.2,0.5", help="Comma-separated temperatures")
+    parser.add_argument("--skip-preflight", action="store_true", help="Skip preflight checks")
+    parser.add_argument("--cost-per-request", type=float, default=0.01, help="Estimated $ per LLM request")
+    parser.add_argument("--run-validation", action="store_true", help="Run all v0.2.0 hermetic validation suites (#432-#437, #443-#444)")
+    parser.add_argument("--validation-suite", default=None, help="Run a single validation suite only (see VALIDATION_SUITES keys)")
     args = parser.parse_args()
-    if not args.all and not args.corpus_type:
-        parser.error("specify a corpus_type or --all")
+    if args.max_workers is None:
+        args.max_workers = 2 if (args.llm_base_url and "localhost" in args.llm_base_url) else 4
+    if not args.all and not args.corpus_type and not args.run_validation:
+        parser.error("specify a corpus_type, --all, or --run-validation")
     return args
 
 
-# ── LLM + extraction (library calls, no subprocess) ────────────────────
+# ── Preflight ──────────────────────────────────────────────────────────
+
+def run_preflight_checks(corpus_type: str, corpus_dir: Path, args: argparse.Namespace) -> dict:
+    from cauterule.config import Config, LLMConfig, PathsConfig, ThresholdsConfig, PromotionConfig, RedactionConfig, ExtractionConfig
+    from cauterule.preflight import run_preflight
+
+    api_key = os.getenv("CAUTERULE_LLM_API_KEY", "")
+    cfg = Config(
+        llm=LLMConfig(provider=args.llm_provider, model=args.llm_model, api_key=api_key, base_url=args.llm_base_url),
+        paths=PathsConfig(),
+        thresholds=ThresholdsConfig(),
+        promotion=PromotionConfig(),
+        redaction=RedactionConfig(),
+        extraction=ExtractionConfig(),
+    )
+    result = run_preflight(cfg, corpus_path=str(corpus_dir), cost_per_request_usd=args.cost_per_request)
+    return {
+        "passed": result.passed,
+        "provider_checks": [{"name": c.name, "passed": c.passed, "message": c.message} for c in result.provider_checks],
+        "corpus_checks": [{"name": c.name, "passed": c.passed, "message": c.message} for c in result.corpus_checks],
+        "cost_estimate_usd": result.cost_estimate_usd,
+        "warnings": result.warnings,
+    }
+
+
+# ── LLM + extraction ──────────────────────────────────────────────────
 
 _LLM_CACHE: dict[str, Any] = {}
 
 
 def _get_llm(provider: str, model: str, base_url: str):
-    """Build or return cached LLM provider instance."""
     cache_key = f"{provider}/{model}/{base_url}"
     if cache_key in _LLM_CACHE:
         return _LLM_CACHE[cache_key]
-
-    from cauterule.config import (
-        Config, LLMConfig, PathsConfig, ThresholdsConfig,
-        PromotionConfig, RedactionConfig, ExtractionConfig,
-    )
+    from cauterule.config import Config, LLMConfig, PathsConfig, ThresholdsConfig, PromotionConfig, RedactionConfig, ExtractionConfig
     from cauterule.llm.factory import get_llm
-
     api_key = os.getenv("CAUTERULE_LLM_API_KEY", "")
     cfg = Config(
-        llm=LLMConfig(
-            provider=provider,
-            model=model,
-            api_key=api_key,
-            base_url=base_url,
-        ),
+        llm=LLMConfig(provider=provider, model=model, api_key=api_key, base_url=base_url),
         paths=PathsConfig(),
         thresholds=ThresholdsConfig(),
         promotion=PromotionConfig(),
@@ -135,32 +270,20 @@ def extract_candidates(
     llm_base_url: str,
     temperatures: list[float],
 ) -> list[dict]:
-    """Run multi-pass extraction using the CauterRule library directly.
-
-    Returns a list of candidate dicts with keys:
-        when, do, confidence, extraction_pass, reasoning, llm_response
-    """
     from cauterule.extraction.extractor import _parse_candidate_json
     from cauterule.extraction.prompt import build_extraction_prompt
     from cauterule.models.trajectory import Trajectory
-
     llm = _get_llm(llm_provider, llm_model, llm_base_url)
     traj = Trajectory.from_dict(trajectory)
-
     candidates: list[dict] = []
     for idx, temp in enumerate(temperatures, start=1):
         try:
             prompt = build_extraction_prompt(traj)
             result = llm.complete(prompt, temperature=temp)
             raw_text = result.text if hasattr(result, "text") else str(result)
-
-            candidate = _parse_candidate_json(
-                raw_text, extraction_pass=idx, template=None,
-            )
-
+            candidate = _parse_candidate_json(raw_text, extraction_pass=idx, template=None)
             from cauterule.extraction.quality import check_quality
             _ = check_quality(candidate, traj)
-
             candidates.append({
                 "when": candidate.when.trigger,
                 "do": candidate.do.directive,
@@ -172,21 +295,40 @@ def extract_candidates(
             })
         except Exception as exc:
             print(f"NO CANDIDATE (pass {idx}, temp={temp}): {exc}")
-
     return candidates
 
 
-# ── Replay testing (library calls) ──────────────────────────────────────
+# ── Gate ───────────────────────────────────────────────────────────────
+
+def run_gate(trajectory: dict, corpus_type: str) -> dict:
+    from cauterule.extraction.gate import run_gate, GateMode
+    from cauterule.models.trajectory import Trajectory
+    base = corpus_type.split("/")[-1].strip().lower()
+    mode: GateMode = GATE_MODE_STRICT if base in SAFETY_CORPORA else GATE_MODE_RELAXED
+    traj = Trajectory.from_dict(trajectory)
+    result = run_gate(traj, mode=mode)
+    return {
+        "should_extract": result.should_extract,
+        "reason": result.reason,
+        "failure_signals": list(result.failure_signals),
+        "is_silence": result.is_silence,
+        "gate_mode": mode,
+    }
+
+
+# ── Replay testing ─────────────────────────────────────────────────────
 
 def replay_test_candidate(
     candidate: dict,
     reference_trajs: list[dict],
+    corpus_type: str,
+    is_omlx: bool = False,
 ) -> dict:
-    """Test candidate against reference trajectories using the replay engine."""
     from cauterule.models.candidate import CandidateRule
     from cauterule.models.rule import RuleDo, RuleWhen
     from cauterule.models.trajectory import Trajectory
     from cauterule.replay.report import build_evidence_report
+    from cauterule.replay.matcher import threshold_for_corpus, match_detail
 
     cand = CandidateRule(
         when=RuleWhen(trigger=candidate["when"]),
@@ -195,7 +337,6 @@ def replay_test_candidate(
         reasoning=candidate.get("reasoning"),
         extraction_pass=candidate.get("extraction_pass", 1),
     )
-
     traj_objs: list[Trajectory] = []
     for t in reference_trajs:
         try:
@@ -203,7 +344,16 @@ def replay_test_candidate(
         except Exception:
             pass
 
-    report = build_evidence_report(cand, traj_objs)
+    threshold = threshold_for_corpus(corpus_type, omlx=is_omlx)
+    report = build_evidence_report(cand, traj_objs, threshold=threshold)
+
+    # Capture match_detail diagnostics from the first reference trajectory
+    match_diag: dict | None = None
+    if traj_objs:
+        try:
+            match_diag = match_detail(cand, traj_objs[0])
+        except Exception:
+            match_diag = None
 
     return {
         "candidate": candidate,
@@ -214,19 +364,24 @@ def replay_test_candidate(
         "recall": report.recall,
         "verdict": report.verdict,
         "replay_trace": [dict(r) for r in report.replay_trace],
+        "threshold": threshold,
+        "match_detail": match_diag,
     }
 
 
-# ── Corpus loading ──────────────────────────────────────────────────────
+# ── Corpus loading ────────────────────────────────────────────────────
 
 def load_trajectories(dir_path: Path) -> list[dict]:
-    """Load all JSONL trajectories from *dir_path*."""
     if not dir_path.is_dir():
         return []
     trajs: list[dict] = []
     for f in sorted(dir_path.glob("*.jsonl")):
         try:
-            trajs.append(json.loads(f.read_text().strip()))
+            lines = f.read_text().strip().split("\n")
+            for line in lines:
+                line = line.strip()
+                if line:
+                    trajs.append(json.loads(line))
         except Exception as exc:
             print(f"  [warn] skipping {f.name}: {exc}")
     return trajs
@@ -240,7 +395,7 @@ def load_trajectory(file_path: Path) -> dict | None:
         return None
 
 
-# ── Per-trajectory processing ───────────────────────────────────────────
+# ── Per-trajectory processing ─────────────────────────────────────────
 
 def process_one_trajectory(
     traj_path: Path,
@@ -250,7 +405,6 @@ def process_one_trajectory(
     reference_trajs: list[dict],
     args: argparse.Namespace,
 ) -> dict:
-    """Extract + test a single trajectory, return result record."""
     tid = traj_path.stem
     print(f"  [{traj_idx}/{total}] {tid} ... ", end="", flush=True)
 
@@ -259,18 +413,74 @@ def process_one_trajectory(
         print("SKIP (load failed)")
         return {"trajectory_id": tid, "status": "skipped", "error": "load failed"}
 
+    # Gate
+    gate_result = run_gate(trajectory, corpus_type)
+    pre_extraction_drop = gate_result["is_silence"]
+
+    # v0.2.0: specificity scoring on trajectory task
+    from cauterule.extraction.specificity import score_specificity
+    task_specificity = score_specificity(trajectory.get("task", ""))
+
     temperatures = [float(t) for t in args.temperatures.split(",")]
+
+    # If gate dropped, no LLM call
+    if pre_extraction_drop:
+        print("GATE DROPPED (no failure signal)")
+        return {
+            "trajectory_id": tid,
+            "status": "gate_dropped",
+            "candidate_count": 0,
+            "candidates": [],
+            "gate": gate_result,
+            "task_specificity": task_specificity,
+            "pre_extraction_drop": True,
+            "llm_calls_avoided": len(temperatures),
+        }
 
     candidates = extract_candidates(
         trajectory, args.llm_provider, args.llm_model, args.llm_base_url, temperatures,
     )
     if not candidates:
         print("NO CANDIDATES")
-        return {"trajectory_id": tid, "status": "no_candidates", "candidates": []}
+        return {
+            "trajectory_id": tid,
+            "status": "no_candidates",
+            "candidates": [],
+            "gate": gate_result,
+            "task_specificity": task_specificity,
+            "pre_extraction_drop": False,
+            "llm_calls_avoided": 0,
+        }
 
     test_results = []
+    is_omlx = args.llm_base_url and "localhost" in args.llm_base_url
     for cand in candidates:
-        test_result = replay_test_candidate(cand, reference_trajs)
+        test_result = replay_test_candidate(cand, reference_trajs, corpus_type, is_omlx=is_omlx)
+        # v0.2.0: specificity scoring on trigger
+        test_result["trigger_specificity"] = score_specificity(cand["when"])
+        # v0.2.0: inconclusive attribution
+        if test_result.get("verdict") == "inconclusive":
+            from cauterule.replay.attribution import attribute_inconclusive
+            from cauterule.models.candidate import CandidateRule
+            from cauterule.models.rule import RuleDo, RuleWhen
+            from cauterule.models.trajectory import Trajectory
+            from cauterule.replay.report import build_evidence_report
+            cand_obj = CandidateRule(
+                when=RuleWhen(trigger=cand["when"]),
+                do=RuleDo(directive=cand["do"]),
+                confidence=cand["confidence"],
+                reasoning=cand.get("reasoning"),
+                extraction_pass=cand.get("extraction_pass", 1),
+            )
+            traj_objs = []
+            for t in reference_trajs:
+                try:
+                    traj_objs.append(Trajectory.from_dict(t))
+                except Exception:
+                    pass
+            ev_report = build_evidence_report(cand_obj, traj_objs)
+            reason = attribute_inconclusive(cand_obj, traj_objs, ev_report)
+            test_result["inconclusive_reason"] = reason
         test_results.append(test_result)
 
     best = max(test_results, key=lambda r: r["precision"] * r["recall"]) if test_results else {}
@@ -279,20 +489,27 @@ def process_one_trajectory(
     return {
         "trajectory_id": tid,
         "status": "done",
-        "trajectory": {k: trajectory.get(k) for k in ("task", "domain", "failure_class", "quality_label", "success", "expected_rule")},
+        "trajectory": {k: trajectory.get(k) for k in ("task", "domain", "failure_class", "quality_label", "success", "expected_rule", "expected_outcome")},
         "candidate_count": len(candidates),
         "candidates": test_results,
         "best": best,
+        "gate": gate_result,
+        "task_specificity": task_specificity,
+        "pre_extraction_drop": False,
+        "llm_calls_avoided": 0,
     }
 
 
-# ── Summary writer (incremental) ───────────────────────────────────────
+# ── Summary writer (v0.2.0 with safety-adjusted scoring) ──────────────
 
-def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_time: float) -> None:
-    """Write a live summary that gets updated after each trajectory."""
+def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_time: float, corpus_type: str) -> None:
     done = [r for r in results if r.get("status") == "done"]
-    skipped = [r for r in results if r.get("status") != "done"]
+    gate_dropped = [r for r in results if r.get("status") == "gate_dropped"]
+    skipped = [r for r in results if r.get("status") not in ("done", "gate_dropped")]
+
     total_candidates = sum(r.get("candidate_count", 0) for r in done)
+    total_llm_calls_avoided = sum(r.get("llm_calls_avoided", 0) for r in results)
+    total_trajectories = len(results)
 
     best_results = [r.get("best", {}) for r in done if r.get("best")]
     avg_precision = sum(r.get("precision", 0) for r in best_results) / len(best_results) if best_results else 0.0
@@ -301,58 +518,118 @@ def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_ti
     failing = sum(1 for r in best_results if r.get("verdict") == "fail")
     inconclusive = sum(1 for r in best_results if r.get("verdict") == "inconclusive")
 
+    # v0.2.0: safety-adjusted scoring
+    from cauterule.replay.safety import classify_outcome, score_safety_trajectory, safety_summary
+    safety_outcomes = []
+    for r in done:
+        best = r.get("best", {})
+        outcome = classify_outcome(
+            gate_is_silence=False,
+            has_parse_error=False,
+            candidate_count=r.get("candidate_count", 0),
+            replay_verdict=best.get("verdict"),
+        )
+        safety_outcomes.append(outcome)
+    for r in gate_dropped:
+        safety_outcomes.append("silence")
+    safety = safety_summary(safety_outcomes, corpus_type)
+
+    # v0.2.0: specificity distribution
+    specificity_counts: dict[str, int] = {"specific": 0, "moderate": 0, "generic": 0}
+    for r in results:
+        spec = r.get("task_specificity", "generic")
+        specificity_counts[spec] = specificity_counts.get(spec, 0) + 1
+    for r in done:
+        for c in r.get("candidates", []):
+            spec = c.get("trigger_specificity", "generic")
+            specificity_counts[spec] = specificity_counts.get(spec, 0) + 1
+
+    # v0.2.0: inconclusive attribution breakdown
+    inconclusive_breakdown: dict[str, int] = {"broad_trigger": 0, "matcher_gap": 0, "corpus_mismatch": 0, "ambiguous_evidence": 0}
+    for r in done:
+        for c in r.get("candidates", []):
+            if c.get("verdict") == "inconclusive" and c.get("inconclusive_reason") in inconclusive_breakdown:
+                inconclusive_breakdown[c["inconclusive_reason"]] += 1
+
+    # v0.2.0: match_detail aggregation
+    match_scores: list[float] = []
+    for r in done:
+        for c in r.get("candidates", []):
+            md = c.get("match_detail")
+            if md and md.get("score") is not None:
+                match_scores.append(md["score"])
+    avg_match_score = round(sum(match_scores) / len(match_scores), 3) if match_scores else None
+
     summary = {
         "meta": meta,
         "elapsed_seconds": round(time.time() - start_time, 1),
-        "total": len(results),
+        "total": total_trajectories,
         "done": len(done),
+        "gate_dropped": len(gate_dropped),
         "skipped": len(skipped),
         "total_candidates": total_candidates,
+        "total_llm_calls_avoided": total_llm_calls_avoided,
         "avg_precision": round(avg_precision, 3),
         "avg_recall": round(avg_recall, 3),
+        "avg_match_score": avg_match_score,
+        "match_detail_count": len(match_scores),
         "passing": passing,
         "failing": failing,
         "inconclusive": inconclusive,
+        "safety": safety,
+        "specificity_distribution": specificity_counts,
+        "inconclusive_breakdown": inconclusive_breakdown,
         "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     summary_file.write_text(json.dumps(summary, indent=2))
 
 
-# ── Main per-corpus runner ──────────────────────────────────────────────
+# ── Harness health ────────────────────────────────────────────────────
+
+def write_harness_health(results: list[dict], meta: dict, corpus_type: str, health_file: Path) -> None:
+    from cauterule.benchmark.harness import harness_health
+    done = [r for r in results if r.get("status") == "done"]
+    gate_dropped = [r for r in results if r.get("status") == "gate_dropped"]
+    parsed = sum(1 for r in done if r.get("candidate_count", 0) > 0)
+    total = len(done) + len(gate_dropped)
+    candidates = sum(r.get("candidate_count", 0) for r in done)
+    base = corpus_type.split("/")[-1].strip().lower()
+    is_safety = base in SAFETY_CORPORA
+    health = harness_health(
+        parsed=parsed,
+        total=total,
+        candidates=candidates,
+        trajectories=total,
+        is_safety_corpus=is_safety,
+    )
+    health_data = {
+        "passed": health.passed,
+        "checks": [{"name": c.name, "passed": c.passed, "message": c.message, "value": c.value, "threshold": c.threshold} for c in health.checks],
+        "warnings": health.warnings,
+    }
+    health_file.write_text(json.dumps(health_data, indent=2))
+
+
+# ── Main per-corpus runner ────────────────────────────────────────────
 
 def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
-    """Run field test for one corpus type. Returns number of trajectories processed."""
     corpus_dir = CORPUS_TYPES.get(corpus_type)
     if corpus_dir is None:
         print(f"[error] unknown corpus type: {corpus_type}. Known: {list(CORPUS_TYPES)}")
         return 0
-
     if not corpus_dir.is_dir():
         print(f"[error] corpus directory not found: {corpus_dir}")
         return 0
 
     print(f"\n{'='*60}")
-    print(f"Field Test: {corpus_type}")
+    print(f"Field Test (v0.2.0): {corpus_type}")
     print(f"  LLM:      {args.llm_provider}/{args.llm_model}")
     if args.llm_base_url:
         print(f"  Base URL: {args.llm_base_url}")
     print(f"  Corpus:   {corpus_dir}")
     print(f"{'='*60}\n")
 
-    # Load reference trajectories once
-    reference_trajs: list[dict] = []
-    for bucket in REFERENCE_BUCKETS:
-        reference_trajs.extend(load_trajectories(bucket))
-    print(f"  Reference corpus: {len(reference_trajs)} trajectories loaded")
-
-    # Discover trajectories
-    traj_files = sorted(corpus_dir.glob("*.jsonl"))
-    if not traj_files:
-        print(f"  [warn] no .jsonl files in {corpus_dir}")
-        return 0
-    print(f"  Target corpus: {len(traj_files)} trajectories\n")
-
-    # Output directory: {output-dir}/{corpus-type}/{llm_provider}-{llm_model}/{timestamp}/
+    # Output directory
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     if args.llm_base_url and "localhost" in args.llm_base_url:
         llm_label = f"omlx-{args.llm_provider}-{args.llm_model}"
@@ -362,15 +639,40 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
     out_dir = Path(args.output_dir) / corpus_type.replace("/", "_") / llm_label / timestamp
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    # Preflight
+    if not args.skip_preflight:
+        print("  Running preflight checks...")
+        preflight_result = run_preflight_checks(corpus_type, corpus_dir, args)
+        (out_dir / "preflight.json").write_text(json.dumps(preflight_result, indent=2))
+        if not preflight_result["passed"]:
+            print(f"  PREFLIGHT FAILED: {preflight_result['warnings']}")
+            print("  Aborting. Use --skip-preflight to override.")
+            return 0
+        print(f"  Preflight OK (cost est: ${preflight_result.get('cost_estimate_usd', '?')})")
+    else:
+        preflight_result = {"passed": True, "cost_estimate_usd": None}
+
+    # Load reference trajectories
+    reference_trajs: list[dict] = []
+    for bucket in REFERENCE_BUCKETS:
+        reference_trajs.extend(load_trajectories(bucket))
+    print(f"  Reference corpus: {len(reference_trajs)} trajectories loaded")
+
+    # Discover trajectories
+    traj_files = sorted(corpus_dir.rglob("*.jsonl"))
+    if not traj_files:
+        print(f"  [warn] no .jsonl files in {corpus_dir}")
+        return 0
+    print(f"  Target corpus: {len(traj_files)} trajectories\n")
+
     results_file = out_dir / "results.jsonl"
     summary_file = out_dir / "summary.json"
     meta_file = out_dir / "meta.json"
+    harness_file = out_dir / "harness_health.json"
 
-    # Clear previous results from same-day reruns to avoid contamination
     results_file.write_text("")
     summary_file.write_text("{}")
 
-    # Write run metadata
     meta = {
         "corpus_type": corpus_type,
         "timestamp": timestamp,
@@ -381,10 +683,12 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
         "temperatures": args.temperatures,
         "target_trajectories": len(traj_files),
         "reference_trajectories": len(reference_trajs),
+        "cost_per_request_usd": args.cost_per_request,
+        "gate_mode": GATE_MODE_STRICT if corpus_type.split("/")[-1].strip().lower() in SAFETY_CORPORA else GATE_MODE_RELAXED,
     }
     meta_file.write_text(json.dumps(meta, indent=2))
 
-    # Process trajectories in parallel
+    # Process trajectories
     results: list[dict] = []
     start_time = time.time()
 
@@ -398,16 +702,17 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
             try:
                 result = future.result()
                 results.append(result)
-
-                # Write incrementally: append to results.jsonl
                 with open(results_file, "a") as fh:
                     fh.write(json.dumps(result, default=str) + "\n")
-
-                # Write incremental summary
-                _write_summary(results, summary_file, meta, start_time)
-
+                _write_summary(results, summary_file, meta, start_time, corpus_type)
             except Exception as exc:
                 print(f"  [error] worker failed: {exc}")
+
+    # Harness health
+    write_harness_health(results, meta, corpus_type, harness_file)
+    health_data = json.loads(harness_file.read_text())
+    health_status = "PASS" if health_data.get("passed") else "FAIL"
+    print(f"  Harness health: {health_status}")
 
     elapsed = time.time() - start_time
     print(f"\n  Done: {len(results)}/{len(traj_files)} processed in {elapsed:.0f}s")
@@ -415,8 +720,119 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
     return len(results)
 
 
+# ── Validation suite runner (v0.2.0 pre-field validation) ─────────────
+
+def run_validation(args: argparse.Namespace) -> int:
+    """Run all or selected hermetic validation suites, writing results to 0.2.0 dir."""
+    suites_to_run: dict[str, dict[str, str]] = {}
+    if args.validation_suite:
+        if args.validation_suite not in VALIDATION_SUITES:
+            print(f"[error] unknown validation suite: {args.validation_suite}. Known: {list(VALIDATION_SUITES)}")
+            return 1
+        suites_to_run[args.validation_suite] = VALIDATION_SUITES[args.validation_suite]
+    else:
+        suites_to_run = dict(VALIDATION_SUITES)
+
+    import subprocess
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    out_root = Path(args.output_dir) / "validation" / timestamp
+    out_root.mkdir(parents=True, exist_ok=True)
+
+    overall: dict[str, Any] = {
+        "timestamp": timestamp,
+        "suites": {},
+        "total_passed": 0,
+        "total_failed": 0,
+        "total_errors": 0,
+    }
+
+    for suite_name, suite_info in suites_to_run.items():
+        targets = suite_info["targets"]
+        suffix = suite_info["issue"]
+        xml_path = out_root / f"{suite_name}.xml"
+        log_path = out_root / f"{suite_name}.log"
+
+        print(f"\n{'='*60}")
+        print(f"Validation Suite: {suite_name} ({suffix})")
+        print(f"  Targets: {' '.join(targets)}")
+        print(f"  XML:     {xml_path}")
+        print(f"{'='*60}")
+
+        cmd = [
+            sys.executable, "-m", "pytest",
+            *targets,
+            "-v",
+            f"--junitxml={xml_path}",
+            "--tb=short",
+        ]
+        start = time.time()
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+        elapsed = time.time() - start
+
+        passed = result.returncode == 0
+        log_path.write_text(result.stdout + "\n" + result.stderr)
+
+        import re
+        passed_count = 0
+        failed_count = 0
+        error_count = 0
+        for line in result.stdout.split("\n"):
+            m = re.search(r"=+ (\d+) passed", line)
+            if m:
+                passed_count += int(m.group(1))
+            m = re.search(r"(\d+) failed", line)
+            if m:
+                failed_count += int(m.group(1))
+            m = re.search(r"(\d+) errors?", line)
+            if m:
+                error_count += int(m.group(1))
+
+        suite_result = {
+            "passed": passed,
+            "returncode": result.returncode,
+            "elapsed_seconds": round(elapsed, 1),
+            "passed_count": passed_count,
+            "failed_count": failed_count,
+            "error_count": error_count,
+            "xml": str(xml_path),
+            "log": str(log_path),
+        }
+        overall["suites"][suite_name] = suite_result
+        overall["total_passed"] += passed_count
+        overall["total_failed"] += failed_count
+        overall["total_errors"] += error_count
+
+        status = "PASS" if passed else "FAIL"
+        print(f"  Result: {status} ({passed_count} passed, {failed_count} failed, {error_count} errors) in {elapsed:.0f}s")
+
+    overall["all_passed"] = all(s["passed"] for s in overall["suites"].values())
+    summary_path = out_root / "validation-summary.json"
+    summary_path.write_text(json.dumps(overall, indent=2))
+
+    # Copy sentinel_benchmark JUnit XML to standard location for report consumption
+    benchmark_xml_src = out_root / "sentinel_benchmark.xml"
+    benchmark_xml_dst = Path(args.output_dir) / "benchmark-results.xml"
+    if benchmark_xml_src.exists():
+        import shutil
+        benchmark_xml_dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(str(benchmark_xml_src), str(benchmark_xml_dst))
+        print(f"\n  Benchmark XML: {benchmark_xml_dst}")
+
+    print(f"\n{'='*60}")
+    print(f"Validation Summary: {'ALL PASS' if overall['all_passed'] else 'SOME FAILED'}")
+    print(f"  {overall['total_passed']} passed, {overall['total_failed']} failed, {overall['total_errors']} errors")
+    print(f"  Summary: {summary_path}")
+    print(f"{'='*60}")
+    return 0 if overall["all_passed"] else 1
+
+
 def main() -> None:
     args = parse_args()
+
+    if args.run_validation:
+        sys.exit(run_validation(args))
+
     api_key = os.getenv("CAUTERULE_LLM_API_KEY")
     if not api_key and args.llm_provider in ("openai", "anthropic", "litellm") and not args.llm_base_url:
         print("[warn] CAUTERULE_LLM_API_KEY not set. Cloud LLMs will likely fail.")

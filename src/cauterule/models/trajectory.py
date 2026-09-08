@@ -10,11 +10,16 @@ from typing import Any, Literal
 
 QualityLabel = Literal["clear", "ambiguous", "multi-causal", "misleading", "operator-induced"]
 Severity = Literal["low", "medium", "high"]
+ExpectedOutcome = Literal["should_extract", "should_silence", "should_reject"]
+ExpectedOutcomeConfidence = Literal["high", "medium", "low", None]
 
 _VALID_QUALITY_LABELS: frozenset[str] = frozenset(
     {"clear", "ambiguous", "multi-causal", "misleading", "operator-induced"}
 )
 _VALID_SEVERITIES: frozenset[str] = frozenset({"low", "medium", "high"})
+_VALID_EXPECTED_OUTCOMES: frozenset[str] = frozenset(
+    {"should_extract", "should_silence", "should_reject"}
+)
 
 
 def _require_nonblank(value: str, name: str) -> None:
@@ -126,6 +131,9 @@ class Trajectory:
     agent_config: AgentConfig | None = None
     environment: Environment | None = None
     redacted: bool = False
+    expected_outcome: ExpectedOutcome | None = None
+    expected_outcome_rationale: str | None = None
+    expected_outcome_confidence: ExpectedOutcomeConfidence = None
 
     def __post_init__(self) -> None:
         _require_nonblank(self.id, "trajectory.id")
@@ -135,6 +143,11 @@ class Trajectory:
             raise ValueError(f"quality_label must be one of {_VALID_QUALITY_LABELS}")
         if self.severity is not None and self.severity not in _VALID_SEVERITIES:
             raise ValueError(f"severity must be one of {_VALID_SEVERITIES}")
+        if (
+            self.expected_outcome is not None
+            and self.expected_outcome not in _VALID_EXPECTED_OUTCOMES
+        ):
+            raise ValueError(f"expected_outcome must be one of {_VALID_EXPECTED_OUTCOMES}")
         for t in self.tags:
             _require_nonblank(t, "tags item")
 
@@ -164,6 +177,12 @@ class Trajectory:
             d["agent_config"] = self.agent_config.to_dict()
         if self.environment is not None:
             d["environment"] = self.environment.to_dict()
+        if self.expected_outcome is not None:
+            d["expected_outcome"] = self.expected_outcome
+        if self.expected_outcome_rationale is not None:
+            d["expected_outcome_rationale"] = self.expected_outcome_rationale
+        if self.expected_outcome_confidence is not None:
+            d["expected_outcome_confidence"] = self.expected_outcome_confidence
         return d
 
     @classmethod
@@ -190,4 +209,7 @@ class Trajectory:
             agent_config=AgentConfig.from_dict(ac_raw) if isinstance(ac_raw, dict) else None,
             environment=Environment.from_dict(env_raw) if isinstance(env_raw, dict) else None,
             redacted=bool(data.get("redacted", False)),
+            expected_outcome=data.get("expected_outcome"),
+            expected_outcome_rationale=data.get("expected_outcome_rationale"),
+            expected_outcome_confidence=data.get("expected_outcome_confidence"),
         )
