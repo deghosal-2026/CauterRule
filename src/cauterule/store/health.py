@@ -87,6 +87,15 @@ def health_report(base_dir: str = "rules") -> dict[str, Any]:
 
     now_str = datetime.now(UTC).isoformat()
 
+    # Supersession integrity (#544): dangling targets, cycles, orphan middles.
+    supersession_issues: list[str] = []
+    try:
+        from cauterule.lifecycle.supersede import all_issues
+
+        supersession_issues = [i.render() for i in all_issues(rules)]
+    except Exception:
+        pass
+
     return {
         "total_rules": total,
         "by_status": by_status,
@@ -95,6 +104,7 @@ def health_report(base_dir: str = "rules") -> dict[str, Any]:
         "stale_rules": stale_rules,
         "conflict_count": conflict_count,
         "near_duplicate_pairs": near_duplicate_pairs,
+        "supersession_issues": supersession_issues,
         "report_time": now_str,
     }
 

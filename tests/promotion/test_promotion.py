@@ -284,7 +284,6 @@ def test_execute_promotion_failed_commit_warns(
     # Review: git_commit → None is handled explicitly, promotion stands.
     import logging
 
-    import pytest
 
     monkeypatch.setattr(
         "cauterule.promotion.executor.git_commit", lambda *a, **k: None

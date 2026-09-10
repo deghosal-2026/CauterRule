@@ -2,7 +2,7 @@
 
 **Goal:** Hardening & Ecosystem — fix critical bugs from the v0.2.0 field test, ship adapters, rule lifecycle, pack ecosystem, corpus/benchmark infra, then prove it with a full field test and release.
 
-**Milestones:** M1-M8 (GitHub milestones 52-57, 62-63) — M1 ✓ (18/18 verified), M2 ✓ (7/13 verified, 4 deferred to M7), M3 ✓ (16/16 verified, #524→M7, #614/#615→M8), 64 open, 41 closed.
+**Milestones:** M1-M8 (GitHub milestones 52-57, 62-63) — M1 ✓ (18/18 verified), M2 ✓ (7/13 verified, 4 deferred to M7), M3 ✓ (16/16 verified, #524→M7, #614/#615→M8), M4 ✓ (11/11 verified), 50 open, 52 closed.
 
 ## Release Tagline
 
@@ -15,7 +15,7 @@
 | Part | Title | Milestones | Tasks | Issues |
 |------|-------|------------|-------|--------|
 | [1](wbs-v0.3.0-part1-fixes.md) | Phase 1 — Critical Fixes & Reliability | M1-M3 (M1 ✓, M2 ✓, M3 ✓) | 50 tasks | #487-#508, #517-#527, #593-#600, #608-#616 |
-| [2](wbs-v0.3.0-part2-features.md) | Phase 2 — Adapters, Lifecycle, Packs & Infra | M4-M6 | 40 tasks | #479-#481, #486, #512, #516, #534-#560, #581-#588, #601-#607 |
+| [2](wbs-v0.3.0-part2-features.md) | Phase 2 — Adapters, Lifecycle, Packs & Infra | M4-M6 (M4 ✓) | 40 tasks | #479-#481, #486, #512, #516, #534-#560, #581-#588, #601-#607 |
 | [3](wbs-v0.3.0-part3-field-test.md) | Phase 3 — Field Test | M7 | 13 tasks | #625, #629, #635, #641-#642, #648, #650, #653, #658, #663, #667, #671, #673 |
 | [4](wbs-v0.3.0-part4-release.md) | Phase 4 — Release Readiness & Distribution | M8 | 17 tasks | #622, #626, #630, #633, #637, #640, #645, #649, #654, #657, #661, #665, #668, #670, #674-#675 |
 | **Total** | | **M1-M8** | **120 tasks** | **120 issues** |
@@ -25,12 +25,12 @@
 ## Milestone Map
 
 ```
-M1 ✓    M2 ✓   M3 ✓    M4      M5      M6      M7      M8
+M1 ✓    M2 ✓   M3 ✓    M4 ✓    M5      M6      M7      M8
 │       │       │       │       │       │       │       │
 └──┬────┴───┬───┴───┬───┘       │       │       │       │
    │       │       │           └──┬────┴───┬───┴───┬───┘
    │ Phase 1: Fixes             │ Phase 2: Features              │
-   │ M1-M3 ✓                    │ M4-M6                          │
+   │ M1-M3 ✓                    │ M4 ✓ · M5-M6                   │
    │                            │                                 │
    └────────────────────────────┴─────────────────────────────────┘
                                     Phase 3 + 4: M7 (Field Test) → M8 (Release)

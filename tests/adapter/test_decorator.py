@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -75,3 +76,75 @@ def test_watch_without_call_parens(tmp_path: Path) -> None:
     assert another() == 6
     files = list(tmp_path.rglob("*.jsonl"))
     assert len(files) == 1
+
+
+# --------------------------------------------------------------------------
+# #538 — async / generator / async-generator / kwargs redaction
+# --------------------------------------------------------------------------
+def test_watch_async_success(tmp_path: Path) -> None:
+    import asyncio
+
+    @watch(base_dir=str(tmp_path))
+    async def async_agent(x: int) -> int:
+        return x + 1
+
+    result = asyncio.run(async_agent(41))
+    assert result == 42
+    files = list(tmp_path.rglob("*.jsonl"))
+    assert len(files) == 1
+    assert "success" in files[0].name
+
+
+def test_watch_async_failure_re_raises(tmp_path: Path) -> None:
+    import asyncio
+
+    @watch(base_dir=str(tmp_path))
+    async def bad_async() -> None:
+        raise RuntimeError("async boom")
+
+    with pytest.raises(RuntimeError, match="async boom"):
+        asyncio.run(bad_async())
+    files = list(tmp_path.rglob("*.jsonl"))
+    assert len(files) == 1
+    assert "failure" in files[0].name
+
+
+def test_watch_kwargs_redaction(tmp_path: Path) -> None:
+    @watch(base_dir=str(tmp_path))
+    def agent_with_secret(api_key: str, other: str) -> str:
+        return "done"
+
+    agent_with_secret(api_key="sk-secret-1234567890", other="hello")
+    files = list(tmp_path.rglob("*.jsonl"))
+    assert len(files) == 1
+    content = files[0].read_text()
+    # The secret must not appear raw or quoted anywhere in the written file.
+    assert "sk-secret-1234567890" not in content
+    assert "[REDACTED]" in content
+
+
+def test_watch_generator_records(tmp_path: Path) -> None:
+    @watch(base_dir=str(tmp_path))
+    def stream() -> Any:
+        yield 1
+        yield 2
+
+    assert list(stream()) == [1, 2]
+    files = list(tmp_path.rglob("*.jsonl"))
+    assert len(files) >= 1  # at least the first-step capture
+
+
+def test_watch_async_generator_records(tmp_path: Path) -> None:
+    import asyncio
+
+    @watch(base_dir=str(tmp_path))
+    async def astream() -> Any:
+        yield "a"
+        yield "b"
+
+    async def collect() -> list[str]:
+        return [item async for item in astream()]
+
+    assert asyncio.run(collect()) == ["a", "b"]
+    files = list(tmp_path.rglob("*.jsonl"))
+    assert len(files) >= 1

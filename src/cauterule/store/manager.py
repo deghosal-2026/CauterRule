@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import time
+from dataclasses import replace
 from pathlib import Path
 
 from cauterule.models.rule import StandingRule
@@ -129,20 +130,9 @@ class StoreManager:
             msg = f"Cannot retire rule {rule_id!r}: status is {rule.status!r}"
             raise ValueError(msg)
         now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        retired = StandingRule(
-            id=rule.id,
-            when=rule.when,
-            do=rule.do,
-            confidence=rule.confidence,
-            provenance=rule.provenance,
+        retired = replace(
+            rule,
             status="retired",
-            promoted_at=rule.promoted_at,
-            hit_count=rule.hit_count,
-            last_match=rule.last_match,
-            tags=rule.tags,
-            taxonomy=rule.taxonomy,
-            template=rule.template,
-            pack=rule.pack,
             retired_at=now,
             retirement_reason=reason,
         )
@@ -164,20 +154,9 @@ class StoreManager:
             msg = f"Rule {rule_id!r} not found"
             raise ValueError(msg)
         now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        superseded = StandingRule(
-            id=rule.id,
-            when=rule.when,
-            do=rule.do,
-            confidence=rule.confidence,
-            provenance=rule.provenance,
+        superseded = replace(
+            rule,
             status="superseded",
-            promoted_at=rule.promoted_at,
-            hit_count=rule.hit_count,
-            last_match=rule.last_match,
-            tags=rule.tags,
-            taxonomy=rule.taxonomy,
-            template=rule.template,
-            pack=rule.pack,
             retired_at=now,
             superseded_by=new_id,
         )

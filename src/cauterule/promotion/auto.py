@@ -17,6 +17,7 @@ def auto_promote(
     conflict_reports: list[ConflictReport] | None = None,
     corpus_name: str | None = None,
     force: bool = False,
+    cutoffs: object | None = None,
 ) -> PromotionDecision:
     """Decide promotion for *candidate* in auto mode.
 
@@ -25,6 +26,8 @@ def auto_promote(
     - Zero unresolved conflicts.
     - Evidence verdict pass with at least one failure prevented.
     - Safety gate: no safety-corpus violations (unless force=True).
+    - Confidence at or above the promotion cutoff (static or learned), unless
+      *force* is set.
 
     Args:
         candidate: The candidate rule under review.
@@ -34,7 +37,11 @@ def auto_promote(
             empty.
         corpus_name: Source corpus for safety checks (e.g. successes).
             If None, safety gate is skipped.
-        force: If True, promote despite safety warnings (audit logged).
+        force: If True, promote despite safety warnings / learned cutoffs
+            (audit logged).
+        cutoffs: Optional promotion cutoffs (static presets or learned via
+            :mod:`cauterule.lifecycle.tune`). When provided, the minimum
+            confidence threshold from the cutoffs is enforced.
 
     Returns:
         A :class:`PromotionDecision` with verdict ``"promote"`` if all
@@ -51,10 +58,20 @@ def auto_promote(
     safety_warnings = check_safety(evidence, corpus_name=corpus_name)
     safety_ok = not safety_warnings or force
 
-    if linter_result.passed and not conflicts and evidence_ok and safety_ok:
+    cutoff_ok = True
+    cutoff_note = ""
+    if cutoffs is not None:
+        min_qual = float(getattr(cutoffs, "min_quality", 0.0))
+        if candidate.confidence < min_qual and not force:
+            cutoff_ok = False
+            cutoff_note = f", confidence {candidate.confidence:.2f} below learned cutoff {min_qual:.2f}"
+
+    if linter_result.passed and not conflicts and evidence_ok and safety_ok and cutoff_ok:
         summary = f"Auto-promote: linter clean, no conflicts, evidence={evidence.verdict}; candidate confidence={candidate.confidence}"
         if safety_warnings and force:
             summary += f" (safety overridden: {'; '.join(safety_warnings)})"
+        if cutoffs is not None:
+            summary += f" [cutoffs: {getattr(cutoffs, 'summarize', lambda: str(cutoffs))()}]"
         return PromotionDecision(
             verdict="promote",
             evidence_summary=summary,
@@ -70,6 +87,7 @@ def auto_promote(
             f"linter_passed={linter_result.passed}, "
             f"conflicts={len(conflicts)}, "
             f"evidence_verdict={evidence.verdict}"
+            + cutoff_note
             + (f", safety_warnings={safety_warnings}" if safety_warnings else "")
         ),
         approver="auto",

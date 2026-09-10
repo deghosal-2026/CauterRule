@@ -66,6 +66,18 @@ def validate_store(base_dir: str = "rules") -> list[str]:
                 f"not found in store"
             )
 
+        # Retired-vs-superseded invariant (#544): `superseded` rules must
+        # point at their successor; `retired` rules are terminal and carry
+        # no successor pointer.
+        if rule.status == "superseded" and rule.superseded_by is None:
+            warnings.append(
+                f"{fname} ({rule.id}): status=superseded requires superseded_by"
+            )
+        if rule.status == "retired" and rule.superseded_by is not None:
+            warnings.append(
+                f"{fname} ({rule.id}): retired rules must not carry superseded_by"
+            )
+
         if rule.pack is not None:
             pack_path = d / f"{rule.pack}.yaml"
             if not pack_path.is_file():

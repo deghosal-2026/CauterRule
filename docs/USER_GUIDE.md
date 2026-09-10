@@ -543,3 +543,54 @@ cauterule test --corpus adversarial
 - **GitHub Action:** run `cauterule test --ci` in any CI workflow
 - **Webhook:** configure promotion webhook in `cauterule.toml`
 - **OpenTelemetry:** emit traces and metrics to any OTEL collector
+
+---
+
+## v0.3.0 M4 — Rule Lifecycle & Framework Adapters
+
+The rule store is now a self-maintaining asset.  See
+[`docs/ADAPTERS.md`](ADAPTERS.md) for the full adapter + conformance
+reference; the lifecycle policies are summarized below.
+
+### Rule lifecycle configuration (`cauterule.toml`)
+
+```toml
+[retirement]          # #543 — auto-retirement policy
+harmful_window = 20   # trailing outcomes examined
+harmful_ratio = 0.5   # broke/(broke+prevented) above this → candidate
+stale_days = 90       # idle for this long → stale candidate
+stale_specificity = 0.3  # + specificity below this → stale candidate
+min_evidence = 5      # never retire on fewer than N outcomes
+dry_run = true        # default: `audit` reports, does not mutate
+
+[promotion]           # #545 — auto-promotion tuning guardrails
+min_evidence = 30     # outcomes before learned cutoffs activate
+target_prevented_rate = 0.8
+floor_min_quality = 0.4
+ceiling_min_quality = 0.95
+floor_min_specificity = 0.1
+ceiling_min_specificity = 0.9
+```
+
+### Per-rule lifecycle CLI
+
+```bash
+cauterule metrics --rule R-001         # outcome counts + trend sparkline
+cauterule show R-001 --outcomes        # same, per rule
+cauterule list --sort spec             # include/sort by specificity
+cauterule metrics --lowest-spec        # lowest-specificity rules (broad < 0.3)
+cauterule audit                        # retirement candidates (dry-run)
+cauterule audit --apply --yes          # retire them
+cauterule show R-001 --history         # supersession chain v1→v2→v3
+cauterule promote --show-cutoffs       # learned vs default cutoffs
+```
+
+### Framework adapters
+
+```bash
+cauterule init --dir proj --adapter langgraph   # | crewai | pydanticai | custom
+```
+
+Each adapter captures failures (as trajectories) and injects matching
+standing rules using the real matcher + budget.  All adapters pass the shared
+conformance suite in `tests/adapter_conformance/`.

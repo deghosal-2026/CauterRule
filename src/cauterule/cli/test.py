@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import click
 from pathlib import Path
 
-from cauterule.serialization.trajectory_jsonl import load_trajectories
-from cauterule.replay.report import build_evidence_report
+import click
+
 from cauterule.models.candidate import CandidateRule
-from cauterule.models.rule import RuleDo, RuleWhen
+from cauterule.replay.report import build_evidence_report
+from cauterule.serialization.trajectory_jsonl import load_trajectories
 
 
 @click.command("test")
@@ -43,6 +43,13 @@ def test(rule: str, ci: bool) -> None:
         return
 
     report_ = build_evidence_report(cand, trajectories)
+    # #542: recording point — replay verdicts attributed to this standing rule
+    # are accumulated into its outcome counters/trend via the idempotent log.
+    try:
+        from cauterule.observe.outcomes import apply_report_outcomes
+        apply_report_outcomes(store, rule, report_)
+    except Exception:
+        pass
     click.echo(f"Testing rule: {rule}")
     click.echo(f"  Failures prevented: {len(report_.failures_prevented)}")
     click.echo(f"  Successes broken: {len(report_.successes_broken)}")
