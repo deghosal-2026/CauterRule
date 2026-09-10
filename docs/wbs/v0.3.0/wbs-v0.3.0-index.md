@@ -14,7 +14,7 @@
 
 | Part | Title | Milestones | Tasks | Issues |
 |------|-------|------------|-------|--------|
-| [1](wbs-v0.3.0-part1-fixes.md) | Phase 1 — Critical Fixes & Reliability | M1-M3 | 50 tasks | #487-#508, #517-#527, #593-#600, #608-#616 |
+| [1](wbs-v0.3.0-part1-fixes.md) | Phase 1 — Critical Fixes & Reliability | M1-M3 (M2 ✓) | 50 tasks | #487-#508, #517-#527, #593-#600, #608-#616 |
 | [2](wbs-v0.3.0-part2-features.md) | Phase 2 — Adapters, Lifecycle, Packs & Infra | M4-M6 | 40 tasks | #479-#481, #486, #512, #516, #534-#560, #581-#588, #601-#607 |
 | [3](wbs-v0.3.0-part3-field-test.md) | Phase 3 — Field Test | M7 | 13 tasks | #625, #629, #635, #641-#642, #648, #650, #653, #658, #663, #667, #671, #673 |
 | [4](wbs-v0.3.0-part4-release.md) | Phase 4 — Release Readiness & Distribution | M8 | 17 tasks | #622, #626, #630, #633, #637, #640, #645, #649, #654, #657, #661, #665, #668, #670, #674-#675 |
@@ -25,7 +25,7 @@
 ## Milestone Map
 
 ```
-M1      M2      M3      M4      M5      M6      M7      M8
+M1 ✓    M2 ✓   M3      M4      M5      M6      M7      M8
 │       │       │       │       │       │       │       │
 └──┬────┴───┬───┴───┬───┘       │       │       │       │
    │       │       │           └──┬────┴───┬───┴───┬───┘

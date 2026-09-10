@@ -1,6 +1,6 @@
 # v0.3.0 — WBS Part 1: Phase 1 — Critical Fixes & Reliability
 
-**Milestones:** M1-M3 ([M1](https://github.com/deghosal-2026/CauterRule/milestone/52) · [M2](https://github.com/deghosal-2026/CauterRule/milestone/53) · [M3](https://github.com/deghosal-2026/CauterRule/milestone/54))
+**Milestones:** M1-M3 ([M1](https://github.com/deghosal-2026/CauterRule/milestone/52) · [M2 ✓](https://github.com/deghosal-2026/CauterRule/milestone/53) · [M3](https://github.com/deghosal-2026/CauterRule/milestone/54))
 
 **Theme:** All issues fix existing code + add regression tests. Silent data corruption first, then gates, then durability. Every milestone includes lint strict, coverage >95%, docs updated.
 
@@ -45,27 +45,27 @@
 
 ---
 
-## M2: Field-Test Gates (13 issues)
+## M2: Field-Test Gates (13 issues) ✓
 
 **Goal:** Make preflight honest (real latency/cost/dir checks, schema enforcement) and close the matcher gaps that block the field test (mismatch detection, corpus expansion, prompt narrowing).
 
 **Dependencies:** M1 (gates must run on trustworthy data)
 
-| # | Task | Issue |
-|---|------|-------|
-| 2.1 | CLI preflight: latency probe never passed, flat $0.01 estimate, no output-dir checks | [#600](https://github.com/deghosal-2026/CauterRule/issues/600) |
-| 2.2 | Wire validate_annotations + validate_corpus_sizes into preflight + catalog.yaml loader | [#599](https://github.com/deghosal-2026/CauterRule/issues/599) |
-| 2.3 | Enforce CORPUS_SCHEMA_VERSION "1.0" on load + expand preflight REQUIRED_FIELDS | [#598](https://github.com/deghosal-2026/CauterRule/issues/598) |
-| 2.4 | Close M11 exit gates: lint+mypy, 3x green CI, security scans, PyPI/Homebrew/Docker verify | [#495](https://github.com/deghosal-2026/CauterRule/issues/495) |
-| 2.5 | Cross-session repeat-failure reduction ≥50% + multi-env validation | [#496](https://github.com/deghosal-2026/CauterRule/issues/496) |
-| 2.6 | Restore coverage 86% → 95% (TUI/observe/review/release/adversarial CLI) | [#494](https://github.com/deghosal-2026/CauterRule/issues/494) |
-| 2.7 | Measure human-vs-replay agreement rate (field-test-plan §5.6) | [#493](https://github.com/deghosal-2026/CauterRule/issues/493) |
-| 2.8 | Qwen alias expansion — clear 18 matcher_gap on nearmiss | [#492](https://github.com/deghosal-2026/CauterRule/issues/492) |
-| 2.9 | Re-run Fix 8 (recovery exclusion) on local OMLX models | [#491](https://github.com/deghosal-2026/CauterRule/issues/491) |
-| 2.10 | BUG: Public multi-line JSONL loader drops 160 public trajectories | [#490](https://github.com/deghosal-2026/CauterRule/issues/490) |
-| 2.11 | Expand reference corpus 230 → 500+ diverse phrasings | [#489](https://github.com/deghosal-2026/CauterRule/issues/489) |
-| 2.12 | Narrow the extraction prompt — name error codes not just tool+fails | [#488](https://github.com/deghosal-2026/CauterRule/issues/488) |
-| 2.13 | Trigger-domain mismatch detection — kill nearmiss wrong-failure FPs | [#487](https://github.com/deghosal-2026/CauterRule/issues/487) |
+| # | Task | Issue | Status |
+|---|------|-------|--------|
+| 2.1 | CLI preflight: latency probe never passed, flat $0.01 estimate, no output-dir checks | [#600](https://github.com/deghosal-2026/CauterRule/issues/600) | ✅ |
+| 2.2 | Wire validate_annotations + validate_corpus_sizes into preflight + catalog.yaml loader | [#599](https://github.com/deghosal-2026/CauterRule/issues/599) | ✅ |
+| 2.3 | Enforce CORPUS_SCHEMA_VERSION "1.0" on load + expand preflight REQUIRED_FIELDS | [#598](https://github.com/deghosal-2026/CauterRule/issues/598) | ✅ |
+| 2.4 | Close M11 exit gates: lint+mypy, 3x green CI, security scans, PyPI/Homebrew/Docker verify | [#495](https://github.com/deghosal-2026/CauterRule/issues/495) | ✅ |
+| 2.5 | Cross-session repeat-failure reduction ≥50% + multi-env validation | [#496](https://github.com/deghosal-2026/CauterRule/issues/496) | deferred to M7 |
+| 2.6 | Restore coverage 86% → 95% (TUI/observe/review/release/adversarial CLI) | [#494](https://github.com/deghosal-2026/CauterRule/issues/494) | ✅ |
+| 2.7 | Measure human-vs-replay agreement rate (field-test-plan §5.6) | [#493](https://github.com/deghosal-2026/CauterRule/issues/493) | deferred to M7 |
+| 2.8 | Qwen alias expansion — clear 18 matcher_gap on nearmiss | [#492](https://github.com/deghosal-2026/CauterRule/issues/492) | ✅ |
+| 2.9 | Re-run Fix 8 (recovery exclusion) on local OMLX models | [#491](https://github.com/deghosal-2026/CauterRule/issues/491) | deferred to M7 |
+| 2.10 | BUG: Public multi-line JSONL loader drops 160 public trajectories | [#490](https://github.com/deghosal-2026/CauterRule/issues/490) | ✅ |
+| 2.11 | Expand reference corpus 230 → 500+ diverse phrasings | [#489](https://github.com/deghosal-2026/CauterRule/issues/489) | deferred to M7 |
+| 2.12 | Narrow the extraction prompt — name error codes not just tool+fails | [#488](https://github.com/deghosal-2026/CauterRule/issues/488) | ✅ |
+| 2.13 | Trigger-domain mismatch detection — kill nearmiss wrong-failure FPs | [#487](https://github.com/deghosal-2026/CauterRule/issues/487) | ✅ |
 
 ### M2 Exit Gate
 
