@@ -274,6 +274,8 @@ def match_score(candidate: CandidateRule, trajectory: Trajectory) -> float:
         return 0.0
 
     norm_trigger = _normalize(trigger)
+    if not norm_trigger:
+        return 0.0
 
     # --- Exact normalized-substring match → score 1.0 ---
     haystack = _build_haystack(trajectory)
@@ -369,68 +371,6 @@ def check_domain_mismatch(
     if trigger_domain is None or traj_domain is None:
         return False
     return trigger_domain != traj_domain
-    if not norm_trigger:
-        return 0.0
-    haystack = _build_haystack(trajectory)
-
-    # Exact normalized-substring match preserves legacy behavior.
-    if norm_trigger in haystack:
-        return 1.0
-
-    trigger_tokens = _content_tokens(trigger)
-    if not trigger_tokens:
-        return 0.0
-    haystack_tokens = _content_tokens(haystack)
-
-    # Phrase-level paraphrase: if any alias phrase for the trigger appears
-    # verbatim in the haystack, that is strong equivalence evidence.
-    alias_phrase_hit = any(
-        _normalize(phrase) in haystack
-        for key, phrases in _ALIASES.items()
-        if key in norm_trigger
-        for phrase in phrases
-    )
-
-    alias_tokens = _expand_aliases(norm_trigger) - trigger_tokens
-
-    direct_hit = trigger_tokens & haystack_tokens
-    alias_hit = alias_tokens & haystack_tokens
-
-    # Weighted token F1: direct hits count 1.0, alias hits count 0.5.
-    weighted_hit = len(direct_hit) + 0.5 * len(alias_hit)
-    weighted_trigger = len(trigger_tokens) + 0.5 * len(alias_tokens)
-    if weighted_trigger == 0:
-        token_f1 = 0.0
-    else:
-        precision = weighted_hit / max(weighted_trigger, 1)
-        recall = weighted_hit / weighted_trigger
-        token_f1 = 0.0 if (precision + recall) == 0 else 2 * precision * recall / (precision + recall)
-
-# Bigram recall captures phrase-level similarity under rewording.
-    trigger_ordered = _ordered_content_tokens(trigger)
-    haystack_ordered = _ordered_content_tokens(haystack)
-    trigger_bigrams = _bigrams(trigger_ordered)
-    if not trigger_bigrams:
-        bigram_recall = 1.0 if not trigger_ordered else 0.0
-    else:
-        haystack_bigrams = _bigrams(haystack_ordered)
-        bigram_recall = len(trigger_bigrams & haystack_bigrams) / len(trigger_bigrams)
-
-    score = 0.6 * token_f1 + 0.4 * bigram_recall
-    if alias_phrase_hit:
-        score = max(score, 0.70)
-
-    # Substring fallback: if trigger contains a distinctive error phrase
-    # that appears verbatim in the haystack, floor the score at 0.70 so
-    # it passes both default and curated thresholds.
-    if score < 0.70 and len(norm_trigger) >= _LONG_PHRASE_THRESHOLD:
-        raw_lower = trigger.lower()
-        for phrase in _DISTINCTIVE_PHRASES:
-            if phrase in raw_lower and _normalize(phrase) in haystack:
-                score = max(score, 0.70)
-                break
-
-    return round(score, 4)
 
 
 def match_detail(candidate: CandidateRule, trajectory: Trajectory) -> dict[str, Any]:

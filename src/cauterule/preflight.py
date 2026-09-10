@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from cauterule.config import Config
-from cauterule.corpus.validation import MIN_SAFETY_SIZES, validate_annotations, validate_corpus_sizes
+from cauterule.corpus.validation import validate_annotations, validate_corpus_sizes
 from cauterule.serialization.trajectory_jsonl import load_trajectories
 
 SLOW_THRESHOLD_S = 30.0
@@ -321,10 +321,8 @@ def check_output_dir(output_path: str | Path) -> CheckResult:
     """Check that *output_path* is writable and has free space."""
     path = Path(output_path)
     parent = path.parent if path.suffix else path
-    just_created = False
     if not parent.exists():
         parent.mkdir(parents=True, exist_ok=True)
-        just_created = True
     if not os.access(parent, os.W_OK):
         return CheckResult(
             name="output_dir",
@@ -351,7 +349,6 @@ def run_preflight(
     config: Config,
     corpus_path: str | Path | None = None,
     probe: Callable[[Config], float] | None = None,
-    cost_per_request_usd: float | None = None,
     output_dir: str | Path | None = None,
     catalog_path: str | Path | None = None,
 ) -> PreflightResult:

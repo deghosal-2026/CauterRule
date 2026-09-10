@@ -39,6 +39,30 @@ def dump_trajectories(trajectories: Iterable[Trajectory], path: str | Path) -> N
             f.write(dump_trajectory(t) + "\n")
 
 
+def _json_depth(line: str) -> int:
+    """Count brace depth outside of JSON string values (#490)."""
+    depth = 0
+    in_string = False
+    escaped = False
+    for ch in line:
+        if escaped:
+            escaped = False
+            continue
+        if ch == "\\":
+            escaped = True
+            continue
+        if ch == '"' and not escaped:
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+    return depth
+
+
 def load_trajectories(
     path: str | Path,
     *,
@@ -63,7 +87,7 @@ def load_trajectories(
 
             if buf is not None:
                 buf += "\n" + stripped
-                depth += stripped.count("{") - stripped.count("}")
+                depth += _json_depth(stripped)
                 if depth <= 0:
                     try:
                         yield load_trajectory(buf)

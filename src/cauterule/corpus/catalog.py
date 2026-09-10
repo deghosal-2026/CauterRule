@@ -31,9 +31,7 @@ def load_catalog(path: str | Path) -> dict[str, CorpusMetadata]:
     catalog: dict[str, CorpusMetadata] = {}
     for key, val in raw.items():
         if not isinstance(val, dict):
-            raise ValueError(f"Catalog entry {key!r} must be a mapping")
+            raise TypeError(f"Catalog entry {key!r} must be a mapping")
         meta = CorpusMetadata.from_dict(val)
-        if meta.id and meta.id != key:
-            pass  # tolerate key/meta.id mismatch silently
         catalog[meta.id or key] = meta
     return catalog

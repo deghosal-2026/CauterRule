@@ -21,11 +21,10 @@ def preflight(
 ) -> None:
     """Run provider + corpus preflight checks (fail fast before sweep)."""
     cfg = load_config()
-    probe = None if no_probe else _simple_probe
     result = run_preflight(
         cfg,
         corpus_path=corpus,
-        probe=probe,
+        probe=_simple_probe if not no_probe else None,
         output_dir=output_dir,
         catalog_path=catalog,
     )
@@ -51,7 +50,7 @@ def preflight(
         raise click.ClickException("Preflight checks failed")  # noqa: TRY003
 
 
-def _simple_probe(config: object) -> float:
+def _simple_probe(_config: object) -> float:
     """Minimal latency probe: return 0.1s placeholder.
 
     Real probes are deferred to the field-test runner; this ensures the

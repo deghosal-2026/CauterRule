@@ -174,3 +174,27 @@ def test_load_trajectories_multiline_objects(tmp_path: Path) -> None:
     assert len(loaded) == 3
     assert loaded[1].id == "T-multi"
     assert loaded[1].success is False
+
+
+def test_load_trajectories_multiline_with_braces_in_strings(tmp_path: Path) -> None:
+    # #490: braces inside JSON string values must not confuse depth counter.
+    multi = """{
+  "trajectory_id": "T-brace",
+  "timestamp": "t",
+  "task": "test with {brace} in task",
+  "steps": [
+    {
+      "step_number": 1,
+      "tool": "bash",
+      "error": "expected { in format string"
+    }
+  ],
+  "success": false
+}"""
+    p = tmp_path / "corpus.jsonl"
+    with p.open("w", encoding="utf-8") as f:
+        f.write(dump_trajectory(_valid_trajectory()) + "\n")
+        f.write(multi + "\n")
+    loaded = list(load_trajectories(p))
+    assert len(loaded) == 2
+    assert loaded[1].id == "T-brace"
