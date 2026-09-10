@@ -8,6 +8,7 @@ from typing import Any
 import yaml
 
 from cauterule.packs.format import PackManifest
+from cauterule.store.manager import resolve_inside, validate_rule_id
 
 
 def list_packs(base_dir: str = "rules") -> list[str]:
@@ -45,8 +46,10 @@ def pack_info(name: str, base_dir: str = "rules") -> dict[str, Any]:
 
     Raises:
         FileNotFoundError: If the pack does not exist.
+        ValueError: If *name* is unsafe for paths (#499).
     """
-    manifest_path = Path(base_dir) / "packs" / name / "manifest.yaml"
+    validate_rule_id(name)
+    manifest_path = resolve_inside(Path(base_dir) / "packs", name, "manifest.yaml")
     if not manifest_path.is_file():
         raise FileNotFoundError(f"Pack manifest not found: {manifest_path}")
 

@@ -243,6 +243,22 @@ class TestLoadPack:
         with pytest.raises(ValueError, match="missing rule"):
             load_pack("partial", base_dir=str(pack_rules_dir / "rules"))
 
+    def test_rejects_traversal_pack_name(self, tmp_path: Path) -> None:
+        # Review: pack name traversal raises before any I/O.
+        with pytest.raises(ValueError, match="invalid rule_id"):
+            load_pack("../../evil", base_dir=str(tmp_path / "rules"))
+        with pytest.raises(ValueError, match="invalid rule_id"):
+            pack_info("/etc/passwd", base_dir=str(tmp_path / "rules"))
+
+    def test_rejects_traversal_rule_id_in_manifest(self, tmp_path: Path) -> None:
+        # Review: manifest-listed rule ids are validated identically.
+        pack_dir = tmp_path / "rules" / "packs" / "evil"
+        pack_dir.mkdir(parents=True)
+        manifest = {"name": "e", "version": "1", "description": "d", "author": "a", "rules": ["../escape"]}
+        (pack_dir / "manifest.yaml").write_text(yaml.safe_dump(manifest), encoding="utf-8")
+        with pytest.raises(ValueError, match="invalid rule_id"):
+            load_pack("evil", base_dir=str(tmp_path / "rules"))
+
 
 # ---------------------------------------------------------------------------
 # manager.py — list_packs & pack_info
@@ -302,6 +318,15 @@ class TestReadonly:
             pack=None,
         )
         assert check_readonly(normal_rule) is False
+
+    def test_hostile_pack_id_returns_false(
+        self, tmp_path: Path, normal_rule: StandingRule
+    ) -> None:
+        # Review: crafted rule.pack must not raise or escape.
+        import dataclasses
+
+        hostile = dataclasses.replace(normal_rule, pack="../../evil")
+        assert check_readonly(hostile, base_dir=str(tmp_path / "rules")) is False
 
 
 # ---------------------------------------------------------------------------

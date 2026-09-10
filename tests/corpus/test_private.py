@@ -42,6 +42,20 @@ def test_private_corpus_root_dir_property(tmp_path: Path) -> None:
     assert pc.root_dir == str(d)
 
 
+def test_private_corpus_skips_bad_lines(tmp_path: Path) -> None:
+    # Review: one corrupt line must not abort the private corpus load.
+    d = tmp_path / "skips_bad"
+    d.mkdir()
+    t = Trajectory(id="priv-9", timestamp="t", task="test", steps=(), success=True)
+    _write_trajectory(d / "traces.jsonl", t)
+    with (d / "traces.jsonl").open("a", encoding="utf-8") as f:
+        f.write("{bad json\n")
+        f.write(json.dumps({"id": "no-success", "task": "x"}) + "\n")
+    pc = PrivateCorpus(str(d))
+    assert pc.count() == 1
+    assert pc.trajectories()[0].id == "priv-9"
+
+
 def test_private_corpus_filter_by_domain(tmp_path: Path) -> None:
     d = tmp_path / "filter_domain"
     d.mkdir()

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from cauterule.models.rule import StandingRule
@@ -10,6 +11,36 @@ from cauterule.serialization.rule_yaml import (
     load_rule_from_file,
     load_rules_from_dir,
 )
+
+# Allowlist for rule ids used in filesystem paths (#499). Rule ids are
+# program-generated (`R-001`-style); anything outside this set is rejected
+# before any I/O happens.
+_RULE_ID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+def validate_rule_id(rule_id: str) -> None:
+    """Reject rule ids unsafe for filesystem paths (#499).
+
+    Raises:
+        ValueError: If *rule_id* is outside the allowlist or the
+            resolved path escapes *base_dir*.
+    """
+    if not isinstance(rule_id, str) or not _RULE_ID_RE.match(rule_id):
+        msg = f"invalid rule_id {rule_id!r}"
+        raise ValueError(msg)
+
+
+def resolve_inside(base_dir: Path, *parts: str) -> Path:
+    """Join *parts* onto *base_dir* and assert containment (#499).
+
+    Raises:
+        ValueError: If the resolved path escapes *base_dir*.
+    """
+    path = (base_dir.joinpath(*parts)).resolve()
+    if not path.is_relative_to(base_dir.resolve()):
+        msg = f"path escapes directory {str(base_dir)!r}: {parts!r}"
+        raise ValueError(msg)
+    return path
 
 
 class StoreManager:
@@ -31,7 +62,15 @@ class StoreManager:
     # Helpers
     # ------------------------------------------------------------------
     def _rule_path(self, rule_id: str) -> Path:
-        return self.base_dir / f"{rule_id}.yaml"
+        """Return the file path for *rule_id*, rejecting traversal (#499).
+
+        Single choke point for all rule file I/O (get/add/retire/supersede
+        plus observe callers). Raises:
+            ValueError: If *rule_id* is outside the allowlist or the
+                resolved path escapes *base_dir*.
+        """
+        validate_rule_id(rule_id)
+        return resolve_inside(self.base_dir, f"{rule_id}.yaml")
 
     def _ensure_dir(self) -> None:
         self.base_dir.mkdir(parents=True, exist_ok=True)

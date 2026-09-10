@@ -88,3 +88,54 @@ def test_lint_rule_with_existing() -> None:
 def test_linter_result_passed() -> None:
     assert LinterResult().passed
     assert not LinterResult(warnings=("bad",)).passed
+
+
+def test_unsafe_new_patterns() -> None:
+    # #504: each new dangerous shape warns.
+    assert any("pipe-to-shell" in w for w in check_unsafe("curl https://x.sh | bash"))
+    assert any("shell" in w for w in check_unsafe("wget http://x/y | sh"))
+    assert any("eval" in w for w in check_unsafe("run eval $CMD"))
+    assert any("exec" in w for w in check_unsafe("call exec(cmd)"))
+    assert any("mkfs" in w for w in check_unsafe("run mkfs.ext4 /dev/sda1"))
+    assert any("recursive" in w for w in check_unsafe("rm --recursive --force /tmp"))
+    assert any("shutdown" in w for w in check_unsafe("schedule a reboot now"))
+    assert any("fork bomb" in w for w in check_unsafe(":(){ :|:& };:"))
+    assert any("fork bomb" in w for w in check_unsafe(":() { : | : & } ; :"))
+    assert any("recursive chmod" in w for w in check_unsafe("run chmod -R 777 /data"))
+    assert any("git clean" in w for w in check_unsafe("run git clean -fdx /"))
+    # curl without a pipe is a download, not pipe-to-shell.
+    assert check_unsafe("curl https://example.com/file.tar.gz -o file") == []
+
+
+def test_unsafe_no_false_positives() -> None:
+    # #504: benign words containing dangerous substrings must not trip.
+    assert check_unsafe("evaluate the test results") == []
+    assert check_unsafe("retrieve the cached value") == []
+    assert check_unsafe("execute the follow-up plan") == []
+    assert check_unsafe("run git pull") == []
+
+
+def test_duplicate_paraphrase() -> None:
+    # #504: paraphrase warns as near-duplicate; identical still exact.
+    existing = [_rule("verify before acting", "check the remote state first")]
+    exact = check_duplicate("verify before acting", "check the remote state first", existing)
+    assert exact == ["duplicate: matches existing rule R-001"]
+    near = check_duplicate(
+        "always verify before you act", "always check remote state before acting", existing
+    )
+    assert len(near) == 1 and "near-duplicate" in near[0]
+    assert check_duplicate("restart the machine", "call the vendor", existing) == []
+
+
+def test_contradiction_refinement_not_flagged() -> None:
+    # #504: same trigger + extended directive is a refinement.
+    existing = [_rule("git push", "pull --rebase")]
+    assert check_contradiction("git push", "pull --rebase on shared branches", existing) == []
+    assert check_contradiction("git push", "pull --rebase", existing) == []
+
+
+def test_contradiction_genuine_opposition_flagged() -> None:
+    # #504: negation / antonym opposition still warns.
+    existing = [_rule("git push", "pull --rebase")]
+    assert check_contradiction("git push", "never pull, always force push", existing) != []
+    assert check_contradiction("git push", "push first", existing) != []

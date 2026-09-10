@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Sequence
+from typing import Any, cast
+
+from cauterule.log import get_logger
+
+_log = get_logger(__name__)
 
 try:
     from opentelemetry import trace
@@ -11,6 +16,30 @@ try:
     _OTEL_AVAILABLE = True
 except ImportError:  # pragma: no cover
     _OTEL_AVAILABLE = False
+
+
+AttributeValue = (
+    str | bool | int | float | Sequence[str] | Sequence[bool] | Sequence[int] | Sequence[float]
+)
+
+
+def _coerce_attribute(value: object) -> AttributeValue:
+    """Coerce *value* to an OTel-safe attribute type (#508).
+
+    Passes through ``str``/``bool``/``int``/``float`` (and homogeneous
+    sequences thereof); coerces anything else with ``str()`` so telemetry
+    can never crash the caller. ``bool`` is checked before ``int``
+    (``bool`` subclasses ``int``) but passes through unchanged either way.
+    """
+    if isinstance(value, (str, bool, int, float)):
+        return value
+    if isinstance(value, (list, tuple)):
+        # OTel sequences must be homogeneous; mixed or complex content
+        # is stringified instead of crashing the caller.
+        kinds = {type(v) for v in value}
+        if not kinds or kinds <= {str} or kinds <= {bool} or kinds <= {int, float}:
+            return cast(AttributeValue, list(value))
+    return str(value)
 
 
 class OtelExporter:
@@ -28,6 +57,12 @@ class OtelExporter:
         if _OTEL_AVAILABLE:
             self._tracer = trace.get_tracer(service_name)
         else:
+            # Actionable hint, logged once per exporter (#507) — the
+            # no-op path is otherwise completely silent.
+            _log.warning(
+                "opentelemetry-api is not installed — OTel export is disabled. "
+                "pip install cauterule[otel] to enable it."
+            )
             self._tracer = None  # type: ignore[assignment]
 
     def emit_rule_hit(self, rule_id: str, context: dict[str, Any] | None = None) -> None:
@@ -46,7 +81,7 @@ class OtelExporter:
             span.set_attribute("rule.id", rule_id)
             if context:
                 for k, v in context.items():
-                    span.set_attribute(k, v)
+                    span.set_attribute(k, _coerce_attribute(v))
 
     def emit_rule_promotion(self, rule_id: str, title: str | None = None) -> None:
         """Record a rule-promotion event as an OTel span.

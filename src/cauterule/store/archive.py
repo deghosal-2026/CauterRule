@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from cauterule.serialization.rule_yaml import dump_rule_to_file, load_rule_from_file
+from cauterule.store.manager import resolve_inside, validate_rule_id
 
 
 def archive_rule(rule_id: str, base_dir: str = "rules") -> Path:
@@ -21,15 +22,18 @@ def archive_rule(rule_id: str, base_dir: str = "rules") -> Path:
 
     Raises:
         FileNotFoundError: If the rule file does not exist.
+        ValueError: If *rule_id* is unsafe for paths (#499).
     """
-    src = Path(base_dir) / f"{rule_id}.yaml"
+    validate_rule_id(rule_id)
+    base = Path(base_dir)
+    src = resolve_inside(base, f"{rule_id}.yaml")
     if not src.is_file():
         msg = f"Rule file not found: {src}"
         raise FileNotFoundError(msg)
 
     archive_dir = Path(base_dir) / "archived"
     archive_dir.mkdir(parents=True, exist_ok=True)
-    dst = archive_dir / f"{rule_id}.yaml"
+    dst = resolve_inside(archive_dir, f"{rule_id}.yaml")
 
     rule = load_rule_from_file(src)
     dump_rule_to_file(rule, dst)

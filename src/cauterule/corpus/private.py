@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from typing import Any
 
 from cauterule.models.trajectory import Trajectory
+from cauterule.serialization.trajectory_jsonl import load_trajectories_result
 
 
 class PrivateCorpus:
@@ -33,13 +32,10 @@ class PrivateCorpus:
             return self._trajectories
         trajectories: list[Trajectory] = []
         for fpath in sorted(self._root.glob("*.jsonl")):
-            with fpath.open("r", encoding="utf-8") as f:
-                for line in f:
-                    stripped = line.strip()
-                    if not stripped:
-                        continue
-                    data: dict[str, Any] = json.loads(stripped)
-                    trajectories.append(Trajectory.from_dict(data))
+            # Resilient load (#597): one bad line skips with a warning
+            # instead of aborting the whole private corpus.
+            result = load_trajectories_result(fpath)
+            trajectories.extend(result.loaded)
         self._trajectories = trajectories
         return trajectories
 

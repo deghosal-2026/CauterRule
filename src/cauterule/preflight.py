@@ -11,7 +11,7 @@ from pathlib import Path
 from cauterule.config import Config
 
 SLOW_THRESHOLD_S = 30.0
-REQUIRED_FIELDS = {"trajectory_id", "timestamp", "task", "steps"}
+REQUIRED_FIELDS = {"trajectory_id", "timestamp", "task", "steps", "success"}
 
 
 @dataclass(frozen=True)

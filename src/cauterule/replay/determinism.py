@@ -8,6 +8,7 @@ import json
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.evidence import EvidenceReport
 from cauterule.models.trajectory import Trajectory
+from cauterule.replay.matcher import DEFAULT_THRESHOLD
 from cauterule.replay.report import build_evidence_report
 
 
@@ -20,13 +21,15 @@ def _corpus_hash(trajectories: list[Trajectory]) -> str:
 def deterministic_replay(
     candidate: CandidateRule,
     trajectories: list[Trajectory],
+    threshold: float = DEFAULT_THRESHOLD,
 ) -> EvidenceReport:
     """Replay with determinism guarantee.
 
-    Same candidate + same corpus (by ids) = same report (no randomness).
-    Achieved by sorting trajectories by id and using deterministic scorer.
+    Same candidate + same corpus (by ids) + same threshold = same report
+    (no randomness). Achieved by sorting trajectories by id and using
+    deterministic scorer.
     """
     # Sort for determinism
     sorted_trajs = sorted(trajectories, key=lambda t: t.id)
     _ = _corpus_hash(sorted_trajs)  # hash used for caching key (future)
-    return build_evidence_report(candidate, sorted_trajs)
+    return build_evidence_report(candidate, sorted_trajs, threshold)

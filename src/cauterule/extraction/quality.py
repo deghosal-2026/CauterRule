@@ -6,11 +6,19 @@ from cauterule.models.candidate import CandidateRule
 from cauterule.models.trajectory import Trajectory
 
 
-def check_quality(candidate: CandidateRule, trajectory: Trajectory) -> list[str]:
+def check_quality(
+    candidate: CandidateRule, trajectory: Trajectory, threshold: float = 0.6
+) -> list[str]:
     """Validate *candidate* against *trajectory*.
 
     Checks: valid structure (handled by dataclass), references trajectory,
-    not tautological, confidence >= 0.6.
+    not tautological, confidence >= *threshold*.
+
+    Args:
+        candidate: Extracted candidate rule.
+        trajectory: Source trajectory the candidate was extracted from.
+        threshold: Minimum confidence (defaults to
+            ``ExtractionConfig.confidence_threshold`` = 0.6, #497).
 
     Returns:
         List of warning messages (empty if valid).
@@ -18,8 +26,8 @@ def check_quality(candidate: CandidateRule, trajectory: Trajectory) -> list[str]
     warnings: list[str] = []
 
     # Confidence threshold
-    if candidate.confidence < 0.6:
-        warnings.append(f"confidence {candidate.confidence:.2f} below 0.6")
+    if candidate.confidence < threshold:
+        warnings.append(f"confidence {candidate.confidence:.2f} below {threshold:.2f}")
 
     # References trajectory: trigger or directive should mention a token from failure
     task_tokens = set(trajectory.task.lower().split()) if trajectory.task else set()
@@ -51,6 +59,8 @@ def check_quality(candidate: CandidateRule, trajectory: Trajectory) -> list[str]
     return warnings
 
 
-def is_valid(candidate: CandidateRule, trajectory: Trajectory) -> bool:
+def is_valid(
+    candidate: CandidateRule, trajectory: Trajectory, threshold: float = 0.6
+) -> bool:
     """Return ``True`` if *candidate* passes quality checks."""
-    return len(check_quality(candidate, trajectory)) == 0
+    return len(check_quality(candidate, trajectory, threshold)) == 0

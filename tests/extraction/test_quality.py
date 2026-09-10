@@ -66,3 +66,11 @@ def test_quality_phrase_tautology() -> None:
     # Our check is when fail in trigger and don't fail in directive
     # Here trigger contains "when fail" and directive contains "don't fail"
     assert any("tautological" in w for w in warnings)
+
+
+def test_quality_threshold_param() -> None:
+    # #497: threshold comes from the caller, not a hardcode.
+    c = _candidate(confidence=0.65)
+    assert check_quality(c, _traj()) == []
+    assert check_quality(c, _traj(), threshold=0.7) != []
+    assert is_valid(c, _traj(), threshold=0.7) is False

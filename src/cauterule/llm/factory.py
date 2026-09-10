@@ -38,11 +38,40 @@ def get_llm(config: Config) -> LLMProvider:
         raise ValueError(f"Unknown LLM provider: {provider!r}. Supported: {sorted(_PROVIDER_MAP)}")
 
     # Pass relevant config fields; each provider ignores extras it does not need.
+    llm = config.llm
     if provider == "openai":
-        return OpenAIProvider(model=config.llm.model, api_key=config.llm.api_key, base_url=config.llm.base_url)
+        return OpenAIProvider(
+            model=llm.model,
+            api_key=llm.api_key,
+            base_url=llm.base_url,
+            temperature=llm.temperature,
+            timeout=llm.timeout,
+            max_retries=llm.max_retries,
+        )
     if provider == "anthropic":
-        return AnthropicProvider(model=config.llm.model, api_key=config.llm.api_key, base_url=config.llm.base_url)
+        return AnthropicProvider(
+            model=llm.model,
+            api_key=llm.api_key,
+            base_url=llm.base_url,
+            temperature=llm.temperature,
+            max_tokens=llm.max_tokens,
+            timeout=llm.timeout,
+            max_retries=llm.max_retries,
+        )
     if provider == "ollama":
-        return OllamaProvider(model=config.llm.model, base_url=config.llm.base_url or "http://localhost:11434")
+        return OllamaProvider(
+            model=llm.model,
+            base_url=llm.base_url or "http://localhost:11434",
+            temperature=llm.temperature,
+            timeout=llm.timeout,
+            max_retries=llm.max_retries,
+        )
     # litellm
-    return LiteLLMProvider(model=config.llm.model, api_key=config.llm.api_key, base_url=config.llm.base_url)
+    return LiteLLMProvider(
+        model=llm.model,
+        api_key=llm.api_key,
+        base_url=llm.base_url,
+        temperature=llm.temperature,
+        timeout=llm.timeout,
+        max_retries=llm.max_retries,
+    )

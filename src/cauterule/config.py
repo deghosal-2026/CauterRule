@@ -12,6 +12,8 @@ api_key = ""
 base_url = ""
 temperature = 0.0
 max_tokens = 4096
+timeout = 30
+max_retries = 2
 
 [paths]
 rules = "rules"
@@ -55,6 +57,7 @@ class LLMConfig:
     temperature: float = 0.0
     max_tokens: int = 4096
     timeout: int = 30
+    max_retries: int = 2
 
 
 @dataclass(frozen=True)
@@ -69,7 +72,7 @@ class PathsConfig:
 class ThresholdsConfig:
     """Replay/promotion thresholds."""
 
-    precision: float = 1.0
+    precision: float = 0.8
     recall: float = 0.5
 
 
@@ -92,8 +95,8 @@ class ExtractionConfig:
     """Extraction settings."""
 
     passes: int = 3
-    temperatures: tuple[float, ...] = (0.0, 0.7, 1.0)
-    confidence_threshold: float = 0.5
+    temperatures: tuple[float, ...] = (0.2, 0.5, 0.8)
+    confidence_threshold: float = 0.6
     gate_mode: str = "strict"  # strict | relaxed
 
 
@@ -112,8 +115,12 @@ class Config:
 def _parse_toml(path: Path) -> dict[str, Any]:
     if not path.is_file():
         return {}
-    with path.open("rb") as f:
-        data = tomllib.load(f)
+    try:
+        with path.open("rb") as f:
+            data = tomllib.load(f)
+    except tomllib.TOMLDecodeError as exc:
+        msg = f"invalid TOML in {path}: {exc}"
+        raise ValueError(msg) from exc
     if not isinstance(data, dict):
         return {}
     return data
@@ -128,6 +135,7 @@ def _llm_from_dict(data: dict[str, Any]) -> LLMConfig:
         temperature=float(data.get("temperature", 0.0)),
         max_tokens=int(data.get("max_tokens", 4096)),
         timeout=int(data.get("timeout", 30)),
+        max_retries=int(data.get("max_retries", 2)),
     )
 
 
@@ -140,7 +148,7 @@ def _paths_from_dict(data: dict[str, Any]) -> PathsConfig:
 
 def _thresholds_from_dict(data: dict[str, Any]) -> ThresholdsConfig:
     return ThresholdsConfig(
-        precision=float(data.get("precision", 1.0)),
+        precision=float(data.get("precision", 0.8)),
         recall=float(data.get("recall", 0.5)),
     )
 
@@ -189,6 +197,28 @@ def _config_from_dict(data: dict[str, Any]) -> Config:
     )
 
 
+def _env_float(name: str) -> float | None:
+    """Parse float env var *name*; None when unset; ValueError when malformed."""
+    raw = os.getenv(name)
+    if raw is None:
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        raise ValueError(f"{name} must be a float, got {raw!r}") from None
+
+
+def _env_int(name: str) -> int | None:
+    """Parse int env var *name*; None when unset; ValueError when malformed."""
+    raw = os.getenv(name)
+    if raw is None:
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        raise ValueError(f"{name} must be an int, got {raw!r}") from None
+
+
 def _apply_env_overrides(config: Config) -> Config:
     """Apply ``CAUTERULE_*`` environment variables over *config*.
 
@@ -197,6 +227,15 @@ def _apply_env_overrides(config: Config) -> Config:
     - ``CAUTERULE_LLM_MODEL`` and ``CAUTERULE_MODEL`` (fallback)
     - ``CAUTERULE_LLM_API_KEY``
     - ``CAUTERULE_LLM_BASE_URL``
+    - ``CAUTERULE_LLM_TEMPERATURE`` (float)
+    - ``CAUTERULE_LLM_MAX_TOKENS`` (int)
+    - ``CAUTERULE_LLM_TIMEOUT`` (int, seconds)
+    - ``CAUTERULE_LLM_MAX_RETRIES`` (int)
+    - ``CAUTERULE_THRESHOLD_PRECISION`` (float)
+    - ``CAUTERULE_THRESHOLD_RECALL`` (float)
+    - ``CAUTERULE_EXTRACTION_CONFIDENCE_THRESHOLD`` (float)
+    - ``CAUTERULE_EXTRACTION_PASSES`` (int)
+    - ``CAUTERULE_EXTRACTION_GATE_MODE`` (strict | relaxed)
     - ``CAUTERULE_PROMOTION_MODE`` / ``CAUTERULE_MODE``
     - ``CAUTERULE_RULES_PATH`` / ``CAUTERULE_RULES``
     - ``CAUTERULE_TRAJECTORIES_PATH``
@@ -205,21 +244,72 @@ def _apply_env_overrides(config: Config) -> Config:
     llm_model = os.getenv("CAUTERULE_LLM_MODEL") or os.getenv("CAUTERULE_MODEL")
     llm_api_key = os.getenv("CAUTERULE_LLM_API_KEY")
     llm_base_url = os.getenv("CAUTERULE_LLM_BASE_URL")
+    llm_temperature = _env_float("CAUTERULE_LLM_TEMPERATURE")
+    llm_max_tokens = _env_int("CAUTERULE_LLM_MAX_TOKENS")
+    llm_timeout = _env_int("CAUTERULE_LLM_TIMEOUT")
+    llm_max_retries = _env_int("CAUTERULE_LLM_MAX_RETRIES")
+    threshold_precision = _env_float("CAUTERULE_THRESHOLD_PRECISION")
+    threshold_recall = _env_float("CAUTERULE_THRESHOLD_RECALL")
+    extraction_confidence = _env_float("CAUTERULE_EXTRACTION_CONFIDENCE_THRESHOLD")
+    extraction_passes = _env_int("CAUTERULE_EXTRACTION_PASSES")
+    extraction_gate_mode = os.getenv("CAUTERULE_EXTRACTION_GATE_MODE")
     promotion_mode = os.getenv("CAUTERULE_PROMOTION_MODE") or os.getenv("CAUTERULE_MODE")
     rules_path = os.getenv("CAUTERULE_RULES_PATH") or os.getenv("CAUTERULE_RULES")
     trajectories_path = os.getenv("CAUTERULE_TRAJECTORIES_PATH") or os.getenv("CAUTERULE_TRAJECTORIES")
 
     # Rebuild only sections that have overrides, preserving frozen semantics.
     llm = config.llm
-    if llm_provider is not None or llm_model is not None or llm_api_key is not None or llm_base_url is not None:
+    if (
+        llm_provider is not None
+        or llm_model is not None
+        or llm_api_key is not None
+        or llm_base_url is not None
+        or llm_temperature is not None
+        or llm_max_tokens is not None
+        or llm_timeout is not None
+        or llm_max_retries is not None
+    ):
         llm = LLMConfig(
             provider=llm_provider if llm_provider is not None else llm.provider,
             model=llm_model if llm_model is not None else llm.model,
             api_key=llm_api_key if llm_api_key is not None else llm.api_key,
             base_url=llm_base_url if llm_base_url is not None else llm.base_url,
-            temperature=llm.temperature,
-            max_tokens=llm.max_tokens,
-            timeout=llm.timeout,
+            temperature=llm_temperature if llm_temperature is not None else llm.temperature,
+            max_tokens=llm_max_tokens if llm_max_tokens is not None else llm.max_tokens,
+            timeout=llm_timeout if llm_timeout is not None else llm.timeout,
+            max_retries=llm_max_retries if llm_max_retries is not None else llm.max_retries,
+        )
+
+    thresholds = config.thresholds
+    if threshold_precision is not None or threshold_recall is not None:
+        thresholds = ThresholdsConfig(
+            precision=threshold_precision
+            if threshold_precision is not None
+            else thresholds.precision,
+            recall=threshold_recall if threshold_recall is not None else thresholds.recall,
+        )
+
+    extraction = config.extraction
+    if (
+        extraction_confidence is not None
+        or extraction_passes is not None
+        or extraction_gate_mode is not None
+    ):
+        if extraction_gate_mode is not None and extraction_gate_mode not in {"strict", "relaxed"}:
+            msg = (
+                "CAUTERULE_EXTRACTION_GATE_MODE must be strict|relaxed, "
+                f"got {extraction_gate_mode!r}"
+            )
+            raise ValueError(msg)
+        extraction = ExtractionConfig(
+            passes=extraction_passes if extraction_passes is not None else extraction.passes,
+            temperatures=extraction.temperatures,
+            confidence_threshold=extraction_confidence
+            if extraction_confidence is not None
+            else extraction.confidence_threshold,
+            gate_mode=extraction_gate_mode
+            if extraction_gate_mode is not None
+            else extraction.gate_mode,
         )
 
     paths = config.paths
@@ -235,16 +325,22 @@ def _apply_env_overrides(config: Config) -> Config:
             raise ValueError(f"CAUTERULE_PROMOTION_MODE must be auto|human-review|hybrid, got {promotion_mode!r}")
         promotion = PromotionConfig(mode=promotion_mode)
 
-    if llm is config.llm and paths is config.paths and promotion is config.promotion:
+    if (
+        llm is config.llm
+        and paths is config.paths
+        and promotion is config.promotion
+        and thresholds is config.thresholds
+        and extraction is config.extraction
+    ):
         return config
 
     return Config(
         llm=llm,
         paths=paths,
-        thresholds=config.thresholds,
+        thresholds=thresholds,
         promotion=promotion,
         redaction=config.redaction,
-        extraction=config.extraction,
+        extraction=extraction,
     )
 
 
@@ -272,6 +368,7 @@ def config_to_dict(config: Config) -> dict[str, Any]:
             "temperature": config.llm.temperature,
             "max_tokens": config.llm.max_tokens,
             "timeout": config.llm.timeout,
+            "max_retries": config.llm.max_retries,
         },
         "paths": {"rules": config.paths.rules, "trajectories": config.paths.trajectories},
         "thresholds": {"precision": config.thresholds.precision, "recall": config.thresholds.recall},

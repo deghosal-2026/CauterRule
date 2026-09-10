@@ -10,6 +10,7 @@ from cauterule.cli.counterfactual import counterfactual
 from cauterule.cli.demo import demo
 from cauterule.cli.diff import diff
 from cauterule.cli.explain import explain
+from cauterule.cli.export import export, import_cmd
 from cauterule.cli.extract import extract
 from cauterule.cli.frontier import frontier
 from cauterule.cli.gaps import gaps
@@ -23,12 +24,14 @@ from cauterule.cli.leaderboard import leaderboard
 from cauterule.cli.list import list_rules
 from cauterule.cli.mcp import mcp
 from cauterule.cli.metrics import metrics
+from cauterule.cli.observe import observe
 from cauterule.cli.pack import pack
 from cauterule.cli.preflight import preflight
 from cauterule.cli.promote import promote
 from cauterule.cli.report import report
 from cauterule.cli.retire import retire
 from cauterule.cli.review import review
+from cauterule.cli.rewind import rewind_cmd
 from cauterule.cli.search import search
 from cauterule.cli.show import show
 from cauterule.cli.story import story
@@ -55,7 +58,10 @@ main.add_command(counterfactual)
 main.add_command(demo)
 main.add_command(diff)
 main.add_command(explain)
+main.add_command(export)
+main.add_command(import_cmd, name="import")
 main.add_command(extract)
+main.add_command(observe)
 main.add_command(health)
 main.add_command(history)
 main.add_command(init)
@@ -74,6 +80,7 @@ main.add_command(promote)
 main.add_command(report)
 main.add_command(retire)
 main.add_command(review)
+main.add_command(rewind_cmd, name="rewind")
 main.add_command(search)
 main.add_command(show)
 main.add_command(story)

@@ -66,3 +66,27 @@ def test_tournament_verdict_threshold() -> None:
         ranked = run_tournament([c], trajs)
     # prevented < 1, so verdict should be "fail"
     assert ranked[0].evidence.verdict == "fail"
+
+
+def test_tournament_filters_unquality_with_source() -> None:
+    # #497: low-confidence candidates never enter ranking when source is given.
+    from cauterule.models.rule import RuleDo, RuleWhen
+
+    good = CandidateRule(
+        when=RuleWhen(trigger="git push fails"),
+        do=RuleDo(directive="pull"),
+        confidence=0.9,
+    )
+    bad = CandidateRule(
+        when=RuleWhen(trigger="git push fails"),
+        do=RuleDo(directive="pull"),
+        confidence=0.1,
+    )
+    source = _traj("T-0", "git push fails", False)
+    trajs = [_traj("T-1", "git push fails", False)]
+    with patch("cauterule.extraction.tournament.build_evidence_report") as mock_build:
+        mock_build.return_value = EvidenceReport(
+            failures_prevented=("T-1",), precision=1.0, recall=0.5, verdict="inconclusive"
+        )
+        ranked = run_tournament([good, bad], trajs, source=source)
+    assert [r.candidate for r in ranked] == [good]

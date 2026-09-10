@@ -8,6 +8,9 @@ _UNVERIFIABLE_PHRASES = frozenset({
     "understand the context", "use your judgment",
     "reflect on", "contemplate", "ponder",
     "be aware of", "remember to", "keep in mind",
+    # Observed LLM filler with no replay-verifiable outcome (#504).
+    "use best judgment", "exercise judgment", "think it through",
+    "weigh the options", "consider carefully",
 })
 
 

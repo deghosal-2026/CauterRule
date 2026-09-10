@@ -9,6 +9,7 @@ import yaml
 from cauterule.models.rule import StandingRule
 from cauterule.packs.format import PackManifest
 from cauterule.serialization.rule_yaml import load_rule_from_file
+from cauterule.store.manager import resolve_inside, validate_rule_id
 
 
 def load_pack(
@@ -31,9 +32,12 @@ def load_pack(
 
     Raises:
         FileNotFoundError: If the pack directory or manifest does not exist.
-        ValueError: If the manifest YAML is invalid or rule files are missing.
+        ValueError: If the manifest YAML is invalid, rule files are missing,
+            or *name* / rule ids are unsafe for paths (#499).
     """
-    pack_dir = Path(base_dir) / "packs" / name
+    validate_rule_id(name)
+    packs_root = Path(base_dir) / "packs"
+    pack_dir = resolve_inside(packs_root, name)
     manifest_path = pack_dir / "manifest.yaml"
 
     if not pack_dir.is_dir():
@@ -50,7 +54,8 @@ def load_pack(
     rules: list[StandingRule] = []
     missing: list[str] = []
     for rule_id in manifest.rules:
-        rule_path = pack_dir / f"{rule_id}.yaml"
+        validate_rule_id(rule_id)
+        rule_path = resolve_inside(pack_dir, f"{rule_id}.yaml")
         if not rule_path.is_file():
             missing.append(rule_id)
             continue

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from cauterule.linter.orchestrator import LinterResult
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.conflict import ConflictReport
@@ -274,3 +276,29 @@ def test_execute_promotion_missing_config_key() -> None:
     import pytest
     with pytest.raises(KeyError):
         execute_promotion(_candidate(), {})
+
+
+def test_execute_promotion_failed_commit_warns(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    # Review: git_commit → None is handled explicitly, promotion stands.
+    import logging
+
+    import pytest
+
+    monkeypatch.setattr(
+        "cauterule.promotion.executor.git_commit", lambda *a, **k: None
+    )
+    config = {
+        "rules_dir": str(tmp_path / "rules"),
+        "source_trajectory": "traj-001",
+        "extracted_by": "extractor-m1",
+        "extract_timestamp": "2025-01-01T00:00:00Z",
+        "extraction_pass": 1,
+        "promotion_mode": "auto",
+        "status": "active",
+    }
+    with caplog.at_level(logging.WARNING, logger="cauterule.promotion.executor"):
+        rule_id = execute_promotion(_candidate(), config)
+    assert rule_id == "R-001"
+    assert "promotion commit failed" in caplog.text

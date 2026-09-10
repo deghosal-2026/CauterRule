@@ -50,6 +50,12 @@ CauterRule automates the extract → test → promote loop. Same pattern as CI/C
 
 ```bash
 pip install cauterule
+# With LLM providers (OpenAI, Anthropic, LiteLLM, Ollama-over-HTTP):
+pip install cauterule[llm]
+# With OpenTelemetry export:
+pip install cauterule[otel]
+# Everything:
+pip install cauterule[all]
 
 # Run the demo — seeded failures, full loop in 60s
 cauterule demo
@@ -90,7 +96,7 @@ cauterule export --format agents
 - `cauterule init` | `demo` | `extract` (`--dry-run`) | `test` (`--ci`) | `promote` | `inject` | `list` | `show` | `search`
 - `cauterule audit` | `diff` | `retire` | `history` | `conflicts` | `health` | `validate`
 - `cauterule counterfactual` | `story` | `explain` | `config` | `metrics` | `report` | `pack list` | `pack info`
-- `cauterule rewind` (Failure Time Machine) | `cauterule mcp` (MCP server)
+- `cauterule export` (`--format agents`) | `import` | `rewind` (Failure Time Machine) | `cauterule mcp` (MCP server)
 - **NEW** `cauterule review` — TUI review interface with confidence-ordered queue
 - **NEW** `cauterule observe` — observability metrics and learning journal
 

@@ -175,3 +175,63 @@ def test_config_to_dict_roundtrip() -> None:
     loaded = load_config(path=p)
     assert loaded.llm.provider == "openai"
     p.unlink(missing_ok=True)
+
+
+def test_malformed_toml_raises_value_error(tmp_path: Path) -> None:
+    # #503: TOML crash becomes a ValueError with path + cause.
+    p = tmp_path / "cauterule.toml"
+    p.write_text("[llm\nprovider = 'oops'\n")
+    with pytest.raises(ValueError, match="invalid TOML"):
+        load_config(path=p)
+
+
+def test_env_overrides_new_vars(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # #503: numeric + threshold + extraction env vars honored.
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "cauterule.toml").write_text("")
+    monkeypatch.setenv("CAUTERULE_LLM_TEMPERATURE", "0.7")
+    monkeypatch.setenv("CAUTERULE_LLM_MAX_TOKENS", "2048")
+    monkeypatch.setenv("CAUTERULE_LLM_TIMEOUT", "45")
+    monkeypatch.setenv("CAUTERULE_LLM_MAX_RETRIES", "5")
+    monkeypatch.setenv("CAUTERULE_THRESHOLD_PRECISION", "0.9")
+    monkeypatch.setenv("CAUTERULE_THRESHOLD_RECALL", "0.6")
+    monkeypatch.setenv("CAUTERULE_EXTRACTION_CONFIDENCE_THRESHOLD", "0.8")
+    monkeypatch.setenv("CAUTERULE_EXTRACTION_PASSES", "5")
+    monkeypatch.setenv("CAUTERULE_EXTRACTION_GATE_MODE", "relaxed")
+    cfg = load_config()
+    assert cfg.llm.temperature == 0.7
+    assert cfg.llm.max_tokens == 2048
+    assert cfg.llm.timeout == 45
+    assert cfg.llm.max_retries == 5
+    assert cfg.thresholds.precision == 0.9
+    assert cfg.thresholds.recall == 0.6
+    assert cfg.extraction.confidence_threshold == 0.8
+    assert cfg.extraction.passes == 5
+    assert cfg.extraction.gate_mode == "relaxed"
+
+
+def test_env_invalid_numeric(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "cauterule.toml").write_text("")
+    monkeypatch.setenv("CAUTERULE_LLM_TIMEOUT", "soon")
+    with pytest.raises(ValueError, match="CAUTERULE_LLM_TIMEOUT"):
+        load_config()
+
+
+def test_defaults_agree_across_sources() -> None:
+    # #503: dataclass defaults and from-dict fallbacks agree (docstring contract).
+    from cauterule.config import (
+        ExtractionConfig,
+        ThresholdsConfig,
+        _config_from_dict,
+        _extraction_from_dict,
+        _thresholds_from_dict,
+    )
+
+    assert ExtractionConfig().temperatures == (0.2, 0.5, 0.8)
+    assert ExtractionConfig().confidence_threshold == 0.6
+    assert ThresholdsConfig().precision == 0.8
+    assert _extraction_from_dict({}).temperatures == (0.2, 0.5, 0.8)
+    assert _extraction_from_dict({}).confidence_threshold == 0.6
+    assert _thresholds_from_dict({}).precision == 0.8
+    assert _config_from_dict(config_to_dict(Config())) == Config()

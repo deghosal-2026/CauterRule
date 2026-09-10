@@ -42,6 +42,28 @@ def test_corpus_missing_fields() -> None:
         assert any(not r.passed and "missing fields" in r.message.lower() for r in results)
 
 
+def test_corpus_missing_success_flagged() -> None:
+    # Review: success is REQUIRED_FIELDS — flagged before strict load.
+    with tempfile.TemporaryDirectory() as tmp:
+        p = Path(tmp) / "test.jsonl"
+        p.write_text(
+            json.dumps(
+                {
+                    "trajectory_id": "T-001",
+                    "timestamp": "t",
+                    "task": "do thing",
+                    "steps": [],
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        results = check_corpus(p)
+        assert any(
+            not r.passed and "success" in r.message.lower() for r in results
+        )
+
+
 def test_corpus_empty_file() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         p = Path(tmp) / "empty.jsonl"

@@ -6,11 +6,14 @@ import time
 from pathlib import Path
 from typing import Any
 
+from cauterule.log import get_logger
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.rule import Provenance, StandingRule
 from cauterule.serialization.rule_yaml import dump_rule_to_file
 from cauterule.store.git import git_commit
 from cauterule.store.index import IndexManager
+
+_log = get_logger(__name__)
 
 _RULE_ID_PREFIX = "R"
 
@@ -94,6 +97,10 @@ def execute_promotion(
     index_mgr.add_entry(rule)
 
     commit_hash = git_commit(f"promote: {rule_id}", str(rules_dir))
+    if commit_hash is None:
+        # #505: explicit handling — promotion stands, but provenance records
+        # the missing commit instead of silently implying success.
+        _log.warning("promotion commit failed for %s — continuing without hash", rule_id)
 
     final_provenance = Provenance(
         source_trajectory=provenance.source_trajectory,

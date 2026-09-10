@@ -7,6 +7,10 @@ _VAGUE_PHRASES = frozenset({
     "use common sense", "be reasonable", "be nice", "be good",
     "do better", "try harder", "be professional", "be smart",
     "be gentle", "be safe", "don't mess up", "don't break things",
+    # Observed LLM filler that says nothing actionable (#504).
+    "do the right thing", "handle it properly", "take appropriate action",
+    "follow best practices", "ensure correctness", "make sure it works",
+    "fix accordingly", "deal with it appropriately", "handle accordingly",
 })
 
 

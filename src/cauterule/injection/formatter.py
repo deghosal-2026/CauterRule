@@ -4,21 +4,38 @@ from __future__ import annotations
 from cauterule.models.rule import StandingRule
 
 
+def _safe(text: str) -> str:
+    """Neutralize markdown structure in untrusted rule text (#508).
+
+    Rule trigger/directive content is data, not instructions: backticks
+    are stripped so fences can't break, and lines starting with ``#``
+    are escaped so a rule can't forge a ``### Rule N:`` header.
+    """
+    cleaned = text.replace("`", "'")
+    lines = [
+        f"\\{line}" if line.lstrip().startswith("#") else line
+        for line in cleaned.splitlines()
+    ]
+    return "\n".join(lines)
+
+
 def _format_single(rule: StandingRule, index: int) -> str:
     lines: list[str] = []
     lines.append(f"### Rule {index}: {rule.id}")
-    lines.append(f"- **When**: {rule.when.trigger}")
+    lines.append(f"- **When**: {_safe(rule.when.trigger)}")
     if rule.when.context:
-        lines.append(f"- **Context**: {', '.join(rule.when.context)}")
-    lines.append(f"- **Do**: {rule.do.directive}")
+        lines.append(f"- **Context**: {_safe(', '.join(rule.when.context))}")
+    lines.append(f"- **Do**: {_safe(rule.do.directive)}")
     if rule.do.because:
-        lines.append(f"- **Because**: {rule.do.because}")
+        lines.append(f"- **Because**: {_safe(rule.do.because)}")
     if rule.tags:
-        lines.append(f"- **Tags**: {', '.join(rule.tags)}")
+        lines.append(f"- **Tags**: {_safe(', '.join(rule.tags))}")
     if rule.taxonomy:
-        lines.append(f"- **Taxonomy**: {rule.taxonomy}")
+        lines.append(f"- **Taxonomy**: {_safe(rule.taxonomy)}")
     if rule.provenance.source_trajectory:
-        lines.append(f"- **Source**: Learned from {rule.provenance.source_trajectory} ({rule.promoted_at})")
+        lines.append(
+            f"- **Source**: Learned from {_safe(rule.provenance.source_trajectory)} ({rule.promoted_at})"
+        )
     if rule.provenance.replay_evidence:
         ev = rule.provenance.replay_evidence
         n = len(ev.failures_prevented)

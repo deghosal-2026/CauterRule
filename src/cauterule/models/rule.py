@@ -228,14 +228,22 @@ class StandingRule:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> StandingRule:
-        """Create from a dict produced by :meth:`to_dict`."""
+        """Create from a dict produced by :meth:`to_dict`.
+
+        Raises:
+            ValueError: If the required ``status`` field is absent (#593 —
+                a missing status must not silently resurrect a retired rule
+                as ``active``).
+        """
+        if "status" not in data or data.get("status") is None:
+            raise ValueError("StandingRule missing required 'status' field")
         return cls(
             id=data.get("id", ""),
             when=RuleWhen.from_dict(data.get("when", {})),
             do=RuleDo.from_dict(data.get("do", {})),
             confidence=float(data.get("confidence", 0.0)),
             provenance=Provenance.from_dict(data.get("provenance", {})),
-            status=data.get("status", "active"),
+            status=data["status"],
             promoted_at=data.get("promoted_at", ""),
             hit_count=int(data.get("hit_count", 0)),
             last_match=data.get("last_match"),
