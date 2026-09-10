@@ -51,5 +51,9 @@ def test_inject_empty_trigger() -> None:
 
 def test_inject_with_kwargs() -> None:
     r = _rule("git push")
-    with inject("git push", rules=[r], tool="bash", error="boom") as matched:
+    # error context: "git push" in error text matches -> rule kept.
+    with inject("git push", rules=[r], error="git push failed completely") as matched:
         assert len(matched) == 1
+    # error context unrelated to trigger -> rule filtered out.
+    with inject("git push", rules=[r], error="something else") as matched:
+        assert matched == []

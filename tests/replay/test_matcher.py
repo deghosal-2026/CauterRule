@@ -112,7 +112,7 @@ def test_threshold_param() -> None:
 
 def test_qwen_alias_expansion() -> None:
     # #492: Qwen abstract triggers match through alias expansion.
-    from cauterule.replay.matcher import match_score, DEFAULT_THRESHOLD
+    from cauterule.replay.matcher import DEFAULT_THRESHOLD, match_score
     cand = _cand("command fails with exit code")
     traj = Trajectory(id="T-q", timestamp="t", task="git push fails", steps=(Step(1, "bash", error="exit code 128"),), success=False, failure_class="git/push")
     score = match_score(cand, traj)
@@ -130,3 +130,69 @@ def test_domain_mismatch_detection() -> None:
     assert check_domain_mismatch(cand, traj) is True
     traj2 = Trajectory(id="T-dm3", timestamp="t", task="docker build fails", steps=(Step(1, "bash", error="err"),), success=False, failure_class="docker/build")
     assert check_domain_mismatch(cand, traj2) is False
+
+
+# ---------------------------------------------------------------------------
+# #517 — real F1, min-trigger-words floor, unified is_near_miss
+# ---------------------------------------------------------------------------
+
+
+def test_short_generic_trigger_rejected_without_context() -> None:
+    # Single-word trigger "error" without context must be rejected (#517).
+    cand = _cand("error")
+    traj = _traj(task="something failed", error="fatal error occurred")
+    assert not rule_matches(cand, traj)
+
+
+def test_short_generic_trigger_accepted_with_context() -> None:
+    cand = _cand("error", context=("fatal",))
+    traj = Trajectory(
+        id="T-ctx", timestamp="t", task="something fatal",
+        steps=(Step(1, "bash", error="error occurred"),), success=False,
+    )
+    assert rule_matches(cand, traj)
+
+
+def test_distinctive_two_word_trigger_accepted() -> None:
+    cand = _cand("permission denied")
+    traj = _traj(task="git push failed", error="permission denied to push")
+    assert rule_matches(cand, traj)
+
+
+def test_noisy_haystack_penalizes_score() -> None:
+    # Same trigger hit in two haystacks: the noisier (larger) one scores lower.
+    # Bypass exact-substring and alias floors so token-F1 path is exercised.
+    cand = _cand("artifact upload failure")
+    small_traj = Trajectory(
+        id="T-sm", timestamp="t", task="artifact upload",
+        steps=(Step(1, "bash", error="failure"),), success=False,
+    )
+    big_traj = Trajectory(
+        id="T-lg", timestamp="t",
+        task="artifact upload succeeded caching layer compressing archives",
+        steps=(Step(1, "bash", error="failure pushing to registry after retry with fallback snapshot"),), success=False,
+    )
+    small_score = match_score(cand, small_traj)
+    big_score = match_score(cand, big_traj)
+    assert small_score >= big_score, f"noisy-haystack penalty: {small_score=} < {big_score=}"
+
+
+def test_near_miss_respects_threshold_param() -> None:
+    # is_near_miss(cand, traj, threshold=0.70) should agree with
+    # rule_matches(cand, traj, threshold=0.70) — both must be False
+    # for a low-score pair where old hardcoded 0.60 would have diverged.
+    cand = _cand("docker build cache miss")
+    traj = _traj(task="pipeline", error="layer already exists")
+    assert not rule_matches(cand, traj, threshold=0.70)
+    assert not is_near_miss(cand, traj, threshold=0.70)
+
+
+def test_near_miss_include_input() -> None:
+    cand = _cand("build failure", context=("dockerfile", "ci pipeline"))
+    traj = Trajectory(
+        id="T-inp", timestamp="t", task="docker build",
+        steps=(Step(1, "bash", "check dockerfile syntax", error="failure"),),
+        success=False,
+    )
+    assert is_near_miss(cand, traj, include_input=True)
+    assert not is_near_miss(cand, traj, include_input=False)

@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import re
+import time
 from pathlib import Path
 
 from cauterule.models.rule import StandingRule
 from cauterule.serialization.rule_yaml import (
-    dump_rule_to_file,
+    dump_rule_to_file_atomic,
     load_rule_from_file,
     load_rules_from_dir,
 )
@@ -110,19 +111,16 @@ class StoreManager:
             The rule's id.
         """
         self._ensure_dir()
-        dump_rule_to_file(rule, self._rule_path(rule.id))
+        dump_rule_to_file_atomic(rule, self._rule_path(rule.id))
         return rule.id
 
     def retire_rule(self, rule_id: str, reason: str) -> None:
-        """Mark a rule as retired and update its ``id`` to include a suffix.
+        """Mark a rule as retired.
 
         Args:
             rule_id: Id of the rule to retire.
-            reason: Reason for retirement (stored via rule provenance or
-                    a status flag — currently the rule is re-written with
-                    status ``"retired"``).
+            reason: Reason for retirement.
         """
-        import time
         rule = self.get_rule(rule_id)
         if rule is None:
             msg = f"Rule {rule_id!r} not found"
@@ -148,7 +146,9 @@ class StoreManager:
             retired_at=now,
             retirement_reason=reason,
         )
-        dump_rule_to_file(retired, self._rule_path(rule_id))
+        dump_rule_to_file_atomic(retired, self._rule_path(rule_id))
+        _index_sync_safe(retired, self.base_dir)
+        _commit_safe(f"retire rule {rule_id}: {reason}", str(self.base_dir))
 
     def supersede_rule(self, rule_id: str, new_id: str) -> None:
         """Mark *rule_id* as superseded by *new_id*.
@@ -159,7 +159,6 @@ class StoreManager:
             rule_id: Id of the rule to supersede.
             new_id: Id of the rule that replaces it.
         """
-        import time
         rule = self.get_rule(rule_id)
         if rule is None:
             msg = f"Rule {rule_id!r} not found"
@@ -182,4 +181,30 @@ class StoreManager:
             retired_at=now,
             superseded_by=new_id,
         )
-        dump_rule_to_file(superseded, self._rule_path(rule_id))
+        dump_rule_to_file_atomic(superseded, self._rule_path(rule_id))
+        _index_sync_safe(superseded, self.base_dir)
+        _commit_safe(
+            f"supersede rule {rule_id} (replaced by {new_id})",
+            str(self.base_dir),
+        )
+
+
+# ------------------------------------------------------------------
+# Helpers — best-effort index + git sync (failure is logged, not raised)
+# ------------------------------------------------------------------
+def _index_sync_safe(
+    rule: StandingRule, base_dir: Path,
+) -> None:
+    try:
+        from cauterule.store.index import IndexManager
+        IndexManager(str(base_dir)).update_entry(rule)
+    except Exception:
+        pass
+
+
+def _commit_safe(message: str, base_dir: str) -> None:
+    try:
+        from cauterule.store.git import git_commit
+        git_commit(message, base_dir)
+    except Exception:
+        pass

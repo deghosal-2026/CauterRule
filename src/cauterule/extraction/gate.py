@@ -11,12 +11,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-from cauterule.models.trajectory import Trajectory
+from cauterule.models.trajectory import Step, Trajectory
 
 GateMode = Literal["strict", "relaxed"]
 SILENCE_REASON_NO_FAILURE = "no_failure_signal"
 SILENCE_REASON_NEARMISS = "nearmiss_recovery_succeeded"
-_SILENCE_REASONS = frozenset({SILENCE_REASON_NO_FAILURE, SILENCE_REASON_NEARMISS})
+SILENCE_REASON_NO_SIGNAL_AND_FAILURE = "failure_without_signal"
+_SILENCE_REASONS = frozenset(
+    {SILENCE_REASON_NO_FAILURE, SILENCE_REASON_NEARMISS, SILENCE_REASON_NO_SIGNAL_AND_FAILURE}
+)
 
 
 @dataclass(frozen=True)
@@ -32,15 +35,47 @@ class GateResult:
         return not self.should_extract and self.reason in _SILENCE_REASONS
 
 
+def _step_shows_success(step: Step) -> bool:
+    """Return True if *step* indicates success by output or state (#518).
+
+    A non-zero exit_code is always a failure signal regardless of output
+    or absence of assertions (code-review).  ``exit_code == 0`` counts as
+    success ONLY when no assertion or schema violation is present.
+    """
+    if step.output and step.output.strip():
+        return True
+    state = step.state or {}
+    exit_code = state.get("exit_code")
+    if exit_code is not None:
+        try:
+            if int(exit_code) != 0:
+                return False
+            # exit_code 0 — still a failure if assertion/schema violated
+            if state.get("assertion_failed") or state.get("schema_violation"):
+                return False
+            return True
+        except (ValueError, TypeError):
+            pass
+    if state.get("assertion_failed") or state.get("schema_violation"):
+        return False
+    if step.error and step.error.strip():
+        return False
+    return True
+
+
 def _detect_nearmiss_recovery(trajectory: Trajectory) -> bool:
     """Detect a near-miss pattern: first step fails, later step succeeds.
 
     A near-miss is a trajectory where:
-    - At least one early step has an error
-    - A later step succeeds (has output, no error)
+    - At least one early step has an error or failure signal
+    - A later step succeeds (has output, exit_code 0, or no error)
     - Overall trajectory success = True (retry/recovery succeeded)
 
     These should not produce rules — the failure was transient.
+
+    State-only recovery is recognized (#518): a step whose retry succeeds
+    via state change (``exit_code: 0``, no assertion/schema violation)
+    with empty output still counts as recovery.
     """
     if not trajectory.success:
         return False
@@ -53,7 +88,7 @@ def _detect_nearmiss_recovery(trajectory: Trajectory) -> bool:
     for i, step in enumerate(trajectory.steps):
         if step.error and step.error.strip():
             has_early_error = True
-        elif has_early_error and step.output and step.output.strip():
+        elif has_early_error and _step_shows_success(step):
             has_later_success = True
 
     return has_early_error and has_later_success
@@ -126,10 +161,15 @@ def run_gate(
     if mode == "relaxed":
         return GateResult(should_extract=True, failure_signals=tuple(signals))
 
-    if not signals and trajectory.success:
+    if not signals:
+        reason = (
+            SILENCE_REASON_NO_SIGNAL_AND_FAILURE
+            if not trajectory.success
+            else SILENCE_REASON_NO_FAILURE
+        )
         return GateResult(
             should_extract=False,
-            reason=SILENCE_REASON_NO_FAILURE,
+            reason=reason,
             failure_signals=(),
         )
 

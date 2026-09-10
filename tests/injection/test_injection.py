@@ -221,6 +221,56 @@ def test_optimize_budget_empty() -> None:
     assert optimize_budget([]) == []
 
 
+def test_optimize_budget_preserves_metadata() -> None:
+    # #522: compression must not drop hit_count/last_match/pack/template.
+    import dataclasses
+    rule = dataclasses.replace(
+        _rule(trigger="long trigger " * 20, directive="long directive " * 20),
+        hit_count=42,
+        last_match="2026-09-01T00:00:00+00:00",
+        pack="git",
+        template="retry",
+    )
+    result = optimize_budget([rule], max_tokens=5)  # forces compression
+    assert len(result) == 0  # still too tight even one-lined -> dropped
+    # Force compression only (one-liner fits) and assert metadata survives.
+    out = optimize_budget([rule], max_tokens=500)[0]
+    assert out.hit_count == 42
+    assert out.last_match == "2026-09-01T00:00:00+00:00"
+    assert out.pack == "git"
+    assert out.template == "retry"
+
+
+def test_optimize_budget_value_ranking() -> None:
+    # #522: a high-hit rule survives a tight budget over a verbose never-hit rule.
+    import dataclasses
+    verbose_never_hit = _rule(
+        trigger="deploy fails when the container registry is unreachable from the ECS agent after retries",
+        directive="check the health endpoint and restart the deployment pipeline with the rollback flag enabled",
+        confidence=0.99,
+    )
+    high_hit = dataclasses.replace(
+        _rule(trigger="git push fails", directive="pull --rebase"),
+        hit_count=50,
+        confidence=0.85,
+    )
+    result = optimize_budget([verbose_never_hit, high_hit], max_tokens=40)
+    ids = [r.id for r in result]
+    # The high-hit rule must be selected (or its tail preserved over the verbose one).
+    assert result and (result[0] == high_hit or any(r == high_hit for r in result))
+    assert len(ids) == 1  # 40 tokens fits one rule; high-hit wins
+
+
+def test_optimize_budget_custom_estimator() -> None:
+    # #522: pluggable token estimator.
+    def fake_est(_rule: object) -> int:
+        return 1
+
+    rules = [_rule(trigger="a"), _rule(trigger="b")]
+    result = optimize_budget(rules, max_tokens=1, token_estimator=fake_est)  # type: ignore[arg-type]
+    assert len(result) == 1
+
+
 # ── portfolio ────────────────────────────────────────────────────────
 
 

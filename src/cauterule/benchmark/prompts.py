@@ -29,17 +29,28 @@ class PromptBakeoffHarness:
         self.prompt_fns: dict[str, PromptFn] = dict(prompt_fns)
 
     def run(self, trajectories: list[Trajectory]) -> dict[str, list[PromptResult]]:
-        """Run all prompt variants on *trajectories* and return per-prompt results."""
+        """Run all prompt variants on *trajectories* and return per-prompt results.
+
+        A crashing prompt function is recorded with ``extraction_error``
+        instead of aborting the bake-off (#611).
+        """
         results: dict[str, list[PromptResult]] = {name: [] for name in self.prompt_fns}
         for traj in trajectories:
             for name, prompt_fn in self.prompt_fns.items():
-                candidate = prompt_fn(traj)
+                candidate: CandidateRule | None = None
+                error: str | None = None
+                try:
+                    candidate = prompt_fn(traj)
+                except Exception as exc:  # noqa: PERF203
+                    error = f"{type(exc).__name__}: {exc}"
                 results[name].append(
                     PromptResult(
                         prompt_name=name,
                         candidate=candidate,
                         confidence=candidate.confidence if candidate else 0.0,
-                        extraction_error=None if candidate else "extraction returned None",
+                        extraction_error=(
+                            error or (None if candidate else "extraction returned None")
+                        ),
                     )
                 )
         return results

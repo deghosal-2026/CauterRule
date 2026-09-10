@@ -24,8 +24,18 @@ from typing import Any
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.trajectory import Trajectory
 
-# Triggers shorter than this are considered too generic to match reliably.
+# Triggers shorter than this are considered too generic to match reliably
+# unless context disambiguates them (issue #517).
+# Single-word triggers like "error" or "timeout" are rejected;
+# two-word distinctive phrases like "permission denied" pass.
 _MIN_TRIGGER_WORDS = 1
+
+# High-frequency, overly-generic single-word triggers that match too broadly
+# across any failure trajectory.  Rejected when they have no disambiguating
+# context; specific single-word triggers like "replica" still pass (#517).
+_GENERIC_TRIGGERS: frozenset[str] = frozenset(
+    {"error", "fail", "failed", "failure", "warning", "exception", "timeout", "bug"}
+)
 
 # Degenerate trigger pattern — step identifiers like "step_1", "step 2".
 _DEGENERATE_TRIGGER_RE = re.compile(r"^step[_\s]*\d+$", re.IGNORECASE)
@@ -304,14 +314,30 @@ def match_score(candidate: CandidateRule, trajectory: Trajectory) -> float:
     alias_tokens = _expand_aliases(norm_trigger)
     alias_hit = alias_tokens & haystack_content
 
-    # Weighted token F1: direct hits count 1.0, alias hits count 0.5.
+    # Weighted token F1: direct hits count 1.0, alias hits count 0.5 (#517).
+    # Precision measures the match concentration within the haystack so a
+    # noisy trajectory (large volume of irrelevant text) gets penalised.
+    # The denominator is capped at 4× the trigger size — otherwise a
+    # verbose but genuinely-matched trajectory (e.g. a multi-step CI run
+    # with a short, distinctive failure phrase) would see precision → 0
+    # and the token-F1 path would be unusable without an alias floor
+    # (code-review).
     weighted_hit = len(direct_hit) + 0.5 * len(alias_hit)
     weighted_trigger = len(trigger_content) + 0.5 * len(alias_tokens)
+    weighted_haystack = min(
+        len(haystack_content),
+        max(4 * int(weighted_trigger), 1),
+    )
     if weighted_trigger == 0:
         token_f1 = 0.0
     else:
+        precision = weighted_hit / max(weighted_haystack, 1)
         recall = weighted_hit / weighted_trigger
-        token_f1 = recall  # precision shares denominator, so this is just recall for now
+        token_f1 = (
+            0.0
+            if (precision + recall) == 0
+            else 2 * precision * recall / (precision + recall)
+        )
 
     # Bigram recall (adjacent content-token pairs)
     trigger_bigrams = _bigrams(_ordered_content_tokens(norm_trigger))
@@ -432,24 +458,43 @@ def rule_matches(
     if len(trigger_words) < _MIN_TRIGGER_WORDS and not candidate.when.context:
         return False
 
+    # Reject single-word generic triggers like "error"/"timeout" that
+    # match too broadly (#517).  Specific single-word triggers (e.g.
+    # "replica") pass through and rely on the scorer for verdict.
+    if len(trigger_words) == 1 and not candidate.when.context:
+        if any(w in _GENERIC_TRIGGERS for w in trigger_words):
+            return False
+
     if match_score(candidate, trajectory) < threshold:
         return False
 
     return _context_matches(candidate, trajectory)
 
 
-def is_near_miss(candidate: CandidateRule, trajectory: Trajectory) -> bool:
-    """Return True if trigger matches but not all context (partial)."""
+def is_near_miss(
+    candidate: CandidateRule, trajectory: Trajectory,
+    threshold: float = DEFAULT_THRESHOLD,
+    include_input: bool = True,
+) -> bool:
+    """Return True if trigger matches but not all context (partial).
+
+    Args:
+        candidate: The candidate rule.
+        trajectory: The failure trajectory.
+        threshold: Match threshold (matches :func:`rule_matches` semantics).
+        include_input: Whether to include ``step.input`` in the haystack
+            that context items are checked against.
+    """
     trigger = candidate.when.trigger
     if not trigger or not trigger.strip():
         return False
 
-    if match_score(candidate, trajectory) < DEFAULT_THRESHOLD:
+    if match_score(candidate, trajectory) < threshold:
         return False
 
     # If context exists and not all context matches, it's near miss.
     if candidate.when.context:
-        haystack = _build_haystack(trajectory, include_input=False)
+        haystack = _build_haystack(trajectory, include_input=include_input)
         matched_ctx = sum(1 for ctx in candidate.when.context if _normalize(ctx) in haystack)
         if 0 < matched_ctx < len(candidate.when.context):
             return True

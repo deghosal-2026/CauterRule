@@ -94,7 +94,12 @@ def execute_promotion(
     dump_rule_to_file(rule, str(rule_path))
 
     index_mgr = IndexManager(str(rules_dir))
-    index_mgr.add_entry(rule)
+    try:
+        index_mgr.add_entry(rule)
+    except Exception:
+        # Best-effort index sync (code-review): a corrupt index must not
+        # abort the promotion after the rule file was already written.
+        _log.warning("index sync failed for %s — continuing without index entry", rule_id)
 
     commit_hash = git_commit(f"promote: {rule_id}", str(rules_dir))
     if commit_hash is None:

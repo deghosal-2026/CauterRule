@@ -44,9 +44,11 @@ def check_quality(
     directive_lower = candidate.do.directive.lower()
     combined = f"{trigger_lower} {directive_lower}"
     # If no overlap with trajectory tokens, warn.
-    if task_tokens and not any(tok in combined for tok in task_tokens):
-        if failure_tokens and not any(tok in combined for tok in failure_tokens):
-            warnings.append("candidate does not reference trajectory")
+    if (task_tokens or failure_tokens) and not (
+        any(tok in combined for tok in task_tokens)
+        or any(tok in combined for tok in failure_tokens)
+    ):
+        warnings.append("candidate does not reference trajectory")
 
     # Not tautological: trigger and directive should not be identical
     if trigger_lower.strip() == directive_lower.strip() and trigger_lower.strip():

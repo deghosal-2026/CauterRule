@@ -9,6 +9,10 @@ from cauterule.replay.attribution import attribute_inconclusive
 from cauterule.replay.scorer import compute_scores
 from cauterule.replay.simulator import simulate
 
+# Minimum history for a trustworthy verdict (#521). With fewer trajectories
+# the surfaced verdict is always "inconclusive" (override is transparent).
+MIN_TRAJECTORIES = 3
+
 
 def build_evidence_report(
     candidate: CandidateRule,
@@ -44,16 +48,25 @@ def build_evidence_report(
         elif outcome == "near_miss":
             near_misses.append(traj.id)
 
-    precision, recall, verdict = compute_scores(
+    precision, recall, computed_verdict = compute_scores(
         prevented=len(prevented),
         broken=len(broken),
         total_failures=total_failures,
         total_successes=len(trajectories) - total_failures,
     )
 
-    # If insufficient history, override verdict to inconclusive (handled elsewhere too)
-    if len(trajectories) < 3:
+    # Explicit min-sample policy: with too little history, the surfaced
+    # verdict is "inconclusive" regardless of what the scorer computed.
+    # The override is transparent (verdict_reason records the computed
+    # verdict) instead of silently discarding it (#521).
+    verdict = computed_verdict
+    verdict_reason: str | None = None
+    if len(trajectories) < MIN_TRAJECTORIES:
         verdict = "inconclusive"
+        verdict_reason = (
+            f"min_sample: {len(trajectories)} < {MIN_TRAJECTORIES}; "
+            f"computed={computed_verdict}"
+        )
 
     report = EvidenceReport(
         failures_prevented=tuple(prevented),
@@ -61,10 +74,22 @@ def build_evidence_report(
         near_misses=tuple(near_misses),
         precision=precision,
         recall=recall,
-        verdict=verdict,  # type: ignore[arg-type]
+        verdict=verdict,
         replay_trace=tuple(trace),
+        verdict_reason=verdict_reason,
     )
     if report.verdict == "inconclusive":
+        # Attribution needs the report; reconstruct once with the reason set.
         reason = attribute_inconclusive(candidate, trajectories, report)
-        object.__setattr__(report, "inconclusive_reason", reason)
+        report = EvidenceReport(
+            failures_prevented=report.failures_prevented,
+            successes_broken=report.successes_broken,
+            near_misses=report.near_misses,
+            precision=report.precision,
+            recall=report.recall,
+            verdict=report.verdict,
+            replay_trace=report.replay_trace,
+            inconclusive_reason=reason,
+            verdict_reason=report.verdict_reason,
+        )
     return report

@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from cauterule.models.evidence import Verdict
+
 
 def compute_scores(
     prevented: int,
     broken: int,
     total_failures: int,
     total_successes: int,
-) -> tuple[float, float, str]:
+) -> tuple[float, float, Verdict]:
     """Compute precision, recall, verdict.
 
     Broad-trigger penalty: if a trigger matches successes it would break,
@@ -34,7 +36,7 @@ def compute_scores(
     recall = (prevented / total_failures) if total_failures > 0 else 0.0
 
     if prevented == 0 and broken == 0:
-        verdict = "inconclusive"
+        verdict: Verdict = "inconclusive"
     elif broken > prevented:
         # More successes broken than failures prevented — dangerously broad
         verdict = "fail"

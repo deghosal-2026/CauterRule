@@ -12,13 +12,15 @@ from cauterule.log import get_logger
 
 _log = get_logger(__name__)
 
-QualityLabel = Literal["clear", "ambiguous", "multi-causal", "misleading", "operator-induced"]
+QualityLabel = Literal[
+    "clear", "noisy", "ambiguous", "multi-causal", "misleading", "operator-induced", "open-ended"
+]
 Severity = Literal["low", "medium", "high"]
 ExpectedOutcome = Literal["should_extract", "should_silence", "should_reject"]
 ExpectedOutcomeConfidence = Literal["high", "medium", "low", None]
 
 _VALID_QUALITY_LABELS: frozenset[str] = frozenset(
-    {"clear", "ambiguous", "multi-causal", "misleading", "operator-induced"}
+    {"clear", "noisy", "ambiguous", "multi-causal", "misleading", "operator-induced", "open-ended"}
 )
 _VALID_SEVERITIES: frozenset[str] = frozenset({"low", "medium", "high"})
 _VALID_EXPECTED_OUTCOMES: frozenset[str] = frozenset(

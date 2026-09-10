@@ -1,7 +1,7 @@
 """Tests for the tournament module."""
 from __future__ import annotations
 
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import patch
 
 from cauterule.extraction.tournament import run_tournament
 from cauterule.models.candidate import CandidateRule

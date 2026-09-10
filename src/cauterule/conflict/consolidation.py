@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from cauterule.conflict.specificity import score_specificity
 from cauterule.models.conflict import ConflictReport
 from cauterule.models.rule import StandingRule
 
@@ -28,9 +29,10 @@ def consolidate(
 
     Strategy:
       1. Identify all contradiction and overlap pairs.
-      2. For each conflict, keep the more specific rule (higher specificity
-         determined heuristically by context count + trigger word count) and
-         supersede the other.
+      2. For each conflict, keep the more specific rule (ranked by
+         :func:`cauterule.conflict.specificity.score_specificity` — the
+         single canonical scorer weighting context, trigger, taxonomy,
+         hits and replay precision) and supersede the other.
       3. For equal-specificity non-contradictory overlapping rules, merge
          by keeping the rule with higher hit_count.
       4. Return the modified rule list and conflict reports.
@@ -52,8 +54,8 @@ def consolidate(
                 continue
             processed.add((a.id, b.id))
 
-            a_spec = len(a.when.context) + len(a.when.trigger.split())
-            b_spec = len(b.when.context) + len(b.when.trigger.split())
+            a_spec = score_specificity(a)
+            b_spec = score_specificity(b)
 
             if a_spec >= b_spec:
                 winner, loser = a, b
@@ -93,7 +95,7 @@ def consolidate(
                     trigger=winner.when.trigger,
                     resolution=(
                         f"Consolidated: '{loser.id}' superseded by '{winner.id}' "
-                        f"(higher specificity)"
+                        f"(score_specificity {a_spec:.2f} vs {b_spec:.2f})"
                     ),
                 )
             )

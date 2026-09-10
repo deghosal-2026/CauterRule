@@ -1,7 +1,9 @@
 """Tests for the pre-extraction null-hypothesis gate."""
 
 from cauterule.extraction.gate import (
+    SILENCE_REASON_NEARMISS,
     SILENCE_REASON_NO_FAILURE,
+    SILENCE_REASON_NO_SIGNAL_AND_FAILURE,
     GateResult,
     run_gate,
 )
@@ -129,3 +131,47 @@ def test_blank_error_is_not_signal() -> None:
     result = run_gate(traj, mode="strict")
     assert result.should_extract is False
     assert result.reason == SILENCE_REASON_NO_FAILURE
+
+
+# ------------------------------------------------------------------
+# #518 — zero-signal failures + state-only recovery
+# ------------------------------------------------------------------
+def test_failure_without_signals_is_silence() -> None:
+    traj = Trajectory(
+        id="T-nosig",
+        timestamp="t",
+        task="do thing",
+        steps=(Step(step_number=1, tool="bash", output=""),),
+        success=False,
+    )
+    result = run_gate(traj, mode="strict")
+    assert result.should_extract is False
+    assert result.reason == SILENCE_REASON_NO_SIGNAL_AND_FAILURE
+
+
+def test_failure_without_signals_proceeds_relaxed() -> None:
+    traj = Trajectory(
+        id="T-nosig-relaxed",
+        timestamp="t",
+        task="do thing",
+        steps=(Step(step_number=1, tool="bash", output=""),),
+        success=False,
+    )
+    result = run_gate(traj, mode="relaxed")
+    assert result.should_extract is True
+
+
+def test_state_only_recovery_is_nearmiss() -> None:
+    traj = Trajectory(
+        id="T-state-rec",
+        timestamp="t",
+        task="retry",
+        steps=(
+            Step(step_number=1, tool="bash", error="perm denied", state={"exit_code": 1}),
+            Step(step_number=2, tool="bash", output="", state={"exit_code": 0}),
+        ),
+        success=True,
+    )
+    result = run_gate(traj, mode="strict")
+    assert result.should_extract is False
+    assert result.reason == SILENCE_REASON_NEARMISS

@@ -74,3 +74,22 @@ def test_quality_threshold_param() -> None:
     assert check_quality(c, _traj()) == []
     assert check_quality(c, _traj(), threshold=0.7) != []
     assert is_valid(c, _traj(), threshold=0.7) is False
+
+
+def test_empty_task_grounding() -> None:
+    # #518: task with no overlap shouldn't bypass grounding when failure tokens exist.
+    traj = Trajectory(
+        id="T-empty",
+        timestamp="t",
+        task="x",
+        steps=(Step(step_number=1, tool="git", error="non-fast-forward"),),
+        success=False,
+        failure_class="git/push",
+    )
+    c = CandidateRule(
+        when=RuleWhen(trigger="unrelated"),
+        do=RuleDo(directive="unrelated"),
+        confidence=0.9,
+    )
+    warnings = check_quality(c, traj)
+    assert any("does not reference" in w for w in warnings)
