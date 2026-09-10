@@ -10,16 +10,25 @@ from cauterule.preflight import run_preflight
 
 @click.command("preflight")
 @click.option("--corpus", help="Path to corpus JSONL file or directory.")
-@click.option(
-    "--cost-per-request",
-    default=0.01,
-    show_default=True,
-    help="Cost per LLM request in USD for estimate.",
-)
-def preflight(corpus: str | None, cost_per_request: float) -> None:
+@click.option("--catalog", help="Path to catalog.yaml for size/annotation checks.")
+@click.option("--output-dir", help="Output directory to check for writability/space.")
+@click.option("--no-probe", is_flag=True, help="Skip LLM latency probe.")
+def preflight(
+    corpus: str | None,
+    catalog: str | None,
+    output_dir: str | None,
+    no_probe: bool,
+) -> None:
     """Run provider + corpus preflight checks (fail fast before sweep)."""
     cfg = load_config()
-    result = run_preflight(cfg, corpus_path=corpus, cost_per_request_usd=cost_per_request)
+    probe = None if no_probe else _simple_probe
+    result = run_preflight(
+        cfg,
+        corpus_path=corpus,
+        probe=probe,
+        output_dir=output_dir,
+        catalog_path=catalog,
+    )
 
     for check in result.provider_checks:
         status = "PASS" if check.passed else "FAIL"
@@ -40,3 +49,12 @@ def preflight(corpus: str | None, cost_per_request: float) -> None:
     else:
         click.echo("Preflight: FAIL — fix issues before running.")
         raise click.ClickException("Preflight checks failed")  # noqa: TRY003
+
+
+def _simple_probe(config: object) -> float:
+    """Minimal latency probe: return 0.1s placeholder.
+
+    Real probes are deferred to the field-test runner; this ensures the
+    preflight code path is exercised without requiring a live LLM.
+    """
+    return 0.1
