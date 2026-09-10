@@ -189,6 +189,13 @@ _ALIASES: dict[str, frozenset[str]] = {
     "frame not found": frozenset({"no such frame", "frame", "switch", "iframe"}),
     "delete branch": frozenset({"checkout", "branch", "checked out", "delete"}),
     "flaky": frozenset({"intermittent", "retry", "transient", "intermittent failure"}),
+    # Qwen alias expansion (#492): Qwen produces more abstract trigger phrasings
+    # that the matcher needs alias support to match.
+    "command fails": frozenset({"exit code", "non-zero exit", "return code", "process exited"}),
+    "tool fails": frozenset({"tool error", "command error", "execution error", "operation failed"}),
+    "authentication error": frozenset({"auth failed", "permission denied", "unauthorized", "login failed"}),
+    "not found error": frozenset({"no such file", "not found", "missing", "does not exist"}),
+    "pipeline fails": frozenset({"ci failed", "build failed", "deploy failed", "test failed", "stage failed"}),
 }
 
 
@@ -267,6 +274,101 @@ def match_score(candidate: CandidateRule, trajectory: Trajectory) -> float:
         return 0.0
 
     norm_trigger = _normalize(trigger)
+
+    # --- Exact normalized-substring match → score 1.0 ---
+    haystack = _build_haystack(trajectory)
+    if norm_trigger in haystack:
+        return 1.0
+
+    # --- Token-based scoring ---
+    trigger_content = _content_tokens(norm_trigger)
+    haystack_content = _content_tokens(haystack)
+
+    if not trigger_content:
+        return 0.0
+
+    # Phrase-level paraphrase: if any alias phrase appears verbatim in
+    # the haystack, that is strong equivalence evidence.
+    alias_phrase_hit = any(
+        _normalize(phrase) in haystack
+        for key, phrases in _ALIASES.items()
+        if key in norm_trigger
+        for phrase in phrases
+    )
+
+    # Direct hit tokens
+    direct_hit = trigger_content & haystack_content
+    # Alias expansion
+    alias_tokens = _expand_aliases(norm_trigger)
+    alias_hit = alias_tokens & haystack_content
+
+    # Weighted token F1: direct hits count 1.0, alias hits count 0.5.
+    weighted_hit = len(direct_hit) + 0.5 * len(alias_hit)
+    weighted_trigger = len(trigger_content) + 0.5 * len(alias_tokens)
+    if weighted_trigger == 0:
+        token_f1 = 0.0
+    else:
+        recall = weighted_hit / weighted_trigger
+        token_f1 = recall  # precision shares denominator, so this is just recall for now
+
+    # Bigram recall (adjacent content-token pairs)
+    trigger_bigrams = _bigrams(_ordered_content_tokens(norm_trigger))
+    haystack_bigrams = _bigrams(_ordered_content_tokens(haystack))
+    bigram_recall = 0.0
+    if trigger_bigrams:
+        bigram_recall = len(trigger_bigrams & haystack_bigrams) / len(trigger_bigrams)
+
+    score = 0.6 * token_f1 + 0.4 * bigram_recall
+    # Phrase-level paraphrase floors at 0.70 (alias text matches haystack verbatim).
+    if alias_phrase_hit:
+        score = 0.70
+    elif alias_hit and score < DEFAULT_THRESHOLD:
+        score = DEFAULT_THRESHOLD
+
+    # Substring fallback: if trigger contains a distinctive error phrase
+    # that appears verbatim in the haystack, floor the score at 0.70 so
+    # it passes both default and curated thresholds.
+    if score < 0.70 and len(norm_trigger) >= _LONG_PHRASE_THRESHOLD:
+        raw_lower = trigger.lower()
+        for phrase in _DISTINCTIVE_PHRASES:
+            if phrase in raw_lower and _normalize(phrase) in haystack:
+                score = 0.70
+                break
+
+    return round(score, 4)
+
+
+def extract_trigger_domain(trigger: str) -> str | None:
+    """Extract the primary domain/tool from a trigger string.
+
+    Returns the first recognizable tool or error domain keyword, or None.
+    Used for domain-mismatch detection (#487).
+    """
+    tl = trigger.lower()
+    for domain in ("git", "docker", "pip", "pytest", "kubectl",
+                   "terraform", "api", "browser", "python", "ssh",
+                   "npm", "deploy", "ci", "test"):
+        if domain in tl:
+            return domain
+    return None
+
+
+def check_domain_mismatch(
+    candidate: CandidateRule, trajectory: Trajectory
+) -> bool:
+    """Return True if the candidate trigger and trajectory are in different domains.
+
+    A mismatch means the rule's primary tool/domain does not align with the
+    trajectory's failure_class (e.g. trigger mentions "docker" but reference
+    trajectory has failure_class="git/push/...").
+    """
+    trigger_domain = extract_trigger_domain(candidate.when.trigger)
+    traj_domain: str | None = None
+    if trajectory.failure_class:
+        traj_domain = trajectory.failure_class.split("/")[0].lower()
+    if trigger_domain is None or traj_domain is None:
+        return False
+    return trigger_domain != traj_domain
     if not norm_trigger:
         return 0.0
     haystack = _build_haystack(trajectory)

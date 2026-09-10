@@ -132,3 +132,31 @@ def test_failure_point_only_without_class() -> None:
         failure_point="step_1",
     )
     assert simulate(cand, traj) == "broken"
+
+
+def test_domain_mismatch_not_counted_as_prevented() -> None:
+    # #487: trigger says "docker" but trajectory is a git failure — domain mismatch.
+    cand = _cand("when docker build fails")
+    traj = Trajectory(
+        id="T-dm",
+        timestamp="t",
+        task="git push fails",
+        steps=(Step(1, "bash", error="non-fast-forward"),),
+        success=False,
+        failure_class="git/push/non-fast-forward",
+    )
+    assert simulate(cand, traj) == "no_effect"
+
+
+def test_domain_not_mismatched_when_same() -> None:
+    # #487: same domain — prevented as usual.
+    cand = _cand("when docker build fails with package not found")
+    traj = Trajectory(
+        id="T-dms",
+        timestamp="t",
+        task="docker build fails",
+        steps=(Step(1, "bash", error="Package 'x' not found"),),
+        success=False,
+        failure_class="docker/build/package-not-found",
+    )
+    assert simulate(cand, traj) == "prevented"

@@ -148,3 +148,29 @@ def test_load_trajectories_strict_ignores_blank_lines(tmp_path: Path) -> None:
         f.write(dump_trajectory(_valid_trajectory()) + "\n")
         f.write("\n")
     assert len(list(load_trajectories(p, strict=True))) == 1
+
+
+def test_load_trajectories_multiline_objects(tmp_path: Path) -> None:
+    # #490: multi-line pretty-printed JSON objects load correctly.
+    multi = """{
+  "trajectory_id": "T-multi",
+  "timestamp": "t",
+  "task": "multi-line test",
+  "steps": [
+    {
+      "step_number": 1,
+      "tool": "bash",
+      "input": "echo hello"
+    }
+  ],
+  "success": false
+}"""
+    p = tmp_path / "corpus.jsonl"
+    with p.open("w", encoding="utf-8") as f:
+        f.write(dump_trajectory(_valid_trajectory()) + "\n")
+        f.write(multi + "\n")
+        f.write(dump_trajectory(_valid_trajectory()) + "\n")
+    loaded = list(load_trajectories(p))
+    assert len(loaded) == 3
+    assert loaded[1].id == "T-multi"
+    assert loaded[1].success is False

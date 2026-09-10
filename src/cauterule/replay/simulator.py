@@ -6,7 +6,7 @@ from typing import Literal
 
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.trajectory import Trajectory
-from cauterule.replay.matcher import DEFAULT_THRESHOLD, is_near_miss, rule_matches
+from cauterule.replay.matcher import DEFAULT_THRESHOLD, check_domain_mismatch, is_near_miss, rule_matches
 
 Outcome = Literal["prevented", "broken", "no_effect", "near_miss"]
 
@@ -62,6 +62,13 @@ def simulate(
         return "near_miss"
     matches = rule_matches(candidate, trajectory, threshold=threshold)
     if not matches:
+        return "no_effect"
+    # Domain mismatch: trigger names a different domain than the reference
+    # trajectory's failure_class. This is typically a "wrong failure" scenario
+    # where the match is coincidental (e.g. both trajectories involve bash but
+    # one is a git failure and the other is a docker failure). Rather than
+    # counting as "prevented", downgrade to no_effect (#487).
+    if not trajectory.success and check_domain_mismatch(candidate, trajectory):
         return "no_effect"
     if not trajectory.success:
         return "prevented"

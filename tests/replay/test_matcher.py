@@ -108,3 +108,25 @@ def test_threshold_param() -> None:
     )
     assert rule_matches(cand, traj, threshold=0.5)
     assert not rule_matches(cand, traj, threshold=0.99)
+
+
+def test_qwen_alias_expansion() -> None:
+    # #492: Qwen abstract triggers match through alias expansion.
+    from cauterule.replay.matcher import match_score, DEFAULT_THRESHOLD
+    cand = _cand("command fails with exit code")
+    traj = Trajectory(id="T-q", timestamp="t", task="git push fails", steps=(Step(1, "bash", error="exit code 128"),), success=False, failure_class="git/push")
+    score = match_score(cand, traj)
+    assert score >= DEFAULT_THRESHOLD, f"alias score {score:.3f} < {DEFAULT_THRESHOLD}"
+
+
+def test_domain_mismatch_detection() -> None:
+    # #487: extract_trigger_domain and check_domain_mismatch.
+    from cauterule.replay.matcher import check_domain_mismatch, extract_trigger_domain
+    assert extract_trigger_domain("docker build fails") == "docker"
+    assert extract_trigger_domain("git push fails") == "git"
+    assert extract_trigger_domain("something unrelated") is None
+    cand = _cand("docker build fails")
+    traj = Trajectory(id="T-dm2", timestamp="t", task="git push fails", steps=(Step(1, "bash", error="err"),), success=False, failure_class="git/push")
+    assert check_domain_mismatch(cand, traj) is True
+    traj2 = Trajectory(id="T-dm3", timestamp="t", task="docker build fails", steps=(Step(1, "bash", error="err"),), success=False, failure_class="docker/build")
+    assert check_domain_mismatch(cand, traj2) is False

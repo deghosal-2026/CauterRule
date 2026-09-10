@@ -1,6 +1,7 @@
 """JSONL serialization for Trajectory.
 
 Each trajectory is stored as a single JSON object per line, streamable.
+Also supports pretty-printed multi-line JSON objects (#490).
 """
 
 from __future__ import annotations
@@ -46,25 +47,50 @@ def load_trajectories(
 ) -> Iterator[Trajectory]:
     """Stream trajectories from a JSONL file at *path*.
 
-    Skips blank lines. Malformed lines are skipped with a warning
-    (file:line + error) unless *strict* is True, in which case the
-    first bad line raises (#597). When *on_skip* is given it is called
-    with ``(line_number, error_message)`` for every skipped line so
-    callers can expose a skip count.
+    Skips blank lines. Supports both single-line and multi-line (pretty-
+    printed) JSON objects (#490). Multi-line objects are detected by a
+    lone ``{`` on its own line; accumulation continues until a matching
+    ``}`` closes the brace depth.
     """
     p = Path(path)
     with p.open("r", encoding="utf-8") as f:
+        buf: str | None = None
+        depth = 0
         for lineno, line in enumerate(f, start=1):
             stripped = line.strip()
             if not stripped:
                 continue
+
+            if buf is not None:
+                buf += "\n" + stripped
+                depth += stripped.count("{") - stripped.count("}")
+                if depth <= 0:
+                    try:
+                        yield load_trajectory(buf)
+                    except (json.JSONDecodeError, ValueError, KeyError, TypeError) as exc:
+                        msg = f"{p}:{lineno}: multi-line JSON failed ({exc})"
+                        if strict:
+                            raise ValueError(msg) from exc
+                        _log.warning(msg)
+                        if on_skip is not None:
+                            on_skip(lineno, str(exc))
+                    buf = None
+                continue
+
+            # Detect multi-line JSON: a lone ``{`` on its own line.
+            if stripped == "{":
+                buf = stripped
+                depth = 1
+                continue
+
+            # Single-line JSONL path.
             try:
                 yield load_trajectory(stripped)
             except (json.JSONDecodeError, ValueError, KeyError, TypeError) as exc:
-                message = f"{p}:{lineno}: skipping bad JSONL line ({exc})"
+                msg = f"{p}:{lineno}: skipping bad JSONL line ({exc})"
                 if strict:
-                    raise ValueError(message) from exc
-                _log.warning(message)
+                    raise ValueError(msg) from exc
+                _log.warning(msg)
                 if on_skip is not None:
                     on_skip(lineno, str(exc))
 
