@@ -7,7 +7,7 @@ stdio+HTTP+security, OTEL, preflight cost, badge/webhook, persistence, image
 size, multi-arch, resource + network limits.
 
 Marked ``@pytest.mark.docker`` — skipped when no Docker daemon is reachable.
-Results are recorded to ``field-test/0.3.0/docker/`` by the field conftest.
+Results are recorded to ``field-test/results/0.3.0/docker/`` by the field conftest.
 """
 
 from __future__ import annotations

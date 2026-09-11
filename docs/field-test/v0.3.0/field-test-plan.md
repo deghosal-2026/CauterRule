@@ -336,7 +336,7 @@ Same 4 models as v0.2.0 (regression comparison), swept on the v0.3.0 corpora:
 | `--model-config` | Multi-model YAML config (per-model overrides) | #629 |
 | `--regression-v020` | Delta table vs v0.2.0 baseline (§7.5) | #629 |
 
-New validation suites added to `VALIDATION_SUITES` (§4.1): `adapter_conformance`, `lifecycle`, `packs`, `mcp_security`, `otel_exporter`, `corpus_cli`, `benchmark_cli`. Results output to `field-test/0.3.0/` (docker results already at `field-test/0.3.0/docker/`).
+New validation suites added to `VALIDATION_SUITES` (§4.1): `adapter_conformance`, `lifecycle`, `packs`, `mcp_security`, `otel_exporter`, `corpus_cli`, `benchmark_cli`. Results output to `field-test/0.3.0/` (docker results already at `field-test/results/0.3.0/docker/`).
 
 ---
 
@@ -565,7 +565,7 @@ Fixed 1000-trajectory corpus per model; §7.4 formulas; results feed `preflight 
 
 | Environment | Procedure | Evidence |
 |-------------|-----------|----------|
-| macOS (local) | Full fast suite + docker-marked suite via Docker Desktop (Apple Silicon/arm64) | `field-test/0.3.0/docker/docker-results.jsonl` |
+| macOS (local) | Full fast suite + docker-marked suite via Docker Desktop (Apple Silicon/arm64) | `field-test/results/0.3.0/docker/docker-results.jsonl` |
 | Linux | CI runner (amd64): fast suite + docker suite | CI logs; junit `docker-junit.xml` |
 | Docker | `scripts/docker_field_test.sh` — 18-stage plan (hardened image, compose profiles, MCP http, multi-arch readiness) | `docker-test-results.md` (closed #641/#642) |
 

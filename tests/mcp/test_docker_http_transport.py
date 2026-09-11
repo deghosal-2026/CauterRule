@@ -6,7 +6,7 @@ the server from *outside* the container the way a deployed agent would: starts
 the host, and exercises initialize / list_tools / call_tool / schema-rejection
 / unknown-tool over the official MCP ``streamable_http_client``.
 
-Results are recorded to ``field-test/0.3.0/docker/`` by the field conftest
+Results are recorded to ``field-test/results/0.3.0/docker/`` by the field conftest
 (this module also marks tests ``docker`` so they are picked up there).
 
 Skipped gracefully where no Docker daemon is available.

@@ -3,7 +3,7 @@
 #
 # v0.3.0 (default): builds the hardened image and runs the automated Docker
 # test suite (`tests/field/test_docker_v030.py` + `tests/mcp/test_docker_http_transport.py`).
-# Results are written to `field-test/0.3.0/docker/`:
+# Results are written to `field-test/results/0.3.0/docker/`:
 #   - docker-results.jsonl   (per-test outcome + duration)
 #   - docker-test-report.md   (markdown summary table)
 #   - docker-junit.xml        (JUnit for CI)
@@ -19,7 +19,7 @@
 set -euo pipefail
 
 DOCKER_TAG="cauterule:field-test"
-RESULTS_DIR="field-test/0.3.0/docker"
+RESULTS_DIR="field-test/results/0.3.0/docker"
 MODE="v030"
 SKIP_BUILD=false
 VERBOSE=false

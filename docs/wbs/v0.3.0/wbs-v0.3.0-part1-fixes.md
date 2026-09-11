@@ -65,7 +65,7 @@
 | 2.8 | Qwen alias expansion — clear 18 matcher_gap on nearmiss | [#492](https://github.com/deghosal-2026/CauterRule/issues/492) | ✅ |
 | 2.9 | Re-run Fix 8 (recovery exclusion) on local OMLX models | [#491](https://github.com/deghosal-2026/CauterRule/issues/491) | deferred to M7 |
 | 2.10 | BUG: Public multi-line JSONL loader drops 160 public trajectories | [#490](https://github.com/deghosal-2026/CauterRule/issues/490) | ✅ |
-| 2.11 | Expand reference corpus 230 → 500+ diverse phrasings | [#489](https://github.com/deghosal-2026/CauterRule/issues/489) | deferred to M7 |
+| 2.11 | Expand reference corpus 230 → 500+ diverse phrasings | [#489](https://github.com/deghosal-2026/CauterRule/issues/489) | ✓ closed (M7) |
 | 2.12 | Narrow the extraction prompt — name error codes not just tool+fails | [#488](https://github.com/deghosal-2026/CauterRule/issues/488) | ✅ |
 | 2.13 | Trigger-domain mismatch detection — kill nearmiss wrong-failure FPs | [#487](https://github.com/deghosal-2026/CauterRule/issues/487) | ✅ |
 

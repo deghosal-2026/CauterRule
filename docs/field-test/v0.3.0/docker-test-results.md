@@ -9,7 +9,7 @@
 **Docker Image:** `cauterule:field-test` (python:3.12-slim, wheel install, **hardened per #524/#607**)
 **Plan:** `docs/field-test/v0.3.0/docker-test-plan.md`
 **Prior baseline:** v0.2.0 = 127 tests, all passed (`docs/field-test/v0.2.0/docker-test-results.md`)
-**Results artifacts:** `field-test/0.3.0/docker/` — `docker-results.jsonl` (per-test), `docker-test-report.md` (summary table), `docker-junit.xml` (CI), `docker-test.log` (full output)
+**Results artifacts:** `field-test/results/0.3.0/docker/` — `docker-results.jsonl` (per-test), `docker-test-report.md` (summary table), `docker-junit.xml` (CI), `docker-test.log` (full output)
 
 ---
 
@@ -182,4 +182,4 @@ Real LLM sweeps (#648/#650), real OTEL collector backend (mock in-container only
 
 ## 9. Conclusion
 
-The v0.3.0 Docker suite does what a field test is for: it found that the #601 security feature — green in unit CI, closed on the milestone — **did not actually work in deployment**. The auth guard now demonstrably rejects unauthenticated calls from outside a container, and every hardening claim from #524/#607 is asserted by a test rather than trusted. The hardening also surfaced its own follow-on (non-root ownership of `/app`) that only a full-stack compose run could catch. 151 of 153 tests pass at report time; 2 compose re-runs remain to close out #641/#642. The suite, the runner (`scripts/docker_field_test.sh`), and the results pipeline (`field-test/0.3.0/docker/`) are in place for the M7 exit gate.
+The v0.3.0 Docker suite does what a field test is for: it found that the #601 security feature — green in unit CI, closed on the milestone — **did not actually work in deployment**. The auth guard now demonstrably rejects unauthenticated calls from outside a container, and every hardening claim from #524/#607 is asserted by a test rather than trusted. The hardening also surfaced its own follow-on (non-root ownership of `/app`) that only a full-stack compose run could catch. 151 of 153 tests pass at report time; 2 compose re-runs remain to close out #641/#642. The suite, the runner (`scripts/docker_field_test.sh`), and the results pipeline (`field-test/results/0.3.0/docker/`) are in place for the M7 exit gate.

@@ -1,10 +1,10 @@
-"""Field-test conftest — records docker test outcomes to field-test/0.3.0/docker/.
+"""Field-test conftest — records docker test outcomes to field-test/results/0.3.0/docker/.
 
 Every test marked ``@pytest.mark.docker`` that runs under this conftest gets a
-JSON record appended to ``field-test/0.3.0/docker/docker-results.jsonl`` with
+JSON record appended to ``field-test/results/0.3.0/docker/docker-results.jsonl`` with
 its node id, outcome, and duration. A markdown summary is written at the end of
 the session. This satisfies the v0.3.0 requirement that all docker test results
-land under ``field-test/0.3.0/docker/`` (#642/#676/#629).
+land under ``field-test/results/0.3.0/docker/`` (#642/#676/#629).
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-RESULTS_DIR = Path("field-test/0.3.0/docker")
+RESULTS_DIR = Path("field-test/results/0.3.0/docker")
 RESULTS_JSONL = RESULTS_DIR / "docker-results.jsonl"
 RESULTS_MD = RESULTS_DIR / "docker-test-report.md"
 
