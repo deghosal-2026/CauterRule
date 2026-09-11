@@ -8,6 +8,7 @@ candidate immediately without calling the LLM.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -30,6 +31,14 @@ _SILENCE_REASONS = frozenset(
     {SILENCE_REASON_NO_FAILURE, SILENCE_REASON_NEARMISS, SILENCE_REASON_NO_SIGNAL_AND_FAILURE}
 )
 
+# Failure-indicating text that may be captured in ``step.output`` rather than
+# ``step.error`` (e.g. a shell command that prints to stdout).  Such output
+# must not be mistaken for a success signal (#693).
+_FAILURE_TEXT_RE = re.compile(
+    r"\b(error|failed|failure|exception|traceback|fatal|refused|denied)\b",
+    re.IGNORECASE,
+)
+
 
 @dataclass(frozen=True)
 class GateResult:
@@ -45,14 +54,14 @@ class GateResult:
 
 
 def _step_shows_success(step: Step) -> bool:
-    """Return True if *step* indicates success by output or state (#518).
+    """Return True if *step* indicates success by state or output (#518).
 
-    A non-zero exit_code is always a failure signal regardless of output
-    or absence of assertions (code-review).  ``exit_code == 0`` counts as
-    success ONLY when no assertion or schema violation is present.
+    The reliable explicit signals (non-zero exit_code, assertion/schema
+    violation, step error) are checked before inferring success from the
+    mere presence of output.  Output text that itself looks like an error
+    (printed to stdout rather than captured in ``step.error``) is not a
+    success signal (#693).
     """
-    if step.output and step.output.strip():
-        return True
     state = step.state or {}
     exit_code = state.get("exit_code")
     if exit_code is not None:
@@ -69,6 +78,11 @@ def _step_shows_success(step: Step) -> bool:
         return False
     if step.error and step.error.strip():
         return False
+    if step.output and step.output.strip():
+        # Failure text printed to output is not evidence of success (#693).
+        if _FAILURE_TEXT_RE.search(step.output):
+            return False
+        return True
     return True
 
 
@@ -92,8 +106,8 @@ def _detect_nearmiss_recovery(trajectory: Trajectory) -> bool:
     # "nearmiss/coding") has no early-error pattern but is still a
     # recovered trajectory.  Keyword set mirrors Fix 8 (replay side).
     if trajectory.success and trajectory.failure_class:
-        fc = trajectory.failure_class.lower()
-        if any(kw in fc for kw in _RECOVERY_KEYWORDS):
+        fc_tokens = re.split(r"[/_\-\s]+", trajectory.failure_class.lower())
+        if any(kw in fc_tokens for kw in _RECOVERY_KEYWORDS):
             return True
 
     if not trajectory.success:

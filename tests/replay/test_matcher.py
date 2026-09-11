@@ -1,3 +1,5 @@
+import pytest
+
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.rule import RuleDo, RuleWhen
 from cauterule.models.trajectory import Step, Trajectory
@@ -196,3 +198,44 @@ def test_near_miss_include_input() -> None:
     )
     assert is_near_miss(cand, traj, include_input=True)
     assert not is_near_miss(cand, traj, include_input=False)
+
+
+# ---------------------------------------------------------------------------
+# #694 — check_domain_mismatch must actually gate rule_matches
+# ---------------------------------------------------------------------------
+
+
+def test_rule_matches_rejects_cross_domain_match() -> None:
+    cand = _cand("docker build failed")
+    traj = Trajectory(
+        id="T-cross", timestamp="t", task="docker build failed on push",
+        steps=(Step(1, "bash", error="rejected"),), success=False,
+        failure_class="git/push/rejected",
+    )
+    assert match_score(cand, traj) >= 0.6
+    assert not rule_matches(cand, traj)
+
+
+def test_rule_matches_allows_same_domain_match() -> None:
+    cand = _cand("docker build failed")
+    traj = Trajectory(
+        id="T-same", timestamp="t", task="docker build failed",
+        steps=(Step(1, "bash", error="exit 1"),), success=False,
+        failure_class="docker/build",
+    )
+    assert rule_matches(cand, traj)
+
+
+def test_check_domain_mismatch_is_invoked(monkeypatch: pytest.MonkeyPatch) -> None:
+    import cauterule.replay.matcher as matcher
+
+    calls = {"n": 0}
+    real = matcher.check_domain_mismatch
+
+    def spy(candidate: CandidateRule, trajectory: Trajectory) -> bool:
+        calls["n"] += 1
+        return real(candidate, trajectory)
+
+    monkeypatch.setattr(matcher, "check_domain_mismatch", spy)
+    rule_matches(_cand("git push"), _traj())
+    assert calls["n"] == 1

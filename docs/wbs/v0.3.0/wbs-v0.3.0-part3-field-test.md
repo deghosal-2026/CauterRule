@@ -36,6 +36,40 @@
 
 **Docker work closed (this session):** #641 (plan) + #642 (suite) + #676 (MCP HTTP in-container) + deferred #524/#607 (Docker/CI + compose hardening). Dockerfile hardened (non-root, git, HEALTHCHECK, OCI labels, .dockerignore), compose profiled (name:, profiles:, no dead 8025, pip baked in, pip --user in test service), image rebuilt. New `tests/field/test_docker_v030.py` (22 tests, #642), `tests/mcp/test_docker_http_transport.py` (4 tests, #676), results reporter `tests/field/conftest.py` → `field-test/results/0.3.0/docker/` (jsonl + markdown + junit). Runner `scripts/docker_field_test.sh` (v0.3.0 default). 151/153 docker tests passing; 2 compose re-runs (mcp-accepts, test-service) marked done per scope — documented in `docs/field-test/v0.3.0/docker-test-results.md`.
 
+### M7 Code Review Follow-ups (23 issues)
+
+**Source:** `[0.3.0 Code Review]` issues filed from the v0.3.0 code review; all assigned to this milestone ([v0.3.0-M7: Field Test](https://github.com/deghosal-2026/CauterRule/milestone/62)).
+
+| # | Task | Issue | Status |
+|---|------|-------|--------|
+| 7.14 | Trajectory-count mismatch (908 vs 1093/1156/1156/1132) — doc totals drift from raw results | [#685](https://github.com/deghosal-2026/CauterRule/issues/685) |
+| 7.15 | Add regeneration pipeline for field-test reports (`scripts/generate_field_test_report.py`) | [#686](https://github.com/deghosal-2026/CauterRule/issues/686) |
+| 7.16 | Link #667/#671/#673/#677-684 references in FIELD_TEST_REPORT.md to local WBS mirror | [#687](https://github.com/deghosal-2026/CauterRule/issues/687) |
+| 7.17 | Resolve docker-test-plan.md "~70 tests" ambiguity vs docker-test-results.md's 153 | [#688](https://github.com/deghosal-2026/CauterRule/issues/688) |
+| 7.18 | matcher.py: add semantic/embedding similarity to bridge paraphrase gap | [#689](https://github.com/deghosal-2026/CauterRule/issues/689) |
+| 7.19 | Root-cause split: 0-pass corpora (lifecycle, otel, packs, raw/ci) — extraction vs threshold | [#690](https://github.com/deghosal-2026/CauterRule/issues/690) |
+| 7.20 | Calibrate matcher thresholds (`STRATEGY_THRESHOLDS`, `OMLX_THRESHOLD`) with provenance test | [#691](https://github.com/deghosal-2026/CauterRule/issues/691) |
+| 7.21 | gate.py: recovery-keyword substring match can silently suppress real failures | [#692](https://github.com/deghosal-2026/CauterRule/issues/692) | ✓ done |
+| 7.22 | gate.py `_step_shows_success()`: non-empty output treated as success even on error text | [#693](https://github.com/deghosal-2026/CauterRule/issues/693) | ✓ done |
+| 7.23 | matcher.py: `check_domain_mismatch()`/`extract_trigger_domain()` are dead code | [#694](https://github.com/deghosal-2026/CauterRule/issues/694) | code done; field-test revalidation pending |
+| 7.24 | Add confidence intervals to field-test metrics (small n=10, n=50 samples) | [#695](https://github.com/deghosal-2026/CauterRule/issues/695) |
+| 7.25 | Adversarial corpus: add tool-output-borne + multi-turn/compounding vectors | [#696](https://github.com/deghosal-2026/CauterRule/issues/696) |
+| 7.26 | Spot-audit gate-dropped trajectories — expose false-positive gate silence | [#697](https://github.com/deghosal-2026/CauterRule/issues/697) |
+| 7.27 | Corpus expansion: real production agent-trajectory sources + synthetic gaps | [#698](https://github.com/deghosal-2026/CauterRule/issues/698) |
+| 7.28 | Corpus source: AgentHarm (Hugging Face) for adversarial/unsafe realism | [#699](https://github.com/deghosal-2026/CauterRule/issues/699) |
+| 7.29 | Corpus source: InjecAgent (GitHub) for tool-output-borne injection | [#700](https://github.com/deghosal-2026/CauterRule/issues/700) |
+| 7.30 | Corpus source: HarmBench (GitHub) for adversarial/misleading + contradiction | [#701](https://github.com/deghosal-2026/CauterRule/issues/701) |
+| 7.31 | Corpus source: OpenTelemetry Demo (GitHub) for otel reference-corpus gap | [#702](https://github.com/deghosal-2026/CauterRule/issues/702) |
+| 7.32 | Corpus source: modelcontextprotocol/servers (GitHub) for mcp reference-corpus gap | [#703](https://github.com/deghosal-2026/CauterRule/issues/703) |
+| 7.33 | Corpus source: Terraform provider issue trackers for lifecycle/infra failures | [#704](https://github.com/deghosal-2026/CauterRule/issues/704) |
+| 7.34 | Corpus source: WebArena / VisualWebArena (GitHub) for browser-tool failure diversity | [#705](https://github.com/deghosal-2026/CauterRule/issues/705) |
+| 7.35 | Corpus source: BugsInPy and Defects4J for python/test failure classes | [#706](https://github.com/deghosal-2026/CauterRule/issues/706) |
+| 7.36 | Corpus process: pair each external source with matching success trajectories | [#707](https://github.com/deghosal-2026/CauterRule/issues/707) |
+
+**Batch progress (code-first ordering):**
+- **Batch 1 — gate/matcher safety correctness (done):** #692 (recovery keyword whole-token match), #693 (`_step_shows_success` no longer treats error text in `step.output` as success; exit_code checked first), #694 (`check_domain_mismatch` wired into `rule_matches`, failure trajectories only, to preserve #616 recovery semantics). Tests added in `tests/extraction/test_gate.py` + `tests/replay/test_matcher.py`; full non-field/non-scale/non-docker suite green; ruff/mypy clean on changed files.
+- **Next — Batch 2:** #691 (threshold calibration test + `strategy_for_corpus` substring robustness), #697 (persist gate reason per trajectory + summary breakdown).
+
 ### M7 Exit Gate
 
 - [ ] All tests run clear: `pytest` — all pass

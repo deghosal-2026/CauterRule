@@ -471,6 +471,14 @@ def rule_matches(
     if match_score(candidate, trajectory) < threshold:
         return False
 
+    # Reject cross-domain matches for failure trajectories (e.g. a "docker"
+    # trigger matching a git/push trajectory) — #487 precision guard, wired
+    # in #694.  Success trajectories are excluded: recovery/near-miss
+    # classification is domain-independent and handled by the simulator
+    # (#616), so gating them would suppress genuine recovery signals.
+    if not trajectory.success and check_domain_mismatch(candidate, trajectory):
+        return False
+
     return _context_matches(candidate, trajectory)
 
 
