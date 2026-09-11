@@ -187,17 +187,46 @@ VALIDATION_SUITES: dict[str, dict[str, str]] = {
         "issue": "#443 (TUI review)",
         "targets": ["tests/tui/"],
     },
+    # ── v0.3.0 validation suites (#629) ──
+    "adapter_conformance": {
+        "issue": "#540 (M4 adapter conformance)",
+        "targets": ["tests/adapter_conformance/"],
+    },
+    "lifecycle": {
+        "issue": "#512 (M4 rule lifecycle)",
+        "targets": ["tests/lifecycle/"],
+    },
+    "packs": {
+        "issue": "#479/#481 (M5 packs)",
+        "targets": ["tests/packs/"],
+    },
+    "mcp_security": {
+        "issue": "#601 (M6 MCP security)",
+        "targets": ["tests/mcp/test_security.py"],
+    },
+    "otel_exporter": {
+        "issue": "#588 (M6 OTEL exporter)",
+        "targets": ["tests/integrations/test_otel_exporter.py"],
+    },
+    "corpus_cli": {
+        "issue": "#606 (M6 corpus CLI)",
+        "targets": ["tests/cli/test_corpus_cli.py"],
+    },
+    "benchmark_cli": {
+        "issue": "#605/#606 (M6 benchmark CLI)",
+        "targets": ["tests/cli/test_benchmark_cli.py", "benchmarks/"],
+    },
 }
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="CauterRule field-test runner (v0.2.0)")
+    parser = argparse.ArgumentParser(description="CauterRule field-test runner (v0.3.0)")
     parser.add_argument("corpus_type", nargs="?", help="Corpus type to test")
     parser.add_argument("--all", action="store_true", help="Run all corpus types sequentially")
     parser.add_argument("--llm-provider", default="openai", help="LLM provider")
     parser.add_argument("--llm-model", default="gpt-4o-mini", help="Model name")
     parser.add_argument("--llm-base-url", default="", help="Base URL for custom endpoints")
-    parser.add_argument("--output-dir", default="field-test/results/0.2.0", help="Output directory")
+    parser.add_argument("--output-dir", default="field-test/results/0.3.0", help="Output directory")
     parser.add_argument("--max-workers", type=int, default=None, help="Parallel trajectories (default: 2 for local OMLX, otherwise 4)")
     parser.add_argument("--extraction-passes", type=int, default=2, help="Multi-pass extraction passes")
     parser.add_argument("--temperatures", default="0.2,0.5", help="Comma-separated temperatures")
@@ -205,6 +234,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cost-per-request", type=float, default=0.01, help="Estimated $ per LLM request")
     parser.add_argument("--run-validation", action="store_true", help="Run all v0.2.0 hermetic validation suites (#432-#437, #443-#444)")
     parser.add_argument("--validation-suite", default=None, help="Run a single validation suite only (see VALIDATION_SUITES keys)")
+    parser.add_argument("--model-config", default=None, help="YAML file with per-model overrides (v0.3.0 #629)")
+    parser.add_argument("--regression-v020", action="store_true", help="Compare v0.3.0 results to v0.2.0 baseline (v0.3.0 #629)")
     args = parser.parse_args()
     if args.max_workers is None:
         args.max_workers = 2 if (args.llm_base_url and "localhost" in args.llm_base_url) else 4
@@ -827,8 +858,68 @@ def run_validation(args: argparse.Namespace) -> int:
     return 0 if overall["all_passed"] else 1
 
 
+def _load_model_config(path: str) -> list[dict[str, str]]:
+    """Load a YAML file of per-model overrides (v0.3.0 #629).
+
+    Expected schema:
+        models:
+          - name: llama-3.2-3b-instruct
+            provider: openai
+            base_url: http://localhost:8000/v1
+            temperatures: "0.2,0.5"
+            max_cost: 1.0
+    Returns a list of model-config dicts (name/provider/base_url/temperatures/max_cost).
+    """
+    try:
+        import yaml
+    except ImportError as exc:
+        raise SystemExit(f"[error] PyYAML not installed: {exc}") from exc
+    with open(path, encoding="utf-8") as fh:
+        data = yaml.safe_load(fh) or {}
+    return data.get("models", [])
+
+
+def _regression_v020(args: argparse.Namespace) -> int:
+    """Compare v0.3.0 results to the v0.2.0 baseline (v0.3.0 #629).
+
+    Walks field-test/results/0.2.0/{corpus}/{model}/{date}/summary.json and the
+    current run dir, emits a per-corpus delta table (pass rate, inconclusive
+    rate, specificity, silence rate). A >5pp regression on any metric is flagged.
+    """
+    baseline_root = Path("field-test/results/0.2.0")
+    current_root = Path(args.output_dir)
+    out_path = current_root / "regression-v020.md"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    lines = ["# v0.3.0 vs v0.2.0 Regression Comparison\n", "| Corpus | Metric | v0.2.0 | v0.3.0 | Delta | Flag |", "|--------|--------|-------|-------|-------|------|"]
+    flagged = 0
+    for summary in sorted(baseline_root.rglob("summary.json")):
+        corpus = summary.parent.parent.parent.name
+        try:
+            old = json.loads(summary.read_text())
+        except Exception:
+            continue
+        new_path = current_root / corpus.replace("/", "_") / summary.parent.parent.name / summary.parent.name / "summary.json"
+        new = json.loads(new_path.read_text()) if new_path.is_file() else None
+        if new is None:
+            continue
+        for metric in ("pass_rate", "inconclusive_rate", "silence_rate", "generic_trigger_pct"):
+            o = float(old.get(metric, 0) or 0)
+            n = float(new.get(metric, 0) or 0)
+            delta = n - o
+            flag = "⚠ regression" if (metric != "silence_rate" and delta < -0.05) or (metric == "silence_rate" and delta < -0.05) else ""
+            if flag:
+                flagged += 1
+            lines.append(f"| {corpus} | {metric} | {o:.2f} | {n:.2f} | {delta:+.2f} | {flag} |")
+    out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"[regression] {out_path} ({flagged} regressions flagged)")
+    return 0
+
+
 def main() -> None:
     args = parse_args()
+
+    if args.regression_v020:
+        sys.exit(_regression_v020(args))
 
     if args.run_validation:
         sys.exit(run_validation(args))
@@ -839,9 +930,25 @@ def main() -> None:
         print("       Set it: export CAUTERULE_LLM_API_KEY=sk-...")
         print("       For local OMLX, use --llm-base-url http://localhost:8000/v1\n")
 
-    types_to_run: list[str] = list(CORPUS_TYPES) if args.all else [args.corpus_type]
-    for ct in types_to_run:
-        run_corpus_type(ct, args)
+    # Multi-model config (v0.3.0 #629): if --model-config given, iterate models.
+    if args.model_config:
+        models = _load_model_config(args.model_config)
+        if not models:
+            raise SystemExit(f"[error] no 'models:' entries in {args.model_config}")
+        for m in models:
+            args.llm_provider = m.get("provider", args.llm_provider)
+            args.llm_model = m.get("name", args.llm_model)
+            args.llm_base_url = m.get("base_url", args.llm_base_url)
+            if "temperatures" in m:
+                args.temperatures = m["temperatures"]
+            print(f"\n[model] {args.llm_provider}/{args.llm_model}")
+            types_to_run = list(CORPUS_TYPES) if args.all else [args.corpus_type]
+            for ct in types_to_run:
+                run_corpus_type(ct, args)
+    else:
+        types_to_run: list[str] = list(CORPUS_TYPES) if args.all else [args.corpus_type]
+        for ct in types_to_run:
+            run_corpus_type(ct, args)
 
     print("\nAll runs complete.")
 
