@@ -405,7 +405,7 @@ services:
 | 16. Image Size | 1 | Baseline diff documented |
 | 17. Multi-Arch | 2 | amd64 + arm64 build/smoke |
 | 18. Resource/Network | 2 | Graceful under limits, offline CLI |
-| **Total** | **~70** | **All stages pass** |
+| **Total** | **~70 new tests** (excludes 127 inherited v0.2.0 tests; see `docker-test-results.md`) | **All stages pass** |
 
 ---
 

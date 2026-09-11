@@ -42,7 +42,7 @@
 | **otel** | 20 | 0 | 0 | 20 | 0 | 0 | 0 | fail |
 | **reference-expansion** | 288 | 9 | 125 | 152 | 0 | 0.103 | 0.022 | pass |
 
-**Total:** 30 corpora · 908 trajectories processed.
+**Total:** 30 corpora · 1,156 trajectories processed.
 
 ---
 

@@ -28,5 +28,8 @@ jobs:
       - name: Type check (mypy)
         run: mypy src/
 
+      - name: Field-test report drift check (#686)
+        run: python scripts/generate_field_test_report.py --check
+
       - name: Test with coverage
         run: pytest --cov=cauterule --cov-report=term-missing --cov-fail-under=95

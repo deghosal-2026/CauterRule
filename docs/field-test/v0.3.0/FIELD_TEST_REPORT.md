@@ -2,7 +2,9 @@
 
 **Date:** 2026-09-11  
 **Milestone:** M7 — Field Test (milestone 62)  
-**Scope:** 4-model × 30-corpus sweep (3,632 trajectory-runs), Docker field test (153 tests), 5 field-test-found fixes, v0.2.0 regression comparison.
+**Scope:** 4-model × 30-corpus sweep (4,537 trajectory-runs), Docker field test (153 tests), 5 field-test-found fixes, v0.2.0 regression comparison.
+
+**Issue references (see also):** GitHub issue numbers cited in this report (#601, #642, #653, #663, #667, #671, #673, #677–#684, …) are mirrored locally with status in [`docs/wbs/v0.3.0/wbs-v0.3.0-part3-field-test.md`](../../wbs/v0.3.0/wbs-v0.3.0-part3-field-test.md) and [`docs/wbs/v0.3.0/wbs-v0.3.0-index.md`](../../wbs/v0.3.0/wbs-v0.3.0-index.md).
 
 ---
 
@@ -20,7 +22,7 @@
 | **Reference corpus size** | 230 trajectories | **518** (+288 #489) | ✅ More than doubled |
 | **Corpora tested** | 22 | **30** (+8 new) | ✅ Broader |
 | **Models tested** | 4 (2 local + 2 cloud) | 4 (same) | ✅ Same coverage |
-| **Total trajectory-runs** | ~4,000 | **3,632** (30×4 minus gate-drops) | Comparable |
+| **Total trajectory-runs** | ~4,000 | **4,537** (raw results.jsonl line totals) | Comparable |
 | **Docker tests** | 0 | **153** (151 passing, 2 re-run pending) | ✅ New |
 | **Test suite** | 1,008 | **1,278** (+270) | ✅ Grew |
 | **Near-miss penalty in scorer** | Not implemented | **pass→inconclusive when near_misses>0** | ✅ New fix |
@@ -50,7 +52,7 @@ The field test found and fixed 5 issues during the sweep (near-miss penalty, sel
 | Nearmiss precision ≥90% | ✅ MET | 98% correct (1 FP / 50) on all 4 models |
 | Adversarial: 0 promoted rules | ✅ MET | 0/50 across all 5 vectors, all 4 models |
 | MCP remote security (#601) | ✅ MET | Auth guard fixed (fastmcp→mcp SDK Context); bearer auth enforced |
-| Docker field test | ✅ MET | 151/153 tests passing; 2 compose re-runs pending |
+| Docker field test | 🟡 MET (2 re-runs pending) | 151/153 tests passing; 2 compose re-runs (mcp-accepts, test-service) pending |
 | Golden pass rate ≥70% | ❌ NOT MET | 10% (1/10) on all 4 models |
 | Failures/positive pass rate ≥50% | ❌ NOT MET | 6-10% (3-5/50) on all 4 models |
 | Reference recall ≥0.10 | ❌ NOT MET | 0.02-0.04 on reference-expansion (all 4) |

@@ -1,5 +1,12 @@
 # v0.3.0 vs v0.2.0 — Llama-3.2-3B-Instruct-4bit (OMLX local)
 
+> **SUPERSEDED (v0.3.0 M7 code review, #686).** This is a mid-sweep checkpoint;
+> its numbers were captured before later field-test fixes landed and now
+> contradict the authoritative results. Numeric tables are regenerated from
+> raw `results.jsonl` by `scripts/generate_field_test_report.py` into
+> `docs/field-test/v0.3.0/generated-results.md`; see `FIELD_TEST_REPORT.md`
+> for the consolidated narrative. Kept for history only — do not cite.
+
 **Model:** `omlx-openai-Llama-3.2-3B-Instruct-4bit` · **Date:** 2026-09-11
 **Baseline:** `field-test/results/0.2.0/` (2026-09-08) · **Current:** `field-test/results/0.3.0/` (2026-09-11)
 **Status:** **POST-FIX** — this reflects the current code with the field-test fixes applied (near-miss penalty, self-match exclusion, recovery gate, JSONL runner fix).

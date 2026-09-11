@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-11 · **Models:** Llama-3.2-3B + Qwen3-4B (OMLX local, #648) · gpt-4o-mini + llama-3.1-8b (OpenRouter cloud, #650)
 **Results dir:** `field-test/results/0.3.0/` · **Runner:** `--max-workers 3-6`, one corpus at a time
-**All models swept on all 30 corpora (908 trajectories each; 3,632 total runs).**
+**All models swept on all 30 corpora (1,093 / 1,156 / 1,156 / 1,132 trajectories per model; 4,537 total runs).**
 
 ---
 
@@ -53,6 +53,8 @@ The 4-model sweep is **remarkably uniform**:
 **The near-miss penalty + self-match exclusion + alias removal made precision honest but dropped the pass-rate.** Golden 1/10 across ALL models confirms this is structural, not model-specific.
 
 ## 4. Recommended Next Step (feed #667 report + release decision)
+
+> See also: [`docs/wbs/v0.3.0/wbs-v0.3.0-part3-field-test.md`](../../wbs/v0.3.0/wbs-v0.3.0-part3-field-test.md) for local issue status.
 
 1. **Re-baseline the release gate.** With safety + nearmiss + adversarial all green on 4/4 models, the "quality" thresholds (golden ≥70%, fp ≥50%) were calibrated on the pre-#492-alias-removal matcher. Either:
    a. Tune the matcher score blend (0.6 token-F1 + 0.4 bigram) or raise the DEFAULT pass floor, OR
