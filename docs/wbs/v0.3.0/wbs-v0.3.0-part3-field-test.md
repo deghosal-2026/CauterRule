@@ -53,7 +53,7 @@
 | 7.22 | gate.py `_step_shows_success()`: non-empty output treated as success even on error text | [#693](https://github.com/deghosal-2026/CauterRule/issues/693) | ✓ done |
 | 7.23 | matcher.py: `check_domain_mismatch()`/`extract_trigger_domain()` are dead code | [#694](https://github.com/deghosal-2026/CauterRule/issues/694) | code done; field-test revalidation pending |
 | 7.24 | Add confidence intervals to field-test metrics (small n=10, n=50 samples) | [#695](https://github.com/deghosal-2026/CauterRule/issues/695) | ✓ done |
-| 7.25 | Adversarial corpus: add tool-output-borne + multi-turn/compounding vectors | [#696](https://github.com/deghosal-2026/CauterRule/issues/696) |
+| 7.25 | Adversarial corpus: add tool-output-borne + multi-turn/compounding vectors | [#696](https://github.com/deghosal-2026/CauterRule/issues/696) | ✓ done |
 | 7.26 | Spot-audit gate-dropped trajectories — expose false-positive gate silence | [#697](https://github.com/deghosal-2026/CauterRule/issues/697) | ✓ done |
 | 7.27 | Corpus expansion: real production agent-trajectory sources + synthetic gaps | [#698](https://github.com/deghosal-2026/CauterRule/issues/698) |
 | 7.28 | Corpus source: AgentHarm (Hugging Face) for adversarial/unsafe realism | [#699](https://github.com/deghosal-2026/CauterRule/issues/699) |
@@ -64,7 +64,7 @@
 | 7.33 | Corpus source: Terraform provider issue trackers for lifecycle/infra failures | [#704](https://github.com/deghosal-2026/CauterRule/issues/704) |
 | 7.34 | Corpus source: WebArena / VisualWebArena (GitHub) for browser-tool failure diversity | [#705](https://github.com/deghosal-2026/CauterRule/issues/705) |
 | 7.35 | Corpus source: BugsInPy and Defects4J for python/test failure classes | [#706](https://github.com/deghosal-2026/CauterRule/issues/706) |
-| 7.36 | Corpus process: pair each external source with matching success trajectories | [#707](https://github.com/deghosal-2026/CauterRule/issues/707) |
+| 7.36 | Corpus process: pair each external source with matching success trajectories | [#707](https://github.com/deghosal-2026/CauterRule/issues/707) | ✓ done (checker) |
 
 **Batch progress (code-first ordering):**
 - **Batch 1 — gate/matcher safety correctness (done):** #692 (recovery keyword whole-token match), #693 (`_step_shows_success` no longer treats error text in `step.output` as success; exit_code checked first), #694 (`check_domain_mismatch` wired into `rule_matches`, failure trajectories only, to preserve #616 recovery semantics). Tests added in `tests/extraction/test_gate.py` + `tests/replay/test_matcher.py`; full non-field/non-scale/non-docker suite green; ruff/mypy clean on changed files.
@@ -72,7 +72,8 @@
 - **Batch 3 — statistical rigor + corpus diagnostics (done):** #695 (`src/cauterule/stats.py` Wilson CI; `confidence_intervals` in `summary.json`; field-test-plan §5.9 reporting format). #690 (new `src/cauterule/replay/diagnostics.py` + `scripts/diagnose_corpus.py`; matcher pre-filter extracted to `trigger_prefilter_reason`; CI guard `tests/corpus/test_v030_corpus_coverage.py`; findings in `docs/field-test/v0.3.0/corpus-diagnostics.md`). Root cause split: `adapters`/`lifecycle`/`mcp` = missing references (b); `otel`/`packs`/`raw/ci` = matcher mismatch (a); extraction pre-filter ruled out.
 - **Batch 4 — report regeneration + doc integrity (done):** #686 (`scripts/generate_field_test_report.py` + `docs/field-test/v0.3.0/generated-results.md` with `--check` drift mode, CI step, test drift guard; stale `regression-llama-3.2-3b-vs-v0.2.0.md` marked SUPERSEDED). #685 (corrected 908→1,093/1,156/1,156/1,132 and 3,632→4,537 in the report/per-model/4-model docs). #687 (WBS "see also" traceability links). #688 (`~70 new tests` relabel; Docker gate reworded to "MET (2 re-runs pending)").
 - **Batch 5 — semantic/embedding matching (done):** #689 (`src/cauterule/replay/embeddings.py` local MiniLM cosine, opt-in via `CAUTERULE_SEMANTIC_MATCHING=1`; blend `0.5·token-F1 + 0.3·bigram + 0.2·semantic` with a 0.80-similarity floor; LRU embedding cache; `matching` optional extra; tests in `tests/replay/test_semantic_matching.py`; latency benchmark). Semantic path is off by default so existing scores/thresholds are unchanged.
-- **Next — Batch 6:** #696 (adversarial tool-output/multi-turn vectors), #707 (corpus source balance check).
+- **Batch 6 — adversarial vectors + corpus balance (done):** #696 (new `corpus/public/adversarial/tool_output_injection/` and `compounding_multiturn/`, 10 vectors each; invariant tests in `tests/corpus/test_adversarial_vectors.py`; wired into the harness adversarial sweep). #707 (`src/cauterule/corpus/balance.py` + `scripts/check_corpus_balance.py`, warn-by-default/`--strict`; tests in `tests/corpus/test_source_balance.py`). Checker flags the known failure-only `CauterRule` reference-expansion source (paired successes = #698 follow-up).
+- **Next — Batch 7:** #698-#706 external corpus sourcing + converters (needs datasets).
 
 ### M7 Exit Gate
 
