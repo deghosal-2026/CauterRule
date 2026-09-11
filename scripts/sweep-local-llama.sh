@@ -12,6 +12,7 @@ CORPORA=(
   raw/opencode raw/synthetic raw/ci raw/sibling-repos raw/corrections raw/cross-session
   public/golden public/counterexample public/nearmiss public/staleness public/synthetic public/domains
   adversarial/injection adversarial/misleading adversarial/contradiction adversarial/unsafe adversarial/poisoning
+  adversarial/tool_output_injection adversarial/compounding_multiturn
   adapters lifecycle packs mcp otel reference-expansion
 )
 

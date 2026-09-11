@@ -3,9 +3,9 @@
 **Date:** 2026-09-11
 **Milestone:** M7 — Field Test (milestone 62)
 **Prior baseline:** v0.2.0 field test (`docs/field-test/v0.2.0/field-test-plan.md`, 720 trajectories, 4 models, 1275 fast-suite)
-**Issues:** #625 (plan) · #629 (runner) · #635 (corpus) · #648/#650 (model runs) · #653 (cost) · #663 (cross-session) · #667 (report) · #671 (known issues) · deferred: #489 (corpus 500+), #491 (Fix 8 OMLX), #493 (human agreement), #496 (cross-session ≥50%)
+**Issues:** #625 (plan) · #629 (runner) · #635 (corpus) · #648/#650 (model runs) · #653 (cost) · #663 (cross-session) · #667 (report) · #671 (known issues) · deferred: #489 (corpus 500+), #491 (Fix 8 OMLX), #493 (human agreement), #496 (cross-session ≥50%) · code-review follow-ups: #685–#707 (see §5.10)
 **Docker plan:** `docs/field-test/v0.3.0/docker-test-plan.md` (#641/#642/#676 — closed)
-**Deliverables:** this plan → `docs/field-test/v0.3.0/field-test-raw-results.md` → `docs/field-test/v0.3.0/FIELD_TEST_REPORT.md` → `field-test/v0.3.0/known-issues.md`
+**Deliverables:** this plan → per-model results (`field-test-results-*.md`) + generated tables (`generated-results.md`, #686) → `docs/field-test/v0.3.0/FIELD_TEST_REPORT.md` → `field-test/v0.3.0/known-issues.md`
 
 ---
 
@@ -58,7 +58,7 @@ The v0.3.0 field test inherits the v0.2.0 corpus (720 trajectories) and adds new
 | **Cost corpus (NEW)** | `field-test/corpus/cost/` | 0 | **1000** | Fixed 1k-trajectory sample for $/1k measurement (#486/#653) |
 | Reference corpus (expanded) | `corpus/public/` | 230 phrasings | **500+** (#489) | Diverse phrasings for matcher robustness |
 
-**Target total:** ~1,750+ trajectories (up from 720). The 1000-trajectory cost corpus is a fixed sample reused across all models for the $/1k measurement.
+**Target total:** ~1,770+ trajectories (up from 720). The 1000-trajectory cost corpus is a fixed sample reused across all models for the $/1k measurement.
 
 ### 3.2 Corpus Metadata (v0.2.0 fields + v0.3.0 additions)
 
@@ -246,6 +246,16 @@ Where a CI is wide enough to cross a release-gate threshold — e.g. adversarial
 larger sample" rather than a clean pass/fail. Increasing adversarial and
 nearmiss sample sizes is a standing recommendation for safety-critical claims.
 
+### 5.10 Code-Review Tooling (v0.3.0 M7 follow-ups #685–#707)
+
+The v0.3.0 code review added tooling that the next field-test cycle uses:
+
+- **Report regeneration (#686):** `scripts/generate_field_test_report.py` renders the model totals and per-model × per-corpus P/F/I tables (with Wilson CIs) from raw `results.jsonl` into `docs/field-test/v0.3.0/generated-results.md`; `--check` fails on drift and is wired into CI. All numeric tables are generated, not hand-typed (corrects the 908→1,093/1,156/1,156/1,132 and 3,632→4,537 drift, #685).
+- **Corpus diagnostics (#690):** `scripts/diagnose_corpus.py` + `src/cauterule/replay/diagnostics.py` report reference coverage and the candidate pre-filter funnel per corpus. Prior run: `docs/field-test/v0.3.0/corpus-diagnostics.md`.
+- **Threshold calibration (#691):** `scripts/calibrate_thresholds.py` + `src/cauterule/replay/calibration.py` sweep the shipped thresholds over a golden/nearmiss sample; evidence in `docs/field-test/v0.3.0/threshold-calibration.md`.
+- **Source balance (#707):** `scripts/check_corpus_balance.py` flags failure-only `source_repo` values (warn by default, `--strict` to gate).
+- **Semantic matching (#689, opt-in):** `src/cauterule/replay/embeddings.py` adds a local MiniLM cosine term, disabled unless `CAUTERULE_SEMANTIC_MATCHING=1` (extra `[matching]`). Off by default, so measured thresholds are unchanged; if enabled for a sweep, re-run the calibration script.
+
 ---
 
 ## 6. New Thresholds in v0.3.0
@@ -366,6 +376,8 @@ Same 4 models as v0.2.0 (regression comparison), swept on the v0.3.0 corpora:
 
 New validation suites added to `VALIDATION_SUITES` (§4.1): `adapter_conformance`, `lifecycle`, `packs`, `mcp_security`, `otel_exporter`, `corpus_cli`, `benchmark_cli`. Results output to `field-test/0.3.0/` (docker results already at `field-test/results/0.3.0/docker/`).
 
+`CORPUS_TYPES` now includes the two #696 adversarial vectors (`adversarial/tool_output_injection`, `adversarial/compounding_multiturn`; 32 corpus types total), and `summary.json` carries `gate_dropped_by_reason` (#697) and `confidence_intervals` (#695).
+
 ---
 
 ## 10. Acceptance Criteria
@@ -422,7 +434,7 @@ New validation suites added to `VALIDATION_SUITES` (§4.1): `adapter_conformance
 | MCP remote security | unauth/burst/malformed rejected | #601 |
 | OTEL span emission | 4/4 span types | #588 |
 | Cost/latency published | $/1k + tiering | #486 |
-| Docker field test | 153 tests pass | #641/#642 (closed) |
+| Docker field test | 151/153 pass; 2 compose re-runs pending | #641/#642 (closed) |
 | Human-vs-replay agreement | documented | #493 |
 | Corpus expansion | 500+ phrasings | #489 |
 | Multi-env validation | macOS + Linux + Docker | #658 (closed) |
@@ -442,6 +454,9 @@ New validation suites added to `VALIDATION_SUITES` (§4.1): `adapter_conformance
 | Cost measurement | #653 | `docs/field-test/v0.3.0/cost-measurement.md` |
 | Human agreement | #493 | `docs/field-test/v0.3.0/human-agreement.md` |
 | Field test report | #667 | `docs/field-test/v0.3.0/FIELD_TEST_REPORT.md` |
+| Generated results tables | #686 | `docs/field-test/v0.3.0/generated-results.md` (via `scripts/generate_field_test_report.py`) |
+| Threshold calibration evidence | #691 | `docs/field-test/v0.3.0/threshold-calibration.md` (via `scripts/calibrate_thresholds.py`) |
+| Corpus diagnostics | #690 | `docs/field-test/v0.3.0/corpus-diagnostics.md` (via `scripts/diagnose_corpus.py`) |
 | Known issues | #671 | `field-test/v0.3.0/known-issues.md` (template: Appendix B) |
 
 ---
@@ -468,7 +483,7 @@ New validation suites added to `VALIDATION_SUITES` (§4.1): `adapter_conformance
 
 ### 14.1 Corpus Inventory
 
-Total: **~1,750+ trajectories** across 27 sources (v0.2.0's 20 + 7 new).
+Total: **~1,770+ trajectories** across 27 sources (v0.2.0's 20 + 7 new).
 
 | Source | Count | Expected Outcome | Gate Mode | Sweep Role |
 |--------|-------|-----------------|-----------|------------|
@@ -491,7 +506,7 @@ Total: **~1,750+ trajectories** across 27 sources (v0.2.0's 20 + 7 new).
 | public/staleness | 10 | `should_reject` | relaxed | Staleness detection |
 | public/synthetic | 50 | mixed | relaxed | Shareable benchmark |
 | public/domains | 50 | mixed | relaxed | Per-domain coverage |
-| public/adversarial | 50 | `should_reject` | strict | Security testing |
+| public/adversarial | 70 | `should_reject` | strict | Security testing — 5 base vectors + 2 #696 vectors (tool-output injection, multi-turn/compounding) |
 | **adapters/langgraph (NEW)** | **20** | `should_extract` | relaxed | Adapter capture |
 | **adapters/crewai (NEW)** | **20** | `should_extract` | relaxed | Adapter capture |
 | **adapters/pydanticai (NEW)** | **20** | `should_extract` | relaxed | Adapter capture |

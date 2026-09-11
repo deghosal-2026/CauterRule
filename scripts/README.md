@@ -16,28 +16,44 @@ Utility scripts for development, testing, corpus management, and field test exec
 | `generate-m7-corpus.py` | Regenerate `corpus/public/` (golden families, counterexample, nearmiss, staleness, synthetic) from canonical scenarios | `python scripts/generate-m7-corpus.py` |
 | `normalize-corpus.py` | Backfill missing trajectory metadata fields (incl. `expected_outcome`) — idempotent | `python scripts/normalize-corpus.py --path corpus/public` |
 | `normalize-corpus.py --dry-run` | Report what would change without writing | `python scripts/normalize-corpus.py --dry-run` |
+| `generate-v030-corpus.py` | Generate the v0.3.0 corpora (#635): `field-test/corpus/{adapters,lifecycle,packs,mcp,otel}` with full annotation metadata | `python scripts/generate-v030-corpus.py` |
+| `generate-reference-expansion.py` | Generate the paraphrase reference corpus (270+ trajectories, #489) into `corpus/public/reference-expansion/` | `python scripts/generate-reference-expansion.py` |
 
 ## Field Test Run
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `run-field-test.py` | Run v0.2.0 field test sweeps (single corpus, `--all`, or hermetic validation suites). Outputs to `field-test/results/0.2.0/` | `python scripts/run-field-test.py golden --output-dir field-test/results/0.2.0` |
-| `run-field-test.py --run-validation` | Run all hermetic pre-field validation suites (#432-#437, #443-#444): gate, matcher, safety, attribution, specificity, sentinel benchmarks, scale, adversarial, corpus, observe, tui | `python scripts/run-field-test.py --run-validation --output-dir field-test/results/0.2.0/` |
+| `run-field-test.py` | Run v0.3.0 field test sweeps (single corpus, `--all`, or hermetic validation suites). Outputs to `field-test/results/0.3.0/` | `python scripts/run-field-test.py golden --output-dir field-test/results/0.3.0` |
+| `run-field-test.py --run-validation` | Run all hermetic pre-field validation suites (#432-#437, #443-#444): gate, matcher, safety, attribution, specificity, sentinel benchmarks, scale, adversarial, corpus, observe, tui | `python scripts/run-field-test.py --run-validation --output-dir field-test/results/0.3.0/` |
 | `run-field-test.py --validation-suite <name>` | Run a single validation suite only | `python scripts/run-field-test.py --run-validation --validation-suite sentinel_benchmark` |
-| `run-field-test.py --skip-preflight` | Skip provider/corpus preflight checks (for hermetic local runs) | `python scripts/run-field-test.py successes --llm-provider openai --llm-base-url http://localhost:8000/v1 --skip-preflight --output-dir field-test/results/0.2.0` |
+| `run-field-test.py --skip-preflight` | Skip provider/corpus preflight checks (for hermetic local runs) | `python scripts/run-field-test.py successes --llm-provider openai --llm-base-url http://localhost:8000/v1 --skip-preflight --output-dir field-test/results/0.3.0` |
+| `run-field-test.py --regression-v020` | Emit a per-corpus delta table vs the v0.2.0 baseline | `python scripts/run-field-test.py --regression-v020 --output-dir field-test/results/0.3.0` |
 
-**v0.2.0 runner features:**
-- Pre-extraction gate (strict on `successes`/`failures/negative`, relaxed elsewhere) — logs `pre_extraction_drops`
-- Corpus-aware matcher thresholds (0.70 curated, 0.45 raw, 0.40 cross-repo)
+**v0.3.0 runner features:**
+- Pre-extraction gate (strict on `successes`/`failures/negative`/`nearmiss`, relaxed elsewhere)
+- Corpus-aware matcher thresholds (`strict` 0.70, `loose` 0.35, `semantic` 0.60, `transfer` 0.40 — see `replay/matcher.py`), with an OMLX override
 - Safety-adjusted scoring — `silence_rate`, `safety_summary` per corpus
 - Trigger specificity distribution (specific/moderate/generic, generic target <10%)
 - Inconclusive attribution breakdown (`broad_trigger`/`matcher_gap`/`corpus_mismatch`/`ambiguous_evidence`)
-- Preflight checks with cost estimate, written to `preflight.json`
-- Harness health assertions after each sweep, written to `harness_health.json`
+- **Gate-drop reason breakdown (#697)** — `gate_dropped_by_reason` in `summary.json`, per-trajectory `gate.reason` in `results.jsonl`
+- **Wilson confidence intervals (#695)** — `confidence_intervals` for `pass_rate` / `safety_silence_rate` in `summary.json`
+- Preflight checks with cost estimate → `preflight.json`; harness health → `harness_health.json`
 - LLM call avoidance tracking (pre-extraction gate savings)
+- **Adversarial vectors (#696)** — `adversarial/tool_output_injection` and `adversarial/compounding_multiturn` alongside the 5 base vectors
 - Per-run artifacts: `meta.json`, `results.jsonl`, `summary.json`, `preflight.json`, `harness_health.json`
 | `compare-runs.py` | Compare two field-test run snapshots — diff inconclusive rates, specificity, silence rates, harness health | `python scripts/compare-runs.py <dir-1> <dir-2> [label1] [label2]` |
 | `generate-safety-corpus.py` | Generate expanded safety corpora (successes, negatives, nearmiss) to meet ≥50 targets | `python scripts/generate-safety-corpus.py` |
+| `sweep-local-llama.sh` | Resume-able v0.3.0 sweep over all corpora on local OMLX Llama-3.2-3B (skips corpora already run); add `run-field-test.py` model-config for other models | `bash scripts/sweep-local-llama.sh` |
+
+## Field-Test Analysis & Calibration
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `generate_field_test_report.py` | Single source of truth for field-test tables — renders model totals + per-model/per-corpus P/F/I (with CIs) from raw `results.jsonl` into `docs/field-test/v0.3.0/generated-results.md` (#686) | `python scripts/generate_field_test_report.py [--output <doc>]` |
+| `generate_field_test_report.py --check` | Fail (exit 1) if the committed generated report drifts from a fresh render — wired into CI | `python scripts/generate_field_test_report.py --check` |
+| `diagnose_corpus.py` | Root-cause a 0-pass corpus: reference coverage, uncovered target domains, and (via `--results`) the candidate pre-filter funnel (#690) | `python scripts/diagnose_corpus.py [--corpus otel] [--results <results.jsonl>]` |
+| `calibrate_thresholds.py` | Sweep matcher thresholds over the golden/nearmiss sample and render precision/recall evidence (#691) | `python scripts/calibrate_thresholds.py --output docs/field-test/v0.3.0/threshold-calibration.md` |
+| `check_corpus_balance.py` | Flag failure-only `source_repo` values across `corpus/public` so new sources pair failures with successes (#707) | `python scripts/check_corpus_balance.py [--strict]` |
 
 ## Performance & Measurement
 
@@ -45,6 +61,7 @@ Utility scripts for development, testing, corpus management, and field test exec
 |--------|---------|-------|
 | `measure_performance.py` | Measure CLI command response times (list, health, validate, inject) | `python scripts/measure_performance.py` |
 | `measure_ttv.sh` | Measure time-to-value wall-clock duration (install → first prevented failure) | `bash scripts/measure_ttv.sh` |
+| `compare_benchmarks.py` | Compare pytest-benchmark runs against a baseline; fail on >15% regression (#605) | `python scripts/compare_benchmarks.py <baseline.json> <.benchmarks/current.json>` |
 
 ## Build & Distribution
 
@@ -52,7 +69,7 @@ Utility scripts for development, testing, corpus management, and field test exec
 |--------|---------|-------|
 | `build.sh` | Build Python distribution artifacts (wheel) | `bash scripts/build.sh` |
 | `build_binary.sh` | Build standalone binary via PyInstaller | `bash scripts/build_binary.sh` |
-| `docker_field_test.sh` | Run all Docker field test stages sequentially | `bash scripts/docker_field_test.sh [--stage N] [--skip-build]` |
+| `docker_field_test.sh` | Build the hardened image and run the v0.3.0 docker-marked pytest suite (results → `field-test/results/0.3.0/docker/`); `--legacy` runs the v0.2.0-era 15 shell stages | `bash scripts/docker_field_test.sh [--skip-build] [--legacy [--stage N]]` |
 
 ## Quick Start
 
@@ -80,12 +97,25 @@ python scripts/create-trajectory.py
 python scripts/measure_performance.py
 
 # Run hermetic validation suites (pre-field validation, ~#432-#437, #443-#444)
-python scripts/run-field-test.py --run-validation --output-dir field-test/results/0.2.0
+python scripts/run-field-test.py --run-validation --output-dir field-test/results/0.3.0
 
 # Run a field-test sweep on the golden corpus
 CAUTERULE_LLM_API_KEY=dummy \
 python scripts/run-field-test.py golden \
   --llm-provider openai --llm-model llama-3.2-3b-instruct \
   --llm-base-url http://localhost:8000/v1 \
-  --output-dir field-test/results/0.2.0
+  --output-dir field-test/results/0.3.0
+
+# Regenerate the field-test result tables (single source of truth) and check for drift
+python scripts/generate_field_test_report.py
+python scripts/generate_field_test_report.py --check
+
+# Root-cause a 0-pass corpus (reference coverage + candidate pre-filter funnel)
+python scripts/diagnose_corpus.py --corpus otel
+
+# Re-sweep and record matcher threshold calibration evidence
+python scripts/calibrate_thresholds.py --output docs/field-test/v0.3.0/threshold-calibration.md
+
+# Warn on failure-only corpus sources (add --strict to fail)
+python scripts/check_corpus_balance.py
 ```

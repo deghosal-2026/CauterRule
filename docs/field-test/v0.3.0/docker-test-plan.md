@@ -42,6 +42,8 @@ docker buildx build --platform linux/amd64,linux/arm64 -t cauterule:field-test .
 
 Base image `python:3.12-slim`, wheel install via `python -m build`. v0.3.0 expectations from the image: `git` present, non-root runtime user, `HEALTHCHECK` defined, OCI labels on `docker inspect`, `mcp` dependency baked in (no runtime `pip install`).
 
+Optional extras (`llm`, `otel`, `matching`) are **not** installed in the base image — the Dockerfile installs the bare wheel. In particular the `matching` extra (`sentence-transformers`/torch, added for #689) stays host-side and opt-in, so semantic matching is disabled in-container and the image size is unaffected.
+
 ---
 
 ## 3. Test Matrix
@@ -61,7 +63,7 @@ Base image `python:3.12-slim`, wheel install via `python -m build`. v0.3.0 expec
 | Preflight | `preflight --cost-table` + `--max-cost` enforcement | subprocess | ✅ NEW (M6 #486) |
 | Badge / Webhook | `badge` SVG + shields URL; promote fires webhook to listener | subprocess + local HTTP listener | ✅ NEW (M5 #581/#585) |
 | Corpus & benchmarks | `corpus validate/lint/build/export` + `benchmark list`/`benchmark run` | subprocess + pytest-benchmark | ✅ NEW (M6 #606/#605) |
-| Adversarial | 6 corpora produce 0 promoted rules | `pytest tests/adversarial/` | — |
+| Adversarial | 5 base vectors + 2 new #696 vectors (tool-output-borne injection, multi-turn/compounding) produce 0 promoted rules | `pytest tests/adversarial/`; corpus invariants in `tests/corpus/test_adversarial_vectors.py`; corpus sweep via `run-field-test.py` adversarial path | ✅ new vectors (#696) |
 | Scale | latency/memory/indexing targets | `pytest tests/scale/` (slow) | — |
 | Demo | full loop <60s via compose profile | `docker compose --profile demo up` | ✅ changed |
 | Image size | measure + diff vs baseline | `docker images` | ✅ NEW |
@@ -333,7 +335,7 @@ Mirrors the plan as pytest methods, following `tests/field/test_docker_*.py` pat
 | `test_docker_resource_limits` | memory/cpu constrained run | 18 |
 | `test_docker_network_isolated` | air-gapped `--help`/`--version` | 18 |
 
-Runner integration: add a `--docker` flag to `scripts/run-field-test.py` (gap in current runner) that invokes only `tests/field/test_docker_v030.py` and emits `field-test/v0.3.0/docker-test-report.md` with PASS/FAIL per test, test counts, and timings.
+Runner integration (shipped): `scripts/docker_field_test.sh` builds the hardened image and runs all `-m docker` tests (inherited v0.1.0/v0.2.0 + new v0.3.0); `tests/field/conftest.py` writes per-test outcomes, a markdown summary table, and JUnit XML to `field-test/results/0.3.0/docker/` (`docker-results.jsonl`, `docker-test-report.md`, `docker-junit.xml`). The originally-planned `--docker` flag in `scripts/run-field-test.py` was not needed — the dedicated runner script covers it.
 
 ---
 
