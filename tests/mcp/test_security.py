@@ -96,30 +96,30 @@ class TestServerGuard:
 
     def test_stdio_skips_enforcement(self, tmp_path) -> None:
         server = self._server(tmp_path, auth_mode="bearer", auth_tokens=["s"])
-        client, error = server._guard()
+        client, error = server._guard(None)
         assert (client, error) == ("stdio", None)
 
     def test_remote_unauthenticated_rejected(self, tmp_path, monkeypatch) -> None:
         server = self._server(tmp_path, auth_mode="bearer", auth_tokens=["s"])
-        monkeypatch.setattr(server, "_request_headers", staticmethod(lambda: {"X-A": "b"}))
-        _, error = server._guard()
+        monkeypatch.setattr(server, "_request_headers", staticmethod(lambda ctx: {"X-A": "b"}))
+        _, error = server._guard("ctx")
         assert error is not None and error["status"] == 401
 
     def test_remote_authenticated_allowed(self, tmp_path, monkeypatch) -> None:
         server = self._server(tmp_path, auth_mode="bearer", auth_tokens=["s"])
         monkeypatch.setattr(
-            server, "_request_headers", staticmethod(lambda: {"Authorization": "Bearer s"})
+            server, "_request_headers", staticmethod(lambda ctx: {"Authorization": "Bearer s"})
         )
-        client, error = server._guard()
+        client, error = server._guard("ctx")
         assert error is None
         assert client.startswith("token:")
 
     def test_remote_malformed_payload_rejected(self, tmp_path, monkeypatch) -> None:
         server = self._server(tmp_path, auth_mode="bearer", auth_tokens=["s"])
         monkeypatch.setattr(
-            server, "_request_headers", staticmethod(lambda: {"Authorization": "Bearer s"})
+            server, "_request_headers", staticmethod(lambda ctx: {"Authorization": "Bearer s"})
         )
-        _, error = server._guard(payload_check=json.dumps({"error": "x"}))
+        _, error = server._guard("ctx", payload_check=json.dumps({"error": "x"}))
         assert error is not None and error["status"] == 400
 
     def test_remote_rate_limited(self, tmp_path, monkeypatch) -> None:
@@ -130,9 +130,9 @@ class TestServerGuard:
             rate_limiter=TokenBucket(capacity=1, refill_per_min=0.0),
         )
         monkeypatch.setattr(
-            server, "_request_headers", staticmethod(lambda: {"Authorization": "Bearer s"})
+            server, "_request_headers", staticmethod(lambda ctx: {"Authorization": "Bearer s"})
         )
-        _, first = server._guard()
+        _, first = server._guard("ctx")
         assert first is None
-        _, second = server._guard()
+        _, second = server._guard("ctx")
         assert second is not None and second["status"] == 429

@@ -100,7 +100,7 @@
 | 3.7 | conflict/overlap flags overlap on single shared token — false positives | [#609](https://github.com/deghosal-2026/CauterRule/issues/609) |
 | 3.8 | conflict/consolidation uses ad-hoc specificity instead of score_specificity() | [#608](https://github.com/deghosal-2026/CauterRule/issues/608) |
 | 3.9 | Store health misses near-dups + validator/supersede gaps + adapter stub divergence | [#526](https://github.com/deghosal-2026/CauterRule/issues/526) |
-| 3.10 | Docker/CI broken: dockerignore/root/git/healthcheck/compose/pgrep/port + ci coverage gate | [#524](https://github.com/deghosal-2026/CauterRule/issues/524) |
+| 3.10 | Docker/CI broken: dockerignore/root/git/healthcheck/compose/pgrep/port + ci coverage gate | [#524](https://github.com/deghosal-2026/CauterRule/issues/524) | ✓ closed (M7) |
 | 3.11 | One bad rule YAML kills list_rules | [#525](https://github.com/deghosal-2026/CauterRule/issues/525) |
 | 3.12 | Store durability: index/archive/atomicity/git-commit gaps | [#523](https://github.com/deghosal-2026/CauterRule/issues/523) |
 | 3.13 | MCP HTTP transport untested (auth/rate-limit/schema) | [#527](https://github.com/deghosal-2026/CauterRule/issues/527) |

@@ -1,5 +1,8 @@
+name: cauterule
+
 services:
   cauterule-demo:
+    profiles: [demo]
     build:
       context: .
       dockerfile: Dockerfile
@@ -13,22 +16,21 @@ services:
       - CAUTERULE_MODEL
       - OPENAI_API_KEY
     healthcheck:
-      test: ["CMD-SHELL", "cauterule --help > /dev/null && exit 0 || exit 1"]
+      test: ["CMD-SHELL", "cauterule --help > /dev/null 2>&1 || exit 1"]
       interval: 30s
       retries: 3
 
   cauterule-test:
+    profiles: [test]
     build:
       context: .
       dockerfile: Dockerfile
     container_name: cauterule-test
     entrypoint: ["sh", "-c"]
-    command: ["pip install -q pytest && cd /repo && python -m pytest tests/models tests/store tests/serialization tests/injection tests/redaction tests/export tests/cli tests/capture tests/promotion tests/conflict tests/loop tests/packs tests/observe tests/review tests/release tests/benchmark tests/corpus tests/adversarial tests/extraction tests/replay tests/safety tests/test_preflight tests/mcp tests/tui -m 'not slow and not docker' --tb=short -q -p no:cacheprovider"]
+    command: ["pip install --user -q pytest pytest-benchmark && python -m pytest tests/ -m 'not slow and not docker' --tb=short -q -p no:cacheprovider"]
     volumes:
-      - ./tests:/app/tests
-      - ./src:/app/src
-      - ./rules:/app/rules
-      - .:/repo
+      - ./tests:/app/tests:ro
+      - ./src:/app/src:ro
     environment:
       - CAUTERULE_LLM_PROVIDER
       - CAUTERULE_MODEL
@@ -36,28 +38,48 @@ services:
     depends_on:
       - cauterule-demo
     healthcheck:
-      test: ["CMD-SHELL", "cauterule --help > /dev/null && exit 0 || exit 1"]
+      test: ["CMD-SHELL", "cauterule --help > /dev/null 2>&1 || exit 1"]
       interval: 30s
       retries: 3
 
   cauterule-mcp:
+    profiles: [mcp]
     build:
       context: .
       dockerfile: Dockerfile
     container_name: cauterule-mcp
-    entrypoint: ["sh", "-c"]
-    command: ["pip install -q mcp && exec cauterule mcp --transport stdio"]
+    command: ["mcp", "--transport", "stdio"]
     volumes:
       - ./rules:/app/rules
     environment:
       - CAUTERULE_LLM_PROVIDER
       - CAUTERULE_MODEL
       - OPENAI_API_KEY
+      - CAUTERULE_MCP_TOKEN
     depends_on:
       - cauterule-demo
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -f 'cauterule mcp' > /dev/null && exit 0 || exit 1"]
+      test: ["CMD-SHELL", "cauterule --help > /dev/null 2>&1 || exit 1"]
       interval: 30s
       retries: 3
+
+  cauterule-mcp-http:
+    profiles: [mcp-http]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cauterule-mcp-http
+    command: ["mcp", "--transport", "http", "--host", "0.0.0.0", "--port", "8025", "--auth-mode", "bearer"]
     ports:
       - "8025:8025"
+    volumes:
+      - ./rules:/app/rules
+    environment:
+      - CAUTERULE_LLM_PROVIDER
+      - CAUTERULE_MODEL
+      - OPENAI_API_KEY
+      - CAUTERULE_MCP_TOKEN
+    healthcheck:
+      test: ["CMD-SHELL", "cauterule --help > /dev/null 2>&1 || exit 1"]
+      interval: 30s
+      retries: 3

@@ -1,0 +1,1 @@
+{"rule_id": "R-001", "pack": "ft-pack", "todo": "TODO: replace with a real failure trajectory for R-001 (trigger: git push fails with non-fast-forward)", "expected_outcome": {"verdict": "reproducible", "rule_id": "R-001"}}

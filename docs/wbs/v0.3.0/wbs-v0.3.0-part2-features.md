@@ -95,7 +95,7 @@
 
 | # | Task | Issue | Status |
 |---|------|-------|--------|
-| 6.1 | Docker compose: MCP runtime pip install, dead port, hardcoded dirs, no profiles, no multi-arch | [#607](https://github.com/deghosal-2026/CauterRule/issues/607) | → M7 |
+| 6.1 | Docker compose: MCP runtime pip install, dead port, hardcoded dirs, no profiles, no multi-arch | [#607](https://github.com/deghosal-2026/CauterRule/issues/607) | ✓ closed (M7) |
 | 6.2 | No `cauterule corpus` CLI group + no `cauterule benchmark` CLI + dead leaderboard code | [#606](https://github.com/deghosal-2026/CauterRule/issues/606) | ✓ closed |
 | 6.3 | pytest-benchmark + perf-regression CI for extraction/replay/injection hot paths | [#605](https://github.com/deghosal-2026/CauterRule/issues/605) | ✓ closed |
 | 6.4 | Release automation: cauterule release CLI + tag/publish workflow + TestPyPI | [#604](https://github.com/deghosal-2026/CauterRule/issues/604) | → M8 |

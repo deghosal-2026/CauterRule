@@ -180,16 +180,25 @@ def test_cli_report(rules_workspace: Path) -> None:
 
 
 @pytest.mark.docker
-def test_cli_pack_list(tmp_path: Path) -> None:
-    (tmp_path / "rules").mkdir(parents=True, exist_ok=True)
-    result = _run(["pack", "list"], cwd=tmp_path)
+def test_cli_pack_list(rules_workspace: Path) -> None:
+    store = str(rules_workspace / "rules")
+    created = _run(["pack", "create", "p1", "--store", store, "--from-tag", "git"], cwd=rules_workspace)
+    assert created.returncode == 0, created.stderr
+    installed = _run(["pack", "install", "./p1", "--store", store], cwd=rules_workspace)
+    assert installed.returncode == 0, installed.stderr
+    result = _run(["pack", "list", "--store", store], cwd=rules_workspace)
     assert result.returncode == 0, result.stderr
-    assert "Available rule packs" in result.stdout or "core" in result.stdout
+    assert "p1" in result.stdout
 
 
 @pytest.mark.docker
 def test_cli_pack_info(rules_workspace: Path) -> None:
-    result = _run(["pack", "info", "pack-git"], cwd=rules_workspace)
+    store = str(rules_workspace / "rules")
+    created = _run(["pack", "create", "p1", "--store", store, "--from-tag", "git"], cwd=rules_workspace)
+    assert created.returncode == 0, created.stderr
+    installed = _run(["pack", "install", "./p1", "--store", store], cwd=rules_workspace)
+    assert installed.returncode == 0, installed.stderr
+    result = _run(["pack", "info", "p1", "--store", store], cwd=rules_workspace)
     assert result.returncode == 0, result.stderr
     assert "Pack:" in result.stdout
     assert "Rules:" in result.stdout

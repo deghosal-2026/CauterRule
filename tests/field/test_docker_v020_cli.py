@@ -143,9 +143,12 @@ def test_cli_journal(rules_workspace: Path) -> None:
 
 @pytest.mark.docker
 def test_cli_report_monthly(rules_workspace: Path) -> None:
-    result = _run(["report", "--monthly", "--store-dir", str(rules_workspace / "rules")], cwd=rules_workspace)
+    # v0.3.0: `report --monthly` was replaced by `report --safety-adjusted`
+    # (field-test model ranking). Bare `report` still emits the report header.
+    result = _run(["report"], cwd=rules_workspace)
     assert result.returncode == 0, result.stderr
-    assert "Monthly Learning Report" in result.stdout
+    assert "CauterRule Report" in result.stdout
+    assert "safety-adjusted" in result.stdout
 
 
 @pytest.mark.docker

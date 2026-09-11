@@ -3,10 +3,22 @@
 from __future__ import annotations
 
 import subprocess
+from pathlib import Path
 
 import pytest
 
+import cauterule
+
 DOCKER_TAG = "cauterule:field-test"
+REPO = Path(__file__).resolve().parents[2]
+
+
+def _pyproject_version() -> str:
+    text = (REPO / "pyproject.toml").read_text(encoding="utf-8")
+    for line in text.splitlines():
+        if line.strip().startswith("version"):
+            return line.split("=")[1].strip().strip('"').strip("'")
+    return ""
 
 
 @pytest.mark.docker
@@ -26,7 +38,7 @@ def test_docker_version() -> None:
         capture_output=True,
         text=True,
     )
-    assert "0.1.0" in result.stdout
+    assert _pyproject_version() in result.stdout
 
 
 @pytest.mark.docker
@@ -67,4 +79,5 @@ def test_docker_import() -> None:
         capture_output=True,
         text=True,
     )
-    assert "0.1.0" in result.stdout
+    assert _pyproject_version() in result.stdout
+    assert cauterule.__version__ == _pyproject_version()

@@ -1,0 +1,99 @@
+............................FFF.F....................................... [ 47%]
+........................................................................ [ 94%]
+.........                                                                [100%]
+=================================== FAILURES ===================================
+___________________________ test_compose_start_demo ____________________________
+
+    @pytest.mark.docker
+    @pytest.mark.slow
+    def test_compose_start_demo() -> None:
+        result = _compose("up", "--build", "cauterule-demo", "--abort-on-container-exit")
+>       assert result.returncode == 0, result.stderr
+E       AssertionError:  Image cauterule-field-test-cauterule-demo Building 
+E          Image cauterule-field-test-cauterule-demo Built 
+E          Network cauterule-field-test_default Creating 
+E          Network cauterule-field-test_default Creating 
+E          Network cauterule-field-test_default Created 
+E          Network cauterule-field-test_default Created 
+E          Container cauterule-demo Creating 
+E          Container cauterule-demo Created 
+E          Container cauterule-demo Starting 
+E          Container cauterule-demo Started 
+E         cauterule-demo  | Traceback (most recent call last):
+E         cauterule-demo  |   File "/usr/local/bin/cauterule", line 6, in <module>
+E         cauterule-demo  |     sys.exit(main())
+E         cauterule-demo  |              ^^^^^^
+E         cauterule-demo  |   File "/usr/local/lib/python3.12/site-packages/click/core.py", line 1631, in __call__
+E         cauterule-demo  |     return self.main(*args, **kwargs)
+E         cauterule-demo  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         cauterule-demo  |   File "/usr/local/lib/python3.12/site-packages/click/core.py", line 1552, in main
+E         cauterule-demo  |     rv = self.invoke(ctx)
+E         cauterule-demo  |          ^^^^^^^^^^^^^^^^
+E         cauterule-demo  |   File "/usr/local/lib/python3.12/site-packages/click/core.py", line 2032, in invoke
+E         cauterule-demo  |     return _process_result(sub_ctx.command.invoke(sub_ctx))
+E         cauterule-demo  |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         cauterule-demo  |   File "/usr/local/lib/python3.12/site-packages/click/core.py", line 1415, in invoke
+E         cauterule-demo  |     return ctx.invoke(self.callback, **ctx.params)
+E         cauterule-demo  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         cauterule-demo  |   File "/usr/local/lib/python3.12/site-packages/click/core.py", line 910, in invoke
+E         cauterule-demo  |     return callback(*args, **kwargs)
+E         cauterule-demo  |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E         cauterule-demo  |   File "/usr/local/lib/python3.12/site-packages/cauterule/cli/demo.py", line 74, in demo
+E         cauterule-demo  |     _run_demo_pipeline(failures)
+E         cauterule-demo  |   File "/usr/local/lib/python3.12/site-packages/cauterule/cli/demo.py", line 51, in _run_demo_pipeline
+E         cauterule-demo  |     traj_dir.mkdir(parents=True, exist_ok=True)
+E         cauterule-demo  |   File "/usr/local/lib/python3.12/pathlib.py", line 1311, in mkdir
+E         cauterule-demo  |     os.mkdir(self, mode)
+E         cauterule-demo  | PermissionError: [Errno 13] Permission denied: 'trajectories'
+E          Compose Stopping Aborting on container exit...
+E          Container cauterule-demo Stopping 
+E          Container cauterule-demo Stopped 
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['docker', 'compose', '-f', 'docker-compose.yaml', '-p', 'cauterule-field-test', 'up', '--build'...e Stopping Aborting on container exit...\n Container cauterule-demo Stopping \n Container cauterule-demo Stopped \n\n').returncode
+
+tests/field/test_docker_compose.py:55: AssertionError
+___________________________ test_compose_mcp_accepts ___________________________
+
+    @pytest.mark.docker
+    @pytest.mark.slow
+    def test_compose_mcp_accepts() -> None:
+        _compose("up", "--build", "-d", "cauterule-mcp")
+>       assert _wait_for_service("cauterule-mcp", running=True), "cauterule-mcp did not start"
+E       AssertionError: cauterule-mcp did not start
+E       assert False
+E        +  where False = _wait_for_service('cauterule-mcp', running=True)
+
+tests/field/test_docker_compose.py:66: AssertionError
+___________________________ test_compose_test_passes ___________________________
+
+    @pytest.mark.docker
+    @pytest.mark.slow
+    def test_compose_test_passes() -> None:
+        result = _compose("up", "--build", "cauterule-test", "--abort-on-container-exit")
+>       assert result.returncode == 0, result.stderr
+E       AssertionError: no such service: cauterule-demo
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['docker', 'compose', '-f', 'docker-compose.yaml', '-p', 'cauterule-field-test', 'up', '--build', 'cauterule-test', '--abort-on-container-exit'], returncode=1, stdout='', stderr='no such service: cauterule-demo\n').returncode
+
+tests/field/test_docker_compose.py:117: AssertionError
+__________________________ test_compose_all_services ___________________________
+
+    @pytest.mark.docker
+    @pytest.mark.slow
+    def test_compose_all_services() -> None:
+        result = _compose("config", "--services")
+        assert result.returncode == 0, result.stderr
+        services = result.stdout.split()
+>       assert "cauterule-demo" in services
+E       AssertionError: assert 'cauterule-demo' in []
+
+tests/field/test_docker_compose.py:135: AssertionError
+docker results -> field-test/0.3.0/docker/docker-results.jsonl (field-test/0.3.0/docker/docker-test-report.md)
+=========================== short test summary info ============================
+FAILED tests/field/test_docker_compose.py::test_compose_start_demo - Assertio...
+FAILED tests/field/test_docker_compose.py::test_compose_mcp_accepts - Asserti...
+FAILED tests/field/test_docker_compose.py::test_compose_test_passes - Asserti...
+FAILED tests/field/test_docker_compose.py::test_compose_all_services - Assert...

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 from mcp.types import ToolAnnotations
 
 from cauterule.mcp.auth import McpAuthError, check_bearer, resolve_tokens
@@ -68,22 +68,36 @@ class CauteruleMCPServer:
         self._register_tools()
 
     @staticmethod
-    def _request_headers() -> dict[str, str]:
-        """Best-effort HTTP headers from the FastMCP request context ({} on stdio)."""
-        try:
-            from fastmcp.server.dependencies import get_http_request
+    def _request_headers(ctx: Context | None) -> dict[str, str]:
+        """HTTP headers from the official MCP SDK request context ({} on stdio).
 
-            request = get_http_request()
-            return {str(k): str(v) for k, v in request.headers.items()}
+        Uses ``ctx.request_context.request`` (a starlette Request when served
+        over streamable-http; ``None`` on stdio) — the supported path in the
+        ``mcp`` package. The previous ``fastmcp.server.dependencies`` import
+        targeted a package that is not installed, so it silently returned {}
+        and the guard never enforced auth (#601 regression caught by the
+        v0.3.0 docker field test).
+        """
+        if ctx is None:
+            return {}
+        try:
+            request = ctx.request_context.request
         except Exception:
             return {}
+        if request is None:
+            return {}
+        return {str(k): str(v) for k, v in request.headers.items()}
 
-    def _guard(self, payload_check: str | None = None) -> tuple[str, dict[str, Any] | None]:
+    def _guard(
+        self,
+        ctx: Context | None = None,
+        payload_check: str | None = None,
+    ) -> tuple[str, dict[str, Any] | None]:
         """Enforce auth + rate limit (+ optional payload validation).
 
         Returns (client, error_response). error_response is None when allowed.
         """
-        headers = self._request_headers()
+        headers = self._request_headers(ctx)
         if not headers:
             return "stdio", None  # no HTTP context: local transport
         try:
@@ -114,16 +128,16 @@ class CauteruleMCPServer:
     def _register_tools(self) -> None:
 
         @self._mcp.tool(annotations=_TOOL_ANNOTATIONS["get_matching_rules"])
-        def get_matching_rules_tool(task: str) -> list[dict[str, Any]] | dict[str, Any]:
-            _, error = self._guard()
+        def get_matching_rules_tool(task: str, ctx: Context) -> list[dict[str, Any]] | dict[str, Any]:
+            _, error = self._guard(ctx)
             if error is not None:
                 return error
             rules = get_matching_rules(task, self.store.list_rules())
             return [r.to_dict() for r in rules]
 
         @self._mcp.tool(annotations=_TOOL_ANNOTATIONS["get_rule"])
-        def get_rule_tool(rule_id: str) -> dict[str, Any] | None:
-            _, error = self._guard()
+        def get_rule_tool(rule_id: str, ctx: Context) -> dict[str, Any] | None:
+            _, error = self._guard(ctx)
             if error is not None:
                 return error
             rule = get_rule(rule_id, self.store)
@@ -133,16 +147,17 @@ class CauteruleMCPServer:
         def list_rules_tool(
             status: str | None = None,
             tag: str | None = None,
+            ctx: Context = None,  # injected by FastMCP; None on direct call
         ) -> list[dict[str, Any]] | dict[str, Any]:
-            _, error = self._guard()
+            _, error = self._guard(ctx)
             if error is not None:
                 return error
             rules = list_rules(status=status, tag=tag, store=self.store)
             return [r.to_dict() for r in rules]
 
         @self._mcp.tool(annotations=_TOOL_ANNOTATIONS["report_failure"])
-        def report_failure_tool(trajectory_json: str) -> dict[str, Any]:
-            _, error = self._guard(payload_check=trajectory_json)
+        def report_failure_tool(trajectory_json: str, ctx: Context) -> dict[str, Any]:
+            _, error = self._guard(ctx, payload_check=trajectory_json)
             if error is not None:
                 return error
             return report_failure(trajectory_json)
