@@ -21,8 +21,8 @@
 | 7.3 | Update corpus for v0.3.0 field test — packs/adapters/lifecycle safety | [#635](https://github.com/deghosal-2026/CauterRule/issues/635) | ✓ closed |
 | 7.4 | Docker test plan — container validation, compose scenarios, image size, multi-arch | [#641](https://github.com/deghosal-2026/CauterRule/issues/641) | ✓ closed |
 | 7.5 | Create and run Docker tests — compose suites, CLI smoke, preflight, full pipeline | [#642](https://github.com/deghosal-2026/CauterRule/issues/642) | ✓ closed |
-| 7.6 | Run field test against 2 OMLX local LLMs — capture results | [#648](https://github.com/deghosal-2026/CauterRule/issues/648) |
-| 7.7 | Run field test against cloud LLMs — gpt-4o-mini + llama-3.1-8b-instruct | [#650](https://github.com/deghosal-2026/CauterRule/issues/650) |
+| 7.6 | Run field test against 2 OMLX local LLMs — capture results | [#648](https://github.com/deghosal-2026/CauterRule/issues/648) | ✓ data captured |
+| 7.7 | Run field test against cloud LLMs — gpt-4o-mini + llama-3.1-8b-instruct | [#650](https://github.com/deghosal-2026/CauterRule/issues/650) | ✓ data captured |
 | 7.8 | Cost measurement — LLM cost per candidate, per promoted rule | [#653](https://github.com/deghosal-2026/CauterRule/issues/653) |
 | 7.9 | Multi-environment validation — macOS, Linux, Docker end-to-end | [#658](https://github.com/deghosal-2026/CauterRule/issues/658) |
 | 7.10 | Cross-session repeat-failure reduction measurement — before/after protocol | [#663](https://github.com/deghosal-2026/CauterRule/issues/663) |

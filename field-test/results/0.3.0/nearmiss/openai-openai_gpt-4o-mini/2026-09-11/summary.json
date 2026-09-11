@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "corpus_type": "nearmiss",
+    "timestamp": "2026-09-11",
+    "llm_provider": "openai",
+    "llm_model": "openai/gpt-4o-mini",
+    "llm_base_url": "https://openrouter.ai/api/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2,0.5",
+    "target_trajectories": 50,
+    "reference_trajectories": 230,
+    "cost_per_request_usd": 0.01,
+    "gate_mode": "strict"
+  },
+  "elapsed_seconds": 10.9,
+  "total": 50,
+  "done": 13,
+  "gate_dropped": 37,
+  "skipped": 0,
+  "total_candidates": 26,
+  "total_llm_calls_avoided": 74,
+  "avg_precision": 0.195,
+  "avg_recall": 0.019,
+  "avg_match_score": 0.034,
+  "match_detail_count": 26,
+  "passing": 1,
+  "failing": 2,
+  "inconclusive": 10,
+  "safety": {
+    "total": 50,
+    "silence": 37,
+    "parse_failure": 0,
+    "rejected": 12,
+    "accepted": 1,
+    "silence_rate": 0.74,
+    "verdict": "pass"
+  },
+  "specificity_distribution": {
+    "specific": 72,
+    "moderate": 3,
+    "generic": 1
+  },
+  "inconclusive_breakdown": {
+    "broad_trigger": 1,
+    "matcher_gap": 10,
+    "corpus_mismatch": 0,
+    "ambiguous_evidence": 9
+  },
+  "updated_at": "2026-09-11T07:04:14Z"
+}

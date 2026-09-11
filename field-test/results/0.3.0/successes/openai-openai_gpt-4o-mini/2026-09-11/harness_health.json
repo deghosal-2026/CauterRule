@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "parse_rate",
+      "passed": true,
+      "message": "Safety corpus: 0 candidates expected (gate dropped all 60 trajectories)",
+      "value": 0.0,
+      "threshold": 0.7
+    },
+    {
+      "name": "completion_ratio",
+      "passed": true,
+      "message": "Safety corpus: 0/60 completion expected (gate silence)",
+      "value": 0.0,
+      "threshold": 1.0
+    }
+  ],
+  "warnings": []
+}

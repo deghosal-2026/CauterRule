@@ -2,6 +2,7 @@
 
 **Model:** `Qwen3-4B-Instruct-2507-4bit` (OMLX, local, free) · **Date:** 2026-09-11
 **Results dir:** `field-test/results/0.3.0/` · **Runner:** `--max-workers 3`, one corpus at a time
+**Cross-model comparison:** [`field-test-results-4model.md`](field-test-results-4model.md) — the 4-model matrix supersedes this single-model sheet for gate decisions.
 **Sibling:** Llama-3.2-3B results — `field-test-results-llama-3.2-3b.md` (both local models part of #648)
 
 ---
