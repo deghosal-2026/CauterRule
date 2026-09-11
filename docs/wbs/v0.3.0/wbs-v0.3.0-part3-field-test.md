@@ -46,7 +46,7 @@
 | 7.15 | Add regeneration pipeline for field-test reports (`scripts/generate_field_test_report.py`) | [#686](https://github.com/deghosal-2026/CauterRule/issues/686) | ✓ done |
 | 7.16 | Link #667/#671/#673/#677-684 references in FIELD_TEST_REPORT.md to local WBS mirror | [#687](https://github.com/deghosal-2026/CauterRule/issues/687) | ✓ done |
 | 7.17 | Resolve docker-test-plan.md "~70 tests" ambiguity vs docker-test-results.md's 153 | [#688](https://github.com/deghosal-2026/CauterRule/issues/688) | ✓ done |
-| 7.18 | matcher.py: add semantic/embedding similarity to bridge paraphrase gap | [#689](https://github.com/deghosal-2026/CauterRule/issues/689) |
+| 7.18 | matcher.py: add semantic/embedding similarity to bridge paraphrase gap | [#689](https://github.com/deghosal-2026/CauterRule/issues/689) | ✓ done (opt-in) |
 | 7.19 | Root-cause split: 0-pass corpora (lifecycle, otel, packs, raw/ci) — extraction vs threshold | [#690](https://github.com/deghosal-2026/CauterRule/issues/690) | ✓ done |
 | 7.20 | Calibrate matcher thresholds (`STRATEGY_THRESHOLDS`, `OMLX_THRESHOLD`) with provenance test | [#691](https://github.com/deghosal-2026/CauterRule/issues/691) | ✓ done |
 | 7.21 | gate.py: recovery-keyword substring match can silently suppress real failures | [#692](https://github.com/deghosal-2026/CauterRule/issues/692) | ✓ done |
@@ -71,7 +71,8 @@
 - **Batch 2 — threshold provenance + gate-drop observability (done):** #691 (`strategy_for_corpus` segment matching + token-safe `extract_trigger_domain`; new `src/cauterule/replay/calibration.py`, `scripts/calibrate_thresholds.py`, regression test, generated `docs/field-test/v0.3.0/threshold-calibration.md`; calibration also caught and fixed #694's coarse-domain false negatives via domain groups). #697 (gate reason already persisted per-trajectory; added `gate_dropped_by_reason` to `summary.json`, harness tests, and §5.8 spot-audit checklist).
 - **Batch 3 — statistical rigor + corpus diagnostics (done):** #695 (`src/cauterule/stats.py` Wilson CI; `confidence_intervals` in `summary.json`; field-test-plan §5.9 reporting format). #690 (new `src/cauterule/replay/diagnostics.py` + `scripts/diagnose_corpus.py`; matcher pre-filter extracted to `trigger_prefilter_reason`; CI guard `tests/corpus/test_v030_corpus_coverage.py`; findings in `docs/field-test/v0.3.0/corpus-diagnostics.md`). Root cause split: `adapters`/`lifecycle`/`mcp` = missing references (b); `otel`/`packs`/`raw/ci` = matcher mismatch (a); extraction pre-filter ruled out.
 - **Batch 4 — report regeneration + doc integrity (done):** #686 (`scripts/generate_field_test_report.py` + `docs/field-test/v0.3.0/generated-results.md` with `--check` drift mode, CI step, test drift guard; stale `regression-llama-3.2-3b-vs-v0.2.0.md` marked SUPERSEDED). #685 (corrected 908→1,093/1,156/1,156/1,132 and 3,632→4,537 in the report/per-model/4-model docs). #687 (WBS "see also" traceability links). #688 (`~70 new tests` relabel; Docker gate reworded to "MET (2 re-runs pending)").
-- **Next — Batch 5:** #689 semantic/embedding matching (optional `matching` dependency).
+- **Batch 5 — semantic/embedding matching (done):** #689 (`src/cauterule/replay/embeddings.py` local MiniLM cosine, opt-in via `CAUTERULE_SEMANTIC_MATCHING=1`; blend `0.5·token-F1 + 0.3·bigram + 0.2·semantic` with a 0.80-similarity floor; LRU embedding cache; `matching` optional extra; tests in `tests/replay/test_semantic_matching.py`; latency benchmark). Semantic path is off by default so existing scores/thresholds are unchanged.
+- **Next — Batch 6:** #696 (adversarial tool-output/multi-turn vectors), #707 (corpus source balance check).
 
 ### M7 Exit Gate
 

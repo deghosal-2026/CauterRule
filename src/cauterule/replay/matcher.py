@@ -23,6 +23,7 @@ from typing import Any
 
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.trajectory import Trajectory
+from cauterule.replay.embeddings import SEMANTIC_FLOOR, embedding_similarity
 
 # Triggers shorter than this are considered too generic to match reliably
 # unless context disambiguates them (issue #517).
@@ -43,6 +44,16 @@ _DEGENERATE_TRIGGER_RE = re.compile(r"^step[_\s]*\d+$", re.IGNORECASE)
 # Default similarity threshold for a match. Corpus-aware callers may pass
 # a different threshold (see issue #420).
 DEFAULT_THRESHOLD = 0.6
+
+# Semantic blend (#689): used only when semantic matching is enabled.  The
+# weights were chosen so an unrelated pair (semantic_sim ≈ 0) cannot clear the
+# 0.60 default threshold on the embedding term alone, while a strong paraphrase
+# (semantic_sim >= SEMANTIC_FLOOR) is floored at 0.70 like the other phrase
+# fast paths.  Re-run scripts/calibrate_thresholds.py when enabling this.
+_SEMANTIC_TOKEN_WEIGHT = 0.5
+_SEMANTIC_BIGRAM_WEIGHT = 0.3
+_SEMANTIC_EMBED_WEIGHT = 0.2
+SEMANTIC_FLOOR_SCORE = 0.70
 
 # Corpus-aware thresholds (issue #420).
 # Curated corpora have clean failure signatures → stricter.
@@ -358,7 +369,18 @@ def match_score(candidate: CandidateRule, trajectory: Trajectory) -> float:
     if trigger_bigrams:
         bigram_recall = len(trigger_bigrams & haystack_bigrams) / len(trigger_bigrams)
 
-    score = 0.6 * token_f1 + 0.4 * bigram_recall
+    semantic_sim = embedding_similarity(norm_trigger, haystack)
+    if semantic_sim > 0.0:
+        score = (
+            _SEMANTIC_TOKEN_WEIGHT * token_f1
+            + _SEMANTIC_BIGRAM_WEIGHT * bigram_recall
+            + _SEMANTIC_EMBED_WEIGHT * semantic_sim
+        )
+        # A high-confidence paraphrase floors the score like the phrase paths.
+        if semantic_sim >= SEMANTIC_FLOOR:
+            score = max(score, SEMANTIC_FLOOR_SCORE)
+    else:
+        score = 0.6 * token_f1 + 0.4 * bigram_recall
     # Phrase-level paraphrase floors at 0.70 (alias text matches haystack verbatim).
     if alias_phrase_hit:
         score = 0.70

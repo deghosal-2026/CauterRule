@@ -30,6 +30,7 @@ KNOWN_THIRD_PARTY = {
     "textual": ("textual", "core"),
     "mcp": ("mcp", "core"),
     "fastmcp": ("mcp", "core"),
+    "sentence_transformers": ("sentence-transformers", "matching"),
 }
 
 

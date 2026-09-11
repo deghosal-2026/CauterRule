@@ -52,6 +52,9 @@ otel = [
     "opentelemetry-sdk>=1.0",
     "opentelemetry-exporter-otlp>=1.0",
 ]
+matching = [
+    "sentence-transformers>=3.0",
+]
 all = [
     "openai>=1.0",
     "anthropic>=0.25",
@@ -60,6 +63,7 @@ all = [
     "opentelemetry-api>=1.0",
     "opentelemetry-sdk>=1.0",
     "opentelemetry-exporter-otlp>=1.0",
+    "sentence-transformers>=3.0",
 ]
 
 [project.urls]
