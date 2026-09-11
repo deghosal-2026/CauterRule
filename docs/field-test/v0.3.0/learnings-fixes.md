@@ -100,7 +100,18 @@ The v0.3.0 corpora (adapters/lifecycle/packs/mcp/otel) are **one `.jsonl` file p
 | raw/synthetic | 29P | 32P | identical behavior + full corpus |
 | reference-expansion | traj=32 | **288** | runner JSONL fix |
 
-Re-run on Qwen3-4B + 2 cloud models (#648/#650) to confirm these fixes generalize (especially the #492 alias removal — Qwen may rely on them; monitor its recall).
+## 7b. Confirmations From the Qwen3-4B Re-run (#648, second local model)
+
+The fixes generalized to the second local model — same 30-corpus sweep on `Qwen3-4B-Instruct-2507-4bit`:
+
+- **#492 alias-removal is SAFE for Qwen.** Qwen3-4B recall is commensurate with Llama (raw/synthetic 0.021 vs 0.039; reference-expansion 0.022 vs 0.031) — Qwen's abstract triggers still match through the weighted token-F1 path, so the broad aliases were not load-bearing. If a future model needs them, re-add with SPECIFIC phrases only (never "exit code"/"not found"/"test failed").
+- **Fix-8 gate-side (#491) is model-independent.** `success=True` + recovery keyword → silence fires identically on both models (nearmiss gate 37/50 both).
+- **Nearmiss stays at 1 false-pass (98% correct)** on Qwen — same irreducible N-002 edge.
+- **Quality ceilings match:** golden 1/10, failures/positive 3-5/50 on both local models — the ≥70%/≥50% release gate is unreachable on the 3B/4B local tier; cloud sweep (#650) is the decisive measurement.
+
+Full Qwen table: `docs/field-test/v0.3.0/field-test-results-qwen3-4b.md`.
+
+Re-run on 2 cloud models (#650) to confirm generalization beyond local — especially the Qwen-recall check (§7b already confirms Qwen3-4B).
 
 ---
 

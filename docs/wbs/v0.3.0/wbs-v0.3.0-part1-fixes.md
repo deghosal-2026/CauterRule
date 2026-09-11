@@ -77,7 +77,7 @@
 - [x] Total code coverage > 92% (full coverage 86%→95% tracked in #494, deferred)
 - [x] Lint strict clean: `ruff check .` + `mypy src/ tests/` — zero errors (M11 exit gates tracked in #495, deferred)
 - [x] All necessary and affected docs are updated
-- [x] Verify all issues in this milestone are done (7 verified; #489/#491/#493/#496 deferred to M7)
+- [x] Verify all issues in this milestone are done (7 verified; #489/#491 closed in M7, #493/#496 deferred to M7)
 - [x] Close all completed issues
 - [x] Code committed and pushed to branch (`feat-v0.3.0`)
 
