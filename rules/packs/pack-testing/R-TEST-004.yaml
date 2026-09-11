@@ -1,0 +1,25 @@
+id: R-TEST-004
+when:
+  trigger: pytest suite mocks an external service the team does not own
+  context:
+    - mocked HTTP client hides a contract change
+do:
+  directive: Move the mock to your own boundary and add a contract test at the seam
+  because: Mocking code you do not own freezes assumptions that nobody verifies
+confidence: 0.85
+provenance:
+  source_trajectory: packs/pack-testing/R-TEST-004
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - testing
+  - mocks
+  - contracts
+taxonomy: test/flaky
+pack: pack-testing

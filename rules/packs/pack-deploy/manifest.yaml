@@ -1,0 +1,15 @@
+name: pack-deploy
+version: 0.1.0
+description: Rules for Kubernetes, rollout/rollback, CI/CD and secret-mount failures
+author: CauterRule Team
+rules:
+  - R-DEPLOY-001
+  - R-DEPLOY-002
+  - R-DEPLOY-003
+  - R-DEPLOY-004
+  - R-DEPLOY-005
+  - R-DEPLOY-006
+  - R-DEPLOY-007
+  - R-DEPLOY-008
+  - R-DEPLOY-009
+  - R-DEPLOY-010

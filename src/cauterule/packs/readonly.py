@@ -28,4 +28,6 @@ def check_readonly(rule: StandingRule, base_dir: str = "rules") -> bool:
         pack_dir = resolve_inside(Path(base_dir) / "packs", rule.pack)
     except ValueError:
         return False
-    return pack_dir.is_dir() and (pack_dir / "manifest.yaml").is_file()
+    return pack_dir.is_dir() and (
+        (pack_dir / "pack.yaml").is_file() or (pack_dir / "manifest.yaml").is_file()
+    )

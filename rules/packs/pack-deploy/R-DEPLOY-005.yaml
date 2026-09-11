@@ -1,0 +1,25 @@
+id: R-DEPLOY-005
+when:
+  trigger: kubernetes rollout stalls past its progress deadline with pods not becoming ready
+  context:
+    - kubectl rollout status hangs then reports timeout
+do:
+  directive: Roll back with kubectl rollout undo, diff revisions, then re-apply the fix forward
+  because: A stuck rollout never self-heals; undo restores serving capacity first
+confidence: 0.89
+provenance:
+  source_trajectory: packs/pack-deploy/R-DEPLOY-005
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - deploy
+  - kubernetes
+  - rollout
+taxonomy: tool/network
+pack: pack-deploy

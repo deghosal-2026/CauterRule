@@ -4,6 +4,7 @@ import click
 
 from cauterule import __version__
 from cauterule.cli.audit import audit
+from cauterule.cli.badge import badge
 from cauterule.cli.config import config
 from cauterule.cli.conflicts import conflicts
 from cauterule.cli.counterfactual import counterfactual
@@ -33,10 +34,13 @@ from cauterule.cli.retire import retire
 from cauterule.cli.review import review
 from cauterule.cli.rewind import rewind_cmd
 from cauterule.cli.search import search
+from cauterule.cli.share import share
 from cauterule.cli.show import show
 from cauterule.cli.story import story
+from cauterule.cli.taxonomy import taxonomy
 from cauterule.cli.test import test
 from cauterule.cli.validate import validate
+from cauterule.cli.webhook import webhook
 from cauterule.log import get_logger, setup_logging
 
 log = get_logger(__name__)
@@ -52,6 +56,7 @@ def main(verbose: bool) -> None:
 
 
 main.add_command(audit)
+main.add_command(badge)
 main.add_command(config)
 main.add_command(conflicts)
 main.add_command(counterfactual)
@@ -82,7 +87,10 @@ main.add_command(retire)
 main.add_command(review)
 main.add_command(rewind_cmd, name="rewind")
 main.add_command(search)
+main.add_command(share)
 main.add_command(show)
 main.add_command(story)
+main.add_command(taxonomy)
 main.add_command(test)
 main.add_command(validate)
+main.add_command(webhook)

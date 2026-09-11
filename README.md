@@ -9,6 +9,7 @@
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14464/badge)](https://www.bestpractices.dev/projects/14464)
 [![Field Test](https://img.shields.io/badge/field%20test-v0.2.0%20%7C%20adversarial%20%2B%20safety%20rankings-brightgreen)](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md)
 [![Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
+[![Cauterule](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/deghosal-2026/Cauterule/main/badge.json)](docs/USER_GUIDE.md)
 
 **Automated standing-rule extraction from agent failures.**
 

@@ -16,7 +16,7 @@ BADGE_TEMPLATE = """\
   </g>
   <g fill="#fff" text-anchor="middle" font-family="Verdana" font-size="11">
     <text x="{left_cx}" y="14">{label}</text>
-    <text x="{left_w + right_cx}" y="14">{count}</text>
+    <text x="{right_cx_abs}" y="14">{count}</text>
   </g>
 </svg>"""
 
@@ -47,7 +47,7 @@ def badge_svg(count: int, label: str = "rules") -> str:
         left_w=left_w,
         right_w=right_w,
         left_cx=left_cx,
-        right_cx=right_cx,
+        right_cx_abs=left_w + right_cx,
         label=label,
         count=count_str,
     )

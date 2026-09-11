@@ -1,0 +1,25 @@
+id: R-DOCKER-010
+when:
+  trigger: docker image bloat from apt-get install without cleanup in the same layer
+  context:
+    - var lib apt lists left behind after install
+do:
+  directive: Combine apt-get update, install and list cleanup into a single RUN layer
+  because: Leftover package lists permanently inflate every image layer
+confidence: 0.87
+provenance:
+  source_trajectory: packs/pack-docker/R-DOCKER-010
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - docker
+  - build
+  - size
+taxonomy: docker/build/size
+pack: pack-docker

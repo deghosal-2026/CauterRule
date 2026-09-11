@@ -1,0 +1,25 @@
+id: R-TEST-005
+when:
+  trigger: pytest snapshot files updated blindly with the update flag in one commit
+  context:
+    - snapshot diff accepted without review
+do:
+  directive: Inspect each snapshot diff, split intended from unintended changes, then update deliberately
+  because: Bulk snapshot updates canonize regressions as expected output
+confidence: 0.86
+provenance:
+  source_trajectory: packs/pack-testing/R-TEST-005
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - testing
+  - snapshots
+  - review
+taxonomy: test/flaky
+pack: pack-testing

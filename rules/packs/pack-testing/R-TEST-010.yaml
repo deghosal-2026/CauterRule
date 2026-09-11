@@ -1,0 +1,25 @@
+id: R-TEST-010
+when:
+  trigger: pytest suite accumulates skipped tests hiding real rot
+  context:
+    - growing skip count with stale reasons
+do:
+  directive: Audit every skip with a reason and expiry, converting stale skips to strict xfails or fixes
+  because: A skip without an owner is a bug with a permission slip
+confidence: 0.84
+provenance:
+  source_trajectory: packs/pack-testing/R-TEST-010
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - testing
+  - skips
+  - hygiene
+taxonomy: test/flaky
+pack: pack-testing

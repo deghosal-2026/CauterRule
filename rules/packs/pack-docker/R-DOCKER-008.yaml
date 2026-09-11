@@ -1,0 +1,25 @@
+id: R-DOCKER-008
+when:
+  trigger: docker compose behaves differently in CI because of a stale latest image tag
+  context:
+    - cached latest tag hides the new image
+do:
+  directive: Pin image versions or digests and run docker compose pull before up
+  because: Mutable tags make local and CI runs diverge silently
+confidence: 0.86
+provenance:
+  source_trajectory: packs/pack-docker/R-DOCKER-008
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - docker
+  - compose
+  - tags
+taxonomy: docker/build/tags
+pack: pack-docker

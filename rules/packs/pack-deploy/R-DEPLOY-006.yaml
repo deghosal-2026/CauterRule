@@ -1,0 +1,25 @@
+id: R-DEPLOY-006
+when:
+  trigger: CI pipeline fails on a flaky network-dependent step that passes on retry
+  context:
+    - intermittent step failure with no code change
+do:
+  directive: Annotate the step with retry-with-backoff and a quarantine label instead of blanket re-runs
+  because: Retrying only the flaky step preserves signal from the rest of the pipeline
+confidence: 0.86
+provenance:
+  source_trajectory: packs/pack-deploy/R-DEPLOY-006
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - deploy
+  - ci
+  - flaky
+taxonomy: test/flaky
+pack: pack-deploy

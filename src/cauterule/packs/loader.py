@@ -38,7 +38,10 @@ def load_pack(
     validate_rule_id(name)
     packs_root = Path(base_dir) / "packs"
     pack_dir = resolve_inside(packs_root, name)
-    manifest_path = pack_dir / "manifest.yaml"
+    # pack.yaml preferred; legacy manifest.yaml synthesised on install (#554).
+    manifest_path = pack_dir / "pack.yaml"
+    if not manifest_path.is_file():
+        manifest_path = pack_dir / "manifest.yaml"
 
     if not pack_dir.is_dir():
         raise FileNotFoundError(f"Pack directory not found: {pack_dir}")
@@ -56,6 +59,9 @@ def load_pack(
     for rule_id in manifest.rules:
         validate_rule_id(rule_id)
         rule_path = resolve_inside(pack_dir, f"{rule_id}.yaml")
+        if not rule_path.is_file():
+            # Tolerate the rules/ subdirectory layout from pack create.
+            rule_path = resolve_inside(pack_dir, "rules", f"{rule_id}.yaml")
         if not rule_path.is_file():
             missing.append(rule_id)
             continue

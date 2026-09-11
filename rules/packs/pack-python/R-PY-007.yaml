@@ -1,0 +1,25 @@
+id: R-PY-007
+when:
+  trigger: python import fails because a local file shadows a stdlib module
+  context:
+    - random.py or email.py sitting in the working directory
+do:
+  directive: Rename the shadowing file and clear stale bytecode caches
+  because: The local directory wins imports, so a colliding name hijacks the stdlib
+confidence: 0.87
+provenance:
+  source_trajectory: packs/pack-python/R-PY-007
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - python
+  - imports
+  - shadowing
+taxonomy: python/import
+pack: pack-python

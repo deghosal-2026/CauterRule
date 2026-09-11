@@ -1,0 +1,25 @@
+id: R-PY-002
+when:
+  trigger: python packages land in system site-packages because no venv is active
+  context:
+    - sys.prefix points outside the project
+do:
+  directive: Create the venv once and activate it in every shell before installing
+  because: Without an active venv every install pollutes the global interpreter
+confidence: 0.9
+provenance:
+  source_trajectory: packs/pack-python/R-PY-002
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - python
+  - venv
+  - env
+taxonomy: config/env
+pack: pack-python

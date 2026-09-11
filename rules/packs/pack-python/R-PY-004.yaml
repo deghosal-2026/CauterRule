@@ -1,0 +1,25 @@
+id: R-PY-004
+when:
+  trigger: python imports a stale installed copy instead of the local repo package
+  context:
+    - editable install missing for local development
+do:
+  directive: Install the repo editable and verify the import path resolves to the checkout
+  because: A stale site-packages copy shadows every local edit until made editable
+confidence: 0.87
+provenance:
+  source_trajectory: packs/pack-python/R-PY-004
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - python
+  - imports
+  - install
+taxonomy: python/import
+pack: pack-python

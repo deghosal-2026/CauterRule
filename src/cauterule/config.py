@@ -101,6 +101,27 @@ class ExtractionConfig:
 
 
 @dataclass(frozen=True)
+class PacksConfig:
+    """Pack ecosystem settings."""
+
+    min_safety_score: int = 70
+
+
+@dataclass(frozen=True)
+class WebhookConfig:
+    """Promotion webhook settings."""
+
+    enabled: bool = False
+    provider: str = "slack"  # slack | discord | github | custom
+    url: str = ""
+    secret: str = ""
+    on_events: tuple[str, ...] = ("promote",)
+    max_attempts: int = 3
+    backoff: tuple[int, ...] = (1, 5, 30)
+    redact: bool = True
+
+
+@dataclass(frozen=True)
 class Config:
     """Top-level configuration."""
 
@@ -110,6 +131,8 @@ class Config:
     promotion: PromotionConfig = field(default_factory=PromotionConfig)
     redaction: RedactionConfig = field(default_factory=RedactionConfig)
     extraction: ExtractionConfig = field(default_factory=ExtractionConfig)
+    packs: PacksConfig = field(default_factory=PacksConfig)
+    webhook: WebhookConfig = field(default_factory=WebhookConfig)
 
 
 def _parse_toml(path: Path) -> dict[str, Any]:
@@ -186,6 +209,33 @@ def _extraction_from_dict(data: dict[str, Any]) -> ExtractionConfig:
     )
 
 
+def _packs_from_dict(data: dict[str, Any]) -> PacksConfig:
+    score = int(data.get("min_safety_score", 70))
+    if not 0 <= score <= 100:
+        raise ValueError(f"packs.min_safety_score must be 0-100, got {score}")
+    return PacksConfig(min_safety_score=score)
+
+
+def _webhook_from_dict(data: dict[str, Any]) -> WebhookConfig:
+    provider = str(data.get("provider", "slack"))
+    if provider not in {"slack", "discord", "github", "custom"}:
+        raise ValueError(f"webhook.provider must be slack|discord|github|custom, got {provider!r}")
+    events = data.get("on_events", ["promote"])
+    if isinstance(events, str):
+        events = [events]
+    backoff_raw = data.get("backoff", [1, 5, 30])
+    return WebhookConfig(
+        enabled=bool(data.get("enabled", False)),
+        provider=provider,
+        url=str(data.get("url", "")),
+        secret=str(data.get("secret", "")),
+        on_events=tuple(str(e) for e in events),
+        max_attempts=int(data.get("max_attempts", 3)),
+        backoff=tuple(int(b) for b in backoff_raw),
+        redact=bool(data.get("redact", True)),
+    )
+
+
 def _config_from_dict(data: dict[str, Any]) -> Config:
     return Config(
         llm=_llm_from_dict(data.get("llm", {})),
@@ -194,6 +244,8 @@ def _config_from_dict(data: dict[str, Any]) -> Config:
         promotion=_promotion_from_dict(data.get("promotion", {})),
         redaction=_redaction_from_dict(data.get("redaction", {})),
         extraction=_extraction_from_dict(data.get("extraction", {})),
+        packs=_packs_from_dict(data.get("packs", {})),
+        webhook=_webhook_from_dict(data.get("webhook", {})),
     )
 
 
@@ -239,6 +291,7 @@ def _apply_env_overrides(config: Config) -> Config:
     - ``CAUTERULE_PROMOTION_MODE`` / ``CAUTERULE_MODE``
     - ``CAUTERULE_RULES_PATH`` / ``CAUTERULE_RULES``
     - ``CAUTERULE_TRAJECTORIES_PATH``
+    - ``CAUTERULE_PACKS_MIN_SAFETY_SCORE`` (int, 0-100)
     """
     llm_provider = os.getenv("CAUTERULE_LLM_PROVIDER")
     llm_model = os.getenv("CAUTERULE_LLM_MODEL") or os.getenv("CAUTERULE_MODEL")
@@ -325,12 +378,22 @@ def _apply_env_overrides(config: Config) -> Config:
             raise ValueError(f"CAUTERULE_PROMOTION_MODE must be auto|human-review|hybrid, got {promotion_mode!r}")
         promotion = PromotionConfig(mode=promotion_mode)
 
+    packs = config.packs
+    packs_min_score = _env_int("CAUTERULE_PACKS_MIN_SAFETY_SCORE")
+    if packs_min_score is not None:
+        if not 0 <= packs_min_score <= 100:
+            raise ValueError(
+                f"CAUTERULE_PACKS_MIN_SAFETY_SCORE must be 0-100, got {packs_min_score}"
+            )
+        packs = PacksConfig(min_safety_score=packs_min_score)
+
     if (
         llm is config.llm
         and paths is config.paths
         and promotion is config.promotion
         and thresholds is config.thresholds
         and extraction is config.extraction
+        and packs is config.packs
     ):
         return config
 
@@ -341,6 +404,7 @@ def _apply_env_overrides(config: Config) -> Config:
         promotion=promotion,
         redaction=config.redaction,
         extraction=extraction,
+        packs=packs,
     )
 
 
@@ -379,5 +443,15 @@ def config_to_dict(config: Config) -> dict[str, Any]:
             "temperatures": list(config.extraction.temperatures),
             "confidence_threshold": config.extraction.confidence_threshold,
             "gate_mode": config.extraction.gate_mode,
+        },
+        "packs": {"min_safety_score": config.packs.min_safety_score},
+        "webhook": {
+            "enabled": config.webhook.enabled,
+            "provider": config.webhook.provider,
+            "url": config.webhook.url,
+            "on_events": list(config.webhook.on_events),
+            "max_attempts": config.webhook.max_attempts,
+            "backoff": list(config.webhook.backoff),
+            "redact": config.webhook.redact,
         },
     }

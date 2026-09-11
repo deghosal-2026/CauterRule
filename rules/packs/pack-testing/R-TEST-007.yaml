@@ -1,0 +1,25 @@
+id: R-TEST-007
+when:
+  trigger: pytest test passes alone but fails when the full suite runs
+  context:
+    - shared global state leaking between tests
+do:
+  directive: Isolate with function-scoped fixtures and bisect using forked or shuffled runs
+  because: Order dependence means state leaks, and leaks compound silently
+confidence: 0.87
+provenance:
+  source_trajectory: packs/pack-testing/R-TEST-007
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - testing
+  - isolation
+  - order
+taxonomy: test/flaky
+pack: pack-testing

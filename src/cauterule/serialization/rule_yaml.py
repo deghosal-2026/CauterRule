@@ -149,8 +149,16 @@ def load_rules_from_dir(
         if not _skipped_subdirs.intersection(p.relative_to(d).parts[:-1])
     )
     rules: list[StandingRule] = []
+    # Pack manifests, the dep lockfile, and store indexes are not rules and
+    # must never be quarantined (#554: the loader ate pack.yaml).
+    _non_rule_files = frozenset({
+        "index.yaml", "index.yml",
+        "manifest.yaml", "manifest.yml",
+        "pack.yaml", "pack.yml",
+        "packs.lock.yaml", "packs.lock.yml",
+    })
     for p in files:
-        if p.stem in {"index", "manifest"}:
+        if p.stem in {"index", "manifest"} or p.name in _non_rule_files:
             continue
         if not p.is_file():
             continue

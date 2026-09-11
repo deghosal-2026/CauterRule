@@ -1,0 +1,25 @@
+id: R-TEST-006
+when:
+  trigger: pytest async test hangs or warns coroutine was never awaited
+  context:
+    - missing await on an async call
+do:
+  directive: Await the coroutine and set an explicit timeout so hangs fail loudly
+  because: An unwaited coroutine never runs, and a hanging test burns the whole CI slot
+confidence: 0.88
+provenance:
+  source_trajectory: packs/pack-testing/R-TEST-006
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - testing
+  - async
+  - timeout
+taxonomy: test/flaky
+pack: pack-testing

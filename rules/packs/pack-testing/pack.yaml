@@ -1,0 +1,17 @@
+name: pack-testing
+version: 0.1.0
+description: Rules for flaky tests, coverage gates, mocks, snapshots and async timeouts
+author: CauterRule Team
+license: MIT
+rules:
+  - R-TEST-001
+  - R-TEST-002
+  - R-TEST-003
+  - R-TEST-004
+  - R-TEST-005
+  - R-TEST-006
+  - R-TEST-007
+  - R-TEST-008
+  - R-TEST-009
+  - R-TEST-010
+deps: []

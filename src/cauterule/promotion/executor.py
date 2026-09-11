@@ -66,6 +66,15 @@ def execute_promotion(
     rules_dir = Path(str(config.get("rules_dir", "rules")))
     rule_id = _next_rule_id(rules_dir)
 
+    # Taxonomy gate (#586): required field, auto-classified when missing.
+    from cauterule.taxonomy import ensure_taxonomy
+
+    taxonomy, _auto = ensure_taxonomy(
+        candidate.when.trigger,
+        candidate.do.directive,
+        config.get("taxonomy"),
+    )
+
     now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     promoted_at = now
 
@@ -87,6 +96,7 @@ def execute_promotion(
         status=str(config.get("status", "active")),  # type: ignore[arg-type]
         promoted_at=promoted_at,
         template=candidate.template,
+        taxonomy=taxonomy,
     )
 
     rules_dir.mkdir(parents=True, exist_ok=True)
@@ -124,10 +134,29 @@ def execute_promotion(
         status=rule.status,
         promoted_at=rule.promoted_at,
         template=candidate.template,
+        taxonomy=taxonomy,
     )
     dump_rule_to_file(rule, str(rule_path))
 
     if commit_hash:
         git_commit(f"promote: {rule_id} (update hash)", str(rules_dir))
+
+    # Promotion webhook (#585): best-effort — delivery failure must never
+    # block or roll back a completed promotion.
+    try:
+        from cauterule.integrations.webhook import notify_promotion
+
+        notify_promotion(
+            {
+                "id": rule_id,
+                "title": candidate.do.directive[:120],
+                "trigger": candidate.when.trigger,
+                "promoted_at": promoted_at,
+                "promoted_by": provenance.promotion_mode,
+            },
+            store_dir=str(rules_dir),
+        )
+    except Exception:
+        _log.warning("promotion webhook failed for %s — continuing", rule_id)
 
     return rule_id

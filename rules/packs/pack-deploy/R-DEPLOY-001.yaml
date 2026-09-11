@@ -1,0 +1,25 @@
+id: R-DEPLOY-001
+when:
+  trigger: kubernetes pod stuck in CrashLoopBackOff after repeated container restarts
+  context:
+    - kubectl get pods shows CrashLoopBackOff
+do:
+  directive: Read logs with kubectl logs using the previous container flag, then fix the app panic or missing env var
+  because: Previous-container logs reveal the crash cause that the fresh container hides
+confidence: 0.9
+provenance:
+  source_trajectory: packs/pack-deploy/R-DEPLOY-001
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - deploy
+  - kubernetes
+  - crashloop
+taxonomy: tool/network
+pack: pack-deploy

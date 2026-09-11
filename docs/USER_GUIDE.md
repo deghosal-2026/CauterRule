@@ -594,3 +594,111 @@ cauterule init --dir proj --adapter langgraph   # | crewai | pydanticai | custom
 Each adapter captures failures (as trajectories) and injects matching
 standing rules using the real matcher + budget.  All adapters pass the shared
 conformance suite in `tests/adapter_conformance/`.
+---
+
+## Rule Pack Ecosystem
+
+Turn the rule store into a library: install community packs, scaffold your
+own, publish releases, or share a single rule as a gist.
+
+### Official packs
+
+| Pack | Covers | Install |
+|---|---|---|
+| `pack-git` | push/merge/rebase/conflicts/hooks | bundled |
+| `pack-docker` | builds, compose, networking, volumes, registries | `cauterule pack install <repo>@<version>` |
+| `pack-deploy` | k8s, rollout/rollback, CI/CD, secrets (deps: `pack-docker`) | same (pulls `pack-docker`) |
+| `pack-testing` | flaky tests, coverage, mocks, snapshots, async | same |
+| `pack-python` | imports, venvs, pip resolver, installs | same |
+
+### Install / create / publish / share
+
+```bash
+cauterule pack install acme/pack-docker@v1.2.0   # GitHub release asset
+cauterule pack install pack-docker@1.2.0         # shorthand via registry
+cauterule pack install ./local-pack              # local dir or .tar.gz (air-gapped)
+cauterule pack install <gist-url>                # single shared rule
+cauterule pack install acme/pack-docker --offline --store ./rules
+cauterule pack install acme/pack-docker --skip-cert   # CI escape hatch only
+
+cauterule pack create pack-acme --from-tag docker/ --description "..." --author "You"
+cauterule pack publish --dry-run                 # validate + cert + asset preview
+cauterule pack publish --bump minor              # tag pack-<name>-vX.Y.Z + release
+cauterule share R-001                            # secret gist + PROVENANCE.json
+cauterule share R-001 --public --yes
+
+cauterule pack list                              # installed packs
+cauterule pack info pack-docker                  # version, deps, cert, safety score
+cauterule pack info pack-docker --json           # machine-readable
+cauterule pack tree pack-deploy                  # resolved dep tree from lockfile
+cauterule test --pack pack-docker                # replay every rule in the pack
+```
+
+### Semver policy for packs
+
+- `major`: rule removals, trigger narrowing, manifest format change.
+- `minor`: new rules, new optional deps.
+- `patch`: rule text / metadata fixes.
+- `publish --bump` suggests the kind from the rule-list diff (warn-only).
+
+### Dependency syntax (`pack.yaml` deps)
+
+```yaml
+deps:
+  - pack-docker >=1.0.0,<2.0.0
+  - pack-testing ^0.4.0
+```
+
+Resolution is recorded in `packs.lock.yaml`. Cycles and conflicts fail with
+an actionable error naming both requirers. Prereleases (`-rc.N`) never
+satisfy unpinned installs — pin them exactly.
+
+### Certification and safety scores
+
+Every install and publish runs `certify_pack()` (manifest, replay evidence,
+provenance) plus a 0–100 safety score (unsafe-directive scan,
+broad-trigger penalty). Below the threshold the operation is blocked:
+
+```toml
+[packs]
+min_safety_score = 70
+```
+
+Precedence: `--min-safety-score` flag > `cauterule.toml` > 70.
+`pack info` prints the cert status, score, and which rules drag it.
+
+### Share vs publish: which one?
+
+| Situation | Command |
+|---|---|
+| One rule to a teammate for review | `cauterule share R-001` (secret gist) |
+| Versioned pack for the world | `cauterule pack publish` (GitHub release) |
+| Air-gapped / local testing | `pack install ./path` + `pack create` |
+
+### Failure taxonomy, observability, badges, webhooks
+
+```bash
+cauterule list --taxonomy git/push           # filter by category
+cauterule health --by-taxonomy               # precision per category
+cauterule taxonomy backfill --dry-run        # classify untagged store rules
+
+cauterule observe                            # summary: learned, verdicts, gaps
+cauterule observe --since 7d --json          # period filter, machine output
+cauterule observe journal|metrics|frontier|gaps
+
+cauterule badge --svg                        # cauterule-badge.svg
+cauterule badge --json                       # shields.io endpoint schema
+cauterule badge --url                        # embed URL for README
+```
+
+```toml
+[webhook]
+enabled = true
+provider = "slack"   # slack | discord | github | custom
+url = "https://hooks.slack.com/..."
+on_events = ["promote"]
+```
+
+Promotion fires the webhook with retry + backoff (no retry on 4xx),
+secret redaction, and the SSRF guard. `cauterule webhook test` dry-runs
+delivery against a mock endpoint.

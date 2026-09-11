@@ -1,0 +1,25 @@
+id: R-DEPLOY-007
+when:
+  trigger: kubernetes pod starts with empty env vars from a misnamed secret reference
+  context:
+    - secretKeyRef typo or secret in the wrong namespace
+do:
+  directive: Compare the pod events and secret names across namespaces, then fix the reference
+  because: A single wrong character silently yields empty values instead of an error
+confidence: 0.88
+provenance:
+  source_trajectory: packs/pack-deploy/R-DEPLOY-007
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - deploy
+  - kubernetes
+  - secrets
+taxonomy: config/env
+pack: pack-deploy

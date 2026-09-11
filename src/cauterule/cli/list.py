@@ -9,6 +9,7 @@ from cauterule.store.manager import StoreManager
 @click.command("list")
 @click.option("--status", help="Filter by status (active/retired/draft).")
 @click.option("--tag", help="Filter by tag.")
+@click.option("--taxonomy", "taxonomy_filter", default=None, help="Filter by taxonomy category.")
 @click.option(
     "--sort",
     "sort_by",
@@ -16,7 +17,9 @@ from cauterule.store.manager import StoreManager
     default="id",
     help="Sort column.",
 )
-def list_rules(status: str | None, tag: str | None, sort_by: str) -> None:
+def list_rules(
+    status: str | None, tag: str | None, taxonomy_filter: str | None, sort_by: str
+) -> None:
     """List rules as a table with id, trigger, status, hits, tags, spec."""
     store = StoreManager()
     rules = store.list_rules(status=status)
@@ -26,6 +29,8 @@ def list_rules(status: str | None, tag: str | None, sort_by: str) -> None:
             click.echo(f"  {path}: {error}")
     if tag:
         rules = [r for r in rules if tag in [t.lower() for t in r.tags]]
+    if taxonomy_filter:
+        rules = [r for r in rules if (r.taxonomy or "") == taxonomy_filter]
     if not rules:
         click.echo("No rules found.")
         return

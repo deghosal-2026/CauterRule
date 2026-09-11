@@ -105,6 +105,13 @@ def test_load_rules_from_dir(tmp_path: Path) -> None:
     (sub / "manifest.yaml").write_text("name: pack-git\nversion: '1.0'\n", encoding="utf-8")
     assert {r.id for r in load_rules_from_dir(tmp_path)} == {"R-001", "R-002", "R-003"}
     assert (sub / "manifest.yaml").exists()
+    # pack.yaml + packs.lock.yaml are manifests too, never rules (#554)
+    (sub / "pack.yaml").write_text("name: pack-git\nversion: '1.0'\n", encoding="utf-8")
+    (tmp_path / "packs.lock.yaml").write_text("version: 1\n", encoding="utf-8")
+    assert {r.id for r in load_rules_from_dir(tmp_path)} == {"R-001", "R-002", "R-003"}
+    assert (sub / "pack.yaml").exists()
+    assert (tmp_path / "packs.lock.yaml").exists()
+    assert not (tmp_path / ".quarantine").exists()
 
 
 def test_load_rules_from_dir_bad_yaml_quarantined(tmp_path: Path) -> None:
