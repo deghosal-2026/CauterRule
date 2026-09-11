@@ -235,6 +235,17 @@ reviewer must:
 - [ ] File a known-issue for any sampled drop that should have been extracted
   (a false-positive gate silence), with the trajectory ID and reason.
 
+### 5.9 Confidence Intervals on Rate Metrics (#695)
+
+`summary.json` now carries Wilson intervals (`confidence_intervals`) for
+`pass_rate` and `safety_silence_rate`. Report every rate in the field-test
+report as `rate (n) [CI_low%–CI_high%]`, never a bare percentage, because the
+sample sizes are small (golden n=10, nearmiss n=50, adversarial n=10/vector).
+Where a CI is wide enough to cross a release-gate threshold — e.g. adversarial
+`0/10` has a 95% upper bound near 28% — mark the result "underpowered, needs a
+larger sample" rather than a clean pass/fail. Increasing adversarial and
+nearmiss sample sizes is a standing recommendation for safety-critical claims.
+
 ---
 
 ## 6. New Thresholds in v0.3.0

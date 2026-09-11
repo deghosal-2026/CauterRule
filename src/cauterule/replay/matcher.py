@@ -472,6 +472,41 @@ def _context_matches(candidate: CandidateRule, trajectory: Trajectory) -> bool:
     return True
 
 
+def trigger_prefilter_reason(candidate: CandidateRule) -> str | None:
+    """Return why a trigger is rejected before scoring, or None if it passes.
+
+    Categories: ``empty``, ``degenerate``, ``too_short``, ``generic``.  Mirrors
+    the pre-filters in :func:`rule_matches`; used by corpus diagnostics (#690)
+    to distinguish "no candidate reached scoring" from "candidate scored too
+    low".
+    """
+    trigger = candidate.when.trigger
+    if not trigger or not trigger.strip():
+        return "empty"
+
+    # Reject degenerate triggers (step identifiers like "step_1").
+    if _DEGENERATE_TRIGGER_RE.match(trigger.strip().lower()):
+        return "degenerate"
+
+    trigger_words = _tokenize(trigger)
+
+    # Reject overly generic triggers unless context narrows them.
+    if len(trigger_words) < _MIN_TRIGGER_WORDS and not candidate.when.context:
+        return "too_short"
+
+    # Reject single-word generic triggers like "error"/"timeout" that
+    # match too broadly (#517).  Specific single-word triggers (e.g.
+    # "replica") pass through and rely on the scorer for verdict.
+    if (
+        len(trigger_words) == 1
+        and not candidate.when.context
+        and any(w in _GENERIC_TRIGGERS for w in trigger_words)
+    ):
+        return "generic"
+
+    return None
+
+
 def rule_matches(
     candidate: CandidateRule,
     trajectory: Trajectory,
@@ -489,26 +524,8 @@ def rule_matches(
     Case-insensitive throughout. The ``threshold`` parameter enables
     corpus-aware calibration (see issue #420).
     """
-    trigger = candidate.when.trigger
-    if not trigger or not trigger.strip():
+    if trigger_prefilter_reason(candidate) is not None:
         return False
-
-    # Reject degenerate triggers (step identifiers like "step_1").
-    if _DEGENERATE_TRIGGER_RE.match(trigger.strip().lower()):
-        return False
-
-    trigger_words = _tokenize(trigger)
-
-    # Reject overly generic triggers unless context narrows them.
-    if len(trigger_words) < _MIN_TRIGGER_WORDS and not candidate.when.context:
-        return False
-
-    # Reject single-word generic triggers like "error"/"timeout" that
-    # match too broadly (#517).  Specific single-word triggers (e.g.
-    # "replica") pass through and rely on the scorer for verdict.
-    if len(trigger_words) == 1 and not candidate.when.context:
-        if any(w in _GENERIC_TRIGGERS for w in trigger_words):
-            return False
 
     if match_score(candidate, trajectory) < threshold:
         return False

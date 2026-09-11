@@ -47,12 +47,12 @@
 | 7.16 | Link #667/#671/#673/#677-684 references in FIELD_TEST_REPORT.md to local WBS mirror | [#687](https://github.com/deghosal-2026/CauterRule/issues/687) |
 | 7.17 | Resolve docker-test-plan.md "~70 tests" ambiguity vs docker-test-results.md's 153 | [#688](https://github.com/deghosal-2026/CauterRule/issues/688) |
 | 7.18 | matcher.py: add semantic/embedding similarity to bridge paraphrase gap | [#689](https://github.com/deghosal-2026/CauterRule/issues/689) |
-| 7.19 | Root-cause split: 0-pass corpora (lifecycle, otel, packs, raw/ci) — extraction vs threshold | [#690](https://github.com/deghosal-2026/CauterRule/issues/690) |
+| 7.19 | Root-cause split: 0-pass corpora (lifecycle, otel, packs, raw/ci) — extraction vs threshold | [#690](https://github.com/deghosal-2026/CauterRule/issues/690) | ✓ done |
 | 7.20 | Calibrate matcher thresholds (`STRATEGY_THRESHOLDS`, `OMLX_THRESHOLD`) with provenance test | [#691](https://github.com/deghosal-2026/CauterRule/issues/691) | ✓ done |
 | 7.21 | gate.py: recovery-keyword substring match can silently suppress real failures | [#692](https://github.com/deghosal-2026/CauterRule/issues/692) | ✓ done |
 | 7.22 | gate.py `_step_shows_success()`: non-empty output treated as success even on error text | [#693](https://github.com/deghosal-2026/CauterRule/issues/693) | ✓ done |
 | 7.23 | matcher.py: `check_domain_mismatch()`/`extract_trigger_domain()` are dead code | [#694](https://github.com/deghosal-2026/CauterRule/issues/694) | code done; field-test revalidation pending |
-| 7.24 | Add confidence intervals to field-test metrics (small n=10, n=50 samples) | [#695](https://github.com/deghosal-2026/CauterRule/issues/695) |
+| 7.24 | Add confidence intervals to field-test metrics (small n=10, n=50 samples) | [#695](https://github.com/deghosal-2026/CauterRule/issues/695) | ✓ done |
 | 7.25 | Adversarial corpus: add tool-output-borne + multi-turn/compounding vectors | [#696](https://github.com/deghosal-2026/CauterRule/issues/696) |
 | 7.26 | Spot-audit gate-dropped trajectories — expose false-positive gate silence | [#697](https://github.com/deghosal-2026/CauterRule/issues/697) | ✓ done |
 | 7.27 | Corpus expansion: real production agent-trajectory sources + synthetic gaps | [#698](https://github.com/deghosal-2026/CauterRule/issues/698) |
@@ -69,7 +69,8 @@
 **Batch progress (code-first ordering):**
 - **Batch 1 — gate/matcher safety correctness (done):** #692 (recovery keyword whole-token match), #693 (`_step_shows_success` no longer treats error text in `step.output` as success; exit_code checked first), #694 (`check_domain_mismatch` wired into `rule_matches`, failure trajectories only, to preserve #616 recovery semantics). Tests added in `tests/extraction/test_gate.py` + `tests/replay/test_matcher.py`; full non-field/non-scale/non-docker suite green; ruff/mypy clean on changed files.
 - **Batch 2 — threshold provenance + gate-drop observability (done):** #691 (`strategy_for_corpus` segment matching + token-safe `extract_trigger_domain`; new `src/cauterule/replay/calibration.py`, `scripts/calibrate_thresholds.py`, regression test, generated `docs/field-test/v0.3.0/threshold-calibration.md`; calibration also caught and fixed #694's coarse-domain false negatives via domain groups). #697 (gate reason already persisted per-trajectory; added `gate_dropped_by_reason` to `summary.json`, harness tests, and §5.8 spot-audit checklist).
-- **Next — Batch 3:** #695 (Wilson confidence intervals), #690 (0-pass corpus root-cause diagnostics).
+- **Batch 3 — statistical rigor + corpus diagnostics (done):** #695 (`src/cauterule/stats.py` Wilson CI; `confidence_intervals` in `summary.json`; field-test-plan §5.9 reporting format). #690 (new `src/cauterule/replay/diagnostics.py` + `scripts/diagnose_corpus.py`; matcher pre-filter extracted to `trigger_prefilter_reason`; CI guard `tests/corpus/test_v030_corpus_coverage.py`; findings in `docs/field-test/v0.3.0/corpus-diagnostics.md`). Root cause split: `adapters`/`lifecycle`/`mcp` = missing references (b); `otel`/`packs`/`raw/ci` = matcher mismatch (a); extraction pre-filter ruled out.
+- **Next — Batch 4:** #686 report generator (then #685/#687/#688 doc corrections).
 
 ### M7 Exit Gate
 

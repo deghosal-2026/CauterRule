@@ -272,3 +272,12 @@ def test_extract_trigger_domain_no_substring_false_positive() -> None:
     assert extract_trigger_domain("specificity scoring failed") is None
     assert extract_trigger_domain("capital letters rejected") is None
     assert extract_trigger_domain("deploy fails") == "deploy"
+
+
+def test_trigger_prefilter_reason_categories() -> None:
+    from cauterule.replay.matcher import trigger_prefilter_reason
+
+    assert trigger_prefilter_reason(_cand("step_1")) == "degenerate"
+    assert trigger_prefilter_reason(_cand("error")) == "generic"
+    assert trigger_prefilter_reason(_cand("error", context=("fatal",))) is None
+    assert trigger_prefilter_reason(_cand("distinctive failure signature")) is None

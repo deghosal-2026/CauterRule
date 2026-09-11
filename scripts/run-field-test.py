@@ -631,6 +631,17 @@ def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_ti
         reason = (r.get("gate") or {}).get("reason") or "unknown"
         gate_dropped_by_reason[reason] = gate_dropped_by_reason.get(reason, 0) + 1
 
+    # v0.3.0 (#695): report rate metrics with Wilson confidence intervals so
+    # small-sample point estimates (n=10 golden, n=50 nearmiss, n=10/vector)
+    # are not read as precise facts.
+    from cauterule.stats import rate_with_ci
+    confidence_intervals = {
+        "pass_rate": rate_with_ci(passing, passing + failing),
+        "safety_silence_rate": rate_with_ci(
+            int(safety.get("silence", 0)), int(safety.get("total", 0))
+        ),
+    }
+
     summary = {
         "meta": meta,
         "elapsed_seconds": round(time.time() - start_time, 1),
@@ -649,6 +660,7 @@ def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_ti
         "failing": failing,
         "inconclusive": inconclusive,
         "safety": safety,
+        "confidence_intervals": confidence_intervals,
         "specificity_distribution": specificity_counts,
         "inconclusive_breakdown": inconclusive_breakdown,
         "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),

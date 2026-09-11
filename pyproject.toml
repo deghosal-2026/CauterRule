@@ -89,6 +89,7 @@ convention = "google"
 "tests/**" = ["D", "ANN", "S101", "ARG", "PLR2004", "TRY003", "E501", "RUF043"]
 "src/cauterule/models/**" = ["D105", "TRY003"]
 "src/cauterule/config.py" = ["TRY003", "TRY004", "E501"]
+"src/cauterule/stats.py" = ["TRY003"]
 "src/cauterule/serialization/**" = ["TRY003", "TRY004"]
 "src/cauterule/llm/**" = ["TRY003", "E501", "ANN401", "D"]
 "src/cauterule/capture/**" = ["ANN401", "D", "TRY003", "TRY004", "TRY300", "UP", "SIM", "I", "RUF"]

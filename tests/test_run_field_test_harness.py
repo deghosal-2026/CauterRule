@@ -73,3 +73,44 @@ def test_summary_breaks_down_gate_dropped_by_reason(harness: ModuleType, tmp_pat
         "nearmiss_recovery_succeeded": 1,
         "failure_without_signal": 1,
     }
+
+
+def test_summary_includes_confidence_intervals(harness: ModuleType, tmp_path: Path) -> None:
+    def done(verdict: str) -> dict[str, object]:
+        return {
+            "trajectory_id": f"T-{verdict}",
+            "status": "done",
+            "candidate_count": 1,
+            "candidates": [],
+            "best": {"verdict": verdict, "precision": 1.0, "recall": 1.0},
+            "precision": 1.0,
+            "recall": 1.0,
+            "gate": {"reason": None, "is_silence": False},
+            "task_specificity": "specific",
+            "llm_calls_avoided": 0,
+        }
+
+    results: list[dict[str, object]] = [
+        done("pass"),
+        done("fail"),
+        {
+            "trajectory_id": "T-g",
+            "status": "gate_dropped",
+            "candidate_count": 0,
+            "candidates": [],
+            "gate": {"reason": "no_failure_signal", "is_silence": True},
+            "task_specificity": "generic",
+            "llm_calls_avoided": 1,
+        },
+    ]
+    summary_file = tmp_path / "summary.json"
+    harness._write_summary(
+        results, summary_file, {"corpus_type": "golden"}, harness.time.time(), "golden"
+    )
+    summary = json.loads(summary_file.read_text(encoding="utf-8"))
+    ci = summary["confidence_intervals"]
+    assert ci["pass_rate"]["n"] == 2
+    assert ci["pass_rate"]["rate"] == 0.5
+    assert 0.0 <= ci["pass_rate"]["ci_low"] <= ci["pass_rate"]["ci_high"] <= 1.0
+    assert ci["safety_silence_rate"]["n"] == 3
+    assert ci["safety_silence_rate"]["rate"] == pytest.approx(1 / 3, abs=1e-3)
