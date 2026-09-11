@@ -1,0 +1,4 @@
+# Per-benchmark regression thresholds (#605).
+[regression]
+fail_pct = 15.0
+warn_pct = 5.0

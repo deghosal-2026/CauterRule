@@ -34,6 +34,7 @@ dependencies = [
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
+    "pytest-benchmark>=4.0",
     "ruff>=0.8",
     "mypy>=1.13",
     "types-PyYAML>=6.0",
@@ -48,6 +49,8 @@ llm = [
 ]
 otel = [
     "opentelemetry-api>=1.0",
+    "opentelemetry-sdk>=1.0",
+    "opentelemetry-exporter-otlp>=1.0",
 ]
 all = [
     "openai>=1.0",
@@ -55,6 +58,8 @@ all = [
     "litellm>=1.0",
     "requests>=2.0",
     "opentelemetry-api>=1.0",
+    "opentelemetry-sdk>=1.0",
+    "opentelemetry-exporter-otlp>=1.0",
 ]
 
 [project.urls]
@@ -98,6 +103,7 @@ convention = "google"
 "src/cauterule/observe/**" = ["D", "TRY003", "E501"]
 "src/cauterule/loop/**" = ["ANN401", "D", "TRY003", "E501"]
 "src/cauterule/corpus/**" = ["D105", "D107", "TRY003", "E501", "ANN401", "ARG001"]
+"benchmarks/**" = ["ANN", "ARG", "D"]
 "src/cauterule/cli/**" = ["D"]
 "src/cauterule/benchmark/**" = ["D", "TRY003", "E501", "W292"]
 "src/cauterule/integrations/**" = ["D", "TRY003", "E501"]

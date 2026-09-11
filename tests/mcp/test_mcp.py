@@ -266,7 +266,11 @@ class TestLaunchMcp:
             instance = mock_server_cls.return_value
             launch_mcp(transport="http", host="0.0.0.0", port=8080)
         mock_store_cls.assert_called_once()
-        mock_server_cls.assert_called_once_with(mock_store_cls.return_value, host="0.0.0.0", port=8080)
+        _, kwargs = mock_server_cls.call_args
+        assert kwargs["host"] == "0.0.0.0"
+        assert kwargs["port"] == 8080
+        assert kwargs["auth_mode"] == "none"
+        assert "rate_limiter" in kwargs
         instance.run_http.assert_called_once_with()
 
     def test_invalid_transport(self) -> None:

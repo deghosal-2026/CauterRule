@@ -139,6 +139,13 @@ class StoreManager:
         dump_rule_to_file_atomic(retired, self._rule_path(rule_id))
         _index_sync_safe(retired, self.base_dir)
         _commit_safe(f"retire rule {rule_id}: {reason}", str(self.base_dir))
+        # OTEL rule.retire span (#588): best-effort, never blocks retirement.
+        try:
+            from cauterule.integrations.otel import OtelExporter
+
+            OtelExporter().emit_rule_retire(rule_id, reason=reason)
+        except Exception:
+            pass
 
     def supersede_rule(self, rule_id: str, new_id: str) -> None:
         """Mark *rule_id* as superseded by *new_id*.

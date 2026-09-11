@@ -122,6 +122,29 @@ class WebhookConfig:
 
 
 @dataclass(frozen=True)
+class McpConfig:
+    """MCP remote-mode settings."""
+
+    auth_mode: str = "none"  # none | bearer
+    tokens: tuple[str, ...] = ()
+    rate_capacity: int = 60
+    rate_refill_per_min: float = 30.0
+
+
+@dataclass(frozen=True)
+class OtelConfig:
+    """OpenTelemetry export settings."""
+
+    enabled: bool = False
+    endpoint: str = "http://localhost:4317"
+    service_name: str = "cauterule"
+    headers: tuple[tuple[str, str], ...] = ()
+    batch_size: int = 512
+    export_interval_ms: int = 5000
+    retry_max: int = 3
+
+
+@dataclass(frozen=True)
 class Config:
     """Top-level configuration."""
 
@@ -133,6 +156,8 @@ class Config:
     extraction: ExtractionConfig = field(default_factory=ExtractionConfig)
     packs: PacksConfig = field(default_factory=PacksConfig)
     webhook: WebhookConfig = field(default_factory=WebhookConfig)
+    mcp: McpConfig = field(default_factory=McpConfig)
+    otel: OtelConfig = field(default_factory=OtelConfig)
 
 
 def _parse_toml(path: Path) -> dict[str, Any]:
@@ -236,6 +261,47 @@ def _webhook_from_dict(data: dict[str, Any]) -> WebhookConfig:
     )
 
 
+def _mcp_from_dict(data: dict[str, Any]) -> McpConfig:
+    auth = data.get("auth", {})
+    auth_mode = str(auth.get("mode", data.get("auth_mode", "none")))
+    if auth_mode not in {"none", "bearer"}:
+        raise ValueError(f"mcp.auth.mode must be none|bearer, got {auth_mode!r}")
+    raw_tokens = auth.get("tokens", data.get("tokens", []))
+    tokens = tuple(str(t) for t in raw_tokens) if isinstance(raw_tokens, list) else ()
+    rate = data.get("rate_limit", {})
+    return McpConfig(
+        auth_mode=auth_mode,
+        tokens=tokens,
+        rate_capacity=int(rate.get("capacity", data.get("rate_capacity", 60))),
+        rate_refill_per_min=float(rate.get("refill_per_min", data.get("rate_refill_per_min", 30.0))),
+    )
+
+
+def _otel_from_dict(data: dict[str, Any]) -> OtelConfig:
+    headers_raw = data.get("headers", {})
+    headers = tuple((str(k), str(v)) for k, v in headers_raw.items()) if isinstance(headers_raw, dict) else ()
+    batch_size = int(data.get("batch_size", 512))
+    interval = int(data.get("export_interval_ms", 5000))
+    retry_max = int(data.get("retry_max", 3))
+    if batch_size < 1 or interval < 1 or retry_max < 0:
+        raise ValueError("otel batch_size/export_interval_ms must be > 0, retry_max >= 0")
+    endpoint = str(data.get("endpoint", "http://localhost:4317"))
+    if not endpoint.startswith(("http://", "https://")):
+        raise ValueError(f"otel.endpoint must be an http(s) URL, got {endpoint!r}")
+    service_name = str(data.get("service_name", "cauterule"))
+    if not service_name.strip():
+        raise ValueError("otel.service_name must be non-blank")
+    return OtelConfig(
+        enabled=bool(data.get("enabled", False)),
+        endpoint=endpoint,
+        service_name=service_name,
+        headers=headers,
+        batch_size=batch_size,
+        export_interval_ms=interval,
+        retry_max=retry_max,
+    )
+
+
 def _config_from_dict(data: dict[str, Any]) -> Config:
     return Config(
         llm=_llm_from_dict(data.get("llm", {})),
@@ -246,6 +312,8 @@ def _config_from_dict(data: dict[str, Any]) -> Config:
         extraction=_extraction_from_dict(data.get("extraction", {})),
         packs=_packs_from_dict(data.get("packs", {})),
         webhook=_webhook_from_dict(data.get("webhook", {})),
+        mcp=_mcp_from_dict(data.get("mcp", {})),
+        otel=_otel_from_dict(data.get("otel", {})),
     )
 
 
@@ -445,6 +513,19 @@ def config_to_dict(config: Config) -> dict[str, Any]:
             "gate_mode": config.extraction.gate_mode,
         },
         "packs": {"min_safety_score": config.packs.min_safety_score},
+        "mcp": {
+            "auth_mode": config.mcp.auth_mode,
+            "rate_capacity": config.mcp.rate_capacity,
+            "rate_refill_per_min": config.mcp.rate_refill_per_min,
+        },
+        "otel": {
+            "enabled": config.otel.enabled,
+            "endpoint": config.otel.endpoint,
+            "service_name": config.otel.service_name,
+            "batch_size": config.otel.batch_size,
+            "export_interval_ms": config.otel.export_interval_ms,
+            "retry_max": config.otel.retry_max,
+        },
         "webhook": {
             "enabled": config.webhook.enabled,
             "provider": config.webhook.provider,

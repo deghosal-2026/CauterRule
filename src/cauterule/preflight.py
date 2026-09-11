@@ -9,6 +9,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from cauterule.config import Config
 from cauterule.corpus.validation import validate_annotations, validate_corpus_sizes
@@ -27,8 +28,33 @@ MODEL_COST_PER_REQUEST: dict[str, float] = {
     "gpt-4o-mini": 0.0004,
     "claude-3-opus": 0.015,
     "claude-3-haiku": 0.00025,
+    "llama-3.2-3b-instruct": 0.0,
+    "qwen3-4b-instruct": 0.0,
+    "llama-3.1-8b-instruct": 0.0,
 }
 DEFAULT_COST_PER_REQUEST = 0.01
+
+# Latency estimates (p95) per model in seconds (#486).
+MODEL_LATENCY_S: dict[str, float] = {
+    "gpt-4o": 2.5,
+    "gpt-4o-mini": 1.2,
+    "claude-3-opus": 5.0,
+    "claude-3-haiku": 0.8,
+    "llama-3.2-3b-instruct": 1.0,
+    "qwen3-4b-instruct": 1.1,
+    "llama-3.1-8b-instruct": 1.5,
+}
+
+# Tiered strategy guidance (#486).
+MODEL_TIERS: dict[str, str] = {
+    "llama-3.2-3b-instruct": "local (iteration/regression)",
+    "qwen3-4b-instruct": "local (iteration/regression)",
+    "llama-3.1-8b-instruct": "local (regression/pre-commit)",
+    "gpt-4o-mini": "cheap cloud (PR/release gate, nightly)",
+    "claude-3-haiku": "cheap cloud (PR/release gate)",
+    "gpt-4o": "flagship (calibration, disputed cases)",
+    "claude-3-opus": "flagship (calibration, disputed cases)",
+}
 
 
 @dataclass(frozen=True)
@@ -167,7 +193,7 @@ def check_corpus(
                 CheckResult(name="corpus_size", passed=False, message=w)
             )
         # Annotations: load first batch and validate.
-        trajs: list = []
+            trajs: list[Any] = []
         for f in sorted(path.rglob("*.jsonl")) if path.is_dir() else [path]:
             if not f.is_file() or f.suffix != ".jsonl":
                 continue
@@ -288,7 +314,10 @@ def check_corpus(
             CheckResult(
                 name="schema_version",
                 passed=False,
-                message=f"Unknown or incompatible schema_version: {schema_version_seen!r}. Expected: 1.0",
+                message=(
+                    f"Unknown or incompatible schema_version: "
+                    f"{schema_version_seen!r}. Expected: 1.0"
+                ),
             )
         )
 
@@ -315,6 +344,21 @@ def estimate_cost(
     """Estimate total cost for a run based on model."""
     rate = MODEL_COST_PER_REQUEST.get(model or "", DEFAULT_COST_PER_REQUEST)
     return round(num_trajectories * rate * (tokens_per_request / 1000), 2)
+
+
+def cost_per_1k_trajectories(model: str) -> dict[str, float | str]:
+    """Return $/1k trajs, p95 latency, and tier for *model* (#486)."""
+    rate = MODEL_COST_PER_REQUEST.get(model, DEFAULT_COST_PER_REQUEST)
+    cost = round(1000 * rate * (4000 / 1000), 2)
+    latency = MODEL_LATENCY_S.get(model, 2.0)
+    tier = MODEL_TIERS.get(model, "unclassified")
+    return {"model": model, "cost_per_1k": cost, "p95_latency_s": latency, "tier": tier}
+
+
+def cost_table(models: list[str] | None = None) -> list[dict[str, float | str]]:
+    """Return the published cost/latency/tier table (#486)."""
+    models = models or list(MODEL_COST_PER_REQUEST.keys())
+    return [cost_per_1k_trajectories(m) for m in models]
 
 
 def check_output_dir(output_path: str | Path) -> CheckResult:

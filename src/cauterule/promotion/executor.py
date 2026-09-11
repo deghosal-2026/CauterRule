@@ -159,4 +159,12 @@ def execute_promotion(
     except Exception:
         _log.warning("promotion webhook failed for %s — continuing", rule_id)
 
+    # OTEL rule.promote span (#588): best-effort, never blocks promotion.
+    try:
+        from cauterule.integrations.otel import OtelExporter
+
+        OtelExporter().emit_rule_promote(rule_id, justification=provenance.promotion_mode or "")
+    except Exception:
+        _log.warning("OTel promote emit failed for %s — continuing", rule_id)
+
     return rule_id

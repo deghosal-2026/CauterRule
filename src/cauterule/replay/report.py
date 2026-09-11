@@ -92,4 +92,15 @@ def build_evidence_report(
             inconclusive_reason=reason,
             verdict_reason=report.verdict_reason,
         )
+    # OTEL replay.verdict span (#588): best-effort, never blocks replay.
+    try:
+        from cauterule.integrations.otel import OtelExporter
+
+        OtelExporter().emit_replay_verdict(
+            verdict=report.verdict,
+            precision_score=report.precision,
+            recall_score=report.recall,
+        )
+    except Exception:
+        pass
     return report

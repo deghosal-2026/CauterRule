@@ -29,6 +29,7 @@ KNOWN_THIRD_PARTY = {
     "click": ("click", "core"),
     "textual": ("textual", "core"),
     "mcp": ("mcp", "core"),
+    "fastmcp": ("mcp", "core"),
 }
 
 

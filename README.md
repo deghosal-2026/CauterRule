@@ -100,6 +100,8 @@ cauterule export --format agents
 - `cauterule export` (`--format agents`) | `import` | `rewind` (Failure Time Machine) | `cauterule mcp` (MCP server)
 - **NEW** `cauterule review` — TUI review interface with confidence-ordered queue
 - **NEW** `cauterule observe` — observability metrics and learning journal
+- **NEW** `cauterule corpus` — add/list/validate/lint/build/export trajectory corpora
+- **NEW** `cauterule benchmark` — list/run performance benchmarks
 
 ### Replay Engine
 - Replay harness with evidence reports (failures prevented, successes broken, precision, recall, verdict)

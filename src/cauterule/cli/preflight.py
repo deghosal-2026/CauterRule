@@ -13,13 +13,26 @@ from cauterule.preflight import run_preflight
 @click.option("--catalog", help="Path to catalog.yaml for size/annotation checks.")
 @click.option("--output-dir", help="Output directory to check for writability/space.")
 @click.option("--no-probe", is_flag=True, help="Skip LLM latency probe.")
+@click.option("--max-cost", type=float, default=None, help="Cost cap (USD).")
+@click.option("--cost-table", is_flag=True, help="Print $/1k model table and exit.")
 def preflight(
     corpus: str | None,
     catalog: str | None,
     output_dir: str | None,
     no_probe: bool,
+    max_cost: float | None,
+    cost_table: bool,
 ) -> None:
     """Run provider + corpus preflight checks (fail fast before sweep)."""
+    if cost_table:
+        from cauterule.preflight import cost_table as _table
+
+        for row in _table():
+            click.echo(
+                f"  {row['model']:30s} ${row['cost_per_1k']:.4f}/1k  "
+                f"p95={row['p95_latency_s']:.1f}s  tier={row['tier']}"
+            )
+        return
     cfg = load_config()
     result = run_preflight(
         cfg,
@@ -42,6 +55,12 @@ def preflight(
 
     if result.cost_estimate_usd is not None:
         click.echo(f"Estimated cost: ${result.cost_estimate_usd:.2f}")
+        if max_cost is not None and result.cost_estimate_usd > max_cost:
+            msg = (
+                f"cost estimate ${result.cost_estimate_usd:.2f} exceeds "
+                f"--max-cost ${max_cost:.2f}"
+            )
+            raise click.ClickException(msg)
 
     if result.passed:
         click.echo("Preflight: PASS — ready to run.")

@@ -5,8 +5,10 @@ import click
 from cauterule import __version__
 from cauterule.cli.audit import audit
 from cauterule.cli.badge import badge
+from cauterule.cli.benchmark import benchmark
 from cauterule.cli.config import config
 from cauterule.cli.conflicts import conflicts
+from cauterule.cli.corpus import corpus
 from cauterule.cli.counterfactual import counterfactual
 from cauterule.cli.demo import demo
 from cauterule.cli.diff import diff
@@ -26,6 +28,7 @@ from cauterule.cli.list import list_rules
 from cauterule.cli.mcp import mcp
 from cauterule.cli.metrics import metrics
 from cauterule.cli.observe import observe
+from cauterule.cli.otel import otel
 from cauterule.cli.pack import pack
 from cauterule.cli.preflight import preflight
 from cauterule.cli.promote import promote
@@ -57,7 +60,9 @@ def main(verbose: bool) -> None:
 
 main.add_command(audit)
 main.add_command(badge)
+main.add_command(benchmark)
 main.add_command(config)
+main.add_command(corpus)
 main.add_command(conflicts)
 main.add_command(counterfactual)
 main.add_command(demo)
@@ -67,6 +72,7 @@ main.add_command(export)
 main.add_command(import_cmd, name="import")
 main.add_command(extract)
 main.add_command(observe)
+main.add_command(otel)
 main.add_command(health)
 main.add_command(history)
 main.add_command(init)

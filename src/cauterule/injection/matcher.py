@@ -109,4 +109,18 @@ def match_rules(task: str, rules: list[StandingRule], **context: Any) -> list[St
         if not _taxonomy_matches(rule, **context):
             continue
         matched.append(rule)
+    # OTEL rule.match spans (#588): best-effort, never blocks injection.
+    if matched:
+        try:
+            from cauterule.integrations.otel import OtelExporter
+
+            exporter = OtelExporter()
+            for rule in matched:
+                exporter.emit_rule_match(
+                    rule.id,
+                    trigger=rule.when.trigger,
+                    confidence=rule.confidence,
+                )
+        except Exception:
+            pass
     return matched

@@ -702,3 +702,41 @@ on_events = ["promote"]
 Promotion fires the webhook with retry + backoff (no retry on 4xx),
 secret redaction, and the SSRF guard. `cauterule webhook test` dry-runs
 delivery against a mock endpoint.
+
+---
+
+## Cost / Latency Tiering
+
+Cauterule's extraction economics are explicit. Use the right tier for the job.
+
+### Tier strategy
+
+| Tier | Models | When to use | Approx $/1k trajs |
+|------|--------|-------------|---------------------|
+| **Local** | Llama-3.2-3B, Qwen3-4B (OMLX) | Iteration, regression sweeps, pre-commit | ~$0 (infra-only) |
+| **Cheap cloud** | gpt-4o-mini, Claude-3-Haiku | PR/release gate, nightly CI | $0.40 – $0.50 |
+| **Flagship** | gpt-4o, Claude-3-Opus | Calibration, disputed cases, monthly bake-off | $5.00 – $15.00 |
+
+Decision rule: **use local unless** you need cloud quality for a release gate
+or the extractor is over-triggering on a new corpus (flagship calibration).
+
+### Preflight cost estimate
+
+```bash
+cauterule preflight --corpus corpus/public/golden/ --max-cost 5.00
+cauterule preflight --cost-table          # print the full $/1k model table
+```
+
+`--max-cost` fails the preflight when the estimate exceeds the cap. The table
+covers all known models with $/1k trajectories, p95 latency, and tier.
+
+### Plan thresholds
+
+| Metric | Target |
+|--------|--------|
+| CLI latency | < 500ms |
+| Preflight | < 30s |
+| Demo (full loop) | < 60s |
+
+These are asserted in preflight when a probe is available; otherwise they are
+re-baselined with justification in the field-test report.
