@@ -17,6 +17,15 @@ GateMode = Literal["strict", "relaxed"]
 SILENCE_REASON_NO_FAILURE = "no_failure_signal"
 SILENCE_REASON_NEARMISS = "nearmiss_recovery_succeeded"
 SILENCE_REASON_NO_SIGNAL_AND_FAILURE = "failure_without_signal"
+
+# Recovery/near-miss keywords (Fix 8 set, applied gate-side): a success=True
+# trajectory whose failure_class mentions one of these self-resolved — the
+# agent recovered, so no rule should be extracted (v0.3.0 field-test fix:
+# the N-00x "success-that-looks-like-failure" nearmiss series slipped the
+# gate via failure_class-only signals).
+_RECOVERY_KEYWORDS: frozenset[str] = frozenset(
+    {"temp", "near", "retry", "recover", "intermittent", "flaky"}
+)
 _SILENCE_REASONS = frozenset(
     {SILENCE_REASON_NO_FAILURE, SILENCE_REASON_NEARMISS, SILENCE_REASON_NO_SIGNAL_AND_FAILURE}
 )
@@ -77,6 +86,16 @@ def _detect_nearmiss_recovery(trajectory: Trajectory) -> bool:
     via state change (``exit_code: 0``, no assertion/schema violation)
     with empty output still counts as recovery.
     """
+    # A success=True trajectory whose failure_class carries a recovery
+    # keyword self-resolved regardless of the step pattern — the N-00x
+    # nearmiss series (successful steps, fabricated failure_class like
+    # "nearmiss/coding") has no early-error pattern but is still a
+    # recovered trajectory.  Keyword set mirrors Fix 8 (replay side).
+    if trajectory.success and trajectory.failure_class:
+        fc = trajectory.failure_class.lower()
+        if any(kw in fc for kw in _RECOVERY_KEYWORDS):
+            return True
+
     if not trajectory.success:
         return False
     if len(trajectory.steps) < 2:

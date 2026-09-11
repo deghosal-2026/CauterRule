@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "corpus_type": "raw/synthetic",
+    "timestamp": "2026-09-11",
+    "llm_provider": "openai",
+    "llm_model": "Llama-3.2-3B-Instruct-4bit",
+    "llm_base_url": "http://localhost:8000/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2,0.5",
+    "target_trajectories": 145,
+    "reference_trajectories": 230,
+    "cost_per_request_usd": 0.01,
+    "gate_mode": "relaxed"
+  },
+  "elapsed_seconds": 201.0,
+  "total": 145,
+  "done": 141,
+  "gate_dropped": 0,
+  "skipped": 4,
+  "total_candidates": 262,
+  "total_llm_calls_avoided": 0,
+  "avg_precision": 0.331,
+  "avg_recall": 0.039,
+  "avg_match_score": 0.084,
+  "match_detail_count": 262,
+  "passing": 32,
+  "failing": 38,
+  "inconclusive": 71,
+  "safety": {
+    "total": 141,
+    "silence": 0,
+    "parse_failure": 0,
+    "rejected": 109,
+    "accepted": 32,
+    "silence_rate": 0.0,
+    "verdict": "pass"
+  },
+  "specificity_distribution": {
+    "specific": 326,
+    "moderate": 50,
+    "generic": 31
+  },
+  "inconclusive_breakdown": {
+    "broad_trigger": 20,
+    "matcher_gap": 102,
+    "corpus_mismatch": 0,
+    "ambiguous_evidence": 19
+  },
+  "updated_at": "2026-09-11T05:11:56Z"
+}

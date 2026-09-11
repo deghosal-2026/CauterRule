@@ -90,10 +90,18 @@ CORPUS_TYPES: dict[str, Path] = {
     "adversarial/contradiction": PUBLIC_ROOT / "adversarial" / "contradiction",
     "adversarial/unsafe":      PUBLIC_ROOT / "adversarial" / "unsafe",
     "adversarial/poisoning":   PUBLIC_ROOT / "adversarial" / "poisoning",
+    # v0.3.0 corpora (#635)
+    "adapters":                FIELD_TEST_ROOT / "adapters",
+    "lifecycle":               FIELD_TEST_ROOT / "lifecycle",
+    "packs":                   FIELD_TEST_ROOT / "packs",
+    "mcp":                     FIELD_TEST_ROOT / "mcp",
+    "otel":                    FIELD_TEST_ROOT / "otel",
+    # #489 reference expansion (public, 288 trajs)
+    "reference-expansion":     PUBLIC_ROOT / "reference-expansion",
 }
 
 # Safety corpora use strict gate mode
-SAFETY_CORPORA: frozenset[str] = frozenset({"successes", "failures/negative", "negative"})
+SAFETY_CORPORA: frozenset[str] = frozenset({"successes", "failures/negative", "negative", "nearmiss"})
 
 # Corpus-aware matcher thresholds
 CORPUS_THRESHOLDS: dict[str, float] = {
@@ -354,6 +362,7 @@ def replay_test_candidate(
     reference_trajs: list[dict],
     corpus_type: str,
     is_omlx: bool = False,
+    exclude_ids: set[str] | None = None,
 ) -> dict:
     from cauterule.models.candidate import CandidateRule
     from cauterule.models.rule import RuleDo, RuleWhen
@@ -370,6 +379,14 @@ def replay_test_candidate(
     )
     traj_objs: list[Trajectory] = []
     for t in reference_trajs:
+        # Exclude the candidate's own source trajectory from the reference
+        # set — a nearmiss/success trajectory must not count itself as a
+        # "prevented" failure (v0.3.0 field-test fix: N-00x self-matches
+        # inflated precision to 1.0 on a single trajectory).
+        if exclude_ids and t.get("trajectory_id") in exclude_ids:
+            continue
+        if exclude_ids and t.get("id") in exclude_ids:
+            continue
         try:
             traj_objs.append(Trajectory.from_dict(t))
         except Exception:
@@ -418,33 +435,44 @@ def load_trajectories(dir_path: Path) -> list[dict]:
     return trajs
 
 
-def load_trajectory(file_path: Path) -> dict | None:
+def load_trajectory(file_path: Path) -> list[dict]:
+    """Load a trajectory file as JSONL; return the list of record dicts.
+
+    Single-record .jsonl files yield one dict; multi-record files (the
+    v0.3.0 corpora: adapters/lifecycle/packs/mcp/otel) yield many.  The
+    previous whole-file json.loads() could only read one-record files —
+    the new corpora were silently processed as a single trajectory.
+    """
+    records: list[dict] = []
     try:
-        return json.loads(file_path.read_text().strip())
+        text = file_path.read_text().strip()
     except Exception as exc:
         print(f"  [warn] skipping {file_path.name}: {exc}")
-        return None
+        return records
+    for line in text.split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            records.append(json.loads(line))
+        except Exception as exc:
+            print(f"  [warn] skipping line in {file_path.name}: {exc}")
+    return records
 
 
 # ── Per-trajectory processing ─────────────────────────────────────────
 
 def process_one_trajectory(
-    traj_path: Path,
+    trajectory: dict,
+    tid: str,
     traj_idx: int,
     total: int,
     corpus_type: str,
     reference_trajs: list[dict],
     args: argparse.Namespace,
 ) -> dict:
-    tid = traj_path.stem
     print(f"  [{traj_idx}/{total}] {tid} ... ", end="", flush=True)
 
-    trajectory = load_trajectory(traj_path)
-    if trajectory is None:
-        print("SKIP (load failed)")
-        return {"trajectory_id": tid, "status": "skipped", "error": "load failed"}
-
-    # Gate
     gate_result = run_gate(trajectory, corpus_type)
     pre_extraction_drop = gate_result["is_silence"]
 
@@ -485,8 +513,12 @@ def process_one_trajectory(
 
     test_results = []
     is_omlx = args.llm_base_url and "localhost" in args.llm_base_url
+    exclude_ids = {
+        str(oid) for oid in (trajectory.get("id"), trajectory.get("trajectory_id"), tid)
+        if oid is not None
+    }
     for cand in candidates:
-        test_result = replay_test_candidate(cand, reference_trajs, corpus_type, is_omlx=is_omlx)
+        test_result = replay_test_candidate(cand, reference_trajs, corpus_type, is_omlx=is_omlx, exclude_ids=exclude_ids)
         # v0.2.0: specificity scoring on trigger
         test_result["trigger_specificity"] = score_specificity(cand["when"])
         # v0.2.0: inconclusive attribution
@@ -689,12 +721,17 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
         reference_trajs.extend(load_trajectories(bucket))
     print(f"  Reference corpus: {len(reference_trajs)} trajectories loaded")
 
-    # Discover trajectories
-    traj_files = sorted(corpus_dir.rglob("*.jsonl"))
-    if not traj_files:
-        print(f"  [warn] no .jsonl files in {corpus_dir}")
+    # Discover trajectories — expand multi-record JSONL files into per-record
+    # tasks (v0.3.0 corpora pack many records per file).
+    traj_tasks: list[tuple[dict, str]] = []
+    for tf in sorted(corpus_dir.rglob("*.jsonl")):
+        for rec in load_trajectory(tf):
+            tid = str(rec.get("trajectory_id") or rec.get("id") or tf.stem)
+            traj_tasks.append((rec, tid))
+    if not traj_tasks:
+        print(f"  [warn] no .jsonl records in {corpus_dir}")
         return 0
-    print(f"  Target corpus: {len(traj_files)} trajectories\n")
+    print(f"  Target corpus: {len(traj_tasks)} trajectories\n")
 
     results_file = out_dir / "results.jsonl"
     summary_file = out_dir / "summary.json"
@@ -712,7 +749,7 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
         "llm_base_url": args.llm_base_url,
         "extraction_passes": args.extraction_passes,
         "temperatures": args.temperatures,
-        "target_trajectories": len(traj_files),
+        "target_trajectories": len(traj_tasks),
         "reference_trajectories": len(reference_trajs),
         "cost_per_request_usd": args.cost_per_request,
         "gate_mode": GATE_MODE_STRICT if corpus_type.split("/")[-1].strip().lower() in SAFETY_CORPORA else GATE_MODE_RELAXED,
@@ -725,9 +762,9 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
 
     with ThreadPoolExecutor(max_workers=args.max_workers) as executor:
         futures = {}
-        for i, f in enumerate(traj_files, 1):
-            future = executor.submit(process_one_trajectory, f, i, len(traj_files), corpus_type, reference_trajs, args)
-            futures[future] = f
+        for i, (rec, tid) in enumerate(traj_tasks, 1):
+            future = executor.submit(process_one_trajectory, rec, tid, i, len(traj_tasks), corpus_type, reference_trajs, args)
+            futures[future] = tid
 
         for future in as_completed(futures):
             try:
@@ -746,7 +783,7 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
     print(f"  Harness health: {health_status}")
 
     elapsed = time.time() - start_time
-    print(f"\n  Done: {len(results)}/{len(traj_files)} processed in {elapsed:.0f}s")
+    print(f"\n  Done: {len(results)}/{len(traj_tasks)} processed in {elapsed:.0f}s")
     print(f"  Results: {results_file}")
     return len(results)
 

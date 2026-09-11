@@ -199,13 +199,16 @@ _ALIASES: dict[str, frozenset[str]] = {
     "frame not found": frozenset({"no such frame", "frame", "switch", "iframe"}),
     "delete branch": frozenset({"checkout", "branch", "checked out", "delete"}),
     "flaky": frozenset({"intermittent", "retry", "transient", "intermittent failure"}),
-    # Qwen alias expansion (#492): Qwen produces more abstract trigger phrasings
-    # that the matcher needs alias support to match.
-    "command fails": frozenset({"exit code", "non-zero exit", "return code", "process exited"}),
-    "tool fails": frozenset({"tool error", "command error", "execution error", "operation failed"}),
-    "authentication error": frozenset({"auth failed", "permission denied", "unauthorized", "login failed"}),
-    "not found error": frozenset({"no such file", "not found", "missing", "does not exist"}),
-    "pipeline fails": frozenset({"ci failed", "build failed", "deploy failed", "test failed", "stage failed"}),
+    # NOTE (#492 broad aliases removed, v0.3.0 field-test regression): the
+    # Qwen-oriented entries ("command fails" → "exit code", "pipeline fails" →
+    # "test failed", "not found error" → "not found", etc.) made
+    # alias_phrase_hit fire on nearly any failure trajectory, and the 0.70
+    # phrase floor then auto-passed candidates on the 0.65 OMLX curated
+    # threshold — inflating recall while collapsing precision (golden
+    # 0.741→0.547, failures/positive 0.727→0.394, nearmiss 3P→5P).  Qwen
+    # abstract triggers still match via the weighted token-F1 path; if Qwen
+    # recall regresses, re-add aliases with SPECIFIC phrases only (never
+    # "exit code", "not found", "test failed" — they appear in most failures).
 }
 
 

@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "corpus_type": "noisy",
+    "timestamp": "2026-09-11",
+    "llm_provider": "openai",
+    "llm_model": "Llama-3.2-3B-Instruct-4bit",
+    "llm_base_url": "http://localhost:8000/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2,0.5",
+    "target_trajectories": 5,
+    "reference_trajectories": 230,
+    "cost_per_request_usd": 0.01,
+    "gate_mode": "relaxed"
+  },
+  "elapsed_seconds": 9.3,
+  "total": 5,
+  "done": 5,
+  "gate_dropped": 0,
+  "skipped": 0,
+  "total_candidates": 9,
+  "total_llm_calls_avoided": 0,
+  "avg_precision": 0.4,
+  "avg_recall": 0.095,
+  "avg_match_score": 0.067,
+  "match_detail_count": 9,
+  "passing": 0,
+  "failing": 0,
+  "inconclusive": 5,
+  "safety": {
+    "total": 5,
+    "silence": 0,
+    "parse_failure": 0,
+    "rejected": 5,
+    "accepted": 0,
+    "silence_rate": 0.0,
+    "verdict": "fail"
+  },
+  "specificity_distribution": {
+    "specific": 14,
+    "moderate": 0,
+    "generic": 0
+  },
+  "inconclusive_breakdown": {
+    "broad_trigger": 0,
+    "matcher_gap": 4,
+    "corpus_mismatch": 0,
+    "ambiguous_evidence": 5
+  },
+  "updated_at": "2026-09-11T05:07:48Z"
+}

@@ -53,6 +53,7 @@ def build_evidence_report(
         broken=len(broken),
         total_failures=total_failures,
         total_successes=len(trajectories) - total_failures,
+        near_misses=len(near_misses),
     )
 
     # Explicit min-sample policy: with too little history, the surfaced
