@@ -101,3 +101,23 @@ The v0.3.0 corpora (adapters/lifecycle/packs/mcp/otel) are **one `.jsonl` file p
 | reference-expansion | traj=32 | **288** | runner JSONL fix |
 
 Re-run on Qwen3-4B + 2 cloud models (#648/#650) to confirm these fixes generalize (especially the #492 alias removal — Qwen may rely on them; monitor its recall).
+
+---
+
+## 8. New Issues Documented From This Sweep (not GitHub — md tracking)
+
+Per project process, these are documented here (no new GitHub issues filed at sweep time):
+
+| # | New issue | Severity | Status | Location |
+|---|-----------|----------|--------|----------|
+| N1 | Runner `load_trajectory()` only read single-record JSONL — v0.3.0 multi-record corpora (adapters/lifecycle/packs/mcp/otel/ref-exp) silently under-counted (adapters traj=1, ref-exp=32 instead of 288). Fixed: line-by-line JSONL + per-record discovery. | high | ✅ fixed | `scripts/run-field-test.py` |
+| N2 | Near-miss references computed but never penalised in scoring → over-broad triggers passed. Fixed: `near_misses>0` → `pass`→`inconclusive`. | high | ✅ fixed | `scorer.py`, `report.py`; tests `test_scorer.py` |
+| N3 | Self-match counted as "prevented" — nearmiss/success trajectory validated its own extracted candidate (precision=1.0/1). Fixed: source-trajectory exclusion from references. | high | ✅ fixed | `run-field-test.py` |
+| N4 | Recovery-gate gap: `success=True` + fabricated `failure_class` (e.g. `nearmiss/coding`) passed the gate. Fixed: Fix-8 keyword gate-side + `nearmiss` → `SAFETY_CORPORA`. | high | ✅ fixed | `gate.py` |
+| N5 | 10/50 nearmiss files mislabeled `should_extract` (should be `should_reject`) — N-001..N-010. Fixed: relabeled + rationale. | medium | ✅ fixed | corpus |
+| N6 | #492 broad Qwen aliases over-fired — reverted (see WBS part1). Re-add only with specific phrases if Qwen recall regresses. | medium | ✅ fixed (amended) | `matcher.py` |
+| N7 | `openai` not in dev venv — OMLX sweeps failed before install. | low | fixed | dev env |
+| N8 | `opentelemetry.exporter` not installed → "OTel tracer setup failed" log noise every run. Non-fatal (#588 exporter degrades). Install `opentelemetry-exporter-otlp` for clean logs. | low | open (cosmetic) | env |
+| N9 | Quality thresholds FAIL on 3B local model: golden 10%, failures/positive 10% vs ≥70%/≥50% gate. Known small-model ceiling; cloud re-measure pending #650. | major | open (measurement) | results doc |
+
+**Tracking note:** #491 (Fix 8 OMLX re-run) is now done gate-side; #492 marked amended in WBS part1. GH issue states remain per milestone (not closed by this sweep — the fixes shipped on `feat-v0.3.0`).

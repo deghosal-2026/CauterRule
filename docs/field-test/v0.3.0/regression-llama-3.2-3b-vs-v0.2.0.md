@@ -2,7 +2,8 @@
 
 **Model:** `omlx-openai-Llama-3.2-3B-Instruct-4bit` · **Date:** 2026-09-11
 **Baseline:** `field-test/results/0.2.0/` (2026-09-08) · **Current:** `field-test/results/0.3.0/` (2026-09-11)
-**Corpora run in both:** failures_negative, failures_positive, golden, nearmiss, raw_ci, raw_opencode, raw_synthetic, successes
+**Status:** **POST-FIX** — this reflects the current code with the field-test fixes applied (near-miss penalty, self-match exclusion, recovery gate, JSONL runner fix).
+**Full results:** `docs/field-test/v0.3.0/field-test-results-llama-3.2-3b.md` · **Fixes:** `docs/field-test/v0.3.0/learnings-fixes.md`
 
 ---
 

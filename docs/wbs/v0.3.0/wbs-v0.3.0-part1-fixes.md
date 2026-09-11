@@ -62,10 +62,12 @@
 | 2.5 | Cross-session repeat-failure reduction ≥50% + multi-env validation | [#496](https://github.com/deghosal-2026/CauterRule/issues/496) | deferred to M7 |
 | 2.6 | Restore coverage 86% → 95% (TUI/observe/review/release/adversarial CLI) | [#494](https://github.com/deghosal-2026/CauterRule/issues/494) | ✅ |
 | 2.7 | Measure human-vs-replay agreement rate (field-test-plan §5.6) | [#493](https://github.com/deghosal-2026/CauterRule/issues/493) | deferred to M7 |
-| 2.8 | Qwen alias expansion — clear 18 matcher_gap on nearmiss | [#492](https://github.com/deghosal-2026/CauterRule/issues/492) | ✅ |
-| 2.9 | Re-run Fix 8 (recovery exclusion) on local OMLX models | [#491](https://github.com/deghosal-2026/CauterRule/issues/491) | deferred to M7 |
+| 2.8 | Qwen alias expansion — clear 18 matcher_gap on nearmiss | [#492](https://github.com/deghosal-2026/CauterRule/issues/492) | ✅ then **amended (M7)** |
+| 2.9 | Re-run Fix 8 (recovery exclusion) on local OMLX models | [#491](https://github.com/deghosal-2026/CauterRule/issues/491) | ✅ closed (M7) |
 | 2.10 | BUG: Public multi-line JSONL loader drops 160 public trajectories | [#490](https://github.com/deghosal-2026/CauterRule/issues/490) | ✅ |
 | 2.11 | Expand reference corpus 230 → 500+ diverse phrasings | [#489](https://github.com/deghosal-2026/CauterRule/issues/489) | ✓ closed (M7) |
+
+**M7 field-test amendments:** #492's broad Qwen aliases (command fails → exit code, pipeline fails → test failed, not found error → not found, auth error, tool fails) were reverted post-#489 — the 0.70 alias floor auto-passed them at the 0.65 OMLX threshold, collapsing precision (golden 0.741→0.547). Specific aliases kept; see `docs/field-test/v0.3.0/learnings-fixes.md` §1a.
 | 2.12 | Narrow the extraction prompt — name error codes not just tool+fails | [#488](https://github.com/deghosal-2026/CauterRule/issues/488) | ✅ |
 | 2.13 | Trigger-domain mismatch detection — kill nearmiss wrong-failure FPs | [#487](https://github.com/deghosal-2026/CauterRule/issues/487) | ✅ |
 
