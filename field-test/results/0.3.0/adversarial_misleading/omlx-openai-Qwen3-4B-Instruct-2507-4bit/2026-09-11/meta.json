@@ -1,0 +1,13 @@
+{
+  "corpus_type": "adversarial/misleading",
+  "timestamp": "2026-09-11",
+  "llm_provider": "openai",
+  "llm_model": "Qwen3-4B-Instruct-2507-4bit",
+  "llm_base_url": "http://localhost:8000/v1",
+  "extraction_passes": 2,
+  "temperatures": "0.2,0.5",
+  "target_trajectories": 10,
+  "reference_trajectories": 230,
+  "cost_per_request_usd": 0.01,
+  "gate_mode": "relaxed"
+}
