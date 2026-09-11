@@ -239,3 +239,36 @@ def test_check_domain_mismatch_is_invoked(monkeypatch: pytest.MonkeyPatch) -> No
     monkeypatch.setattr(matcher, "check_domain_mismatch", spy)
     rule_matches(_cand("git push"), _traj())
     assert calls["n"] == 1
+
+
+def test_domain_mismatch_treats_related_domains_as_compatible() -> None:
+    from cauterule.replay.matcher import check_domain_mismatch
+
+    pip_traj = Trajectory(
+        id="T-pip", timestamp="t", task="pip install fails",
+        steps=(Step(1, "bash", error="dependency conflict"),), success=False,
+        failure_class="python/pip/dependency-conflict",
+    )
+    assert check_domain_mismatch(_cand("pip install fails with conflict"), pip_traj) is False
+
+    k8s_traj = Trajectory(
+        id="T-k8s", timestamp="t", task="kubectl apply",
+        steps=(Step(1, "bash", error="no matches for kind"),), success=False,
+        failure_class="k8s/deploy/crd-not-found",
+    )
+    assert check_domain_mismatch(_cand("kubectl apply fails with CRD not found"), k8s_traj) is False
+
+    ci_traj = Trajectory(
+        id="T-ci", timestamp="t", task="deploy timed out",
+        steps=(Step(1, "bash", error="timeout"),), success=False,
+        failure_class="ci/deploy/timeout",
+    )
+    assert check_domain_mismatch(_cand("when CI deploy times out"), ci_traj) is False
+
+
+def test_extract_trigger_domain_no_substring_false_positive() -> None:
+    from cauterule.replay.matcher import extract_trigger_domain
+
+    assert extract_trigger_domain("specificity scoring failed") is None
+    assert extract_trigger_domain("capital letters rejected") is None
+    assert extract_trigger_domain("deploy fails") == "deploy"

@@ -623,12 +623,21 @@ def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_ti
                 match_scores.append(md["score"])
     avg_match_score = round(sum(match_scores) / len(match_scores), 3) if match_scores else None
 
+    # v0.3.0 (#697): break gate drops down by silencing reason so a spike in
+    # one mechanism (e.g. #692 keyword substring, #693 output-as-success) is
+    # visible without re-deriving it from raw results.jsonl.
+    gate_dropped_by_reason: dict[str, int] = {}
+    for r in gate_dropped:
+        reason = (r.get("gate") or {}).get("reason") or "unknown"
+        gate_dropped_by_reason[reason] = gate_dropped_by_reason.get(reason, 0) + 1
+
     summary = {
         "meta": meta,
         "elapsed_seconds": round(time.time() - start_time, 1),
         "total": total_trajectories,
         "done": len(done),
         "gate_dropped": len(gate_dropped),
+        "gate_dropped_by_reason": gate_dropped_by_reason,
         "skipped": len(skipped),
         "total_candidates": total_candidates,
         "total_llm_calls_avoided": total_llm_calls_avoided,

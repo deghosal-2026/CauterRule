@@ -218,6 +218,23 @@ Re-run the v0.1.0 "Fix 8" (recovery exclusion) on the 2 OMLX local models. v0.1.
 
 Pre-extraction gate (#428), replay matcher (#417), inconclusive attribution (#419), trigger specificity (#424), safety scoring (#421/#418), harness health (#430) — all unchanged from v0.2.0 §5. The v0.3.0 runner reuses these scoring functions.
 
+### 5.8 Gate-Drop Spot Audit (#697)
+
+Gate-dropped trajectories are a cost saving only if the drop was *correct*.
+From v0.3.0 the harness records the silencing reason per trajectory
+(`gate.reason` in `results.jsonl`) and summarizes drops by reason
+(`gate_dropped_by_reason` in `summary.json`). For each corpus type, the
+reviewer must:
+
+- [ ] Confirm `summary.json` `gate_dropped_by_reason` totals equal
+  `gate_dropped`, and flag any unexpected reason or spike (e.g. a jump in
+  `nearmiss_recovery_succeeded` from keyword/step-pattern recovery — #692/#693).
+- [ ] Sample 5–10 gate-dropped trajectories per corpus and manually confirm each
+  was genuinely no-signal or genuinely recovered. Record the sample IDs, the
+  reason, and the reviewer verdict in the run's notes.
+- [ ] File a known-issue for any sampled drop that should have been extracted
+  (a false-positive gate silence), with the trajectory ID and reason.
+
 ---
 
 ## 6. New Thresholds in v0.3.0

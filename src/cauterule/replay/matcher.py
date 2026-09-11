@@ -68,15 +68,24 @@ OMLX_NEARMISS_THRESHOLD = 0.70
 NEARMISS_CORPORA: frozenset[str] = frozenset({"nearmiss"})
 
 def strategy_for_corpus(corpus_name: str) -> str:
-    """Return recommended matcher strategy for *corpus_name*."""
-    lower = corpus_name.lower()
-    if "sibling" in lower or "cross-repo" in lower:
+    """Return recommended matcher strategy for *corpus_name*.
+
+    Matching is on whole ``/``-separated path segments (and known hyphenated
+    prefixes) rather than raw substrings, so a name like
+    ``raw-material-handling`` is not misrouted to the loose ``raw`` strategy
+    (#691).
+    """
+    segments = [s.strip() for s in corpus_name.lower().split("/") if s.strip()]
+    if any(
+        s == "sibling" or s.startswith(("sibling-", "cross-repo"))
+        for s in segments
+    ):
         return "transfer"
-    if "raw" in lower:
+    if "raw" in segments:
         return "loose"
     # Curated corpora and anything else default to strict/semantic.
     # Use strict for curated with clean signatures, semantic otherwise.
-    base = corpus_name.split("/")[-1].strip().lower()
+    base = segments[-1] if segments else corpus_name.strip().lower()
     if base in CURATED_CORPORA:
         return "strict"
     return "semantic"
@@ -369,19 +378,49 @@ def match_score(candidate: CandidateRule, trajectory: Trajectory) -> float:
     return round(score, 4)
 
 
+# Recognized tool/error domains for cross-domain matching (#487).
+_KNOWN_DOMAINS: tuple[str, ...] = (
+    "git", "docker", "pip", "pytest", "kubectl", "terraform", "api",
+    "browser", "python", "ssh", "npm", "deploy", "ci", "test",
+)
+
+# Related tools map to a shared group so a "pip" trigger is not considered
+# cross-domain against a "python/..." failure_class, etc. (#694/#691).
+_DOMAIN_GROUPS: dict[str, str] = {
+    "git": "vcs",
+    "docker": "containers",
+    "pip": "python", "pytest": "python", "python": "python",
+    "kubectl": "kubernetes", "k8s": "kubernetes", "kubernetes": "kubernetes",
+    "terraform": "iac",
+    "api": "api",
+    "browser": "browser", "selenium": "browser",
+    "ssh": "ssh",
+    "npm": "node",
+    "deploy": "ci", "ci": "ci",
+    "test": "testing",
+}
+
+
 def extract_trigger_domain(trigger: str) -> str | None:
     """Extract the primary domain/tool from a trigger string.
 
     Returns the first recognizable tool or error domain keyword, or None.
+    Matching is on whole tokens (not substrings) so words like
+    "specificity" or "capital" are not read as ``ci``/``api`` (#691).
     Used for domain-mismatch detection (#487).
     """
-    tl = trigger.lower()
-    for domain in ("git", "docker", "pip", "pytest", "kubectl",
-                   "terraform", "api", "browser", "python", "ssh",
-                   "npm", "deploy", "ci", "test"):
-        if domain in tl:
+    tokens = set(re.split(r"[^a-z0-9]+", trigger.lower()))
+    for domain in _KNOWN_DOMAINS:
+        if domain in tokens:
             return domain
     return None
+
+
+def _domain_group(name: str | None) -> str | None:
+    """Map a tool/domain token to its canonical group, or None if unknown."""
+    if not name:
+        return None
+    return _DOMAIN_GROUPS.get(name.lower())
 
 
 def check_domain_mismatch(
@@ -391,15 +430,18 @@ def check_domain_mismatch(
 
     A mismatch means the rule's primary tool/domain does not align with the
     trajectory's failure_class (e.g. trigger mentions "docker" but reference
-    trajectory has failure_class="git/push/...").
+    trajectory has failure_class="git/push/...").  Related tools (pip/pytest/
+    python, kubectl/k8s, deploy/ci) share a group so they are NOT treated as
+    mismatches (#694/#691).
     """
-    trigger_domain = extract_trigger_domain(candidate.when.trigger)
-    traj_domain: str | None = None
+    trigger_group = _domain_group(extract_trigger_domain(candidate.when.trigger))
+    traj_seg: str | None = None
     if trajectory.failure_class:
-        traj_domain = trajectory.failure_class.split("/")[0].lower()
-    if trigger_domain is None or traj_domain is None:
+        traj_seg = trajectory.failure_class.split("/")[0]
+    traj_group = _domain_group(traj_seg)
+    if trigger_group is None or traj_group is None:
         return False
-    return trigger_domain != traj_domain
+    return trigger_group != traj_group
 
 
 def match_detail(candidate: CandidateRule, trajectory: Trajectory) -> dict[str, Any]:
