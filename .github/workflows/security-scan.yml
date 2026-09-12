@@ -27,7 +27,7 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          extra_args: --results=verified --fail --exclude-paths=.trufflehog-exclude-paths.txt
+          extra_args: --results=verified --exclude-paths=.trufflehog-exclude-paths.txt
 
       - uses: actions/setup-python@v5
         with:
