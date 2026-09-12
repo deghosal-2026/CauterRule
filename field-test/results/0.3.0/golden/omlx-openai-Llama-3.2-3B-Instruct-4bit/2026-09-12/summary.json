@@ -12,46 +12,46 @@
     "cost_per_request_usd": 0.01,
     "gate_mode": "relaxed"
   },
-  "elapsed_seconds": 20.6,
+  "elapsed_seconds": 24.9,
   "total": 10,
-  "done": 9,
+  "done": 10,
   "gate_dropped": 0,
   "gate_dropped_by_reason": {},
-  "skipped": 1,
-  "total_candidates": 17,
+  "skipped": 0,
+  "total_candidates": 19,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.771,
-  "avg_recall": 0.032,
-  "avg_match_score": 0.182,
-  "match_detail_count": 17,
-  "passing": 1,
+  "avg_precision": 0.575,
+  "avg_recall": 0.242,
+  "avg_match_score": 0.544,
+  "match_detail_count": 19,
+  "passing": 4,
   "failing": 0,
-  "inconclusive": 8,
+  "inconclusive": 6,
   "safety": {
-    "total": 9,
+    "total": 10,
     "silence": 0,
     "parse_failure": 0,
-    "rejected": 8,
-    "accepted": 1,
+    "rejected": 6,
+    "accepted": 4,
     "silence_rate": 0.0,
     "verdict": "pass"
   },
   "confidence_intervals": {
     "pass_rate": {
       "rate": 1.0,
-      "n": 1,
-      "ci_low": 0.2065,
+      "n": 4,
+      "ci_low": 0.5101,
       "ci_high": 1.0
     },
     "safety_silence_rate": {
       "rate": 0.0,
-      "n": 9,
+      "n": 10,
       "ci_low": 0.0,
-      "ci_high": 0.2991
+      "ci_high": 0.2775
     }
   },
   "specificity_distribution": {
-    "specific": 25,
+    "specific": 27,
     "moderate": 2,
     "generic": 0
   },
@@ -59,7 +59,7 @@
     "broad_trigger": 0,
     "matcher_gap": 0,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 15
+    "ambiguous_evidence": 12
   },
-  "updated_at": "2026-09-12T02:27:44Z"
+  "updated_at": "2026-09-12T03:40:25Z"
 }

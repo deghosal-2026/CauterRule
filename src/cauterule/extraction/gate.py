@@ -192,6 +192,17 @@ def run_gate(
     signals = _detect_failure_signals(trajectory)
 
     if mode == "relaxed":
+        # A clean success (success=True, no failure signals) must not be
+        # extracted even in relaxed mode: non-failure corpora (e.g. otel span
+        # events, all success=True) would otherwise produce rules that break
+        # reference successes (#709). Failures without signals still proceed —
+        # relaxed mode stays permissive for the raw corpora.
+        if trajectory.success and not signals:
+            return GateResult(
+                should_extract=False,
+                reason=SILENCE_REASON_NO_FAILURE,
+                failure_signals=(),
+            )
         return GateResult(should_extract=True, failure_signals=tuple(signals))
 
     if not signals:

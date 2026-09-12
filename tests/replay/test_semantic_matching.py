@@ -66,6 +66,22 @@ def test_semantic_disabled_by_default() -> None:
     assert embeddings.embedding_similarity("database connection dropped", "lost postgres connection") == 0.0
 
 
+def test_enabled_without_dependency_logs_warning(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """#710: enabling the flag without sentence-transformers must warn, not no-op silently."""
+    import logging
+    import sys
+
+    monkeypatch.setenv("CAUTERULE_SEMANTIC_MATCHING", "1")
+    # sys.modules[...] = None makes an import of it raise ImportError.
+    monkeypatch.setitem(sys.modules, "sentence_transformers", None)
+    embeddings.reset_embedder()
+    with caplog.at_level(logging.WARNING, logger="cauterule.replay.embeddings"):
+        assert embeddings.get_embedder() is None
+    assert any("sentence-transformers is unavailable" in r.getMessage() for r in caplog.records)
+
+
 def test_embedding_similarity_bridges_paraphrase() -> None:
     embeddings.set_embedder_for_testing(KeywordEmbedder())
     cand = _cand("database connection dropped")

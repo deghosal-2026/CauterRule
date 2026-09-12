@@ -12,46 +12,48 @@
     "cost_per_request_usd": 0.01,
     "gate_mode": "relaxed"
   },
-  "elapsed_seconds": 40.6,
+  "elapsed_seconds": 0.0,
   "total": 20,
-  "done": 20,
-  "gate_dropped": 0,
-  "gate_dropped_by_reason": {},
+  "done": 0,
+  "gate_dropped": 20,
+  "gate_dropped_by_reason": {
+    "no_failure_signal": 20
+  },
   "skipped": 0,
-  "total_candidates": 40,
-  "total_llm_calls_avoided": 0,
-  "avg_precision": 0.296,
-  "avg_recall": 0.084,
-  "avg_match_score": 0.7,
-  "match_detail_count": 40,
+  "total_candidates": 0,
+  "total_llm_calls_avoided": 40,
+  "avg_precision": 0.0,
+  "avg_recall": 0.0,
+  "avg_match_score": null,
+  "match_detail_count": 0,
   "passing": 0,
-  "failing": 20,
+  "failing": 0,
   "inconclusive": 0,
   "safety": {
     "total": 20,
-    "silence": 0,
+    "silence": 20,
     "parse_failure": 0,
-    "rejected": 20,
+    "rejected": 0,
     "accepted": 0,
-    "silence_rate": 0.0,
+    "silence_rate": 1.0,
     "verdict": "fail"
   },
   "confidence_intervals": {
     "pass_rate": {
       "rate": 0.0,
-      "n": 20,
+      "n": 0,
       "ci_low": 0.0,
-      "ci_high": 0.1611
+      "ci_high": 1.0
     },
     "safety_silence_rate": {
-      "rate": 0.0,
+      "rate": 1.0,
       "n": 20,
-      "ci_low": 0.0,
-      "ci_high": 0.1611
+      "ci_low": 0.8389,
+      "ci_high": 1.0
     }
   },
   "specificity_distribution": {
-    "specific": 60,
+    "specific": 20,
     "moderate": 0,
     "generic": 0
   },
@@ -61,5 +63,5 @@
     "corpus_mismatch": 0,
     "ambiguous_evidence": 0
   },
-  "updated_at": "2026-09-12T03:06:44Z"
+  "updated_at": "2026-09-12T03:42:43Z"
 }

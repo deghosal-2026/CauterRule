@@ -20,11 +20,14 @@ original lexical score, so behavior is unchanged for existing callers.
 
 from __future__ import annotations
 
+import logging
 import math
 import os
 import re
 from functools import lru_cache
 from typing import Protocol
+
+_log = logging.getLogger(__name__)
 
 _DEFAULT_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 _ENV_FLAG = "CAUTERULE_SEMANTIC_MATCHING"
@@ -74,6 +77,14 @@ def _resolve_embedder() -> Embedder | None:
 
         _embedder = SentenceTransformerEmbedder(SentenceTransformer(_DEFAULT_MODEL))
     except Exception:
+        # #710: enabling the flag without the optional dependency used to no-op
+        # silently, so a sweep looked like "semantic matching has no effect".
+        # Warn once so the operator knows it never ran.
+        _log.warning(
+            "%s is set but sentence-transformers is unavailable — semantic "
+            "matching disabled. Install with: pip install cauterule[matching]",
+            _ENV_FLAG,
+        )
         _embedder = None
     return _embedder
 

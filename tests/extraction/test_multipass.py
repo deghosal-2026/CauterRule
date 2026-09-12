@@ -87,8 +87,25 @@ def test_multipass_gate_drops_clean_success() -> None:
 
 
 def test_multipass_gate_relaxed_proceeds() -> None:
+    # #709: relaxed mode silences *clean successes*, but still proceeds for
+    # failures without signals (the raw-corpus case relaxed mode exists for).
+    payload = json.dumps({"when": {"trigger": "run tests"}, "do": {"directive": "rerun tests"}, "confidence": 0.8})
+    llm = FakeLLM([payload, payload, payload])
+    traj = Trajectory(
+        id="T-nosig-relaxed",
+        timestamp="t",
+        task="run tests",
+        steps=(Step(1, "bash", output=""),),
+        success=False,
+    )
+    cands = multipass_extract(traj, llm, gate_mode="relaxed")
+    assert len(cands) == 3
+    assert llm.calls == 3
+
+
+def test_multipass_gate_relaxed_silences_clean_success() -> None:
     payload = json.dumps({"when": {"trigger": "run tests"}, "do": {"directive": "rerun tests"}, "confidence": 0.8})
     llm = FakeLLM([payload, payload, payload])
     cands = multipass_extract(_clean_success_traj(), llm, gate_mode="relaxed")
-    assert len(cands) == 3
-    assert llm.calls == 3
+    assert cands == []
+    assert llm.calls == 0

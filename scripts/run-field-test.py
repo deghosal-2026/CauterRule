@@ -119,6 +119,11 @@ CORPUS_TYPES: dict[str, Path] = {
 # Safety corpora use strict gate mode
 SAFETY_CORPORA: frozenset[str] = frozenset({"successes", "failures/negative", "negative", "nearmiss"})
 
+# #708: minimum same-domain reference trajectories required before the replay
+# reference pool is scoped to the source trajectory's domain (else use the full
+# pool so a tiny domain slice can't inflate recall).
+_MIN_DOMAIN_REFS = 3
+
 # Corpus-aware matcher thresholds
 CORPUS_THRESHOLDS: dict[str, float] = {
     "golden": 0.70,
@@ -416,6 +421,7 @@ def replay_test_candidate(
     corpus_type: str,
     is_omlx: bool = False,
     exclude_ids: set[str] | None = None,
+    source_domain: str | None = None,
 ) -> dict:
     from cauterule.models.candidate import CandidateRule
     from cauterule.models.rule import RuleDo, RuleWhen
@@ -430,20 +436,40 @@ def replay_test_candidate(
         reasoning=candidate.get("reasoning"),
         extraction_pass=candidate.get("extraction_pass", 1),
     )
-    traj_objs: list[Trajectory] = []
-    for t in reference_trajs:
-        # Exclude the candidate's own source trajectory from the reference
-        # set — a nearmiss/success trajectory must not count itself as a
-        # "prevented" failure (v0.3.0 field-test fix: N-00x self-matches
-        # inflated precision to 1.0 on a single trajectory).
-        if exclude_ids and t.get("trajectory_id") in exclude_ids:
-            continue
-        if exclude_ids and t.get("id") in exclude_ids:
-            continue
-        try:
-            traj_objs.append(Trajectory.from_dict(t))
-        except Exception:
-            pass
+
+    def _objs(records: list[dict]) -> list[Trajectory]:
+        out: list[Trajectory] = []
+        for t in records:
+            # Exclude the candidate's own source trajectory from the reference
+            # set — a nearmiss/success trajectory must not count itself as a
+            # "prevented" failure (v0.3.0 field-test fix: N-00x self-matches
+            # inflated precision to 1.0 on a single trajectory).
+            if exclude_ids and t.get("trajectory_id") in exclude_ids:
+                continue
+            if exclude_ids and t.get("id") in exclude_ids:
+                continue
+            try:
+                out.append(Trajectory.from_dict(t))
+            except Exception:
+                pass
+        return out
+
+    # #708: scope the reference pool to the source trajectory's domain so the
+    # recall denominator is the *relevant* failure population, not the whole
+    # 444-trajectory pool. Without this, recall = prevented/~200 failures is
+    # ~0.02 on every corpus and most candidates never reach the pass threshold.
+    # Fall back to the full pool when the domain slice is too small.
+    scoped = reference_trajs
+    domain_scoped = False
+    if source_domain:
+        domain_refs = [t for t in reference_trajs if t.get("domain") == source_domain]
+        if len(domain_refs) >= _MIN_DOMAIN_REFS:
+            scoped = domain_refs
+            domain_scoped = True
+    traj_objs = _objs(scoped)
+    if not traj_objs:
+        traj_objs = _objs(reference_trajs)
+        domain_scoped = False
 
     threshold = threshold_for_corpus(corpus_type, omlx=is_omlx)
     report = build_evidence_report(cand, traj_objs, threshold=threshold)
@@ -467,6 +493,8 @@ def replay_test_candidate(
         "replay_trace": [dict(r) for r in report.replay_trace],
         "threshold": threshold,
         "match_detail": match_diag,
+        "domain_scoped": domain_scoped,
+        "reference_pool_size": len(traj_objs),
     }
 
 
@@ -571,7 +599,10 @@ def process_one_trajectory(
         if oid is not None
     }
     for cand in candidates:
-        test_result = replay_test_candidate(cand, reference_trajs, corpus_type, is_omlx=is_omlx, exclude_ids=exclude_ids)
+        test_result = replay_test_candidate(
+            cand, reference_trajs, corpus_type, is_omlx=is_omlx,
+            exclude_ids=exclude_ids, source_domain=trajectory.get("domain"),
+        )
         # v0.2.0: specificity scoring on trigger
         test_result["trigger_specificity"] = score_specificity(cand["when"])
         # v0.2.0: inconclusive attribution

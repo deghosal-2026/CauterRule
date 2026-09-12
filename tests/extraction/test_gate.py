@@ -115,11 +115,26 @@ def test_failure_class_is_signal_even_when_success() -> None:
     assert any("failure_class" in s for s in result.failure_signals)
 
 
-def test_relaxed_mode_always_proceeds() -> None:
+def test_relaxed_mode_silences_clean_success() -> None:
+    # #709: a clean success (success=True, no failure signals) must not be
+    # extracted even in relaxed mode — otherwise non-failure corpora (otel span
+    # events) get extracted and then break reference successes.
     result = run_gate(_success_traj(), mode="relaxed")
-    assert result.should_extract is True
-    assert result.reason is None
+    assert result.should_extract is False
+    assert result.reason == SILENCE_REASON_NO_FAILURE
     assert isinstance(result, GateResult)
+
+
+def test_relaxed_mode_proceeds_for_success_with_failure_signal() -> None:
+    traj = Trajectory(
+        id="T-success-sig",
+        timestamp="t",
+        task="recovered run",
+        steps=(Step(step_number=1, tool="bash", error="transient boom"),),
+        success=True,
+    )
+    result = run_gate(traj, mode="relaxed")
+    assert result.should_extract is True
 
 
 def test_blank_error_is_not_signal() -> None:
