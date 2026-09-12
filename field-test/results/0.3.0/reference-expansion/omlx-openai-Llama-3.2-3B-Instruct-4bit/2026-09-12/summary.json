@@ -1,65 +1,65 @@
 {
   "meta": {
-    "corpus_type": "public/real-world/bugsinpy",
+    "corpus_type": "reference-expansion",
     "timestamp": "2026-09-12",
     "llm_provider": "openai",
     "llm_model": "Llama-3.2-3B-Instruct-4bit",
     "llm_base_url": "http://localhost:8000/v1",
     "extraction_passes": 2,
     "temperatures": "0.2,0.5",
-    "target_trajectories": 36,
+    "target_trajectories": 303,
     "reference_trajectories": 444,
     "cost_per_request_usd": 0.01,
     "gate_mode": "relaxed"
   },
-  "elapsed_seconds": 82.6,
-  "total": 36,
-  "done": 36,
+  "elapsed_seconds": 177.4,
+  "total": 86,
+  "done": 86,
   "gate_dropped": 0,
   "gate_dropped_by_reason": {},
   "skipped": 0,
-  "total_candidates": 65,
+  "total_candidates": 168,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.596,
-  "avg_recall": 0.044,
-  "avg_match_score": 0.026,
-  "match_detail_count": 65,
-  "passing": 12,
-  "failing": 0,
-  "inconclusive": 24,
+  "avg_precision": 0.198,
+  "avg_recall": 0.034,
+  "avg_match_score": 0.049,
+  "match_detail_count": 168,
+  "passing": 0,
+  "failing": 14,
+  "inconclusive": 72,
   "safety": {
-    "total": 36,
+    "total": 86,
     "silence": 0,
     "parse_failure": 0,
-    "rejected": 24,
-    "accepted": 12,
+    "rejected": 86,
+    "accepted": 0,
     "silence_rate": 0.0,
-    "verdict": "pass"
+    "verdict": "fail"
   },
   "confidence_intervals": {
     "pass_rate": {
-      "rate": 1.0,
-      "n": 12,
-      "ci_low": 0.7575,
-      "ci_high": 1.0
+      "rate": 0.0,
+      "n": 14,
+      "ci_low": 0.0,
+      "ci_high": 0.2153
     },
     "safety_silence_rate": {
       "rate": 0.0,
-      "n": 36,
+      "n": 86,
       "ci_low": 0.0,
-      "ci_high": 0.0964
+      "ci_high": 0.0428
     }
   },
   "specificity_distribution": {
-    "specific": 89,
-    "moderate": 0,
-    "generic": 12
+    "specific": 159,
+    "moderate": 81,
+    "generic": 14
   },
   "inconclusive_breakdown": {
-    "broad_trigger": 2,
-    "matcher_gap": 23,
+    "broad_trigger": 9,
+    "matcher_gap": 104,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 14
+    "ambiguous_evidence": 28
   },
-  "updated_at": "2026-09-12T03:04:21Z"
+  "updated_at": "2026-09-12T03:09:48Z"
 }
