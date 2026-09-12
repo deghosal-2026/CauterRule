@@ -10,6 +10,9 @@ contract:
 - secret in I/O is redacted on disk
 - success path writes a trajectory
 - written trajectories are schema-valid (enriched + redacted)
+
+# SECURITY-FIXTURE: token-like strings in this module are intentional fake
+# credentials used to verify redaction. None are real secrets.
 """
 
 # ruff: noqa: TRY300 — helpers return PASS/FAIL strings straight from the

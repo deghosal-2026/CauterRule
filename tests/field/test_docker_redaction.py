@@ -3,6 +3,9 @@
 All tests use the Python API directly (not Docker CLI).
 """
 
+# SECURITY-FIXTURE: token-like strings below are intentional fake credentials
+# used to verify redaction. None are real secrets.
+
 from __future__ import annotations
 
 from pathlib import Path

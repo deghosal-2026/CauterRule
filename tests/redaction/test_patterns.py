@@ -1,3 +1,6 @@
+# SECURITY-FIXTURE: token-like strings below are intentional fake credentials
+# used to verify redaction patterns. None are real secrets.
+
 from cauterule.redaction.patterns import BUILTIN_PATTERNS, get_builtin_patterns, get_pattern_names
 
 

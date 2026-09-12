@@ -1,5 +1,8 @@
 """Redaction corpus — 100% success validation."""
 
+# SECURITY-FIXTURE: token-like strings below are intentional fake credentials
+# used to verify redaction. None are real secrets.
+
 from cauterule.models.trajectory import Step, Trajectory
 from cauterule.redaction.engine import contains_secret, redact_trajectory
 

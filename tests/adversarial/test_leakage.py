@@ -1,5 +1,8 @@
 """26.6: Instruction leakage test — secrets do not survive export."""
 
+# SECURITY-FIXTURE: every token-like string in this module is an intentional
+# fake credential used to verify redaction/leak prevention. None are real.
+
 from __future__ import annotations
 
 import pytest

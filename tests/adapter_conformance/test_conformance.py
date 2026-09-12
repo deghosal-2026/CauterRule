@@ -3,6 +3,9 @@
 Every adapter's driver must pass the shared kit plus the init scaffold
 matrix (``--adapter none|langgraph|crewai|pydanticai|custom`` produces a
 project whose example files compile).
+
+# SECURITY-FIXTURE: token-like strings in this module are intentional fake
+# credentials used to verify redaction. None are real secrets.
 """
 
 from __future__ import annotations

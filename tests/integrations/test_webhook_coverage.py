@@ -1,6 +1,9 @@
 # ruff: noqa: SIM117
 """Hermetic coverage for cauterule.integrations.webhook (#494)."""
 
+# SECURITY-FIXTURE: token-like strings in this module are intentional fake
+# credentials used to verify webhook payload redaction. None are real.
+
 from __future__ import annotations
 
 import json

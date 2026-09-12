@@ -7,6 +7,9 @@ redaction plumbing.  The kit (:mod:`kit`) is parametrized over these.
 # ruff: noqa: TRY300, TRY301 — test drivers intentionally raise in try to
 # trigger the failure-capture path and return within try for the happy path.
 
+# SECURITY-FIXTURE: token-like strings in this module are intentional fake
+# credentials used to verify redaction. None are real secrets.
+
 from __future__ import annotations
 
 from collections.abc import Iterator
