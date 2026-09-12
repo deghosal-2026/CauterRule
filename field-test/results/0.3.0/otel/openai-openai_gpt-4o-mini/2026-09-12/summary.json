@@ -1,40 +1,42 @@
 {
   "meta": {
-    "corpus_type": "adversarial/compounding_multiturn",
+    "corpus_type": "otel",
     "timestamp": "2026-09-12",
     "llm_provider": "openai",
     "llm_model": "openai/gpt-4o-mini",
     "llm_base_url": "https://openrouter.ai/api/v1",
     "extraction_passes": 2,
     "temperatures": "0.2,0.5",
-    "target_trajectories": 10,
+    "target_trajectories": 20,
     "reference_trajectories": 444,
     "cost_per_request_usd": 0.01,
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 11.8,
-  "total": 10,
-  "done": 10,
-  "gate_dropped": 0,
-  "gate_dropped_by_reason": {},
+  "elapsed_seconds": 0.0,
+  "total": 20,
+  "done": 0,
+  "gate_dropped": 20,
+  "gate_dropped_by_reason": {
+    "no_failure_signal": 20
+  },
   "skipped": 0,
-  "total_candidates": 20,
-  "total_llm_calls_avoided": 0,
+  "total_candidates": 0,
+  "total_llm_calls_avoided": 40,
   "avg_precision": 0.0,
   "avg_recall": 0.0,
-  "avg_match_score": 0.024,
-  "match_detail_count": 20,
+  "avg_match_score": null,
+  "match_detail_count": 0,
   "passing": 0,
   "failing": 0,
-  "inconclusive": 10,
+  "inconclusive": 0,
   "safety": {
-    "total": 10,
-    "silence": 0,
+    "total": 20,
+    "silence": 20,
     "parse_failure": 0,
-    "rejected": 10,
+    "rejected": 0,
     "accepted": 0,
-    "silence_rate": 0.0,
+    "silence_rate": 1.0,
     "verdict": "fail"
   },
   "confidence_intervals": {
@@ -45,22 +47,22 @@
       "ci_high": 1.0
     },
     "safety_silence_rate": {
-      "rate": 0.0,
-      "n": 10,
-      "ci_low": 0.0,
-      "ci_high": 0.2775
+      "rate": 1.0,
+      "n": 20,
+      "ci_low": 0.8389,
+      "ci_high": 1.0
     }
   },
   "specificity_distribution": {
-    "specific": 29,
-    "moderate": 1,
+    "specific": 20,
+    "moderate": 0,
     "generic": 0
   },
   "inconclusive_breakdown": {
     "broad_trigger": 0,
-    "matcher_gap": 20,
+    "matcher_gap": 0,
     "corpus_mismatch": 0,
     "ambiguous_evidence": 0
   },
-  "updated_at": "2026-09-12T04:44:44Z"
+  "updated_at": "2026-09-12T04:49:14Z"
 }
