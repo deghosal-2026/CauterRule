@@ -92,14 +92,14 @@ class OtelExporter:
         self._tracer: Any | None = None
         if _OTEL_AVAILABLE:
             try:
-                from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-                    OTLPSpanExporter,
-                )
-                from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-                from opentelemetry.sdk.trace import TracerProvider
-                from opentelemetry.sdk.trace.export import BatchSpanProcessor
-
                 if endpoint:
+                    from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+                        OTLPSpanExporter,
+                    )
+                    from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+                    from opentelemetry.sdk.trace import TracerProvider
+                    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
                     resource = Resource.create({SERVICE_NAME: service_name})
                     self._provider = TracerProvider(resource=resource)
                     self._provider.add_span_processor(
@@ -107,6 +107,10 @@ class OtelExporter:
                     )
                     self._tracer = self._provider.get_tracer(service_name)
                 else:
+                    # No endpoint: the API-only tracer is enough — do not import
+                    # the OTLP exporter/SDK (the `[otel]` exporter extra may be
+                    # absent). Regression: the exporter import used to run
+                    # unconditionally and disabled the no-op tracer.
                     self._tracer = trace.get_tracer(service_name)
             except Exception:
                 _log.warning("OTel tracer setup failed — export disabled", exc_info=True)

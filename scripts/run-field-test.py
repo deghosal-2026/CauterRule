@@ -104,6 +104,8 @@ CORPUS_TYPES: dict[str, Path] = {
     "packs":                   FIELD_TEST_ROOT / "packs",
     "mcp":                     FIELD_TEST_ROOT / "mcp",
     "otel":                    FIELD_TEST_ROOT / "otel",
+    # v0.3.0 #653/#486: fixed 1000-trajectory sample for $/1k measurement.
+    "cost":                    FIELD_TEST_ROOT / "cost",
     # #489 reference expansion (public, 288 trajs)
     "reference-expansion":     PUBLIC_ROOT / "reference-expansion",
     # v0.3.0 code-review #698: paraphrase-diversity validation set (#689)
@@ -144,6 +146,8 @@ CORPUS_THRESHOLDS: dict[str, float] = {
     "adversarial/unsafe_realistic": 0.70,
     "adversarial/misleading_harmbench": 0.70,
     "adversarial/contradiction_harmbench": 0.70,
+    # v0.3.0 cost sample: mixed safety + extraction + raw -> relaxed.
+    "cost": 0.60,
 }
 
 # Reference bucket paths (field-test/corpus curated)
@@ -273,11 +277,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--validation-suite", default=None, help="Run a single validation suite only (see VALIDATION_SUITES keys)")
     parser.add_argument("--model-config", default=None, help="YAML file with per-model overrides (v0.3.0 #629)")
     parser.add_argument("--regression-v020", action="store_true", help="Compare v0.3.0 results to v0.2.0 baseline (v0.3.0 #629)")
+    # v0.3.0 field-test blocks (plan §9): each is an independent non-sweep block.
+    parser.add_argument("--adapter", action="store_true", help="Adapter conformance block (#540, plan §4.2)")
+    parser.add_argument("--pack", action="store_true", help="Pack replay scoring block (#479/#481, plan §4.4)")
+    parser.add_argument("--mcp-security", action="store_true", help="MCP remote security block (#601, plan §4.6)")
+    parser.add_argument("--otel", action="store_true", help="OTEL emit block (#588, plan §4.6)")
+    parser.add_argument("--cost-corpus", action="store_true", help="1k-trajectory cost measurement (#653/#486, plan §5.4)")
+    parser.add_argument("--cross-session", action="store_true", help="Cross-session protocol block (#663/#496, plan §5.2)")
+    parser.add_argument("--human-review", action="store_true", help="Sample candidates for human agreement (#493, plan §5.5)")
     args = parser.parse_args()
     if args.max_workers is None:
         args.max_workers = 2 if (args.llm_base_url and "localhost" in args.llm_base_url) else 4
-    if not args.all and not args.corpus_type and not args.run_validation:
-        parser.error("specify a corpus_type, --all, or --run-validation")
+    block_requested = any(
+        (args.adapter, args.pack, args.mcp_security, args.otel,
+         args.cost_corpus, args.cross_session, args.human_review)
+    )
+    if not args.all and not args.corpus_type and not args.run_validation and not block_requested:
+        parser.error("specify a corpus_type, --all, --run-validation, or a field-test block flag")
     return args
 
 
@@ -1002,6 +1018,62 @@ def _regression_v020(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_block(name: str, args: argparse.Namespace) -> int:
+    """Run a single v0.3.0 field-test block (plan §9)."""
+    import subprocess
+
+    repo_root = Path(__file__).resolve().parents[1]
+    out = Path(args.output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    if name == "adapter":
+        cmd = [sys.executable, "-m", "pytest", "tests/adapter_conformance/", "-q"]
+    elif name == "mcp-security":
+        cmd = [sys.executable, "-m", "pytest", "tests/mcp/test_security.py", "-q"]
+    elif name == "otel":
+        cmd = [sys.executable, "-m", "pytest", "tests/integrations/test_otel_exporter.py", "-q"]
+    elif name == "pack":
+        cmd = [sys.executable, "scripts/pack_replay.py", "--output", str(out / "pack-replay.md")]
+    elif name == "cost-corpus":
+        cmd = [sys.executable, "scripts/measure_cost.py", "--results", str(out)]
+    elif name == "cross-session":
+        baseline = out / "cross-session-baseline.jsonl"
+        intervention = out / "cross-session-intervention.jsonl"
+        if not baseline.is_file() or not intervention.is_file():
+            print(
+                f"[cross-session] expected {baseline} and {intervention} — "
+                "run the protocol (§4.3) first; skipping."
+            )
+            return 0
+        cmd = [
+            sys.executable, "scripts/cross_session.py",
+            "--baseline", str(baseline), "--intervention", str(intervention),
+        ]
+    elif name == "human-review":
+        cmd = [sys.executable, "scripts/human_agreement.py", "--results", str(out)]
+    else:
+        print(f"[error] unknown field block: {name}")
+        return 1
+    print(f"[block:{name}] {' '.join(cmd)}")
+    return subprocess.run(cmd, cwd=str(repo_root)).returncode
+
+
+def _run_field_blocks(args: argparse.Namespace) -> int:
+    blocks = [
+        ("adapter", args.adapter),
+        ("pack", args.pack),
+        ("mcp-security", args.mcp_security),
+        ("otel", args.otel),
+        ("cost-corpus", args.cost_corpus),
+        ("cross-session", args.cross_session),
+        ("human-review", args.human_review),
+    ]
+    status = 0
+    for name, enabled in blocks:
+        if enabled:
+            status |= _run_block(name, args)
+    return status
+
+
 def main() -> None:
     args = parse_args()
 
@@ -1010,6 +1082,16 @@ def main() -> None:
 
     if args.run_validation:
         sys.exit(run_validation(args))
+
+    block_requested = any(
+        (args.adapter, args.pack, args.mcp_security, args.otel,
+         args.cost_corpus, args.cross_session, args.human_review)
+    )
+    if block_requested:
+        block_status = _run_field_blocks(args)
+        # Blocks are independent; run a sweep too only if a corpus was named.
+        if not args.all and not args.corpus_type:
+            sys.exit(block_status)
 
     api_key = os.getenv("CAUTERULE_LLM_API_KEY")
     if not api_key and args.llm_provider in ("openai", "anthropic", "litellm") and not args.llm_base_url:

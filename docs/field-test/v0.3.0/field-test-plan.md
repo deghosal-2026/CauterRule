@@ -184,6 +184,13 @@ The 15 pytest-benchmark hot paths run as a validation suite (`benchmarks/`). The
 
 ## 5. New Methodology in v0.3.0
 
+> **Tooling status (2026-09-11):** all measurement methodology below is now
+> implemented and unit-tested under `src/cauterule/measurement/` +
+> `tests/measurement/`, with CLIs under `scripts/` and runner block flags (§9).
+> Numeric results for cost/cross-session/human-agreement are produced when the
+> next model sweep runs; pack-replay and Fix-8 recovery already have measured
+> outputs (`pack-replay.md`, `fix8-recovery-exclusion.md`).
+
 ### 5.1 Adapter Conformance Harness (#540)
 
 Per-adapter: a minimal failing agent → capture → extract → replay → re-run-with-injection. The harness lives in `tests/adapter_conformance/` and is reused as a validation suite AND a field-test block.
@@ -362,23 +369,23 @@ Same 4 models as v0.2.0 (regression comparison), swept on the v0.3.0 corpora:
 
 ## 9. Runner and Harness Changes (#629)
 
-`scripts/run-field-test.py` gains:
+`scripts/run-field-test.py` gains (status: ✅ all shipped 2026-09-11):
 
-| Flag | Purpose | Issue |
-|------|---------|-------|
-| `--cross-session` | Run N sessions sequentially, persist store, compute repeat-failure delta (§7.3) | #663 |
-| `--adapter` | Adapter conformance block (per framework or --all) | #540 |
-| `--pack` | Pack ecosystem block (install/replay/cert/safety) | #479/#481 |
-| `--mcp-security` | MCP remote security block (real agent + bearer) | #601 |
-| `--otel` | OTEL emit block (real collector) | #588 |
-| `--cost-corpus` | 1k-trajectory cost measurement (§7.4) | #653 |
-| `--human-review` | Sample candidates for human agreement scoring | #493 |
-| `--model-config` | Multi-model YAML config (per-model overrides) | #629 |
-| `--regression-v020` | Delta table vs v0.2.0 baseline (§7.5) | #629 |
+| Flag | Purpose | Issue | Status |
+|------|---------|-------|--------|
+| `--cross-session` | Run N sessions sequentially, persist store, compute repeat-failure delta (§7.3) | #663 | ✅ wired (`scripts/cross_session.py`) |
+| `--adapter` | Adapter conformance block (per framework or --all) | #540 | ✅ wired (`tests/adapter_conformance/`) |
+| `--pack` | Pack ecosystem block (install/replay/cert/safety) | #479/#481 | ✅ wired (`scripts/pack_replay.py`) |
+| `--mcp-security` | MCP remote security block (real agent + bearer) | #601 | ✅ wired (`tests/mcp/test_security.py`) |
+| `--otel` | OTEL emit block (real collector) | #588 | ✅ wired (`tests/integrations/test_otel_exporter.py`) |
+| `--cost-corpus` | 1k-trajectory cost measurement (§7.4) | #653 | ✅ wired (`scripts/measure_cost.py`) |
+| `--human-review` | Sample candidates for human agreement scoring | #493 | ✅ wired (`scripts/human_agreement.py`) |
+| `--model-config` | Multi-model YAML config (per-model overrides) | #629 | ✅ pre-existing |
+| `--regression-v020` | Delta table vs v0.2.0 baseline (§7.5) | #629 | ✅ pre-existing |
 
 New validation suites added to `VALIDATION_SUITES` (§4.1): `adapter_conformance`, `lifecycle`, `packs`, `mcp_security`, `otel_exporter`, `corpus_cli`, `benchmark_cli`. Results output to `field-test/0.3.0/` (docker results already at `field-test/results/0.3.0/docker/`).
 
-`CORPUS_TYPES` now includes the two #696 adversarial vectors (`adversarial/tool_output_injection`, `adversarial/compounding_multiturn`; 32 corpus types total), and `summary.json` carries `gate_dropped_by_reason` (#697) and `confidence_intervals` (#695).
+`CORPUS_TYPES` now includes the two #696 adversarial vectors (`adversarial/tool_output_injection`, `adversarial/compounding_multiturn`) **and the 1,000-trajectory `cost` corpus** (33 corpus types total), and `summary.json` carries `gate_dropped_by_reason` (#697) and `confidence_intervals` (#695).
 
 ---
 

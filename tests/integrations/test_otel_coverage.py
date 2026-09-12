@@ -7,6 +7,28 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
+def _otel_sdk_available() -> bool:
+    """True only when the optional `[otel]` extras (SDK + OTLP exporter) exist."""
+    import importlib.util
+
+    try:
+        return (
+            importlib.util.find_spec("opentelemetry.sdk.trace") is not None
+            and importlib.util.find_spec(
+                "opentelemetry.exporter.otlp.proto.http.trace_exporter"
+            )
+            is not None
+        )
+    except (ImportError, ModuleNotFoundError):
+        return False
+
+
+_HAS_OTEL_SDK = _otel_sdk_available()
+_SKIP_NO_OTEL_SDK = pytest.mark.skipif(
+    not _HAS_OTEL_SDK, reason="opentelemetry SDK/OTLP exporter not installed ([otel] extra)"
+)
+
+
 def _fake_tracer() -> tuple[MagicMock, MagicMock, MagicMock]:
     span = MagicMock()
     span.set_attribute = MagicMock()
@@ -103,6 +125,7 @@ def test_exporter_without_endpoint_uses_get_tracer(monkeypatch: pytest.MonkeyPat
     assert exporter._provider is None
 
 
+@_SKIP_NO_OTEL_SDK
 def test_exporter_with_endpoint_creates_provider(monkeypatch: pytest.MonkeyPatch) -> None:
     import cauterule.integrations.otel as otel_module
 
@@ -117,6 +140,7 @@ def test_exporter_with_endpoint_creates_provider(monkeypatch: pytest.MonkeyPatch
         exporter._provider.shutdown()
 
 
+@_SKIP_NO_OTEL_SDK
 def test_exporter_init_handles_exception(monkeypatch: pytest.MonkeyPatch) -> None:
     import cauterule.integrations.otel as otel_module
 

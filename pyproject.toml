@@ -109,6 +109,7 @@ convention = "google"
 "src/cauterule/loop/**" = ["ANN401", "D", "TRY003", "E501"]
 "src/cauterule/corpus/**" = ["D105", "D107", "TRY003", "E501", "ANN401", "ARG001"]
 "benchmarks/**" = ["ANN", "ARG", "D"]
+"scripts/**" = ["ANN", "ARG", "D", "E501", "RUF002", "TRY003"]
 "src/cauterule/cli/**" = ["D"]
 "src/cauterule/benchmark/**" = ["D", "TRY003", "E501", "W292"]
 "src/cauterule/integrations/**" = ["D", "TRY003", "E501"]

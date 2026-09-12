@@ -2,11 +2,12 @@
 v0.3.0 field-test corpus generator (#635).
 
 Adds the new corpora the field-test-plan §14.1 requires:
-  - field-test/corpus/adapters/   (langgraph/crewai/pydanticai, ~6 each)
+  - field-test/corpus/adapters/   (langgraph/crewai/pydanticai, 20 each = 60)
   - field-test/corpus/lifecycle/   (stale/harmful/superseded/outcome-evolving)
   - field-test/corpus/packs/       (pack-git/pack-docker/pack-testing/pack-deploy replay)
   - field-test/corpus/mcp/         (valid/malformed/abusive report_failure payloads)
   - field-test/corpus/otel/        (extract/test/promote/retire span-attribute trajectories)
+  - field-test/corpus/cost/        (fixed 1000-trajectory $/1k sample, #653/#486)
 
 Each trajectory carries full annotation metadata (expected_outcome, domain,
 quality_label, tags) and the v0.3.0 fields framework / pack / lifecycle_stage /
@@ -59,7 +60,7 @@ def _step(n, tool, cmd, err=None, out=None) -> dict:
     return {"step_number": n, "tool": tool, "input": cmd, "output": out, "error": err}
 
 
-# ── adapters: 6 per framework (3 frameworks = 18) ────────────────────────
+# ── adapters: 20 per framework (3 frameworks = 60) ───────────────────────
 def gen_adapters() -> int:
     recs: list[dict] = []
     fw = [
@@ -68,7 +69,7 @@ def gen_adapters() -> int:
         ("pydanticai", "python", "agent/pydantic", "PydanticAI agent failed validation"),
     ]
     for framework, domain, fc, err in fw:
-        for i in range(1, 7):
+        for i in range(1, 21):
             recs.append(_traj(
                 f"adapter-{framework}-{i:03d}",
                 f"Run {framework} agent task {i} that fails",
@@ -195,10 +196,75 @@ def gen_otel() -> int:
     return len(recs)
 
 
+# ── cost: fixed 1000-trajectory sample for $/1k measurement (#653/#486) ──
+def gen_cost() -> int:
+    """Mixed 1,000-trajectory sample: safety + extraction + raw domains.
+
+    Composition (field-test-plan §3.1/§14.1): 300 successes (silence),
+    300 failures/positive (extract), 200 failures/negative (silence), 200
+    mixed raw (extract/reject/silence) across the 8 canonical domains. This is
+    the fixed per-model sample for `cost_per_candidate`, `cost_per_promoted_rule`
+    and `$/1k trajectories` (§5.4/§7.4); it must not change between model sweeps.
+    """
+    domains = [
+        "git", "python", "docker", "ci", "shell", "browser_automation",
+        "research", "support",
+    ]
+    tools = ["bash", "python", "docker", "pytest", "shell", "browser", "curl", "kubectl"]
+    recs: list[dict] = []
+    n = 0
+
+    def add(kind: str, *, success: bool, outcome: str, domain: str, tool: str,
+            fc: str, err: str | None, rationale: str, quality: str = "clear",
+            severity: str | None = "medium") -> None:
+        nonlocal n
+        n += 1
+        recs.append(_traj(
+            f"cost-{n:04d}",
+            f"Cost sample {kind} trajectory {n} in {domain}",
+            [_step(1, tool, f"{tool} cmd {n}", err, None if err else "ok")],
+            success=success,
+            failure_point=None if success else "step_1",
+            failure_class=None if success else fc,
+            domain=domain, severity=severity if not success else None,
+            quality_label=quality,
+            tags=("cost", kind, domain), expected_outcome=outcome,
+            rationale=rationale,
+            extra={"cost_kind": kind},
+        ))
+
+    for i in range(300):
+        add("success", success=True, outcome="should_silence",
+            domain=domains[i % 8], tool=tools[i % 8],
+            fc="none", err=None,
+            rationale="Successful task — pre-extraction gate must silence (cost saving)")
+    for i in range(300):
+        add("failure-positive", success=False, outcome="should_extract",
+            domain=domains[i % 8], tool=tools[i % 8],
+            fc=f"{domains[i % 8]}/failure", err=f"{domains[i % 8]} failure {i}",
+            rationale="Clear actionable failure — should extract (LLM cost incurred)")
+    for i in range(200):
+        add("failure-negative", success=False, outcome="should_silence",
+            domain=domains[i % 8], tool=tools[i % 8],
+            fc="cosmetic/warning", err="warning only, not actionable",
+            rationale="Non-actionable failure-like output — silence (cost saving)",
+            quality="misleading")
+    for i in range(200):
+        outcome = ["should_extract", "should_reject", "should_silence"][i % 3]
+        add("raw-mixed", success=(outcome == "should_silence" and i % 2 == 0),
+            outcome=outcome, domain=domains[i % 8], tool=tools[i % 8],
+            fc="raw/mixed", err=None if outcome == "should_silence" else f"raw mixed output {i}",
+            rationale="Raw mixed corpus trajectory for inconclusive-rate + cost accounting",
+            quality="clear")
+
+    _write(BASE / "cost", recs)
+    return len(recs)
+
+
 def main() -> int:
-    total = gen_adapters() + gen_lifecycle() + gen_packs() + gen_mcp() + gen_otel()
+    total = gen_adapters() + gen_lifecycle() + gen_packs() + gen_mcp() + gen_otel() + gen_cost()
     print(f"\nv0.3.0 corpus: wrote {total} trajectories under {BASE}/")
-    print(f"  adapters + lifecycle + packs + mcp + otel")
+    print("  adapters + lifecycle + packs + mcp + otel + cost")
     print("next: python scripts/normalize-corpus.py --path field-test/corpus")
     print("      pytest tests/corpus/ -q")
     return 0

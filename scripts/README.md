@@ -62,6 +62,11 @@ Utility scripts for development, testing, corpus management, and field test exec
 | `diagnose_corpus.py` | Root-cause a 0-pass corpus: reference coverage (incl. the #698 public reference corpora), uncovered target domains, and (via `--results`) the candidate pre-filter funnel (#690) | `python scripts/diagnose_corpus.py [--corpus otel] [--results <results.jsonl>]` |
 | `calibrate_thresholds.py` | Sweep matcher thresholds over the golden/nearmiss sample and render precision/recall evidence (#691) | `python scripts/calibrate_thresholds.py --output docs/field-test/v0.3.0/threshold-calibration.md` |
 | `check_corpus_balance.py` | Flag failure-only `source_repo` values across `corpus/public` so new sources pair failures with successes (#707) | `python scripts/check_corpus_balance.py [--strict]` |
+| `measure_cost.py` | Per-model cost metrics (`$/candidate`, `$/promoted rule`, `$/1k trajs`, gate savings) from raw `results.jsonl` (#653/#486) | `python scripts/measure_cost.py --results field-test/results/0.3.0 [--input-price X --output-price Y --cost-per-request Z]` |
+| `cross_session.py` | Repeat-failure reduction (baseline vs intervention) from the 5-session protocol (#663/#496) | `python scripts/cross_session.py --baseline <b.jsonl> --intervention <i.jsonl>` |
+| `human_agreement.py` | Sample candidates per verdict bucket and score human-vs-replay agreement (#493) | `python scripts/human_agreement.py --results field-test/results/0.3.0` then `--reviews <filled.jsonl>` |
+| `pack_replay.py` | Replay official pack rules against pack fixtures; `pack_prevented`/`pack_broke`/`pack_score` (#479/#481) | `python scripts/pack_replay.py` |
+| `fix8_recovery.py` | Re-run the Fix 8 recovery exclusion over recovery/near-miss corpora (#491) | `python scripts/fix8_recovery.py [--corpora <dir> ...]` |
 
 ## Performance & Measurement
 
@@ -127,6 +132,13 @@ python scripts/calibrate_thresholds.py --output docs/field-test/v0.3.0/threshold
 
 # Warn on failure-only corpus sources (add --strict to fail)
 python scripts/check_corpus_balance.py
+
+# v0.3.0 measurement blocks (also exposed as run-field-test.py flags)
+python scripts/measure_cost.py --results field-test/results/0.3.0          # --cost-corpus
+python scripts/pack_replay.py                                              # --pack
+python scripts/fix8_recovery.py                                            # Fix 8 (#491)
+python scripts/human_agreement.py --results field-test/results/0.3.0       # --human-review (sample)
+python scripts/cross_session.py --baseline b.jsonl --intervention i.jsonl  # --cross-session
 
 # Refresh the minimal perf baseline from a benchmark run (#679)
 python scripts/compare_benchmarks.py --write-baseline .benchmarks/current.json benchmarks/baseline.json
