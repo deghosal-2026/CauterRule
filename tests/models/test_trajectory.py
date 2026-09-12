@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 import pytest
 
 from cauterule.models.trajectory import AgentConfig, Environment, Step, Trajectory
@@ -86,8 +88,13 @@ def test_trajectory_validation() -> None:
         Trajectory(id="T-1", timestamp="t", task=" ", steps=(), success=True)
     with pytest.raises(ValueError, match="quality_label"):
         Trajectory(
-            id="T-1", timestamp="t", task="task", steps=(), success=True, quality_label="bad"
-        )  # type: ignore[arg-type]
+            id="T-1",
+            timestamp="t",
+            task="task",
+            steps=(),
+            success=True,
+            quality_label=cast(Any, "bad"),
+        )
     with pytest.raises(ValueError, match="severity"):
         Trajectory(id="T-1", timestamp="t", task="task", steps=(), success=True, severity="bad")  # type: ignore[arg-type]
     with pytest.raises(ValueError, match="tags"):

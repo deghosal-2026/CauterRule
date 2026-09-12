@@ -26,13 +26,39 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Lint (ruff)
-        run: ruff check .
+        run: |
+          ruff check .
+          ruff format --check .
 
       - name: Type check (mypy)
-        run: mypy src/
+        run: mypy src tests
 
       - name: Field-test report drift check (#686)
         run: python scripts/generate_field_test_report.py --check
 
       - name: Test with coverage
-        run: pytest --cov=cauterule --cov-report=term-missing --ignore=tests/field --ignore=tests/scale -k "not docker"
+        run: pytest --cov=cauterule --cov-report=term-missing --cov-report=xml --ignore=tests/field --ignore=tests/scale -k "not docker"
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python-version }}
+          path: coverage.xml
+          if-no-files-found: ignore
+
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t cauterule:ci .
+
+      - name: Smoke test
+        run: |
+          docker run --rm cauterule:ci --version
+          docker run --rm cauterule:ci --help > /dev/null
