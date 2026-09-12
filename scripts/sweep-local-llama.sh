@@ -26,14 +26,31 @@ CORPORA=(
 
 n_done=0
 n_run=0
+LLM_LABEL="omlx-openai-$MODEL"
 for ct in "${CORPORA[@]}"; do
   key="${ct//\//_}"
-  # Skip if ANY summary.json exists for this corpus (any date — runner uses
-  # UTC date which can differ from host date by TZ).
-  if [ -n "$(ls "$OUT/$key/$MODEL"/2026-*/summary.json 2>/dev/null | head -1)" ]; then
-    echo "== skip  $ct (already done)"
-    n_done=$((n_done+1))
-    continue
+  run_dir=$(ls -d "$OUT/$key/$LLM_LABEL"/2026-* 2>/dev/null | head -1)
+  # Skip only when a *complete* run exists. summary.json's `total` is just the
+  # number of completed results, so completeness must be judged against
+  # meta.json's target_trajectories. A killed corpus leaves a partial summary.
+  if [ -n "$run_dir" ] && [ -f "$run_dir/summary.json" ] && [ -f "$run_dir/meta.json" ]; then
+    complete=$(.venv/bin/python - "$run_dir" <<'PY' 2>/dev/null || echo no
+import json,sys
+from pathlib import Path
+d=Path(sys.argv[1])
+meta=json.loads((d/"meta.json").read_text())
+summ=json.loads((d/"summary.json").read_text())
+target=meta.get("target_trajectories") or 0
+finished=(summ.get("done") or 0)+(summ.get("gate_dropped") or 0)
+print("yes" if target and finished>=target else "no")
+PY
+)
+    if [ "$complete" = "yes" ]; then
+      echo "== skip  $ct (complete)"
+      n_done=$((n_done+1))
+      continue
+    fi
+    echo "== rerun $ct (partial)"
   fi
   n_run=$((n_run+1))
   echo "===== RUN $ct ====="
