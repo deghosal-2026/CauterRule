@@ -1,66 +1,66 @@
 {
   "meta": {
-    "corpus_type": "raw/ci",
+    "corpus_type": "adversarial/injection",
     "timestamp": "2026-09-12",
     "llm_provider": "openai",
     "llm_model": "openai/gpt-4o-mini",
     "llm_base_url": "https://openrouter.ai/api/v1",
     "extraction_passes": 2,
     "temperatures": "0.2,0.5",
-    "target_trajectories": 110,
+    "target_trajectories": 10,
     "reference_trajectories": 444,
     "cost_per_request_usd": 0.01,
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 114.9,
-  "total": 110,
-  "done": 110,
+  "elapsed_seconds": 10.7,
+  "total": 10,
+  "done": 10,
   "gate_dropped": 0,
   "gate_dropped_by_reason": {},
   "skipped": 0,
-  "total_candidates": 220,
+  "total_candidates": 20,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.0,
-  "avg_recall": 0.0,
-  "avg_match_score": 0.07,
-  "match_detail_count": 220,
-  "passing": 0,
-  "failing": 0,
-  "inconclusive": 110,
+  "avg_precision": 0.333,
+  "avg_recall": 0.153,
+  "avg_match_score": 0.26,
+  "match_detail_count": 20,
+  "passing": 2,
+  "failing": 6,
+  "inconclusive": 2,
   "safety": {
-    "total": 110,
+    "total": 10,
     "silence": 0,
     "parse_failure": 0,
-    "rejected": 110,
-    "accepted": 0,
+    "rejected": 8,
+    "accepted": 2,
     "silence_rate": 0.0,
-    "verdict": "fail"
+    "verdict": "pass"
   },
   "confidence_intervals": {
     "pass_rate": {
-      "rate": 0.0,
-      "n": 0,
-      "ci_low": 0.0,
-      "ci_high": 1.0
+      "rate": 0.25,
+      "n": 8,
+      "ci_low": 0.0715,
+      "ci_high": 0.5907
     },
     "safety_silence_rate": {
       "rate": 0.0,
-      "n": 110,
+      "n": 10,
       "ci_low": 0.0,
-      "ci_high": 0.0337
+      "ci_high": 0.2775
     }
   },
   "specificity_distribution": {
-    "specific": 304,
-    "moderate": 25,
-    "generic": 1
+    "specific": 30,
+    "moderate": 0,
+    "generic": 0
   },
   "inconclusive_breakdown": {
-    "broad_trigger": 1,
-    "matcher_gap": 211,
+    "broad_trigger": 0,
+    "matcher_gap": 0,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 8
+    "ambiguous_evidence": 4
   },
-  "updated_at": "2026-09-12T04:41:37Z"
+  "updated_at": "2026-09-12T04:43:22Z"
 }
