@@ -38,19 +38,27 @@ from cauterule.replay.diagnostics import (
 
 _REPO = Path(__file__).resolve().parents[1]
 _CORPUS = _REPO / "field-test" / "corpus"
+_PUBLIC = _REPO / "corpus" / "public"
 _V030_TARGETS = ("adapters", "lifecycle", "packs", "mcp", "otel")
 _REFERENCE_BUCKETS = (
     "curated/failures/positive",
     "curated/failures/negative",
     "curated/successes",
     "curated/nearmiss",
+    "curated/noisy",
+    "curated/corrections",
 )
+# #698: public reference corpora covering the previously-uncovered domains.
+_PUBLIC_REFERENCE_DIRS = ("adapters", "lifecycle", "mcp")
 
 
 def _load_references() -> list[Trajectory]:
     references: list[Trajectory] = []
     for rel in _REFERENCE_BUCKETS:
         for path in sorted((_CORPUS / rel).glob("*.jsonl")):
+            references.extend(load_jsonl_trajectories(path))
+    for name in _PUBLIC_REFERENCE_DIRS:
+        for path in sorted((_PUBLIC / name).glob("*.jsonl")):
             references.extend(load_jsonl_trajectories(path))
     return references
 

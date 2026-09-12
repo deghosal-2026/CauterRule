@@ -2,6 +2,13 @@
 
 <!-- generated from scripts/diagnose_corpus.py + field-test/results/0.3.0 sweeps -->
 
+> **Update (#698):** the `agent`/`lifecycle`/`mcp` reference gaps identified
+> below are now closed — `corpus/public/{adapters,lifecycle,mcp}/reference.jsonl`
+> (247 reference trajectories total, up from 220) cover those domains, and the
+> runner's `REFERENCE_BUCKETS` loads them. `scripts/diagnose_corpus.py` now
+> reports `uncovered_domains: []` for all five v0.3.0 corpora. Re-run the sweep
+> to measure the effect.
+
 The code-review issue #690 flagged that several corpora showed **0 passes
 across all 4 models** and the field-test report attributed all of them to one
 cause ("matcher threshold too strict"). This diagnostic splits that result into
@@ -16,13 +23,14 @@ llama-3.1-8b).
 ## Reference coverage
 
 Shared curated reference set = 220 trajectories (`curated/failures/positive`,
-`failures/negative`, `successes`, `nearmiss`).
+`failures/negative`, `successes`, `nearmiss`). **Now 247** after the #698
+`adapters`/`lifecycle`/`mcp` reference sets below.
 
 | Corpus | Target trajs | Reference set sufficient | Target domains with **zero** reference coverage |
 |---|---|---|---|
-| adapters | 18 | yes | `agent` |
-| lifecycle | 40 | yes | `lifecycle` |
-| mcp | 20 | yes | `mcp` |
+| adapters | 18 | yes | ~~`agent`~~ → covered (#698) |
+| lifecycle | 40 | yes | ~~`lifecycle`~~ → covered (#698) |
+| mcp | 20 | yes | ~~`mcp`~~ → covered (#698) |
 | otel | 20 | yes | — |
 | packs | 40 | yes | — |
 
@@ -44,9 +52,9 @@ Candidates overwhelmingly **reach `match_score()`** — the pre-filter
 
 | Corpus | Root cause |
 |---|---|
-| `adapters` | **(b) missing references** — `agent` domain has no reference trajectories |
-| `lifecycle` | **(b) missing references** — `lifecycle` domain has no reference trajectories |
-| `mcp` | **(b) missing references** — `mcp` domain has no reference trajectories |
+| `adapters` | ~~(b) missing references~~ → reference set added (#698); re-sweep to confirm |
+| `lifecycle` | ~~(b) missing references~~ → reference set added (#698); re-sweep to confirm |
+| `mcp` | ~~(b) missing references~~ → reference set added (#698); re-sweep to confirm |
 | `otel` | **(a) matcher/reference-content mismatch** — references exist and candidates score, yet 0 pass |
 | `packs` | **(a) matcher/reference-content mismatch** — same; 15/318 candidates lost to generic pre-filter |
 | `raw/ci` | **(a) matcher/reference-content mismatch** — 751 candidates score, 0 pass |

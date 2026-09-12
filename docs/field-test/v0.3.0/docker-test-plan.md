@@ -15,7 +15,7 @@
 | 2 | Compose | **Rewrite per #607**: top-level `name: cauterule`, per-service `profiles:` (`demo` / `test` / `mcp`), dead port `8025` removed from demo, MCP runtime `pip install` moved to build time, 25 hardcoded test dirs replaced with mounted suites |
 | 3 | Hermetic unit suite | Same `tests/` dirs plus `tests/integrations/` (OTEL exporter E2E) |
 | 4 | Adversarial | Unchanged from v0.2.0 (50 on-disk trajectories) |
-| 5 | Corpus & benchmarks | **NEW `cauterule corpus` + `cauterule benchmark` CLIs**; `benchmarks/` pytest-benchmark suite (5 hot paths); `benchmark run --compare` delta path; `corpus export --format csv` |
+| 5 | Corpus & benchmarks | **NEW `cauterule corpus` + `cauterule benchmark` CLIs**; `benchmarks/` pytest-benchmark suite (15 hot paths); `benchmark run --compare` delta path; `corpus export --format csv` |
 | 6 | CLI | Adds `corpus add/list/validate/lint/build/export`, `benchmark list/run`, `pack create/install/publish/info/tree/outdated` (full M5 surface), `otel test`, `mcp --transport http` |
 | 7 | Packs | **NEW (v0.3.0 major):** `pack install` from GitHub/gist/local, `pack create`, publish with semver + safety scoring — packs must install and persist in the container |
 | 8 | Adapters | **NEW (v0.3.0 major):** langgraph / crewai / pydanticai / decorator adapters must import and run inside the container |
@@ -113,7 +113,7 @@ docker run --rm cauterule:field-test sh -c "
   cauterule preflight --cost-table
 "
 ```
-Pass: each group renders its subcommands; `benchmark list` prints the 5 benchmark names; `preflight --cost-table` prints the $/1k per-model table.
+Pass: each group renders its subcommands; `benchmark list` prints the benchmark names (15 hot paths); `preflight --cost-table` prints the $/1k per-model table.
 
 ### Stage 4 — Corpus & Benchmark CLIs (M6 #606/#605)
 ```bash
@@ -134,7 +134,7 @@ docker run --rm cauterule:field-test sh -c "pip install -q pytest-benchmark && \
   cauterule benchmark run conflict_consolidation && \
   cauterule benchmark run --all --compare /app/benchmarks/baseline.json"
 ```
-Pass: corpus round-trips add→list→validate→lint→build→export (`--format jsonl` **and** `--format csv`); `benchmark list` prints the 5 names; `run <name>` runs exactly one; `run --all --compare baseline.json` prints per-benchmark deltas against the checked-in baseline (15 hot paths: extraction, replay_matcher, injection_budget, conflict_consolidation, observe_coverage).
+Pass: corpus round-trips add→list→validate→lint→build→export (`--format jsonl` **and** `--format csv`); `benchmark list` prints the 15 names; `run <name>` runs exactly one; `run --all --compare baseline.json` prints per-benchmark deltas against the checked-in baseline (15 hot paths: extraction, replay_matcher, injection_budget, conflict_consolidation, observe_coverage). The baseline is a minimal derived file (name→mean, #679); regenerate with `compare_benchmarks.py --write-baseline`.
 
 ### Stage 5 — Packs (M5 — v0.3.0 major)
 ```bash

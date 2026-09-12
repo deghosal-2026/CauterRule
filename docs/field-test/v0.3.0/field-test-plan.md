@@ -255,6 +255,8 @@ The v0.3.0 code review added tooling that the next field-test cycle uses:
 - **Threshold calibration (#691):** `scripts/calibrate_thresholds.py` + `src/cauterule/replay/calibration.py` sweep the shipped thresholds over a golden/nearmiss sample; evidence in `docs/field-test/v0.3.0/threshold-calibration.md`.
 - **Source balance (#707):** `scripts/check_corpus_balance.py` flags failure-only `source_repo` values (warn by default, `--strict` to gate).
 - **Semantic matching (#689, opt-in):** `src/cauterule/replay/embeddings.py` adds a local MiniLM cosine term, disabled unless `CAUTERULE_SEMANTIC_MATCHING=1` (extra `[matching]`). Off by default, so measured thresholds are unchanged; if enabled for a sweep, re-run the calibration script.
+- **Domain-context matching (#677):** matcher context now also matches the trajectory's `domain` field. Golden rules that used domain labels (`devops`/`research`/`browser_automation`) as context previously could never match; calibration golden recall rose 0.50 → 0.90 at precision 1.00. Threshold changes were measured not to help (refutes lowering `OMLX_THRESHOLD`).
+- **Reference corpora + paraphrase diversity (#698):** `corpus/public/{adapters,lifecycle,mcp}/reference.jsonl` close the #690 zero-coverage gaps for the `agent`/`lifecycle`/`mcp` domains (balanced with successes per #707), and `corpus/public/reference-expansion/paraphrase-diversity/` adds 3 paraphrases per failure class. The runner's `REFERENCE_BUCKETS` loads them (reference set 220 → 247); `diagnose_corpus.py` now reports no uncovered domains.
 
 ---
 
@@ -515,7 +517,7 @@ Total: **~1,770+ trajectories** across 27 sources (v0.2.0's 20 + 7 new).
 | **mcp (NEW)** | **20** | mixed (valid/malformed/abusive) | strict | MCP security field |
 | **cost (NEW)** | **1000** | mixed | relaxed | $/1k measurement |
 
-Reference corpus expansion: 230 → 500+ diverse phrasings (#489) folded into `public/synthetic` + `public/domains`.
+Reference corpus expansion: 230 → 500+ diverse phrasings (#489) folded into `public/synthetic` + `public/domains`. **#698** adds the `agent`/`lifecycle`/`mcp` reference sets (`corpus/public/{adapters,lifecycle,mcp}/reference.jsonl`, +27 trajectories, runner reference set 220 → 247) and `reference-expansion/paraphrase-diversity/`; these close the #690 uncovered-domain gaps.
 
 ### 14.2 Sweep Corpus Allocation
 

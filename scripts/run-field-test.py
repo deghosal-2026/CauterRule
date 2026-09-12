@@ -144,6 +144,11 @@ REFERENCE_BUCKETS = [
     FIELD_TEST_ROOT / "curated" / "nearmiss",
     FIELD_TEST_ROOT / "curated" / "noisy",
     FIELD_TEST_ROOT / "curated" / "corrections",
+    # v0.3.0 #698: reference coverage for the previously-uncovered target
+    # domains agent/lifecycle/mcp (see docs/field-test/v0.3.0/corpus-diagnostics.md).
+    PUBLIC_ROOT / "adapters",
+    PUBLIC_ROOT / "lifecycle",
+    PUBLIC_ROOT / "mcp",
 ]
 
 GATE_MODE_STRICT = "strict"

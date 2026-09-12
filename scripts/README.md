@@ -51,7 +51,7 @@ Utility scripts for development, testing, corpus management, and field test exec
 |--------|---------|-------|
 | `generate_field_test_report.py` | Single source of truth for field-test tables — renders model totals + per-model/per-corpus P/F/I (with CIs) from raw `results.jsonl` into `docs/field-test/v0.3.0/generated-results.md` (#686) | `python scripts/generate_field_test_report.py [--output <doc>]` |
 | `generate_field_test_report.py --check` | Fail (exit 1) if the committed generated report drifts from a fresh render — wired into CI | `python scripts/generate_field_test_report.py --check` |
-| `diagnose_corpus.py` | Root-cause a 0-pass corpus: reference coverage, uncovered target domains, and (via `--results`) the candidate pre-filter funnel (#690) | `python scripts/diagnose_corpus.py [--corpus otel] [--results <results.jsonl>]` |
+| `diagnose_corpus.py` | Root-cause a 0-pass corpus: reference coverage (incl. the #698 public reference corpora), uncovered target domains, and (via `--results`) the candidate pre-filter funnel (#690) | `python scripts/diagnose_corpus.py [--corpus otel] [--results <results.jsonl>]` |
 | `calibrate_thresholds.py` | Sweep matcher thresholds over the golden/nearmiss sample and render precision/recall evidence (#691) | `python scripts/calibrate_thresholds.py --output docs/field-test/v0.3.0/threshold-calibration.md` |
 | `check_corpus_balance.py` | Flag failure-only `source_repo` values across `corpus/public` so new sources pair failures with successes (#707) | `python scripts/check_corpus_balance.py [--strict]` |
 
@@ -62,6 +62,7 @@ Utility scripts for development, testing, corpus management, and field test exec
 | `measure_performance.py` | Measure CLI command response times (list, health, validate, inject) | `python scripts/measure_performance.py` |
 | `measure_ttv.sh` | Measure time-to-value wall-clock duration (install → first prevented failure) | `bash scripts/measure_ttv.sh` |
 | `compare_benchmarks.py` | Compare pytest-benchmark runs against a baseline; fail on >15% regression (#605) | `python scripts/compare_benchmarks.py <baseline.json> <.benchmarks/current.json>` |
+| `compare_benchmarks.py --write-baseline` | Regenerate the minimal committed baseline (name→mean) from a full pytest-benchmark JSON — keeps `benchmarks/baseline.json` tiny instead of the multi-MB raw dump (#679) | `python scripts/compare_benchmarks.py --write-baseline .benchmarks/current.json benchmarks/baseline.json` |
 
 ## Build & Distribution
 
@@ -118,4 +119,7 @@ python scripts/calibrate_thresholds.py --output docs/field-test/v0.3.0/threshold
 
 # Warn on failure-only corpus sources (add --strict to fail)
 python scripts/check_corpus_balance.py
+
+# Refresh the minimal perf baseline from a benchmark run (#679)
+python scripts/compare_benchmarks.py --write-baseline .benchmarks/current.json benchmarks/baseline.json
 ```
