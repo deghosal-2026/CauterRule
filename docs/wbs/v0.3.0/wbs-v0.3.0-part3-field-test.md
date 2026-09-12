@@ -55,15 +55,15 @@
 | 7.24 | Add confidence intervals to field-test metrics (small n=10, n=50 samples) | [#695](https://github.com/deghosal-2026/CauterRule/issues/695) | ✓ done |
 | 7.25 | Adversarial corpus: add tool-output-borne + multi-turn/compounding vectors | [#696](https://github.com/deghosal-2026/CauterRule/issues/696) | ✓ done |
 | 7.26 | Spot-audit gate-dropped trajectories — expose false-positive gate silence | [#697](https://github.com/deghosal-2026/CauterRule/issues/697) | ✓ done |
-| 7.27 | Corpus expansion: real production agent-trajectory sources + synthetic gaps | [#698](https://github.com/deghosal-2026/CauterRule/issues/698) | ✓ internal (agent/lifecycle/mcp refs + paraphrase); external #699-#706 pending |
+| 7.27 | Corpus expansion: real production agent-trajectory sources + synthetic gaps | [#698](https://github.com/deghosal-2026/CauterRule/issues/698) | ✓ done |
 | 7.28 | Corpus source: AgentHarm (Hugging Face) for adversarial/unsafe realism | [#699](https://github.com/deghosal-2026/CauterRule/issues/699) | ✓ done |
 | 7.29 | Corpus source: InjecAgent (GitHub) for tool-output-borne injection | [#700](https://github.com/deghosal-2026/CauterRule/issues/700) | ✓ done |
 | 7.30 | Corpus source: HarmBench (GitHub) for adversarial/misleading + contradiction | [#701](https://github.com/deghosal-2026/CauterRule/issues/701) | ✓ done |
-| 7.31 | Corpus source: OpenTelemetry Demo (GitHub) for otel reference-corpus gap | [#702](https://github.com/deghosal-2026/CauterRule/issues/702) |
-| 7.32 | Corpus source: modelcontextprotocol/servers (GitHub) for mcp reference-corpus gap | [#703](https://github.com/deghosal-2026/CauterRule/issues/703) |
-| 7.33 | Corpus source: Terraform provider issue trackers for lifecycle/infra failures | [#704](https://github.com/deghosal-2026/CauterRule/issues/704) |
-| 7.34 | Corpus source: WebArena / VisualWebArena (GitHub) for browser-tool failure diversity | [#705](https://github.com/deghosal-2026/CauterRule/issues/705) |
-| 7.35 | Corpus source: BugsInPy and Defects4J for python/test failure classes | [#706](https://github.com/deghosal-2026/CauterRule/issues/706) |
+| 7.31 | Corpus source: OpenTelemetry Demo (GitHub) for otel reference-corpus gap | [#702](https://github.com/deghosal-2026/CauterRule/issues/702) | ✓ done |
+| 7.32 | Corpus source: modelcontextprotocol/servers (GitHub) for mcp reference-corpus gap | [#703](https://github.com/deghosal-2026/CauterRule/issues/703) | ✓ done |
+| 7.33 | Corpus source: Terraform provider issue trackers for lifecycle/infra failures | [#704](https://github.com/deghosal-2026/CauterRule/issues/704) | ✓ done |
+| 7.34 | Corpus source: WebArena / VisualWebArena (GitHub) for browser-tool failure diversity | [#705](https://github.com/deghosal-2026/CauterRule/issues/705) | ✓ done |
+| 7.35 | Corpus source: BugsInPy and Defects4J for python/test failure classes | [#706](https://github.com/deghosal-2026/CauterRule/issues/706) | ✓ done |
 | 7.36 | Corpus process: pair each external source with matching success trajectories | [#707](https://github.com/deghosal-2026/CauterRule/issues/707) | ✓ done (checker) |
 
 **Batch progress (code-first ordering):**
@@ -73,7 +73,7 @@
 - **Batch 4 — report regeneration + doc integrity (done):** #686 (`scripts/generate_field_test_report.py` + `docs/field-test/v0.3.0/generated-results.md` with `--check` drift mode, CI step, test drift guard; stale `regression-llama-3.2-3b-vs-v0.2.0.md` marked SUPERSEDED). #685 (corrected 908→1,093/1,156/1,156/1,132 and 3,632→4,537 in the report/per-model/4-model docs). #687 (WBS "see also" traceability links). #688 (`~70 new tests` relabel; Docker gate reworded to "MET (2 re-runs pending)").
 - **Batch 5 — semantic/embedding matching (done):** #689 (`src/cauterule/replay/embeddings.py` local MiniLM cosine, opt-in via `CAUTERULE_SEMANTIC_MATCHING=1`; blend `0.5·token-F1 + 0.3·bigram + 0.2·semantic` with a 0.80-similarity floor; LRU embedding cache; `matching` optional extra; tests in `tests/replay/test_semantic_matching.py`; latency benchmark). Semantic path is off by default so existing scores/thresholds are unchanged.
 - **Batch 6 — adversarial vectors + corpus balance (done):** #696 (new `corpus/public/adversarial/tool_output_injection/` and `compounding_multiturn/`, 10 vectors each; invariant tests in `tests/corpus/test_adversarial_vectors.py`; wired into the harness adversarial sweep). #707 (`src/cauterule/corpus/balance.py` + `scripts/check_corpus_balance.py`, warn-by-default/`--strict`; tests in `tests/corpus/test_source_balance.py`). Checker flags the known failure-only `CauterRule` reference-expansion source (paired successes = #698 follow-up).
-- **Next — Batch 7:** #698-#706 external corpus sourcing + converters (needs datasets).
+- **Batch 7 — external corpus sourcing + converters (done):** #699 AgentHarm, #700 InjecAgent, #701 HarmBench, #702 OpenTelemetry Demo, #703 MCP servers, #704 Terraform, #705 WebArena, #706 BugsInPy — all with converters, real small-batch corpora, schema tests, and harness/reference wiring.
 
 ### M7 Exit Gate
 

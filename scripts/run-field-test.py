@@ -159,6 +159,13 @@ REFERENCE_BUCKETS = [
     PUBLIC_ROOT / "adapters",
     PUBLIC_ROOT / "lifecycle",
     PUBLIC_ROOT / "mcp",
+    PUBLIC_ROOT / "otel",
+    # #704: broader infra lifecycle failures (terraform apply/plan/destroy).
+    PUBLIC_ROOT / "lifecycle_infra",
+    # #705: browser-tool failures (WebArena / VisualWebArena).
+    PUBLIC_ROOT / "browser",
+    # #706: real-world python test failures (BugsInPy).
+    PUBLIC_ROOT / "real-world" / "bugsinpy",
     # #700/#707: success counterparts from external sources (InjecAgent).
     PUBLIC_ROOT / "successes",
 ]

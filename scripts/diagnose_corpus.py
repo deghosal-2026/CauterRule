@@ -49,7 +49,20 @@ _REFERENCE_BUCKETS = (
     "curated/corrections",
 )
 # #698: public reference corpora covering the previously-uncovered domains.
-_PUBLIC_REFERENCE_DIRS = ("adapters", "lifecycle", "mcp")
+# #704: lifecycle_infra extends lifecycle with terraform/infra failures.
+# #705: browser extends coverage to WebArena/VisualWebArena browser-tool failures.
+# #706: real-world python test failures (BugsInPy).
+# #700/#702/#703/#707: success counterparts live in corpus/public/successes/.
+_PUBLIC_REFERENCE_DIRS = (
+    "adapters",
+    "lifecycle",
+    "lifecycle_infra",
+    "mcp",
+    "otel",
+    "browser",
+    "real-world/bugsinpy",
+    "successes",
+)
 
 
 def _load_references() -> list[Trajectory]:
