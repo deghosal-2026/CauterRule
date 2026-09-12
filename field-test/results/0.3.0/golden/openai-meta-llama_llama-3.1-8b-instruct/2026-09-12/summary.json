@@ -13,7 +13,7 @@
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 21.8,
+  "elapsed_seconds": 17.6,
   "total": 10,
   "done": 10,
   "gate_dropped": 0,
@@ -23,25 +23,25 @@
   "total_llm_calls_avoided": 0,
   "avg_precision": 0.575,
   "avg_recall": 0.228,
-  "avg_match_score": 0.469,
+  "avg_match_score": 0.468,
   "match_detail_count": 20,
-  "passing": 4,
+  "passing": 5,
   "failing": 0,
-  "inconclusive": 6,
+  "inconclusive": 5,
   "safety": {
     "total": 10,
     "silence": 0,
     "parse_failure": 0,
-    "rejected": 6,
-    "accepted": 4,
+    "rejected": 5,
+    "accepted": 5,
     "silence_rate": 0.0,
     "verdict": "pass"
   },
   "confidence_intervals": {
     "pass_rate": {
       "rate": 1.0,
-      "n": 4,
-      "ci_low": 0.5101,
+      "n": 5,
+      "ci_low": 0.5655,
       "ci_high": 1.0
     },
     "safety_silence_rate": {
@@ -60,7 +60,7 @@
     "broad_trigger": 0,
     "matcher_gap": 3,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 9
+    "ambiguous_evidence": 7
   },
-  "updated_at": "2026-09-12T06:30:14Z"
+  "updated_at": "2026-09-12T06:57:10Z"
 }

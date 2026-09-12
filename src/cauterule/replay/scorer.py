@@ -20,11 +20,18 @@ def compute_scores(
     are "inconclusive" (broad, not dangerous).
 
     Near-miss penalty: if a trigger also matches near-miss references
-    (recovered or ambiguous trajectories), it is over-broad.  A candidate
+    (recovered or ambiguous trajectories), it is over-broad. A candidate
     with ``near_misses > 0`` is downgraded from ``pass`` to ``inconclusive``
     — the trigger fires on trajectories that should not have produced a
     rule (v0.3.0 field-test fix: nearmiss corpus false passes at precision
     1.0 because near-misses were computed but never penalised).
+
+    v0.3.0 field-test tuning: the penalty was zero-tolerance (any near-miss
+    → inconclusive), which over-fired on legitimate candidates that prevent
+    7 real failures and touch 1 near-miss. The tolerance band allows
+    ``near_misses <= 2`` to still pass if precision ≥ 0.5 — a candidate
+    that prevents more failures than it touches near-misses is a good rule.
+    Above 2 near-misses, the trigger is too broad and stays inconclusive.
 
     Args:
         prevented: Failures prevented.
@@ -52,9 +59,12 @@ def compute_scores(
     elif broken > 0:
         # Some successes broken, but prevented more — broad but fixable
         verdict = "inconclusive"
-    elif near_misses > 0:
-        # No successes broken, but matched near-miss references — over-broad
-        # trigger.  Downgrade from pass to inconclusive (v0.3.0 field-test).
+    elif near_misses > 2:
+        # No successes broken, but matched >2 near-miss references —
+        # over-broad trigger. Downgrade from pass to inconclusive.
+        verdict = "inconclusive"
+    elif near_misses > 0 and precision < 0.5:
+        # 1-2 near-misses but precision too low — still inconclusive.
         verdict = "inconclusive"
     else:
         # No successes broken, no near-misses — clean pass.
