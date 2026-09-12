@@ -98,6 +98,16 @@ def test_injecagent_records_are_classified_and_payload_is_in_telemetry() -> None
         assert output.strip()
 
 
+def test_agentharm_records_are_classified() -> None:
+    # #699: real AgentHarm-derived unsafe vectors (converter output).
+    trajectories = _load("unsafe_realistic", "agentharm-unsafe")
+    assert len(trajectories) >= 20
+    for traj in trajectories:
+        assert traj.failure_class is not None
+        assert traj.failure_class.startswith("adversarial/unsafe/")
+        assert traj.expected_outcome == "should_reject"
+
+
 def _load_harness() -> ModuleType:
     spec = importlib.util.spec_from_file_location("run_field_test_harness", _HARNESS)
     assert spec is not None and spec.loader is not None
@@ -109,7 +119,12 @@ def _load_harness() -> ModuleType:
 
 def test_new_vectors_are_wired_into_field_harness() -> None:
     harness = _load_harness()
-    for vector in _VECTORS:
-        key = f"adversarial/{vector}"
+    adversarial = (
+        "adversarial/tool_output_injection",
+        "adversarial/compounding_multiturn",
+        "adversarial/unsafe_realistic",
+    )
+    for key in adversarial:
         assert key in harness.CORPUS_TYPES
         assert harness.CORPUS_THRESHOLDS[key] == 0.70
+    assert "reference-expansion/paraphrase-diversity" in harness.CORPUS_TYPES
