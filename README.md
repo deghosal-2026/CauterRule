@@ -5,7 +5,7 @@
 [![PyPI](https://img.shields.io/badge/pypi-v0.3.0-blue)](https://pypi.org/project/cauterule/)
 [![Ruff](https://img.shields.io/badge/code%20style-ruff-000000)](https://github.com/astral-sh/ruff)
 [![Type checked](https://img.shields.io/badge/mypy-strict-blue)](https://github.com/python/mypy)
-[![Coverage](https://img.shields.io/badge/coverage-%E2%89%A595%25-brightgreen)](https://github.com/deghosal-2026/CauterRule/actions)
+[![Coverage](https://img.shields.io/badge/coverage-87%25%20(deterministic%20subset)-yellow)](https://github.com/deghosal-2026/CauterRule/actions)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14464/badge)](https://www.bestpractices.dev/projects/14464)
 [![Field Test](https://img.shields.io/badge/field%20test-v0.3.0%20%7C%2098%E2%80%93100%25%20near-miss%20precision-brightgreen)](docs/field-test/v0.3.0/FIELD_TEST_REPORT.md)
 [![Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
