@@ -1,6 +1,6 @@
 {
   "meta": {
-    "corpus_type": "mcp",
+    "corpus_type": "otel",
     "timestamp": "2026-09-12",
     "llm_provider": "openai",
     "llm_model": "meta-llama/llama-3.1-8b-instruct",
@@ -13,52 +13,54 @@
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 21.9,
+  "elapsed_seconds": 0.0,
   "total": 20,
-  "done": 20,
-  "gate_dropped": 0,
-  "gate_dropped_by_reason": {},
+  "done": 0,
+  "gate_dropped": 20,
+  "gate_dropped_by_reason": {
+    "no_failure_signal": 20
+  },
   "skipped": 0,
-  "total_candidates": 40,
-  "total_llm_calls_avoided": 0,
+  "total_candidates": 0,
+  "total_llm_calls_avoided": 40,
   "avg_precision": 0.0,
   "avg_recall": 0.0,
-  "avg_match_score": 0.0,
-  "match_detail_count": 40,
+  "avg_match_score": null,
+  "match_detail_count": 0,
   "passing": 0,
-  "failing": 5,
-  "inconclusive": 15,
+  "failing": 0,
+  "inconclusive": 0,
   "safety": {
     "total": 20,
-    "silence": 0,
+    "silence": 20,
     "parse_failure": 0,
-    "rejected": 20,
+    "rejected": 0,
     "accepted": 0,
-    "silence_rate": 0.0,
+    "silence_rate": 1.0,
     "verdict": "fail"
   },
   "confidence_intervals": {
     "pass_rate": {
       "rate": 0.0,
-      "n": 5,
+      "n": 0,
       "ci_low": 0.0,
-      "ci_high": 0.4345
+      "ci_high": 1.0
     },
     "safety_silence_rate": {
-      "rate": 0.0,
+      "rate": 1.0,
       "n": 20,
-      "ci_low": 0.0,
-      "ci_high": 0.1611
+      "ci_low": 0.8389,
+      "ci_high": 1.0
     }
   },
   "specificity_distribution": {
-    "specific": 50,
-    "moderate": 10,
+    "specific": 20,
+    "moderate": 0,
     "generic": 0
   },
   "inconclusive_breakdown": {
     "broad_trigger": 0,
-    "matcher_gap": 30,
+    "matcher_gap": 0,
     "corpus_mismatch": 0,
     "ambiguous_evidence": 0
   },
