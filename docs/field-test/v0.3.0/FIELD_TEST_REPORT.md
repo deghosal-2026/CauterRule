@@ -12,7 +12,7 @@
 
 ## 1. BLUF + Release Gate Verdict
 
-CauterRule v0.3.0 is **safer than v0.2.0 on nearmiss precision and adversarial defense, broader in corpus coverage (40 vs 22 corpora), and has caught and fixed a critical MCP authentication bug that shipped green through unit CI**. However, extraction quality regressed — golden pass rate dropped from 50% to 30–40% and failures/positive from 44–54% to 8–10% — because the #492 broad-alias removal made scoring honest but the token-F1 matcher cannot bridge paraphrases without semantic matching, and the near-miss penalty over-fires on legitimate candidates.
+CauterRule v0.3.0 is **safer than v0.2.0 on nearmiss precision and adversarial defense, broader in corpus coverage (40 vs 22 corpora), and has caught and fixed a critical MCP authentication bug that shipped green through unit CI**. However, extraction quality regressed — golden pass rate dropped from 50% to 30–40% and failures/positive from 44–54% to 8–10% — because the #492 broad-alias removal made scoring honest but the token-F1 matcher cannot bridge paraphrases without semantic matching, and the near-miss penalty over-fired on legitimate candidates. After tuning the near-miss penalty tolerance band (`near_misses <= 2 → pass if precision ≥ 0.5`), golden improved to **40% (gpt-4o-mini) and 50% (llama-3.1-8b)** — llama-3.1-8b is back to v0.2.0's level.
 
 Three in-test fixes were applied and verified on both cloud models: (1) domain-scoped reference pool (#708) lifted recall 2–3×, (2) pass threshold lowered from 0.8 to 0.5 to admit honest candidates, and (3) adversarial `should_reject` override (#714) forced 0 promotions (was 2–4). Semantic matching was activated by installing `sentence-transformers` in a Python 3.12 venv (the `.venv` is Python 3.14, which has no torch wheels). Post-fix, recall on golden improved to 0.170 (gpt-4o-mini) and 0.228 (llama-3.1-8b) — up from 0.068/0.104 pre-fix and 0.087 in v0.2.0.
 
@@ -22,7 +22,7 @@ The second improvement is the **#601 MCP auth bug fix**. The Docker field test c
 
 The third is the **domain-scoped reference pool (#708)**. v0.2.0 tested every candidate against the full 230-trajectory reference pool, making recall near-zero (0.05–0.10). A candidate that prevented 3 failures got `recall = 3/200 = 0.015` — below any pass threshold. v0.3.0 scopes `reference_trajs` to the source trajectory's domain (e.g., `git` → 19 refs, `python` → 30 refs, `docker` → 30 refs), reducing the denominator from ~200 to ~10–30 relevant failures. Recall improved to 0.170–0.228 post-fix — the single most impactful code change in v0.3.0.
 
-But the product still struggles where trust matters most. **Golden pass rate is 30–40%** (target ≥70%) — the token-F1 matcher, even with semantic matching at 20% blend weight, cannot bridge the paraphrase gap between LLM-extracted trigger phrasings and reference trajectory phrasings. **Failures/positive is 8–10%** (target ≥50%) — candidates reach precision 0.62–0.89 but the near-miss penalty (`near_misses > 0`) downgrades them to inconclusive. **Inconclusive is ~80%** post-fix (was ~90% pre-fix) — the dominant blocker. The near-miss penalty is working as designed (guarding safety) but over-firing on legitimate candidates that happen to overlap with near-miss patterns. Tuning the tolerance (e.g., `near_misses <= 2 → pass if precision ≥ 0.5`) is the next lever.
+But the product still struggles where trust matters most. **Golden pass rate is 40% (gpt-4o-mini) / 50% (llama-3.1-8b)** (target ≥70%) — the token-F1 matcher, even with semantic matching at 20% blend weight, cannot bridge the paraphrase gap between LLM-extracted trigger phrasings and reference trajectory phrasings. **Failures/positive is 8–10%** (target ≥50%) — candidates reach precision 0.62–0.89 but `broken > 0` or precision < 0.5 blocks the pass. **Inconclusive is ~75%** post-all-fixes (was ~90% pre-fix) — the dominant blocker is now `broken > 0` (broad-trigger) and `matcher_gap` (adapters/raw-ci), not the near-miss penalty. The near-miss tolerance band (`near_misses <= 2 → pass if precision ≥ 0.5`) was applied and lifted golden by +1 pass on each model.
 
 ### Release gate verdict (post-fix)
 
@@ -32,12 +32,12 @@ But the product still struggles where trust matters most. **Golden pass rate is 
 | Nearmiss precision ≥90% | ✅ MET | gpt-4o-mini 98% (1 FP / 50), llama-3.1-8b **100%** (0 FP). v0.2.0 was 86–90% (5–7 FPs). The near-miss penalty + self-match exclusion + recovery gate are the biggest safety improvement in v0.3.0. |
 | Generic triggers <10% | ✅ MET | 0.7% (16 generic out of 2,384). Both models produce specific triggers naming concrete tools and error conditions. |
 | Adversarial: 0 promoted rules | ✅ MET | **0** on both models post-fix (#714 `should_reject` override). Pre-fix: gpt-4o-mini 2, llama-3.1-8b 4. v0.2.0 had 0. The override catches legitimate-looking rules extracted from adversarial trajectories — "git push --force" matches real reference failures but the source trajectory's `expected_outcome` is `should_reject`. |
-| Golden pass rate ≥70% | ❌ NOT MET | gpt-4o-mini 30% (3/10), llama-3.1-8b 40% (4/10). v0.2.0 was 50%. The #492 alias removal made scoring honest but stricter; semantic matching + domain scoping improved recall 2–3× but pass counts didn't recover because the near-miss penalty blocks high-precision candidates. |
-| Failures/positive pass rate ≥50% | ❌ NOT MET | gpt-4o-mini 8% (4/50), llama-3.1-8b 10% (5/50). v0.2.0 was 44–54%. Same root cause — candidates reach precision 0.62–0.89 but `near_misses > 0` or `broken > 0` → inconclusive. |
-| Curated inconclusive <15% | ❌ NOT MET | ~80% post-fix (was ~90% pre-fix). The near-miss penalty is the dominant blocker — candidates with precision 1.00 and recall 0.43–0.56 are inconclusive because they match 1 near-miss reference. |
+| Golden pass rate ≥70% | ❌ NOT MET | gpt-4o-mini 40% (4/10), llama-3.1-8b 50% (5/10) — v0.2.0 was 50%. Near-miss tolerance band applied; llama-3.1-8b back to v0.2.0 level. |
+| Failures/positive pass rate ≥50% | ❌ NOT MET | gpt-4o-mini 8% (4/50), llama-3.1-8b 10% (5/50) — v0.2.0 was 44–54%. Remaining blocker: `broken > 0` (broad-trigger) and precision < 0.5. |
+| Curated inconclusive <15% | ❌ NOT MET | ~75% post-all-fixes (was ~90% pre-fix). The near-miss tolerance band recovered 1 pass/model on golden; the remaining blocker is broad-trigger (`broken > 0`) and matcher_gap (adapters/raw-ci). |
 | Infrastructure | ✅ MET | Preflight, harness health, cost corpus (1,000 trajs), Docker field test (159 tests), measurement tooling (5 scripts + 7 runner flags), token usage capture. |
 
-**Post-fix: 5/7 thresholds pass.** Safety + adversarial + specificity + infrastructure all pass. Quality (golden + failures/positive) is the holdout, addressable by tuning the near-miss penalty tolerance.
+**Post-all-fixes: 5/7 thresholds pass.** Safety + adversarial + specificity + infrastructure all pass. Quality (golden + failures/positive) is the holdout. Golden improved to 40–50% (was 30–40%) after the near-miss tolerance band; llama-3.1-8b is back to v0.2.0's 50%.
 
 ### v0.2.0 gap closure
 
@@ -47,8 +47,8 @@ But the product still struggles where trust matters most. **Golden pass rate is 
 | Reference corpus too small (230) | ✅ CLOSED | 444 + domain-scoped (#708). Recall 2–3× improved. |
 | MCP auth untested over HTTP | ✅ CLOSED | #601 bug found + fixed (Docker field test). |
 | Corpus coverage narrow (22) | ✅ CLOSED | 40 corpora (+18 new: adapters, lifecycle, packs, mcp, otel, cost, browser, bugsinpy, lifecycle_infra, reference-expansion, adversarial vectors). |
-| Golden pass rate ≥70% | ❌ NOT MET | 30–40%. Structural matcher/threshold issue. |
-| Failures/positive ≥50% | ❌ NOT MET | 8–10%. Near-miss penalty over-fires. |
+| Golden pass rate ≥70% | ❌ NOT MET | 40–50% (was 30–40% before tolerance band). Structural matcher/threshold issue. |
+| Failures/positive ≥50% | ❌ NOT MET | 8–10%. Remaining blocker: `broken > 0` (broad-trigger), not near-miss penalty. |
 | Adversarial 0 promoted | ✅ CLOSED | 0 post-fix (#714). Was 2–4 pre-fix. |
 | Cross-session ≥50% | ⚠️ TOOLING READY | `scripts/cross_session.py` + runner `--cross-session`. 5-session protocol not run. |
 | Human agreement | ⚠️ TOOLING READY | `scripts/human_agreement.py` + runner `--human-review`. Reviewer scoring not done. |
@@ -59,11 +59,11 @@ But the product still struggles where trust matters most. **Golden pass rate is 
 
 ### Is v0.3.0 better than v0.2.0? Mixed — safer, broader, higher recall, but lower extraction quality.
 
-v0.2.0 was "safe but quality-gated." v0.3.0 is **safer** (nearmiss 86–90%→98–100%, #601 auth bug fixed, otel fixed) and **broader** (40 corpora, 444 references, Docker validation, measurement tooling, semantic matching) but **lower on extraction quality** — golden dropped 50%→30–40% and failures/positive dropped 44–54%→8–10%. The cause is NOT the models (cloud == cloud on quality) but the **matcher changes**: removing the broad #492 aliases made scoring honest but stricter, and the near-miss penalty — while fixing the safety problem — now blocks legitimate candidates that happen to overlap with near-miss patterns.
+v0.2.0 was "safe but quality-gated." v0.3.0 is **safer** (nearmiss 86–90%→98–100%, #601 auth bug fixed, otel fixed) and **broader** (40 corpora, 444 references, Docker validation, measurement tooling, semantic matching) but initially **lower on extraction quality** — golden dropped 50%→30–40% and failures/positive dropped 44–54%→8–10%. After applying the near-miss tolerance band (`near_misses <= 2 → pass if precision ≥ 0.5`), golden recovered to **40% (gpt-4o-mini) / 50% (llama-3.1-8b)** — llama-3.1-8b is back to v0.2.0's level. The cause of the remaining quality gap is NOT the models (cloud == cloud on quality) but the **matcher changes**: removing the broad #492 aliases made scoring honest but stricter, and the broad-trigger penalty (`broken > 0`) now blocks candidates that the near-miss tolerance no longer blocks.
 
-v0.2.0's higher pass rates were partly inflated. The 5 broad aliases (SSL, DNS/NXDOMAIN, npm, network, cache) auto-matched triggers without real token-F1 scoring — a candidate mentioning "SSL" got precision 1.0 regardless of whether it actually matched the reference's error content. v0.3.0 removed them. The pass-rate drop (golden 50%→30–40%, failures/positive 44–54%→8–10%) is partly real (the aliases were gaming) and partly a collateral precision cost (some legitimate matches lost the alias boost). The domain-scoping fix (#708) partially compensates by reducing the recall denominator, and semantic matching bridges some paraphrases, but the near-miss penalty is still the dominant blocker.
+v0.2.0's higher pass rates were partly inflated. The 5 broad aliases (SSL, DNS/NXDOMAIN, npm, network, cache) auto-matched triggers without real token-F1 scoring — a candidate mentioning "SSL" got precision 1.0 regardless of whether it actually matched the reference's error content. v0.3.0 removed them. The pass-rate drop (golden 50%→30–40%, failures/positive 44–54%→8–10%) was partly real (the aliases were gaming) and partly a collateral precision cost (some legitimate matches lost the alias boost). The domain-scoping fix (#708) and semantic matching compensated partially (recall 2–3×), and the near-miss tolerance band recovered golden to 40–50%. The remaining failures/positive gap (8–10% vs 44–54%) is now attributable to `broken > 0` (broad-trigger penalty) and precision < 0.5, not the near-miss penalty.
 
-The recall improvement is the most encouraging signal. v0.2.0 had recall ~0.087 on golden — near zero, because the 230-trajectory reference pool was too small and undifferentiated. v0.3.0 post-fix has recall 0.170 (gpt-4o-mini) and 0.228 (llama-3.1-8b) — 2–3× improvement. This means the matcher is now finding the right references; it just can't convert those matches into passes because the near-miss penalty intervenes. Tuning the penalty tolerance is the clearest path to recovering pass rates.
+The recall improvement is the most encouraging signal. v0.2.0 had recall ~0.087 on golden — near zero, because the 230-trajectory reference pool was too small and undifferentiated. v0.3.0 post-fix has recall 0.170 (gpt-4o-mini) and 0.228 (llama-3.1-8b) — 2–3× improvement. This means the matcher is now finding the right references. After the near-miss tolerance band, golden recovered to 40% / 50%; the remaining failures/positive gap is the broad-trigger penalty (`broken > 0`).
 
 ### What changed from v0.2.0 to v0.3.0
 
@@ -140,7 +140,7 @@ Both cloud models were run head-to-head on identical corpora (40 sources, 2,384 
 
 The key insight: **the stronger model extracts more and extracts better.** llama-3.1-8b produces triggers that semantic matching can bridge more effectively (recall 0.228 vs 0.170). It also benefits more from the 0.5 threshold (5 passes vs 4 on failures/positive). The pre-fix concern that "stronger models are more susceptible to adversarial promotion" is resolved by the `should_reject` override — the stronger model's better extraction is now a pure advantage.
 
-Both models are identical on safety corpora (100% silence, 60/60 gate-dropped) and specificity (0.7% generic). The 80% inconclusive rate is model-independent — the near-miss penalty is the bottleneck, not model capability. The differences are in extraction volume and recall, where llama-3.1-8b leads.
+Both models are identical on safety corpora (100% silence, 60/60 gate-dropped) and specificity (0.7% generic). The ~75% inconclusive rate is model-independent — broad-trigger (`broken > 0`) and matcher_gap (adapters/raw-ci) are the bottleneck, not model capability. The differences are in extraction volume and recall, where llama-3.1-8b leads.
 
 **Recommendation:** llama-3.1-8b for the release gate. It has the best golden (40%), best failures/positive (10%), best nearmiss (100%), 0 adversarial, and highest recall. gpt-4o-mini remains viable for low-noise regression runs where precision matters more than recall.
 
@@ -226,7 +226,7 @@ This section merges the learnings-fixes content into the final report. Each fix 
 
 **Measured result:** Nearmiss 5–7 FPs → 0–1 FP (98–100%). 27/50 nearmiss trajectories gate-dropped (recovery detection).
 
-**Key learning:** The near-miss penalty is now the main blocker for quality. It over-fires on legitimate candidates that happen to overlap with near-miss patterns (precision 0.62–0.89 → inconclusive). The penalty treats any near-miss match as a disqualifier, but a candidate that prevents 7 real failures and touches 1 near-miss is clearly a good rule. Tuning: `near_misses <= 2 → pass if precision ≥ 0.5`.
+**Key learning:** The zero-tolerance near-miss penalty over-fired on legitimate candidates (precision 0.62–0.89 → inconclusive). The tolerance band (`near_misses <= 2 → pass if precision ≥ 0.5`) recovered 1 pass/model on golden (gpt-4o-mini 30%→40%, llama-3.1-8b 40%→50%). Broad-trigger (`broken > 0`) is now the dominant quality blocker.
 
 ### Fix 9: #492 broad-alias removal
 
@@ -379,7 +379,7 @@ Post-fix recall improved 2–3× on both models:
 
 For the full per-corpus matcher diagnostics (avg precision / avg recall / inconclusive count), see the per-model sheets.
 
-**Root cause of ~80% inconclusive:** the token-F1 matcher (threshold 0.70 curated, 0.60 public, 0.45 raw) cannot bridge the lexical gap between LLM-extracted trigger phrasings and reference trajectory phrasings — even with semantic matching at 20% blend weight. The #708 domain-scoping fix reduced the denominator (recall improved) but the fundamental limitation is lexical: "git push fails with non-fast-forward" vs "push rejected: non-fast-forward updates" score below 0.70 despite being semantically identical. Raising the semantic weight and tuning the near-miss penalty tolerance are the next levers.
+**Root cause of ~75% inconclusive:** the token-F1 matcher (threshold 0.70 curated, 0.60 public, 0.45 raw) cannot bridge the lexical gap between LLM-extracted trigger phrasings and reference trajectory phrasings — even with semantic matching at 20% blend weight. The #708 domain-scoping fix reduced the denominator (recall improved) and the near-miss tolerance band recovered golden to 40–50%, but the fundamental limitation is lexical: "git push fails with non-fast-forward" vs "push rejected: non-fast-forward updates" score below 0.70 despite being semantically identical. Raising the semantic weight is the next lever.
 
 ---
 
@@ -398,7 +398,7 @@ The decision economics are straightforward once the #714 fix is applied. Pre-fix
 
 The wrong-decision rate (fails / (passes + fails)) is comparable: gpt-4o-mini 6/(4+6) = 60% on failures/positive; llama-3.1-8b 6/(5+6) = 55%. Both are high — the scorer is producing too many fails — but llama-3.1-8b is marginally better. On golden, neither model produces any fails (0F), so the wrong-decision rate is 0% — the scorer correctly identifies good rules when it can match them.
 
-The v0.2.0 comparison is the real decision economics question: is v0.3.0 a net improvement over v0.2.0? On safety, unambiguously yes — nearmiss FPs dropped 5–7→0–1, adversarial stayed 0 (post-fix), #601 auth bug fixed. On quality, unambiguously no — golden dropped 50%→30–40%, failures/positive dropped 44–54%→8–10%. The recall improvement (0.087→0.170–0.228) is the bridge: the matcher is finding the right references but the near-miss penalty blocks the pass. Tuning the penalty tolerance is the single highest-ROI action — it could recover a significant portion of the quality drop without compromising safety.
+The v0.2.0 comparison is the real decision economics question: is v0.3.0 a net improvement over v0.2.0? On safety, unambiguously yes — nearmiss FPs dropped 5–7→0–1, adversarial stayed 0 (post-fix), #601 auth bug fixed. On quality after the near-miss tolerance band, golden recovered to 40–50% (llama-3.1-8b back to v0.2.0's 50%), but failures/positive remains 8–10% vs v0.2.0's 44–54%. The recall improvement (0.087→0.170–0.228) is the bridge: the matcher is finding the right references; the broad-trigger penalty (`broken > 0`) blocks the rest.
 
 **Recommendation:** llama-3.1-8b for the release gate. It has the best golden (40%), best failures/positive (10%), best nearmiss (100%), 0 adversarial, and highest recall (0.228). gpt-4o-mini remains viable for low-noise regression runs where precision matters more than recall, but it is no longer the safety-first choice — that distinction is gone post-fix.
 
@@ -412,7 +412,7 @@ The v0.2.0 comparison is the real decision economics question: is v0.3.0 a net i
 | Adversarial promoted | 0 | 0 | ✅ held |
 | Recall (golden) | 0.087 | 0.170 | ✅ 2× |
 
-v0.2.0's higher pass rates were partly inflated by #492 alias auto-pass. v0.3.0's numbers are the true quality floor — but the floor is lower than it should be because the near-miss penalty over-fires. The recall improvement (2×) is the most encouraging signal: the matcher is finding the right references; it just can't convert those matches into passes.
+v0.2.0's higher pass rates were partly inflated by #492 alias auto-pass. v0.3.0's numbers are the true quality floor. After the near-miss tolerance band, golden recovered to 40–50%, but failures/positive remains 8–10% — blocked by broad-trigger (`broken > 0`). The recall improvement (2×) is the most encouraging signal: the matcher is finding the right references.
 
 ---
 
@@ -468,7 +468,7 @@ The `summary.json` per-corpus now carries `gate_dropped_by_reason` (#697) — br
 |---|---|---|
 | Golden 30–40% (target ≥70%) | Major | Near-miss penalty over-fires on high-precision candidates; tune tolerance (`near_misses <= 2 → pass`) |
 | Failures/positive 8–10% (target ≥50%) | Major | Same root cause; precision 0.62–0.89 → inconclusive |
-| ~80% inconclusive | Major | Near-miss penalty + matcher_gap on adapters/raw-ci |
+| ~75% inconclusive | Major | Broad-trigger (`broken > 0`) + matcher_gap on adapters/raw-ci |
 | Adapters 100% inconclusive | Major | Need adapter-specific reference trajectories (langgraph/crewai/pydanticai) |
 | raw/ci 0 passes | Major | CI traceback-heavy prompts produce unmatchable triggers |
 | Semantic matching 20% blend | Medium | Raising to 0.3–0.4 could bridge more paraphrases |
@@ -526,13 +526,13 @@ The `summary.json` per-corpus now carries `gate_dropped_by_reason` (#697) — br
 
 1. **The #708 domain-scoping fix is the single most impactful change in v0.3.0.** It addresses the root cause of the 90% inconclusive rate — the recall denominator was the full 444-pool, not the relevant domain subset. Recall improved 2–3× on cloud and 7× on local. Every other quality fix (semantic matching, threshold lowering) builds on top of this.
 
-2. **The near-miss penalty is now the dominant quality blocker.** It fixed the safety problem (5–7→0–1 false passes) but over-fires on legitimate candidates (precision 0.62–0.89 → inconclusive). A candidate that prevents 7 real failures and touches 1 near-miss is a good rule — the penalty should have a tolerance band, not a zero-tolerance disqualifier. Tuning `near_misses <= 2 → pass if precision ≥ 0.5` is the clearest path to recovering pass rates without compromising safety.
+2. **The near-miss penalty tolerance band recovered golden to v0.2.0 levels.** The zero-tolerance penalty fixed the safety problem (5–7→0–1 false passes) but over-fired on legitimate candidates. The tolerance band (`near_misses <= 2 → pass if precision ≥ 0.5`) recovered 1 pass/model on golden (40%/50%). The remaining quality blocker is now the broad-trigger penalty (`broken > 0`), which downgrades candidates that break 1–2 successes even when they prevent many more failures.
 
 3. **Adversarial promotion is a real threat on stronger models, and content-based evaluation cannot detect it.** llama-3.1-8b produced 4 adversarial promotions (vs gpt-4o-mini's 2) — the stronger model extracts more convincing-looking rules from adversarial trajectories. The `should_reject` override (#714) is essential because the gate and scorer cannot distinguish "rule from adversarial source" from "rule from real failure" based on the rule's content. The rule "git push --force on non-fast-forward" is a real directive that matches real failures — only the source trajectory's metadata reveals it came from an injection attack.
 
 4. **Semantic matching works but is not a silver bullet at 20% blend weight.** The MiniLM cosine term bridges some paraphrases (recall improved further when combined with domain scoping), but many candidates still score 0.00 because the 20% weight means a semantically identical but lexically dissimilar trigger still scores below the 0.70 threshold. Raising the semantic weight to 0.3–0.4 is a low-effort, high-impact lever for v0.4.0.
 
-5. **v0.2.0's higher pass rates were partly inflated.** The 5 broad #492 aliases auto-matched triggers without real token-F1 scoring — a candidate mentioning "SSL" got precision 1.0 regardless of whether it matched the reference's error content. v0.3.0's lower pass rates (golden 30–40% vs 50%, failures/positive 8–10% vs 44–54%) are the true quality floor. The floor is lower than it should be because the near-miss penalty over-fires, but it is honest.
+5. **v0.2.0's higher pass rates were partly inflated.** The 5 broad #492 aliases auto-matched triggers without real token-F1 scoring — a candidate mentioning "SSL" got precision 1.0 regardless of whether it matched the reference's error content. v0.3.0's numbers are the true quality floor: golden 40–50% post-tolerance (vs 50%), failures/positive 8–10% (vs 44–54%). The floor is honest; the remaining gap is the broad-trigger penalty, not alias gaming.
 
 6. **The #601 MCP auth bug is the canonical example of why deployment testing matters.** Unit tests verified the guard's logic; the Docker field test verified the guard's wiring. The bug shipped green through unit CI because the test mocked the exact function that was broken. The fix was found by `test_docker_mcp_http_auth` — an unauthenticated `list_rules_tool` call from the host returned the rule list. Every security-critical code path must have a deployment-level test, not just a unit test.
 
@@ -540,7 +540,7 @@ The `summary.json` per-corpus now carries `gate_dropped_by_reason` (#697) — br
 
 8. **The reference corpus needs domain-specific expansion for adapters and CI.** The 444-trajectory reference set covers git/python/docker/devops well (19–107 refs each), but has no langgraph/crewai/pydanticai trajectories (adapters: 120 matcher_gap) and no CI-specific phrasings (raw/ci: 211 matcher_gap). The #698 reference expansion closed the agent/lifecycle/mcp gaps but adapters and raw/ci remain uncovered.
 
-9. **Recall is the right metric to watch, not pass rate.** v0.2.0 had pass rate 50% but recall 0.087 — the passes were inflated by aliases. v0.3.0 post-fix has pass rate 30% but recall 0.170 — the matcher is finding the right references but can't convert to passes because of the penalty. Improving recall (semantic matching weight, reference expansion) and then tuning the penalty tolerance will lift pass rates honestly.
+9. **Recall is the right metric to watch, not pass rate.** v0.2.0 had pass rate 50% but recall 0.087 — the passes were inflated by aliases. v0.3.0 post-all-fixes has golden pass rate 40–50% and recall 0.170–0.228 — the matcher is finding the right references. Improving recall further (semantic weight, reference expansion) and tuning the broad-trigger penalty will lift pass rates honestly.
 
 10. **The Docker field test is indispensable.** It caught the #601 auth bug (unit-green, deployment-broken), the non-root `/app` ownership issue (compose service crashed with PermissionError), and the MCP HTTP startup race (TCP accept before session manager ready). The v0.2.0 Docker test had 0 tests; v0.3.0 has 159 (157 passing). Every new feature that involves deployment (MCP transport, OTEL, compose) should have a Docker-level test.
 
@@ -553,10 +553,10 @@ The `summary.json` per-corpus now carries `gate_dropped_by_reason` (#697) — br
 - **Safer:** nearmiss 86–90%→98–100% (the biggest safety improvement), adversarial 0→0 (post-fix #714), #601 MCP auth bug caught and fixed, otel 0P/20F→20/20 gate-dropped (#709). Safety corpora remain at 100% silence.
 - **Broader:** 40 corpora (was 22), 444 references (was 230), Docker validation (159 tests), measurement tooling (5 scripts + 7 runner flags), semantic matching, cost corpus (1,000), token usage capture.
 - **Higher recall:** 2–3× improvement (0.087→0.170–0.228) from domain scoping + semantic matching. The matcher is finding the right references.
-- **But lower extraction quality:** golden 50%→30–40%, failures/positive 44–54%→8–10%. The #492 alias removal made scoring honest; the near-miss penalty over-fires on legitimate candidates. v0.2.0's higher pass rates were partly inflated by alias auto-pass.
+- **Extraction quality:** golden 40–50% post-tolerance (vs 50%), failures/positive 8–10% (vs 44–54%). The #492 alias removal made scoring honest; the near-miss tolerance band recovered golden, but the broad-trigger penalty blocks failures/positive. v0.2.0's higher pass rates were partly inflated by alias auto-pass.
 - **Adversarial regression fixed:** 2–4 promotions → 0 post-fix (#714 `should_reject` override).
 
-**Post-fix: 5/7 release gate thresholds pass.** Safety + adversarial + specificity + infrastructure all pass. Quality (golden + failures/positive) is the holdout. The near-miss penalty tolerance tuning (`near_misses <= 2 → pass`) is the clearest path to recovering pass rates — it could lift failures/positive from 8% to 20–30% without compromising safety (the broad-trigger check still guards against genuinely dangerous rules).
+**Post-all-fixes: 5/7 release gate thresholds pass.** Safety + adversarial + specificity + infrastructure all pass. Quality (golden + failures/positive) is the holdout. The near-miss tolerance band (`near_misses <= 2 → pass`) is applied and recovered golden to 40–50%. Broad-trigger penalty tuning (`broken <= 2 → pass if precision ≥ 0.5`) is the next lever for failures/positive.
 
 **v0.3.0 is not yet ready for autonomous rule promotion.** But it is safer than v0.2.0, and the path to closing the quality gap is clear: tune the near-miss penalty, install semantic matching, re-run the full sweep. The recall improvement (2–3×) proves the matcher is working — it just needs the penalty to stop over-firing.
 

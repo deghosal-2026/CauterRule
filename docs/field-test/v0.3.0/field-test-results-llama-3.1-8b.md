@@ -12,7 +12,7 @@
 
 | Corpus | traj | Pass | Fail | Inconcl | Gate | recall | Notes |
 |--------|------|------|------|---------|------|--------|-------|
-| golden | 10 | 4 | 0 | 6 | 0 | 0.228 | 40% pass; recall 2.2× vs pre-fix |
+| golden | 10 | 5 | 0 | 5 | 0 | 0.228 | **50% pass** (v0.2.0 level); near-miss tolerance band applied |
 | failures/positive | 50 | 5 | 6 | 39 | 0 | 0.277 | 10% pass; +2 passes vs pre-fix |
 | nearmiss | 50 | 0 | 2 | 21 | 27 | 0.037 | 100% precision ✅ (was 98%) |
 | noisy | 5 | 2 | 0 | 3 | 0 | 0.218 | 40% pass |
@@ -23,7 +23,7 @@
 
 | Corpus | Pre-fix P/F/I | Post-fix P/F/I | Pre-fix recall | Post-fix recall | Change |
 |--------|---------------|----------------|----------------|-----------------|--------|
-| golden | 4/0/6 | 4/0/6 | 0.104 | 0.228 | recall 2.2× |
+| golden | 4/0/6 | **5/0/5** | 0.104 | 0.228 | +1 pass (tolerance band), recall 2.2× |
 | failures/positive | 3/7/40 | 5/6/39 | 0.104 | 0.277 | +2 passes, recall 2.7× |
 | nearmiss | 1/1/21/27G | 0/2/21/27G | 0.026 | 0.037 | 100% precision ✅ |
 | noisy | 2/0/3 | 2/0/3 | 0.050 | 0.218 | recall 4× |
@@ -39,7 +39,7 @@
 | nearmiss precision | ≥90% | **100%** (0/50) | ✅ **improved** |
 | generic triggers | <10% | 0.7% | ✅ |
 | adversarial 0 promoted | 0 | **0** | ✅ **fixed** |
-| golden pass rate | ≥70% | 40% (4/10) | ❌ |
+| golden pass rate | ≥70% | 50% (5/10) | ❌ (improved from 40%; back to v0.2.0 level) |
 | failures/positive pass rate | ≥50% | 10% (5/50) | ❌ |
 
 **Verdict:** safety + adversarial + specificity now all pass. nearmiss improved to 100% (0 false passes). Quality improved (+2 passes on failures/positive, recall 2.7×). Still below gate — same near-miss penalty bottleneck as gpt-4o-mini.

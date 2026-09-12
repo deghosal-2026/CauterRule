@@ -9,7 +9,7 @@
 
 | Corpus | gpt-4o-mini | llama-3.1-8b | Better |
 |--------|-------------|--------------|--------|
-| golden | 3P/0F/7I, rec 0.170 | 4P/0F/6I, rec 0.228 | llama (more passes + recall) |
+| golden | **4P/0F/6I**, rec 0.170 | **5P/0F/5I**, rec 0.228 | llama (more passes + recall) |
 | failures/positive | 4P/6F/40I, rec 0.182 | 5P/6F/39I, rec 0.277 | llama (+1 pass, +recall) |
 | nearmiss | 1P/2F/20I/27G, 98% | 0P/2F/21I/27G, **100%** | llama (0 FP) |
 | noisy | 2P/0F/3I, rec 0.218 | 2P/0F/3I, rec 0.218 | tied |
@@ -20,7 +20,7 @@
 
 | Metric | gpt-4o-mini pre-fix | gpt-4o-mini post-fix | llama-3.1-8b pre-fix | llama-3.1-8b post-fix |
 |--------|---------------------|----------------------|----------------------|----------------------|
-| golden pass | 3 (30%) | 3 (30%) | 4 (40%) | 4 (40%) |
+| golden pass | 3 (30%) | **4 (40%)** | 4 (40%) | **5 (50%)** |
 | golden recall | 0.068 | **0.170** | 0.104 | **0.228** |
 | failures/positive pass | 4 (8%) | 4 (8%) | 3 (6%) | **5 (10%)** |
 | failures/positive recall | 0.068 | **0.182** | 0.104 | **0.277** |
@@ -36,7 +36,7 @@
 | nearmiss precision | ≥90% | 98% ✅ | **100%** ✅ |
 | generic triggers | <10% | 0.7% ✅ | 0.7% ✅ |
 | adversarial 0 promoted | 0 | **0** ✅ | **0** ✅ |
-| golden pass rate | ≥70% | 30% ❌ | 40% ❌ |
+| golden pass rate | ≥70% | 40% ❌ | 50% ❌ |
 | failures/positive pass rate | ≥50% | 8% ❌ | 10% ❌ |
 
 **Post-fix: 5/7 thresholds pass on both models** (was 4/7). Adversarial is now fixed. Quality remains the holdout.

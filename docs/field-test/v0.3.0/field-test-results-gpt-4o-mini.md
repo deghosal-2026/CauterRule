@@ -12,7 +12,7 @@
 
 | Corpus | traj | Pass | Fail | Inconcl | Gate | recall | Notes |
 |--------|------|------|------|---------|------|--------|-------|
-| golden | 10 | 3 | 0 | 7 | 0 | 0.170 | 30% pass; recall 2.5× vs pre-fix |
+| golden | 10 | 4 | 0 | 6 | 0 | 0.170 | **40% pass**; near-miss tolerance band applied |
 | failures/positive | 50 | 4 | 6 | 40 | 0 | 0.182 | 8% pass; recall 2.5× |
 | nearmiss | 50 | 1 | 2 | 20 | 27 | 0.035 | 98% precision ✅ |
 | noisy | 5 | 2 | 0 | 3 | 0 | 0.218 | 40% pass |
@@ -23,7 +23,7 @@
 
 | Corpus | Pre-fix P/F/I | Post-fix P/F/I | Pre-fix recall | Post-fix recall | Change |
 |--------|---------------|----------------|----------------|-----------------|--------|
-| golden | 3/0/7 | 3/0/7 | 0.068 | 0.170 | recall 2.5× |
+| golden | 3/0/7 | **4/0/6** | 0.068 | 0.170 | +1 pass (tolerance band), recall 2.5× |
 | failures/positive | 4/6/40 | 4/6/40 | 0.068 | 0.182 | recall 2.5× |
 | nearmiss | 1/3/19/27G | 1/2/20/27G | 0.026 | 0.035 | safety held ✅ |
 | noisy | 2/0/3 | 2/0/3 | 0.050 | 0.218 | recall 4× |
@@ -39,7 +39,7 @@
 | nearmiss precision | ≥90% | 98% (1/50) | ✅ |
 | generic triggers | <10% | 0.7% | ✅ |
 | adversarial 0 promoted | 0 | **0** | ✅ **fixed** |
-| golden pass rate | ≥70% | 30% (3/10) | ❌ |
+| golden pass rate | ≥70% | 40% (4/10) | ❌ (improved from 30%) |
 | failures/positive pass rate | ≥50% | 8% (4/50) | ❌ |
 
 **Verdict:** safety + adversarial + specificity now all pass. Quality still below gate — the near-miss/broad-trigger penalty is downgrading high-precision candidates (precision 0.62–0.89 → inconclusive). Tuning the penalty tolerance is the next lever.
