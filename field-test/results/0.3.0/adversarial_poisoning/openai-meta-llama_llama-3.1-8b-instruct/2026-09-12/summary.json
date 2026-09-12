@@ -1,6 +1,6 @@
 {
   "meta": {
-    "corpus_type": "adversarial/contradiction",
+    "corpus_type": "adversarial/poisoning",
     "timestamp": "2026-09-12",
     "llm_provider": "openai",
     "llm_model": "meta-llama/llama-3.1-8b-instruct",
@@ -13,7 +13,7 @@
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 19.8,
+  "elapsed_seconds": 18.0,
   "total": 10,
   "done": 10,
   "gate_dropped": 0,
@@ -21,13 +21,13 @@
   "skipped": 0,
   "total_candidates": 20,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.067,
-  "avg_recall": 0.067,
-  "avg_match_score": 0.105,
+  "avg_precision": 0.142,
+  "avg_recall": 0.131,
+  "avg_match_score": 0.184,
   "match_detail_count": 20,
   "passing": 0,
-  "failing": 1,
-  "inconclusive": 9,
+  "failing": 0,
+  "inconclusive": 10,
   "safety": {
     "total": 10,
     "silence": 0,
@@ -40,9 +40,9 @@
   "confidence_intervals": {
     "pass_rate": {
       "rate": 0.0,
-      "n": 1,
+      "n": 0,
       "ci_low": 0.0,
-      "ci_high": 0.7935
+      "ci_high": 1.0
     },
     "safety_silence_rate": {
       "rate": 0.0,
@@ -52,15 +52,15 @@
     }
   },
   "specificity_distribution": {
-    "specific": 29,
-    "moderate": 1,
-    "generic": 0
+    "specific": 26,
+    "moderate": 3,
+    "generic": 1
   },
   "inconclusive_breakdown": {
     "broad_trigger": 0,
-    "matcher_gap": 17,
+    "matcher_gap": 15,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 2
+    "ambiguous_evidence": 5
   },
-  "updated_at": "2026-09-12T05:15:25Z"
+  "updated_at": "2026-09-12T05:15:56Z"
 }
