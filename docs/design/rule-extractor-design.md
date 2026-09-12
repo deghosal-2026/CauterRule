@@ -39,6 +39,9 @@ Modes (configurable via `extraction.gate_mode` in `cauterule.toml`):
 
 Dropped trajectories are counted as `pre_extraction_drops`, separate from model-produced silence.
 
+#### Model-Level Safety Judgment (Pre-Extraction Gate v2, v0.3.0)
+The deterministic signal scan is complemented by a model-level safety judgment. The extractor is asked to judge whether the trajectory actually contains a defect worth learning from and to return silence when it does not. Clean successes and adversarial trajectories are suppressed before a rule is produced, and the gate result is retained in the run record rather than discarded after the decision. This is the pre-extraction gate v2 referenced by the promotion gate's safety-first posture.
+
 ### Dry-Run Extraction
 `cauterule extract --dry-run` — shows what would be extracted without making an LLM call. Uses cached results or pattern matching only. Saves cost.
 
@@ -70,7 +73,7 @@ Produce a rule in this form:
 The rule must be:
 - Falsifiable (can be tested against historical scenarios)
 - Actionable (the agent can follow it)
-- Specific (not "be more careful")
+- Specific (not "be more careful" — name the concrete error code or message from the trajectory)
 ```
 
 ## Extraction Strategies
@@ -112,6 +115,8 @@ One extraction per cluster, not one per failure. This avoids producing 10 near-i
 - Rule must pass the linter (not vague, not duplicate, not contradictory)
 - Confidence threshold: >=0.6 for automatic processing
 - Unsafe directives are blocked by the linter before replay
+- The quality-gate result is retained and reported, not discarded after extraction
+- Matching no longer uses the broad aliases (#492); the extractor must name concrete error codes so scoring stays honest
 
 ## Confidence Calibration
 

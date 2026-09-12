@@ -243,7 +243,7 @@ No security blockers at release.
 6. **New adapters:**
 
    ```python
-   from cauterule.adapter.langgraph import watch_langgraph  # or crewai / pydanticai
+   from cauterule.adapter.langgraph import langgraph_node, capture_node_error, inject_rules
    ```
 
 7. **Breaking changes / behavior changes:**

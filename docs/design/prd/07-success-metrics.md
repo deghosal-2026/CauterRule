@@ -75,6 +75,40 @@
 | Auto vs human promotion agreement | >= 80% | Compare auto-promote verdicts with human review decisions |
 | Cold-start bundled-pack usefulness | >= 1 prevented failure within first session | Field test with bundled `pack-git` |
 
+## v0.3.0 Field Test Metrics (2026-09-12)
+
+Scope: 40 corpora × 2 cloud models (gpt-4o-mini, llama-3.1-8b), 4,768 trajectory-runs, 444-trajectory domain-scoped reference pool. Full report: [`docs/field-test/v0.3.0/FIELD_TEST_REPORT.md`](../../field-test/v0.3.0/FIELD_TEST_REPORT.md).
+
+| Metric | v0.3.0 Result | Target | Notes |
+|--------|---------------|--------|-------|
+| Near-miss precision | 98–100% (was 86–90%) | >= 90% | Near-miss penalty + self-match exclusion + recovery gate |
+| Adversarial promotions | 0 (was 2–4 pre-fix) | 0 | `should_reject` override (#714), model-independent |
+| Safety silence | 100% (60/60 successes, 60/60 negatives) | 100% | Pre-extraction gate drops clean trajectories |
+| Recall | 0.170–0.228 (was 0.087) | — | 2–3× improvement via domain-scoped reference pool (#708) |
+| Golden pass rate | 40–50% | >= 70% | Not met — matcher paraphrase gap |
+| Failures/positive pass rate | 8–10% | >= 50% | Not met — broad-trigger penalty + matcher gap |
+| Curated inconclusive rate | ~75% | < 15% | Not met — matcher paraphrase limitation |
+| Generic triggers | 0.7% | < 10% | Met |
+
+### Safety-Adjusted Ranking
+
+Candidates are ranked safety-first: near-miss precision, adversarial rejection, and success-regression evidence come before recall/golden usefulness. A high-recall rule that touches a near-miss reference or breaks a success is demoted before it can outrank a safe rule. This ordering is what keeps the safety metrics above from being traded away for pass-rate gains.
+
+### Release Gate Verdict (v0.3.0): 5/7
+
+| Gate | Status |
+|------|--------|
+| Safety: 100% silence on successes/negatives | Met |
+| Near-miss precision >= 90% | Met (98–100%) |
+| Generic triggers < 10% | Met (0.7%) |
+| Adversarial: 0 promoted rules | Met |
+| Infrastructure (preflight, harness health, cost corpus, Docker, measurement tooling) | Met |
+| Golden pass rate >= 70% | Not met (40–50%) |
+| Failures/positive pass rate >= 50% | Not met (8–10%) |
+| Curated inconclusive < 15% | Not met (~75%) |
+
+Safety + adversarial + specificity + infrastructure pass; extraction quality is the holdout. Carry-over themes (matcher paraphrase bridging / semantic weight, cross-session measurement, human agreement, OpenSSF Scorecard posture) are tracked for v0.4.0.
+
 ## Performance & Scale Metrics
 
 | Metric | Target for v0.1.0 | How to Measure |
@@ -142,6 +176,7 @@ These scores make the product easier to reason about at a glance.
 | **Rule Coverage Score** | weighted blend of failure-class coverage, near-miss precision, and stale-rule ratio | Summarizes how protected the agent is |
 | **Learning Efficiency Score** | promoted rules / extraction cost | Shows whether the loop is economically useful |
 | **Trust Score** | replay precision + provenance completeness + linter pass rate | Indicates whether rules are safe to rely on |
+| **Safety-Adjusted Ranking** | rank candidates by safety evidence (near-miss precision, adversarial rejection, success-regression) before usefulness (recall, golden pass) | Prevents high-recall rules from jumping ahead of safe ones |
 | **DX Score** | install success + time-to-wow + CLI completion rate | Reflects whether new users can actually adopt the tool |
 
 ## Release Gates for v0.1.0

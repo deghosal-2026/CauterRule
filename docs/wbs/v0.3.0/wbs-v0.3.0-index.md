@@ -2,7 +2,7 @@
 
 **Goal:** Hardening & Ecosystem — fix critical bugs from the v0.2.0 field test, ship adapters, rule lifecycle, pack ecosystem, corpus/benchmark infra, then prove it with a full field test and release.
 
-**Milestones:** M1-M8 (GitHub milestones 52-57, 62-63) — M1 ✓ (18/18 verified), M2 ✓ (7/13 verified, 4 deferred to M7), M3 ✓ (16/16 verified, #524→M7, #614/#615→M8), M4 ✓ (11/11 verified), M5 ✓ (22/22 resolved, milestone 56 empty), M6 ✓ (5/5 verified, #607→M7, #604→M8).
+**Milestones:** M1-M8 (GitHub milestones 52-57, 62-63) — M1 ✓ (18/18 verified), M2 ✓ (7/13 verified, 4 deferred to M7), M3 ✓ (16/16 verified, #524→M7, #614/#615→M8), M4 ✓ (11/11 verified), M5 ✓ (22/22 resolved, milestone 56 empty), M6 ✓ (5/5 verified, #607→M7, #604→M8), M7 ✓ (field test complete — cloud-only, 2 models × 40 corpora / 4,768 runs, 5/7 release gates met, report published), M8 (in progress — version bump, security scan, release notes, CHANGELOG done; packaging, docs sweep, tag, announcements pending).
 
 ## Release Tagline
 
@@ -16,8 +16,8 @@
 |------|-------|------------|-------|--------|
 | [1](wbs-v0.3.0-part1-fixes.md) | Phase 1 — Critical Fixes & Reliability | M1-M3 (M1 ✓, M2 ✓, M3 ✓) | 50 tasks | #487-#508, #517-#527, #593-#600, #608-#616 |
 | [2](wbs-v0.3.0-part2-features.md) | Phase 2 — Adapters, Lifecycle, Packs & Infra | M4-M6 (M4 ✓, M5 ✓, M6 ✓) | 40 tasks | #479-#481, #486, #512, #516, #534-#560, #581-#588, #601-#607 |
-| [3](wbs-v0.3.0-part3-field-test.md) | Phase 3 — Field Test | M7 | 13 tasks | #625, #629, #635, #641-#642, #648, #650, #653, #658, #663, #667, #671, #673 |
-| [4](wbs-v0.3.0-part4-release.md) | Phase 4 — Release Readiness & Distribution | M8 | 17 tasks | #622, #626, #630, #633, #637, #640, #645, #649, #654, #657, #661, #665, #668, #670, #674-#675 |
+| [3](wbs-v0.3.0-part3-field-test.md) | Phase 3 — Field Test | M7 (M7 ✓) | 13 tasks | #625, #629, #635, #641-#642, #648, #650, #653, #658, #663, #667, #671, #673 |
+| [4](wbs-v0.3.0-part4-release.md) | Phase 4 — Release Readiness & Distribution | M8 (M8 in progress) | 17 tasks | #622, #626, #630, #633, #637, #640, #645, #649, #654, #657, #661, #665, #668, #670, #674-#675 |
 | **Total** | | **M1-M8** | **120 tasks** | **120 issues** |
 
 ---
@@ -25,7 +25,7 @@
 ## Milestone Map
 
 ```
-M1 ✓    M2 ✓   M3 ✓    M4 ✓    M5 ✓    M6 ✓   M7      M8
+M1 ✓    M2 ✓   M3 ✓    M4 ✓    M5 ✓    M6 ✓   M7 ✓    M8 (WIP)
 │       │       │       │       │       │       │       │
 └──┬────┴───┬───┴───┬───┘       │       │       │       │
    │       │       │           └──┬────┴───┬───┴───┬───┘
@@ -33,7 +33,7 @@ M1 ✓    M2 ✓   M3 ✓    M4 ✓    M5 ✓    M6 ✓   M7      M8
    │ M1-M3 ✓                    │ M4-M6 ✓                       │
    │                            │                                 │
    └────────────────────────────┴─────────────────────────────────┘
-                                    Phase 3 + 4: M7 (Field Test) → M8 (Release)
+                                    Phase 3 + 4: M7 (Field Test) ✓ → M8 (Release) (WIP)
 ```
 
 ---
@@ -79,13 +79,15 @@ Every milestone (M1-M8) must pass its exit gate before the next milestone begins
 Before tagging v0.3.0, ALL of the following must be true:
 
 - [ ] All 8 milestones complete and exit gates passed
-- [ ] M7 field test complete and report published (packs/adapters/lifecycle safety)
+- [x] M7 field test complete and report published (cloud-only: 2 models × 40 corpora / 4,768 runs; 5/7 gates met)
 - [ ] M8 release readiness complete (PyPI, Docker, Homebrew, docs)
-- [ ] Release gate thresholds met (golden ≥ 70%, nearmiss precision ≥ 90%)
+- [ ] Release gate thresholds met (golden ≥ 70%, nearmiss precision ≥ 90%) — nearmiss met, golden not (40–50%)
 - [ ] Cross-session repeat-failure reduction measured (#496)
-- [ ] Security scan clean (truffleHog, pip-audit, OpenSSF)
-- [ ] Lint strict clean, mypy strict, zero errors
+- [x] Security scan clean (truffleHog, pip-audit, OpenSSF) — Scorecard follow-up tracked (#713)
+- [x] Lint strict clean, mypy strict, zero errors
 - [ ] Total code coverage > 92%
-- [ ] Documentation includes field test report, release notes, CHANGELOG
+- [x] Documentation includes field test report, release notes, CHANGELOG
 - [ ] All distribution channels verified (PyPI, Homebrew, Docker)
 - [ ] Article ideas documented and at least 1 announcement published
+
+**Current status:** M8 in progress — version bump, security scan, release notes (#633), and CHANGELOG (#630) landed; packaging, docs sweep (#637), tag, and announcements pending.

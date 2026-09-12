@@ -1,7 +1,13 @@
 # CauterRule Corpus Format Specification
 
 **Version:** 1.0
-**Schema:** `corpus_schema_version: "1.0"`
+**Schema constant:** `cauterule.corpus.format.CORPUS_SCHEMA_VERSION = "1.0"`
+
+Each record may carry an optional `schema_version` string. It is **enforced by
+`cauterule preflight <corpus>`**: an absent or empty value is accepted
+(defaults to `1.0`), while any value other than `"1.0"` fails the
+`schema_version` check with `Expected: 1.0`. The field is not required by
+`cauterule corpus validate` / `lint`, which rely on `Trajectory` parsing.
 
 ## 1. File Format
 
@@ -17,6 +23,7 @@ Each line is a JSON object describing one agent trajectory. Required and optiona
 |-------|------|----------|-------------|
 | `trajectory_id` | string | yes | Unique identifier, e.g. `G-001-git-push-non-ff` |
 | `timestamp` | string (ISO 8601) | yes | When the trajectory was captured |
+| `schema_version` | string | no | Format version; `"1.0"` (enforced by preflight, absent = 1.0) |
 
 ### 2.2 Core
 
@@ -58,6 +65,14 @@ Each line is a JSON object describing one agent trajectory. Required and optiona
 |-------|------|----------|-------------|
 | `expected_outcome` | string | yes | `should_extract`, `should_silence`, `should_reject` |
 | `expected_outcome_rationale` | string or null | yes | Explanation of why this outcome is correct |
+| `expected_outcome_confidence` | string or null | no | `high`, `medium`, `low` |
+
+Annotations are mandatory: `cauterule preflight` requires `expected_outcome`
+on every raw corpus (`raw/ci`, `raw/opencode`, `raw/synthetic`,
+`raw/sibling-repos`, `raw/corrections`, `raw/cross-session`) and
+`cauterule corpus lint` flags records missing the required provenance fields
+(`failure_class`, `quality_label`, `domain`). `validate_annotations()` in
+`cauterule.corpus.validation` reports trajectories missing `expected_outcome`.
 
 ### 2.6 Step Object
 
@@ -122,7 +137,28 @@ The rule YAML files use the standard `StandingRule` format (see `docs/design/sta
 
 ## 6. Validation
 
-Use `src/cauterule/corpus/validation.py` to check:
+Use the `cauterule corpus` CLI and `src/cauterule/corpus/validation.py`:
 
-- `validate_corpus_sizes()` — minimum trajectory counts per corpus
-- `validate_annotations()` — 0 missing `expected_outcome` on annotated corpora
+```bash
+cauterule corpus validate [FILES...]   # Schema-check files (Trajectory parsing)
+cauterule corpus lint [FILES...]       # Required annotation/provenance fields
+cauterule preflight <corpus.jsonl>     # Full checks incl. schema_version enforcement
+```
+
+- `validate_corpus_sizes()` — minimum trajectory counts per safety corpus
+  (`successes`, `failures/negative`, `nearmiss`; default 50 each).
+- `validate_annotations()` — 0 missing `expected_outcome` on annotated corpora.
+
+## 7. Domain-Scoped Reference Pool
+
+During replay scoring, candidates are scored against a reference pool. As of
+v0.3.0 (#708) the pool is **scoped to the source trajectory's `domain`** when
+that domain slice has at least 3 reference trajectories; otherwise it falls
+back to the full pool so a tiny slice cannot inflate recall. The scorer also
+excludes the source trajectory from its own reference set and records
+`domain_scoped` plus `reference_pool_size` in the evidence report. The v0.3.0
+field test uses a 444-trajectory domain-scoped pool across 40 corpora, which
+lifted golden recall 2–3×.
+
+See `scripts/run-field-test.py` and
+[`docs/field-test/v0.3.0/FIELD_TEST_REPORT.md`](../field-test/v0.3.0/FIELD_TEST_REPORT.md).

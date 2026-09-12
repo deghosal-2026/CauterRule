@@ -7,6 +7,9 @@ passing a shared conformance harness.  This document covers each adapter
 contract, and the rule-lifecycle policies (specificity, outcomes, retirement,
 supersession, auto-promotion tuning).
 
+All four adapters and the harness are **GA as of v0.3.0** (released
+2026-09-12).
+
 ---
 
 ## 1. Adapter overview
@@ -43,11 +46,14 @@ async def my_async_agent(prompt: str) -> str: ...
 
 
 # generators / async-generators are supported (first-step capture,
-# final failure step on error)
+# final failure step on error); capture_success=False records only failures
+@watch(base_dir="trajectories", capture_success=True)
+def my_failure_only_agent(prompt: str) -> str: ...
 ```
 
-- On success a `success=True` trajectory is written; on exception a
-  `success=False` trajectory is written and the exception is re-raised.
+- On success a `success=True` trajectory is written (unless
+  `capture_success=False`); on exception a `success=False` trajectory is
+  written and the exception is re-raised.
 - `redact_keys`: kwarg keys placeholdered to `[REDACTED]` **before** the step
   input is stringified, so secrets never reach disk (the full
   `redact_trajectory` pass still runs after enrichment).
@@ -56,19 +62,21 @@ async def my_async_agent(prompt: str) -> str: ...
 
 ```python
 from cauterule.adapter import inject, ainject
-import cauterule as cr
+from cauterule.store.manager import StoreManager
 
-with inject(task, rules=cr.load_rules(), tool="git", error="...") as matched:
+rules = StoreManager().list_rules(status="active")
+with inject(task, rules=rules, tool="git", error="...") as matched:
     prompt = base + render(matched)
 
-async with ainject(task, rules=cr.load_rules(), max_rules=5) as matched:
+async with ainject(task, rules=rules, max_rules=5) as matched:
     ...
 ```
 
-Uses the **real** matcher (`injection/matcher.py`, specificity ordering,
-budget from `injection/budget.py`) — identical to the CLI path.  Supported
-context kwargs: `tool`, `error`, `tags`, `taxonomy`; budget: `max_rules`,
-`max_tokens`.
+Passing `rules=None` yields no matches, so load the store first (as above) or
+supply your own list.  Uses the **real** matcher (`injection/matcher.py`,
+specificity ordering, budget from `injection/budget.py`) — identical to the
+CLI path.  Supported context kwargs: `tool`, `error`, `tags`, `taxonomy`;
+budget: `max_rules`, `max_tokens`.
 
 ---
 
@@ -106,8 +114,11 @@ tracer = CrewaiTracer(task_desc="reconcile invoices", base_dir="trajectories")
 with tracer.task("reconcile invoices", agent_role="accountant"):
     crew.kickoff()
 
-# Style B — callback listeners
-crew.tasks_handlers = [tracer.on_task_complete, tracer.on_tool_error]
+# Style B — CrewAI callback listeners: register the tracer's methods as
+# task/tool callbacks on your Crew:
+#   on_tool_error(tool, exception) / on_task_complete()
+# tracer.on_tool_error
+# tracer.on_task_complete
 
 # Injection into a Task description
 description = "Reconcile invoices.\n" + inject_crew_rules("reconcile invoices")
@@ -145,18 +156,21 @@ result = await agent.run(prompt, system_prompt=(base_system + rules_text))
 
 ## 6. Conformance harness (`tests/adapter_conformance/`)
 
-Every adapter must pass the shared kit:
+Every adapter must pass the shared kit (`kit.py`), exported as a
+`PASS`/`FAIL` line per check:
 
-- **no-repeat**: fail twice → 2 trajectories → third run with injection handling
-  succeeds.
-- **redaction**: a secret (`api_key=sk-secret-...`) in task/tool I/O never
-  appears in the written trajectory.
-- **success capture**: success path writes a `success=True` trajectory.
-- **schema valid**: written trajectories carry `id`, `task`, and steps.
+- **no_repeat_failure**: fail twice → 2 trajectories on disk → a third run
+  with injected rules is handled (fail-twice → extract → inject → no-repeat).
+- **redaction**: a secret (`sk-secret-...`) passed as a kwarg **and** as a
+  positional value never appears in the written trajectory.
+- **success_capture**: the success path writes a `success=True` trajectory.
+- **schema_valid**: written trajectories are enriched + redacted and carry
+  `id`, `task`, and at least one step.
 
 Adding an adapter = add one driver fixture in
 `tests/adapter_conformance/conftest.py` (a fake failing agent plus
-last_trajectory plumbing) and it is automatically in the parametrized suite.
+`run_task` / `last_trajectory` / `trajectory_dir` plumbing) and it is
+automatically in the parametrized suite.
 
 ---
 

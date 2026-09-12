@@ -295,27 +295,77 @@ CauterRule is built on five pillars that make it a compelling, differentiated OS
 
 ---
 
-## v0.3.0 — Rule Pack Ecosystem (The "Community" Release)
+## v0.3.0 — Hardening & Ecosystem (The "Trustworthy" Release)
 
-> **Goal:** Full pack ecosystem — install, create, publish, share. Turn CauterRule from a tool into a community.
+> **Goal:** Make CauterRule trustworthy at the seams — no silent data corruption, no phantom gates — and grow it into an ecosystem: adapters for real frameworks, a full rule lifecycle, installable packs, and corpus/benchmark infrastructure. **Shipped 2026-09-12.**
 
-- [ ] **Official packs** (beyond bundled `pack-git`):
-  - `cauterule/pack-docker` — rules for container builds, compose, networking
-  - `cauterule/pack-deploy` — rules for deployment failures (k8s, CI/CD, rollback)
-  - `cauterule/pack-testing` — rules for test failures (flaky tests, coverage, mocking)
-  - `cauterule/pack-python` — rules for Python-specific failures (imports, venv, pip)
+### Framework Adapters
+
+- [ ] **LangGraph adapter** — trajectory capture as a graph node, rule injection as state prep
+- [ ] **CrewAI adapter** — trajectory capture as a crew callback, rule injection as task context
+- [ ] **PydanticAI adapter** — trajectory capture as a tool wrapper, rule injection as system prompt
+- [ ] **Generic `@watch` / `inject`** — async-capable capture decorator + rule-injection context manager for custom loops
+- [ ] **Adapter conformance harness** — verifies every adapter emits capture/injection in the same shape
+
+### Rule Lifecycle & Safety
+
+- [ ] **Per-rule outcome tracking** — prevented / broke / neutral outcomes
+- [ ] **Specificity scoring** — context count, trigger precision, error subtype
+- [ ] **Supersession chains** — R-012 supersedes R-005 with full history
+- [ ] **Automated retirement** — stale and underperforming rules
+- [ ] **Quarantine** — isolate suspect rules pending review
+- [ ] **Auto-promotion tuning** — thresholds adjust from historical accuracy
+- [ ] **Model-level safety judgment** — pre-extraction gate v2 suppresses unsafe/non-failure extractions
+
+### Pack Ecosystem
+
+- [ ] **Official packs** — `pack-python`, `pack-testing`, `pack-deploy`, `pack-docker`
 - [ ] `cauterule pack install <name>` — install a rule pack from GitHub
 - [ ] `cauterule pack create` — scaffold a new pack from your agent's rule store
 - [ ] `cauterule pack publish` — publish a pack as a GitHub release
-- [ ] Pack versioning with semantic versioning (major/minor/patch)
-- [ ] Pack dependency resolution — pack A depends on pack B
+- [ ] **Pack versioning** — semantic versioning (major/minor/patch)
+- [ ] **Pack dependency resolution** — pack A depends on pack B
+- [ ] **Pack certification** — baseline safety, replay, and provenance checks
 - [ ] `cauterule share <rule-id>` — publish a single rule as a GitHub gist with full provenance
+
+### Reliability & MCP Hardening
+
+- [ ] **Atomic store writes** — no partial YAML on crash
+- [ ] **Path-traversal guards** — pack and rule paths stay inside the store
+- [ ] **Duplicate / conflict detection** — minimum-fraction overlap, consolidation via specificity
+- [ ] **Recursive per-file YAML loading** — nested pack/store directories load reliably
+- [ ] **MCP hardening** — bearer auth over HTTP, rate limiting, request schema validation
+- [ ] **Extraction changes** — prompt narrowed to name error codes, broad aliases (#492) removed, quality gate no longer discarded
+
+### Corpus & Benchmark Infrastructure
+
+- [ ] `cauterule corpus` — manage tiered and domain corpora
+- [ ] `cauterule bench` — benchmark runs plus a public leaderboard
+- [ ] `cauterule observe` — runtime observation surface
+- [ ] **OpenTelemetry exporter** — rule hit/promotion/extraction events
+- [ ] **Release automation** — version bump, packaging, publish
+
+### Field Test v0.3.0
+
+- [ ] 40 corpora × 2 cloud models (gpt-4o-mini, llama-3.1-8b), 4,768 runs
+- [ ] Near-miss precision 98–100% (was 86–90%), adversarial promotions 0, 100% safety silence
+- [ ] Recall 0.170–0.228 (was 0.087, 2–3×) with a 444-trajectory domain-scoped reference pool
+- [ ] Known gaps: golden 40–50%, failures/positive 8–10%, inconclusive ~75%
 
 ---
 
-## v0.4.0 — Deep Integrations (The "Plumbing" Release)
+## v0.4.0 — Matcher Quality, Measurement & Integrations (The "Sharp" Release)
 
-> **Goal:** Rules are a first-class artifact accessible to any agent, any tool, any platform. Deep integrations with the ecosystem.
+> **Goal:** Close the extraction-quality gap left by v0.3.0 (matcher paraphrases) and finish the trust story (measurement + security posture), then land deep integrations.
+
+### Matcher Quality
+- [ ] **Paraphrase bridging** — raise the semantic blend weight (0.3–0.4) and bridge trigger/reference phrasings
+- [ ] **Adapter / CI reference vocabulary** — fix the `matcher_gap` corpora (adapters, raw/ci)
+
+### Measurement & Security Posture
+- [ ] **Cross-session repeat-failure measurement** — run the 5-session protocol (#663/#496)
+- [ ] **Human-vs-replay agreement scoring** — fill and score the reviewer sample (#493)
+- [ ] **OpenSSF Scorecard remediation** — branch protection, signed releases, dependency pinning (#713)
 
 ### Integrations
 - [ ] **AgentObservatory integration** — production failure detection triggers extraction
@@ -403,8 +453,8 @@ Features being considered but not yet scheduled:
 | **v0.1.0** | Core Loop + First-Class DX | Full loop, CLI (24+ commands), replay + visualization, export/import, MCP server, bundled pack-git, `@cauterule.watch` adapter, TUI review, corpus, benchmarks, scale tests, field tests, adversarial tests, distribution |
 | **v0.1.1** | Framework Adapters | LangGraph, CrewAI, PydanticAI adapters |
 | **v0.2.0** | Rule Lifecycle Management | Specificity scoring, outcome tracking, automated retirement, supersession chains, auto-promotion tuning |
-| **v0.3.0** | Rule Pack Ecosystem | Official packs (docker, deploy, testing, python), pack install/create/publish, `cauterule share` |
-| **v0.4.0** | Deep Integrations | AgentObservatory, AgentEvalForge, DecisionJournal, LangSmith/Phoenix, CI pipeline testing |
+| **v0.3.0** | Hardening & Ecosystem | Adapters (LangGraph/CrewAI/PydanticAI/`@watch`), rule lifecycle + safety, official packs + install/create/publish/certification, MCP hardening, reliability fixes, corpus/benchmark CLI + leaderboard, OTEL, release automation |
+| **v0.4.0** | Matcher Quality, Measurement & Integrations | Paraphrase bridging + semantic weight, cross-session measurement, human agreement, OpenSSF Scorecard, deep integrations |
 | **v0.5.0** | Observability & Analytics | Web dashboard, replay visualization, trend lines, weekly digest, failure recurrence tracking |
 | **v0.6.0** | Advanced Retrieval | Semantic matching, hybrid matching, rule embedding index, cross-failure pattern detection |
 | **v0.7.0** | Multi-Agent | Cross-agent transfer, shared registry, rule governance, agent profiles, rule federation |

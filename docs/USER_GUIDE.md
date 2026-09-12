@@ -12,6 +12,29 @@ This guide covers:
 - Interpreting results
 - Generating synthetic trajectories for testing
 
+### Contents
+
+- [Quick Start](#quick-start)
+- [Extracting Rules from a Trajectory](#extracting-rules-from-a-trajectory)
+- [Running Field Tests](#running-field-tests)
+- [Output Structure](#output-structure)
+- [Options](#options)
+- [Generating Synthetic Trajectories](#generating-synthetic-trajectories)
+- [Interpreting Results](#interpreting-results)
+- [Examples](#examples)
+- [Advanced: Multi-Pass Extraction](#advanced-multi-pass-extraction)
+- [Corpus Structure Reference](#corpus-structure-reference)
+- [File Format](#file-format)
+- [Troubleshooting](#troubleshooting)
+- [v0.2.0 Features](#v020-features)
+- [v0.3.0 M4 — Rule Lifecycle & Framework Adapters](#v030-m4--rule-lifecycle--framework-adapters)
+- [Rule Pack Ecosystem](#rule-pack-ecosystem)
+- [Corpus Management](#corpus-management-cauterule-corpus)
+- [Benchmarking](#benchmarking-cauterule-benchmark-cauterule-leaderboard)
+- [Observability](#observability-cauterule-observe)
+- [Configuration](#configuration-cauteruletoml)
+- [Cost / Latency Tiering](#cost--latency-tiering)
+
 ---
 
 ## Quick Start
@@ -507,14 +530,26 @@ Produces a markdown table ranking models by safety-adjusted pass rate, with:
 The pre-extraction gate prevents extraction from clean (no-failure) trajectories:
 
 ```bash
-cauterule preflight <trajectory.jsonl>
+cauterule preflight --corpus corpus/public/golden/
 ```
 
 Validates:
 
 - Corpus annotations (`expected_outcome`, `expected_outcome_rationale`)
-- Harness health (environment, dependencies)
+- Corpus sizes and schema (`CORPUS_SCHEMA_VERSION`)
+- Output-directory writability/space
+- Provider reachability (unless `--no-probe`)
 - Trajectory structure before extraction runs
+
+Check harness health after a run with the parse-rate / completion-ratio gate:
+
+```bash
+cauterule harness-health --parsed 38 --total 40 --candidates 41 --threshold 0.7
+```
+
+`--parsed` and `--total` are required; the command warns when the parse rate
+falls below `--threshold` or the candidate/trajectory completion ratio is
+unhealthy.
 
 ### Adversarial Testing
 
@@ -581,25 +616,59 @@ cauterule list --sort spec             # include/sort by specificity
 cauterule metrics --lowest-spec        # lowest-specificity rules (broad < 0.3)
 cauterule audit                        # retirement candidates (dry-run)
 cauterule audit --apply --yes          # retire them
+cauterule retire R-001 --reason "superseded by R-042"
 cauterule show R-001 --history         # supersession chain v1→v2→v3
+cauterule health                       # store health incl. supersession
 cauterule promote --show-cutoffs       # learned vs default cutoffs
 ```
 
+Outcome tracking stores `prevented` / `broke` / `neutral` counts per rule in an
+append-only log, so replay-cache hits do not double-count.  Malformed rule files
+are automatically moved to `<rules>/.quarantine/` (with an index of the failure
+reason) instead of aborting the store load.
+
 ### Framework adapters
+
+Four adapters capture failures (as trajectories) and inject matching standing
+rules using the real matcher + budget.  Every adapter passes the shared
+conformance suite in `tests/adapter_conformance/`.
+
+| Adapter | Capture | Injection |
+|---|---|---|
+| Generic (`@watch`) | per call (sync/async/gen) | `inject()` / `ainject()` |
+| LangGraph | per failed node | `inject_rules(state)` |
+| CrewAI | per task (wrapper or callbacks) | `inject_crew_rules(...)` |
+| PydanticAI | per `Agent.run()` | `inject_system_rules(...)` |
 
 ```bash
 cauterule init --dir proj --adapter langgraph   # | crewai | pydanticai | custom
 ```
 
-Each adapter captures failures (as trajectories) and injects matching
-standing rules using the real matcher + budget.  All adapters pass the shared
-conformance suite in `tests/adapter_conformance/`.
+Generic custom loop:
+
+```python
+from cauterule.adapter import watch, inject
+from cauterule.store.manager import StoreManager
+
+@watch(base_dir="trajectories", redact_keys={"api_key", "token"})
+def my_agent(prompt: str) -> str: ...
+
+with inject(task, rules=StoreManager().list_rules(status="active"), tool="git", error="...") as matched:
+    prompt = base + render(matched)
+```
+
+LangGraph, CrewAI, and PydanticAI follow the same capture/inject contract with
+framework-native entry points.  See [`docs/ADAPTERS.md`](ADAPTERS.md) for the
+full hookup examples, capture/injection semantics, redaction behavior, and the
+conformance contract.
+
 ---
 
 ## Rule Pack Ecosystem
 
 Turn the rule store into a library: install community packs, scaffold your
-own, publish releases, or share a single rule as a gist.
+own, publish releases, or share a single rule as a gist.  To author and submit
+an official pack, see [`docs/packs/CONTRIBUTING-PACKS.md`](packs/CONTRIBUTING-PACKS.md).
 
 ### Official packs
 
@@ -702,6 +771,120 @@ on_events = ["promote"]
 Promotion fires the webhook with retry + backoff (no retry on 4xx),
 secret redaction, and the SSRF guard. `cauterule webhook test` dry-runs
 delivery against a mock endpoint.
+
+---
+
+## Corpus Management (`cauterule corpus`)
+
+Manage the trajectory corpus as a first-class asset — add, validate, lint,
+consolidate, list, and export.
+
+```bash
+cauterule corpus list                                  # files + trajectory counts
+cauterule corpus add path/to/trajs.jsonl --domain coding --tags "ci,deploy"
+cauterule corpus validate corpus/public/golden/        # schema-check (Trajectory parsing)
+cauterule corpus lint corpus/public/                    # required annotation fields + provenance
+cauterule corpus build --output corpus/index.jsonl     # consolidate into one indexed store
+cauterule corpus export --format csv --output out.csv  # export (jsonl|csv), optional --domain
+```
+
+`lint` enforces the required annotation fields (`expected_outcome`,
+`expected_outcome_rationale`) and style/provenance rules; `build` produces a
+single indexed file that downstream runners can load directly.
+
+---
+
+## Benchmarking (`cauterule benchmark`, `cauterule leaderboard`)
+
+Run the extraction/replay/injection hot-path benchmarks and track regressions.
+
+```bash
+cauterule benchmark list                       # available benchmarks
+cauterule benchmark run extraction             # one hot path
+cauterule benchmark run --all                  # full suite
+cauterule benchmark run extraction --compare baseline.json   # delta vs baseline
+```
+
+Available benchmarks: `extraction`, `replay_matcher`, `injection_budget`,
+`conflict_consolidation`, `observe_coverage`.  These back the pytest-benchmark
+performance-regression CI gate.
+
+`leaderboard` surfaces which failure patterns rules actually prevent, and the
+biggest uncovered gaps:
+
+```bash
+cauterule leaderboard --top 20
+cauterule leaderboard --store-dir ./rules --top 10
+```
+
+---
+
+## Observability (`cauterule observe`)
+
+`observe` gives a single summary plus drill-downs over the learning journal and
+rule-health metrics.
+
+```bash
+cauterule observe                     # summary: learned, verdicts, gaps
+cauterule observe --since 7d --json   # period filter, machine output
+cauterule observe journal             # failure → rule → replay → promotion narrative
+cauterule observe metrics             # rules, precision, repeat-failure rate, store size
+cauterule observe frontier            # next most valuable domain/failure family to learn
+cauterule observe gaps                # uncovered failure classes
+```
+
+The learning **journal** renders each candidate's trajectory:
+failure → extracted rule → replay evidence → promotion decision.  **metrics**
+tracks hit counters, coverage scoring, and repeat-failure rate.  See
+[`docs/observability.md`](observability.md) for the metric definitions.
+
+---
+
+## Configuration (`cauterule.toml`)
+
+View or edit configuration from the CLI:
+
+```bash
+cauterule config --show
+cauterule config --set llm.model=openai/gpt-4o-mini
+```
+
+Environment variables override file values:
+
+| Variable | Purpose |
+|---|---|
+| `CAUTERULE_LLM_PROVIDER` | `openai`, `anthropic`, `ollama`, `litellm` |
+| `CAUTERULE_MODEL` | Model name (alias: `CAUTERULE_LLM_MODEL`) |
+| `CAUTERULE_LLM_API_KEY` | API key for cloud LLMs |
+| `CAUTERULE_LLM_BASE_URL` | Provider base URL (OMLX / OpenRouter) |
+| `CAUTERULE_SEMANTIC_MATCHING` | `1` enables optional embedding-based paraphrase matching |
+
+### Custom redaction patterns
+
+Add project-specific secret patterns under `[redaction]`; they are applied by
+`redact_trajectory` in addition to the built-in Slack / Stripe / private-key /
+high-entropy / generic-API-key patterns:
+
+```toml
+[redaction]
+patterns = [
+  "ACME-[A-Za-z0-9]{32}",
+  "internal://[^\\s]+",
+]
+```
+
+### Semantic matching (optional)
+
+The default matcher is lexical (substring + token overlap).  To enable local
+sentence-embedding similarity for paraphrase matching:
+
+```bash
+pip install "cauterule[matching]"
+export CAUTERULE_SEMANTIC_MATCHING=1
+```
+
+This loads a small CPU-friendly model (`all-MiniLM-L6-v2`) on first match.  When
+disabled or unavailable, matching silently falls back to the lexical score.
 
 ---
 

@@ -81,8 +81,16 @@ provenance:
 Candidate → [Linter] → [Replay Test] → [Conflict Check] → Promoted (active)
     → [Hit tracking] → [Coverage gap analysis]
     → Retired (if stale/unused) or Superseded (if replaced by better rule)
+    → Quarantined (if suspect/unsafe, pending review)
     → Consolidated (if merged with similar rules)
 ```
+
+## Reliability Hardening (v0.3.0)
+
+- **Atomic store writes** — rule and index files are written via a temp file plus atomic rename, so a crash never leaves a partially written YAML that corrupts the store.
+- **Path-traversal guards** — rule, pack, and archive paths are validated to stay inside the store root; `../` and absolute paths are rejected.
+- **Recursive per-file YAML loading** — the store walks all YAML files recursively (including nested pack and archive directories) rather than assuming a flat layout.
+- **Duplicate / conflict detection** — minimum-fraction overlap detection flags duplicates, and consolidation resolves overlaps via specificity (see `conflict-detection-design.md`).
 
 ## Validation
 

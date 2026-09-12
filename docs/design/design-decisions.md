@@ -60,7 +60,7 @@
 
 **Status:** Accepted
 **Context:** Rule injection needs to match the current task against standing rules. Semantic embedding is powerful but adds complexity.
-**Decision:** v0.1.0 uses structured matching — match against trigger conditions by keyword, tool name, error type, pattern, tags, and taxonomy. Semantic retrieval is deferred to v0.6.0.
+**Decision:** v0.1.0 uses structured matching — match against trigger conditions by keyword, tool name, error type, pattern, tags, and taxonomy. Semantic retrieval (embeddings) is optional from v0.3.0 onward (`pip install "cauterule[matching]"`, `CAUTERULE_SEMANTIC_MATCHING=1`, blended at 0.2 weight); a full semantic matcher is planned for v0.6.0.
 **Consequences:** Simpler initial implementation. May miss some matches that embedding would catch. Upgrade path is clear.
 
 ## DD-10: Trajectory Redaction Before Extraction
