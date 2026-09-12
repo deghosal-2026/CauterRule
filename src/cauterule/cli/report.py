@@ -8,7 +8,7 @@ from pathlib import Path
 
 import click
 
-from cauterule.benchmark.safety_ranking import ModelResult, rank_by_total, rank_by_safety_adjusted
+from cauterule.benchmark.safety_ranking import ModelResult, rank_by_safety_adjusted, rank_by_total
 
 
 @click.command("report")
@@ -75,14 +75,18 @@ def _build_safety_adjusted_ranking(results_dir: str) -> None:
                 successes_pass=0,
                 failures_negative_pass=0,
                 inconclusive=0,
-                extraction_rate=0.0,
             )
 
         mr = model_results[llm_label]
-        mr.total_pass += passing
-        mr.successes_pass += successes_pass
-        mr.failures_negative_pass += failures_neg_pass
-        mr.inconclusive += inconclusive
+        from dataclasses import replace
+
+        model_results[llm_label] = replace(
+            mr,
+            total_pass=mr.total_pass + passing,
+            successes_pass=mr.successes_pass + successes_pass,
+            failures_negative_pass=mr.failures_negative_pass + failures_neg_pass,
+            inconclusive=mr.inconclusive + inconclusive,
+        )
 
     if not model_results:
         print("No summary.json files found under", results_dir)

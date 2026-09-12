@@ -52,22 +52,23 @@ def collector():
 
 class TestOtelExporter:
     def test_four_span_types_arrive(self, collector: str) -> None:
-        from opentelemetry.sdk.trace import TracerProvider
-        from opentelemetry.trace import get_tracer_provider
-
         from cauterule.integrations import otel as otel_module
         from cauterule.integrations.otel import OtelExporter, configure_otlp
 
         otel_module._CONFIGURED = True
-        exporter = configure_otlp(collector, service_name="test")
+        # collector endpoint must be http(s) and include /v1/traces for OTLP/HTTP; the exporter
+        # owns an isolated provider so we flush that provider, not the global one (#494).
+        collector_traces = collector.rstrip("/") + "/v1/traces"
+        exporter = configure_otlp(collector_traces, service_name="test")
         assert isinstance(exporter, OtelExporter)
         exporter.emit_rule_match("R-1", agent="a", trigger="t", confidence=0.9)
         exporter.emit_rule_promote("R-1", justification="j")
         exporter.emit_rule_retire("R-1", reason="stale")
         exporter.emit_replay_verdict("E-1", verdict="pass", precision_score=1.0)
-        provider = get_tracer_provider()
-        if isinstance(provider, TracerProvider):
-            provider.force_flush(timeout_millis=5000)
+        # Flush the exporter's isolated provider (not the global provider).
+        if exporter._provider is not None:
+            exporter._provider.force_flush(timeout_millis=5000)
+            exporter._provider.shutdown()
         assert len(_Collector.bodies) >= 1
         otel_module._CONFIGURED = False
 

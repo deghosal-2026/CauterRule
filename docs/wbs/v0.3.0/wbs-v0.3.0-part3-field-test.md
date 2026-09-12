@@ -74,6 +74,7 @@
 - **Batch 5 — semantic/embedding matching (done):** #689 (`src/cauterule/replay/embeddings.py` local MiniLM cosine, opt-in via `CAUTERULE_SEMANTIC_MATCHING=1`; blend `0.5·token-F1 + 0.3·bigram + 0.2·semantic` with a 0.80-similarity floor; LRU embedding cache; `matching` optional extra; tests in `tests/replay/test_semantic_matching.py`; latency benchmark). Semantic path is off by default so existing scores/thresholds are unchanged.
 - **Batch 6 — adversarial vectors + corpus balance (done):** #696 (new `corpus/public/adversarial/tool_output_injection/` and `compounding_multiturn/`, 10 vectors each; invariant tests in `tests/corpus/test_adversarial_vectors.py`; wired into the harness adversarial sweep). #707 (`src/cauterule/corpus/balance.py` + `scripts/check_corpus_balance.py`, warn-by-default/`--strict`; tests in `tests/corpus/test_source_balance.py`). Checker flags the known failure-only `CauterRule` reference-expansion source (paired successes = #698 follow-up).
 - **Batch 7 — external corpus sourcing + converters (done):** #699 AgentHarm, #700 InjecAgent, #701 HarmBench, #702 OpenTelemetry Demo, #703 MCP servers, #704 Terraform, #705 WebArena, #706 BugsInPy — all with converters, real small-batch corpora, schema tests, and harness/reference wiring.
+- **Batch 8 — coverage gate (#494):** closed per request 2026-09-11 at 83.15% total (fail-under 95% not reached); +44 cli/review/report tests (14.9%→100%) +65 integrations/otel/webhook/badge tests (25-100%→99-100%); deferred remaining to post-field-test.
 
 ### M7 Exit Gate
 
