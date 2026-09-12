@@ -30,7 +30,7 @@
 | 8.12 | Update README badges — fresh coverage, field test, license, version badges | [#670](https://github.com/deghosal-2026/CauterRule/issues/670) |
 | 8.13 | Pre-release aggregate gate — verify all release gates pass before tagging | [#665](https://github.com/deghosal-2026/CauterRule/issues/665) ✓ |
 | 8.14 | Git tag, GitHub release, milestone closure — create v0.3.0 tag | [#661](https://github.com/deghosal-2026/CauterRule/issues/661) |
-| 8.15 | Article ideas and announcements — dev.to articles, blog posts, social content | [#675](https://github.com/deghosal-2026/CauterRule/issues/675) |
+| 8.15 | Article ideas and announcements — dev.to articles, blog posts, social content | [#675](https://github.com/deghosal-2026/CauterRule/issues/675) ✓ |
 | 8.16 | Post-release checklist — verify PyPI, GitHub release, milestones, announcements | [#668](https://github.com/deghosal-2026/CauterRule/issues/668) |
 | 8.17 | Merge all changes to main — final PR with all v0.3.0 changes | [#674](https://github.com/deghosal-2026/CauterRule/issues/674) |
 
