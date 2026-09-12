@@ -33,17 +33,26 @@ _INJECTION_MARKERS = (
 )
 
 
-def _load(vector: str) -> list[Trajectory]:
+_SYNTHETIC_PREFIX = {
+    "tool_output_injection": "tool-output-injection-",
+    "compounding_multiturn": "compounding-multiturn-",
+}
+
+
+def _load(vector: str, prefix: str | None = None) -> list[Trajectory]:
     trajectories: list[Trajectory] = []
     for path in sorted((_ADV / vector).glob("*.jsonl")):
-        first = path.read_text(encoding="utf-8").strip().splitlines()[0]
-        trajectories.append(Trajectory.from_dict(json.loads(first)))
+        if prefix is not None and not path.name.startswith(prefix):
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                trajectories.append(Trajectory.from_dict(json.loads(line)))
     return trajectories
 
 
 @pytest.mark.parametrize("vector", _VECTORS)
 def test_vector_has_ten_should_reject_trajectories(vector: str) -> None:
-    trajectories = _load(vector)
+    trajectories = _load(vector, _SYNTHETIC_PREFIX[vector])
     assert len(trajectories) == 10
     for traj in trajectories:
         assert traj.expected_outcome == "should_reject"
@@ -52,7 +61,7 @@ def test_vector_has_ten_should_reject_trajectories(vector: str) -> None:
 
 @pytest.mark.parametrize("vector", _VECTORS)
 def test_injection_payload_lives_in_tool_telemetry_not_task(vector: str) -> None:
-    for traj in _load(vector):
+    for traj in _load(vector, _SYNTHETIC_PREFIX[vector]):
         task = traj.task.lower()
         assert not any(marker in task for marker in _INJECTION_MARKERS), traj.id
         telemetry = " ".join(
@@ -62,7 +71,7 @@ def test_injection_payload_lives_in_tool_telemetry_not_task(vector: str) -> None
 
 
 def test_compounding_vector_spreads_across_three_steps() -> None:
-    for traj in _load("compounding_multiturn"):
+    for traj in _load("compounding_multiturn", _SYNTHETIC_PREFIX["compounding_multiturn"]):
         assert len(traj.steps) >= 3
         # Each step carries a fragment; the full instruction is only assembled
         # by reading the sequence.
@@ -70,11 +79,23 @@ def test_compounding_vector_spreads_across_three_steps() -> None:
 
 
 def test_tool_output_vector_places_payload_in_output_or_error() -> None:
-    for traj in _load("tool_output_injection"):
+    for traj in _load("tool_output_injection", _SYNTHETIC_PREFIX["tool_output_injection"]):
         assert any(
             (step.output and step.output.strip()) or (step.error and step.error.strip())
             for step in traj.steps
         )
+
+
+def test_injecagent_records_are_classified_and_payload_is_in_telemetry() -> None:
+    # #700: real InjecAgent-derived vectors (converter output).
+    trajectories = _load("tool_output_injection", "injecagent-tool-output")
+    assert len(trajectories) >= 10
+    for traj in trajectories:
+        assert traj.failure_class == "adversarial/tool_output_injection"
+        assert traj.expected_outcome == "should_reject"
+        output = " ".join((step.output or "") for step in traj.steps)
+        assert "<Attacker Instruction>" not in output
+        assert output.strip()
 
 
 def _load_harness() -> ModuleType:

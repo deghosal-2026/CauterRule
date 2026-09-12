@@ -149,6 +149,8 @@ REFERENCE_BUCKETS = [
     PUBLIC_ROOT / "adapters",
     PUBLIC_ROOT / "lifecycle",
     PUBLIC_ROOT / "mcp",
+    # #700/#707: success counterparts from external sources (InjecAgent).
+    PUBLIC_ROOT / "successes",
 ]
 
 GATE_MODE_STRICT = "strict"
