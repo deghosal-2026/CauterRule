@@ -51,5 +51,5 @@
 
 ### See also
 
-- [Part 2 — Evaluation & Measurement](wbs-v0.3.1-part2-evaluation.md)
+- [Part 2 — Evaluation & Field Test](wbs-v0.3.1-part2-field-test.md)
 - [v0.3.0 field test report §1, §4, §9](../../field-test/v0.3.0/FIELD_TEST_REPORT.md)
