@@ -26,7 +26,7 @@
 | 8.8 | Update SECURITY.md — security policy, threat model, adversarial coverage | [#640](https://github.com/deghosal-2026/CauterRule/issues/640) |
 | 8.9 | Docs sweep — README, user guide, architecture, design docs, API reference | [#637](https://github.com/deghosal-2026/CauterRule/issues/637) |
 | 8.10 | Release notes — what's new, field test results, known issues, upgrade guide | [#633](https://github.com/deghosal-2026/CauterRule/issues/633) |
-| 8.11 | CHANGELOG — create v0.3.0 entry with all M1-M8 changes | [#630](https://github.com/deghosal-2026/CauterRule/issues/630) |
+| 8.11 | CHANGELOG — create v0.3.0 entry with all M1-M8 changes | [#630](https://github.com/deghosal-2026/CauterRule/issues/630) ✓ |
 | 8.12 | Update README badges — fresh coverage, field test, license, version badges | [#670](https://github.com/deghosal-2026/CauterRule/issues/670) |
 | 8.13 | Pre-release aggregate gate — verify all release gates pass before tagging | [#665](https://github.com/deghosal-2026/CauterRule/issues/665) |
 | 8.14 | Git tag, GitHub release, milestone closure — create v0.3.0 tag | [#661](https://github.com/deghosal-2026/CauterRule/issues/661) |
