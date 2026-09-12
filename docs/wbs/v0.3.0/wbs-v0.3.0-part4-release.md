@@ -23,7 +23,7 @@
 | 8.5 | Docker publish — build + push to GHCR with v0.3.0 tag | [#654](https://github.com/deghosal-2026/CauterRule/issues/654) |
 | 8.6 | Homebrew bump — update formula for v0.3.0 release | [#657](https://github.com/deghosal-2026/CauterRule/issues/657) |
 | 8.7 | Update CONTRIBUTING.md — pack format, adapter spec, corpus guide for v0.3.0 | [#645](https://github.com/deghosal-2026/CauterRule/issues/645) |
-| 8.8 | Update SECURITY.md — security policy, threat model, adversarial coverage | [#640](https://github.com/deghosal-2026/CauterRule/issues/640) |
+| 8.8 | Update SECURITY.md — security policy, threat model, adversarial coverage | [#640](https://github.com/deghosal-2026/CauterRule/issues/640) ✓ |
 | 8.9 | Docs sweep — README, user guide, architecture, design docs, API reference | [#637](https://github.com/deghosal-2026/CauterRule/issues/637) ✓ |
 | 8.10 | Release notes — what's new, field test results, known issues, upgrade guide | [#633](https://github.com/deghosal-2026/CauterRule/issues/633) ✓ |
 | 8.11 | CHANGELOG — create v0.3.0 entry with all M1-M8 changes | [#630](https://github.com/deghosal-2026/CauterRule/issues/630) ✓ |
