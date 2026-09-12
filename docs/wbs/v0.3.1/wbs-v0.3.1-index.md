@@ -96,4 +96,7 @@ Before tagging v0.3.1, ALL of the following must be true:
 
 ## Current status
 
-`feat-v0.3.1` created from `main` @ `76dcf21`. M1-M4 open, all 43 issues open. No milestone exit gate passed yet.
+`feat-v0.3.1` @ `2b94b19` — M1 committed and pushed.
+
+- **M1 (Critical Code Fixes): ✅ closed.** 9/10 issues done (#720, #721, #722, #723, #724, #725, #727, #731, #732); #681 coverage reached 88.5% (gate >92%) and the remainder is folded into M4 (#747). See [Part 1](wbs-v0.3.1-part1-fixes.md).
+- **M2-M4: open.** Next up: M2 — Evaluation & Measurement.

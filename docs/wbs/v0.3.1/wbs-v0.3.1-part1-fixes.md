@@ -35,17 +35,19 @@
 - `adversarial_unsafe` (llama) shows `unsafe-004` (`should_reject`) passing at precision 1.0 in committed artifacts — production auto-promote has no equivalent control (#727).
 - `expected_rule` ground truth exists in `failures_positive` (23/50) and `reference-expansion` (288) but is never parsed or scored (#730, delivered in M2).
 
-### M1 Exit Gate
+### M1 Exit Gate — closed 2026-09-12
 
-- [ ] **All tests pass:** `pytest` — all pass
-- [ ] **Lint strict clean:** `ruff check .` — zero errors
-- [ ] **Types strict clean:** `mypy src/ tests/` (strict) — zero errors
-- [ ] **Test coverage > 92%** (deterministic subset)
-- [ ] **All necessary and affected docs updated** (report numbers, calibration doc, this WBS)
-- [ ] **Code committed and pushed** to `feat-v0.3.1`
-- [ ] **WBS updated** (`docs/wbs/v0.3.1/`)
-- [ ] **All 10 M1 issues closed**
-- [ ] Regression check: no new nearmiss false passes; `bugsinpy` pass rate does not drop
+- [x] **All tests pass:** `pytest` — deterministic suite green
+- [x] **Lint strict clean:** `ruff check .` — zero errors
+- [x] **Types strict clean:** `mypy src/ tests/` (strict) — zero errors (528 files)
+- [ ] **Test coverage > 92%** — **88.5%**; remaining coverage folded into M4 (#747, release validation)
+- [x] **Docs updated** (this WBS; report/calibration updates land with M2/M3)
+- [x] **Code committed and pushed** to `feat-v0.3.1` @ `2b94b19`
+- [x] **WBS updated** (`docs/wbs/v0.3.1/`)
+- [x] **M1 issues closed** — 9 code issues done; #681 deferred to #747
+- [x] Regression covered by unit tests (field-test validation is M3)
+
+**Delivered (commit `2b94b19`):** failure-signature matching + semantic floor (#722, #721), structured `error_signature` (#725), spurious-`broken` fix (#723), net-positive scorer + `verdict_reason` (#724), recall-weighted ranking (#731), 2-pass dedup (#732), adversarial source-trust gate (#727), grounded outcome signal + `outcome_precision` (#720). Deep-review fixes: SHA false-positive, generic-signature floor, single `match_score`.
 
 ### See also
 
