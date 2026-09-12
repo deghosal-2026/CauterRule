@@ -11,7 +11,7 @@ checksum: ''
 marketplace:
   categories: []
   keywords: []
-created_with: cauterule 0.2.0
+created_with: cauterule 0.3.0
 cert:
   required: true
   min_score: 0.8

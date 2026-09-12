@@ -2,12 +2,12 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
-[![PyPI](https://img.shields.io/badge/pypi-v0.2.0-blue)](https://pypi.org/project/cauterule/)
+[![PyPI](https://img.shields.io/badge/pypi-v0.3.0-blue)](https://pypi.org/project/cauterule/)
 [![Ruff](https://img.shields.io/badge/code%20style-ruff-000000)](https://github.com/astral-sh/ruff)
 [![Type checked](https://img.shields.io/badge/mypy-strict-blue)](https://github.com/python/mypy)
 [![Coverage](https://img.shields.io/badge/coverage-84%25-yellow)](https://github.com/deghosal-2026/CauterRule/actions)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14464/badge)](https://www.bestpractices.dev/projects/14464)
-[![Field Test](https://img.shields.io/badge/field%20test-v0.2.0%20%7C%20adversarial%20%2B%20safety%20rankings-brightgreen)](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md)
+[![Field Test](https://img.shields.io/badge/field%20test-v0.3.0%20%7C%20packs%20%2B%20adapters%20%2B%20lifecycle-brightgreen)](docs/field-test/v0.3.0/FIELD_TEST_REPORT.md)
 [![Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
 [![Cauterule](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/deghosal-2026/Cauterule/main/badge.json)](docs/USER_GUIDE.md)
 
@@ -22,7 +22,7 @@ After every failure, CauterRule:
 
 No more corrections dying in chat. No more hand-written standing rules. No more vague reflection paragraphs nobody re-reads. Rules are actionable, tested, and permanent.
 
-**Status:** v0.2.0 — Phase 1 (Safety Fixes M1-M4) + Phase 2 (TUI, Observability, Corpus Infra M5-M7) complete. Field test M10 pending.
+**Status:** v0.3.0 — Hardening & Ecosystem: critical fixes, adapters, rule lifecycle, pack ecosystem, corpus/benchmark infra, full field test.
 
 ---
 

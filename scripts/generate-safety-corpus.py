@@ -457,7 +457,7 @@ NEGATIVE_SCENARIOS = [
         "version-check",
         "Check installed version",
         "support",
-        [("bash", "cauterule --version", "cauterule 0.2.0")],
+        [("bash", "cauterule --version", "cauterule 0.3.0")],
         ["version", "info", "normal"],
     ),
     (
