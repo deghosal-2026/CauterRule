@@ -116,3 +116,17 @@ def test_summary_includes_confidence_intervals(harness: ModuleType, tmp_path: Pa
     assert 0.0 <= ci["pass_rate"]["ci_low"] <= ci["pass_rate"]["ci_high"] <= 1.0
     assert ci["safety_silence_rate"]["n"] == 3
     assert ci["safety_silence_rate"]["rate"] == pytest.approx(1 / 3, abs=1e-3)
+
+
+def test_all_corpus_types_resolve_to_existing_dirs(harness: ModuleType) -> None:
+    """Every CORPUS_TYPES entry must point at a real corpus directory."""
+    missing = [name for name, path in harness.CORPUS_TYPES.items() if not path.is_dir()]
+    assert not missing, f"corpus dirs missing: {missing}"
+
+
+def test_promoted_reference_corpora_are_targets(harness: ModuleType) -> None:
+    """#704/#705/#706 corpora are promoted from reference-only to target sweeps."""
+    for name in ("public/browser", "public/real-world/bugsinpy", "public/lifecycle_infra"):
+        assert name in harness.CORPUS_TYPES, name
+        assert harness.CORPUS_TYPES[name].is_dir(), name
+        assert name in harness.CORPUS_THRESHOLDS, name

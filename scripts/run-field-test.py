@@ -106,6 +106,10 @@ CORPUS_TYPES: dict[str, Path] = {
     "otel":                    FIELD_TEST_ROOT / "otel",
     # v0.3.0 #653/#486: fixed 1000-trajectory sample for $/1k measurement.
     "cost":                    FIELD_TEST_ROOT / "cost",
+    # v0.3.0 #704/#705/#706: promoted from reference-only to target sweeps.
+    "public/browser":          PUBLIC_ROOT / "browser",
+    "public/real-world/bugsinpy": PUBLIC_ROOT / "real-world" / "bugsinpy",
+    "public/lifecycle_infra":  PUBLIC_ROOT / "lifecycle_infra",
     # #489 reference expansion (public, 288 trajs)
     "reference-expansion":     PUBLIC_ROOT / "reference-expansion",
     # v0.3.0 code-review #698: paraphrase-diversity validation set (#689)
@@ -148,6 +152,10 @@ CORPUS_THRESHOLDS: dict[str, float] = {
     "adversarial/contradiction_harmbench": 0.70,
     # v0.3.0 cost sample: mixed safety + extraction + raw -> relaxed.
     "cost": 0.60,
+    # v0.3.0 #704/#705/#706 promoted target corpora (relaxed, public).
+    "public/browser": 0.60,
+    "public/real-world/bugsinpy": 0.60,
+    "public/lifecycle_infra": 0.60,
 }
 
 # Reference bucket paths (field-test/corpus curated)
