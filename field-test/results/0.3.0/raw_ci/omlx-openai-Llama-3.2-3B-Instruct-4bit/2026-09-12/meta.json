@@ -9,5 +9,11 @@
   "target_trajectories": 110,
   "reference_trajectories": 444,
   "cost_per_request_usd": 0.01,
-  "gate_mode": "relaxed"
+  "gate_mode": "relaxed",
+  "quarantined": [
+    "ci-fail-015",
+    "ci-fail-016",
+    "ci-fail-017",
+    "ci-fail-018"
+  ]
 }

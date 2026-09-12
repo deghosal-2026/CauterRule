@@ -161,3 +161,17 @@ def test_replay_test_candidate_domain_scopes_reference_pool(harness: ModuleType)
     scoped = harness.replay_test_candidate(cand, refs, "golden", source_domain="git")
     assert scoped["domain_scoped"] is True
     assert scoped["reference_pool_size"] == 5
+
+
+def test_quarantine_ids_from_env(harness: ModuleType, monkeypatch: pytest.MonkeyPatch) -> None:
+    """#713: CAUTERULE_QUARANTINE_IDS is parsed into a skip set."""
+    monkeypatch.setenv("CAUTERULE_QUARANTINE_IDS", "ci-fail-016, ci-fail-017,, ci-fail-018")
+    ids = harness.quarantined_ids()
+    assert ids == frozenset({"ci-fail-016", "ci-fail-017", "ci-fail-018"})
+    assert harness.is_quarantined("ci-fail-017", ids) is True
+    assert harness.is_quarantined("ci-fail-001", ids) is False
+
+
+def test_quarantine_empty_by_default(harness: ModuleType, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("CAUTERULE_QUARANTINE_IDS", raising=False)
+    assert harness.quarantined_ids() == frozenset()

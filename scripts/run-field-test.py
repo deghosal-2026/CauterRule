@@ -54,7 +54,7 @@ import json
 import os
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -123,6 +123,31 @@ SAFETY_CORPORA: frozenset[str] = frozenset({"successes", "failures/negative", "n
 # reference pool is scoped to the source trajectory's domain (else use the full
 # pool so a tiny domain slice can't inflate recall).
 _MIN_DOMAIN_REFS = 3
+
+# #713: hard cap on how long a single trajectory may run before the runner
+# records it as "timeout" and moves on. Guards against a local LLM hanging on a
+# pathological prompt (was blocking the whole raw/ci corpus).
+PER_TRAJECTORY_TIMEOUT_SECONDS = 120
+
+# #713: per-model trajectory quarantine. Some raw/ci trajectories cause the
+# local OMLX OpenAI-compatible endpoint to hang (infinite generation that the
+# request timeout cannot reliably unwind). Set CAUTERULE_QUARANTINE_IDS (comma
+# separated) to skip those trajectories for a sweep instead of wedging the whole
+# corpus. Example:
+#   CAUTERULE_QUARANTINE_IDS=ci-fail-015,ci-fail-016 \
+#     python scripts/run-field-test.py raw/ci --llm-model Llama-3.2-3B-Instruct-4bit ...
+_QUARANTINE_ENV = "CAUTERULE_QUARANTINE_IDS"
+
+
+def quarantined_ids() -> frozenset[str]:
+    """Return the trajectory IDs to skip for this run (env-driven)."""
+    raw = os.environ.get(_QUARANTINE_ENV, "")
+    return frozenset(part.strip() for part in raw.split(",") if part.strip())
+
+
+def is_quarantined(tid: str, quarantined: frozenset[str]) -> bool:
+    """True when *tid* is in the quarantine set."""
+    return tid in quarantined
 
 # Corpus-aware matcher thresholds
 CORPUS_THRESHOLDS: dict[str, float] = {
@@ -283,6 +308,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", default="field-test/results/0.3.0", help="Output directory")
     parser.add_argument("--max-workers", type=int, default=None, help="Parallel trajectories (default: 2 for local OMLX, otherwise 4)")
     parser.add_argument("--extraction-passes", type=int, default=2, help="Multi-pass extraction passes")
+    parser.add_argument(
+        "--per-trajectory-timeout",
+        type=float,
+        default=PER_TRAJECTORY_TIMEOUT_SECONDS,
+        help="Max seconds per trajectory before recording it as timeout (#713)",
+    )
     parser.add_argument("--temperatures", default="0.2,0.5", help="Comma-separated temperatures")
     parser.add_argument("--skip-preflight", action="store_true", help="Skip preflight checks")
     parser.add_argument("--cost-per-request", type=float, default=0.01, help="Estimated $ per LLM request")
@@ -838,6 +869,16 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
         return 0
     print(f"  Target corpus: {len(traj_tasks)} trajectories\n")
 
+    # #713: drop quarantined trajectories (e.g. raw/ci prompts that hang OMLX).
+    quarantined = quarantined_ids()
+    skipped_quarantine = [(rec, tid) for rec, tid in traj_tasks if is_quarantined(tid, quarantined)]
+    if skipped_quarantine:
+        traj_tasks = [(rec, tid) for rec, tid in traj_tasks if not is_quarantined(tid, quarantined)]
+        print(
+            f"  [quarantine] skipping {len(skipped_quarantine)} trajectory(ies): "
+            f"{', '.join(tid for _, tid in skipped_quarantine)}"
+        )
+
     results_file = out_dir / "results.jsonl"
     summary_file = out_dir / "summary.json"
     meta_file = out_dir / "meta.json"
@@ -845,6 +886,24 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
 
     results_file.write_text("")
     summary_file.write_text("{}")
+
+    # #713: record quarantined trajectories up-front so counts stay consistent.
+    quarantined_records: list[dict] = [
+        {
+            "trajectory_id": tid,
+            "status": "quarantined",
+            "candidate_count": 0,
+            "candidates": [],
+            "gate": {"is_silence": False},
+            "task_specificity": "generic",
+            "pre_extraction_drop": False,
+            "llm_calls_avoided": 0,
+        }
+        for _, tid in skipped_quarantine
+    ]
+    with open(results_file, "a") as fh:
+        for rec in quarantined_records:
+            fh.write(json.dumps(rec, default=str) + "\n")
 
     meta = {
         "corpus_type": corpus_type,
@@ -854,32 +913,55 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
         "llm_base_url": args.llm_base_url,
         "extraction_passes": args.extraction_passes,
         "temperatures": args.temperatures,
-        "target_trajectories": len(traj_tasks),
+        "target_trajectories": len(traj_tasks) + len(skipped_quarantine),
         "reference_trajectories": len(reference_trajs),
         "cost_per_request_usd": args.cost_per_request,
         "gate_mode": GATE_MODE_STRICT if corpus_type.split("/")[-1].strip().lower() in SAFETY_CORPORA else GATE_MODE_RELAXED,
+        "quarantined": [tid for _, tid in skipped_quarantine],
     }
     meta_file.write_text(json.dumps(meta, indent=2))
 
     # Process trajectories
-    results: list[dict] = []
+    results: list[dict] = list(quarantined_records)
     start_time = time.time()
 
-    with ThreadPoolExecutor(max_workers=args.max_workers) as executor:
-        futures = {}
-        for i, (rec, tid) in enumerate(traj_tasks, 1):
-            future = executor.submit(process_one_trajectory, rec, tid, i, len(traj_tasks), corpus_type, reference_trajs, args)
-            futures[future] = tid
+    executor = ThreadPoolExecutor(max_workers=args.max_workers)
+    futures: list[tuple[Any, str, int]] = []
+    for i, (rec, tid) in enumerate(traj_tasks, 1):
+        future = executor.submit(process_one_trajectory, rec, tid, i, len(traj_tasks), corpus_type, reference_trajs, args)
+        futures.append((future, tid, i))
 
-        for future in as_completed(futures):
+    # Ordered result() with a per-trajectory timeout — a hung worker is recorded
+    # as "timeout" and we move on, instead of blocking on as_completed() forever
+    # (#713). shutdown(wait=False) avoids the context-manager __exit__ waiting on
+    # a thread stuck in the LLM call.
+    try:
+        for future, tid, _i in futures:
             try:
-                result = future.result()
+                result = future.result(timeout=args.per_trajectory_timeout)
                 results.append(result)
                 with open(results_file, "a") as fh:
                     fh.write(json.dumps(result, default=str) + "\n")
                 _write_summary(results, summary_file, meta, start_time, corpus_type)
+            except TimeoutError:
+                print(f"  [timeout] {tid} — LLM hung, recording as timeout")
+                results.append({
+                    "trajectory_id": tid,
+                    "status": "timeout",
+                    "candidate_count": 0,
+                    "candidates": [],
+                    "gate": {"is_silence": False},
+                    "task_specificity": "generic",
+                    "pre_extraction_drop": False,
+                    "llm_calls_avoided": 0,
+                })
+                with open(results_file, "a") as fh:
+                    fh.write(json.dumps(results[-1], default=str) + "\n")
+                _write_summary(results, summary_file, meta, start_time, corpus_type)
             except Exception as exc:
-                print(f"  [error] worker failed: {exc}")
+                print(f"  [error] worker failed: {tid}: {exc}")
+    finally:
+        executor.shutdown(wait=False, cancel_futures=True)
 
     # Harness health
     write_harness_health(results, meta, corpus_type, harness_file)

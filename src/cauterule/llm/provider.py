@@ -52,10 +52,19 @@ _TRANSIENT_HINTS = (
 
 
 def _is_transient(exc: BaseException) -> bool:
-    """Return True if *exc* looks like a transient provider failure."""
-    if isinstance(exc, (TimeoutError, ConnectionError)):
+    """Return True if *exc* looks like a transient provider failure.
+
+    Timeouts are **not** transient — a timeout on a local OMLX model means the
+    prompt triggers an infinite/repetitive generation that will not succeed on
+    retry. Retrying just blocks the worker for 3× the timeout (#713).
+    """
+    if isinstance(exc, TimeoutError):
+        return False
+    if isinstance(exc, ConnectionError):
         return True
     text = f"{type(exc).__name__} {exc}".lower()
+    if "timeout" in text or "timed out" in text:
+        return False
     return any(hint in text for hint in _TRANSIENT_HINTS)
 
 
@@ -99,6 +108,7 @@ class OpenAIProvider(LLMProvider):
         temperature: float = 0.5,
         timeout: float = 30,
         max_retries: int = 2,
+        max_tokens: int = 4096,
     ) -> None:
         self._model = model
         self._api_key = api_key
@@ -106,6 +116,7 @@ class OpenAIProvider(LLMProvider):
         self._temperature = temperature
         self._timeout = timeout
         self._max_retries = max_retries
+        self._max_tokens = max_tokens
 
     @property
     def name(self) -> str:
@@ -115,12 +126,14 @@ class OpenAIProvider(LLMProvider):
         _require_optional("openai", "llm")
         import openai
 
-        client_kwargs: dict[str, Any] = {"timeout": kwargs.get("timeout", self._timeout)}
+        timeout = kwargs.get("timeout", self._timeout)
+        client_kwargs: dict[str, Any] = {"timeout": timeout}
         if self._api_key:
             client_kwargs["api_key"] = self._api_key
         if self._base_url:
             client_kwargs["base_url"] = self._base_url
         temperature = kwargs.get("temperature", self._temperature)
+        max_tokens = kwargs.get("max_tokens", self._max_tokens)
         client = openai.OpenAI(**client_kwargs)
 
         def _call() -> str:
@@ -128,6 +141,8 @@ class OpenAIProvider(LLMProvider):
                 model=self._model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
+                max_tokens=max_tokens,
+                timeout=timeout,
             )
             return resp.choices[0].message.content or ""
 
