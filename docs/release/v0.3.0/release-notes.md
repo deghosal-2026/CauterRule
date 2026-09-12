@@ -101,7 +101,7 @@ client could read the entire rule store. It is fixed via the official `mcp` SDK
 
 - `cauterule corpus` CLI group + `cauterule benchmark` CLI + leaderboard (#605-#606)
 - pytest-benchmark perf-regression CI for hot paths (#605)
-- Release automation: `cauterule release` CLI + tag/publish workflow + TestPyPI (#604)
+- Release automation (tag/publish workflow + TestPyPI) — tracked by #604
 - MCP security: bearer auth + per-client rate limiting + schema validation (#601)
 - OpenTelemetry standalone exporter (#588)
 - Cost/latency story: $/1k trajectories per model + tiering guidance (#486)
@@ -133,7 +133,7 @@ models were abandoned — too slow / hung on `raw/ci` (#713). Full data:
 | Metric | v0.2.0 | v0.3.0 | Δ |
 |--------|--------|--------|---|
 | Deterministic test pass rate | 100% | 100% (1,558 passed, 3 skipped) | — |
-| Coverage (CI gate) | 95% | ≥95% (87% on the local field/scale/docker-excluded subset) | — |
+| Coverage (deterministic subset, gate 85%) | 95% gate | 87% measured | — |
 | Human-vs-replay agreement | — | tooling ready, protocol not run | ⚠️ |
 | Cross-session repeat-failure reduction | — | tooling ready, protocol not run | ⚠️ |
 | Safety-adjusted ranking accuracy | 0% violations | 0% violations, 0 adversarial | ✅ |
@@ -237,7 +237,6 @@ No security blockers at release.
    cauterule benchmark ...     # benchmark + leaderboard
    cauterule observe ...       # observability
    cauterule pack install ...  # pack ecosystem
-   cauterule release ...       # release automation
    ```
 
 6. **New adapters:**

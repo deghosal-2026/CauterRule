@@ -650,10 +650,14 @@ Generic custom loop:
 from cauterule.adapter import watch, inject
 from cauterule.store.manager import StoreManager
 
+
 @watch(base_dir="trajectories", redact_keys={"api_key", "token"})
 def my_agent(prompt: str) -> str: ...
 
-with inject(task, rules=StoreManager().list_rules(status="active"), tool="git", error="...") as matched:
+
+with inject(
+    task, rules=StoreManager().list_rules(status="active"), tool="git", error="..."
+) as matched:
     prompt = base + render(matched)
 ```
 

@@ -114,9 +114,10 @@ Wrap any Python agent with the generic adapter, or use a framework adapter:
 from cauterule.adapter import watch, inject
 from cauterule.store.manager import StoreManager
 
+
 @watch(base_dir="trajectories", redact_keys={"api_key", "token"})
-def my_agent(prompt: str) -> str:
-    ...
+def my_agent(prompt: str) -> str: ...
+
 
 with inject(task, rules=StoreManager().list_rules(status="active"), tool="git") as matched:
     prompt = base_prompt + render(matched)
@@ -124,9 +125,9 @@ with inject(task, rules=StoreManager().list_rules(status="active"), tool="git") 
 # LangGraph
 from cauterule.adapter.langgraph import inject_rules, langgraph_node
 
+
 @langgraph_node(task="sync billing records", base_dir="trajectories")
-def my_node(state: dict) -> dict:
-    ...
+def my_node(state: dict) -> dict: ...
 ```
 
 See [Adapters & Rule Lifecycle](docs/ADAPTERS.md) for CrewAI and PydanticAI.
@@ -166,7 +167,7 @@ See [Adapters & Rule Lifecycle](docs/ADAPTERS.md) for CrewAI and PydanticAI.
 - Diagnostics: `health` | `validate` | `preflight` | `harness-health` | `gaps` | `frontier`
 - Analysis: `counterfactual` | `story` | `explain` | `metrics` | `report` | `taxonomy`
 - Ecosystem: `pack` (`list`/`info`/`install`/`create`/`publish`) | `share` | `observe`
-- Infra: `corpus` | `benchmark` | `leaderboard` | `otel` | `release`
+- Infra: `corpus` | `benchmark` | `leaderboard` | `otel`
 - Integrations: `export` (`--format agents`) | `import` | `config` | `mcp` | `webhook` | `badge` | `rewind`
 
 ### Pack Ecosystem (New in v0.3.0)
@@ -212,7 +213,6 @@ See [Adapters & Rule Lifecycle](docs/ADAPTERS.md) for CrewAI and PydanticAI.
 - `cauterule benchmark` + `cauterule leaderboard` — determinism, acceptance, rejection, bake-off, mutation, calibration, ablation suites
 - 40 corpora / 2,384 trajectories per model; 444 domain-scoped reference trajectories
 - pytest-benchmark perf-regression CI for hot paths
-- `cauterule release` — tag/publish workflow + TestPyPI automation
 - OpenTelemetry standalone exporter (`cauterule otel`); cost/latency tiering guidance
 
 ### Observability

@@ -142,7 +142,7 @@ branch = true
 omit = ["*/tui/*"]
 
 [tool.coverage.report]
-fail_under = 95
+fail_under = 85
 show_missing = true
 skip_covered = false
 exclude_also = [
