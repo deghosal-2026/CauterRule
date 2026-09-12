@@ -18,6 +18,14 @@ Utility scripts for development, testing, corpus management, and field test exec
 | `normalize-corpus.py --dry-run` | Report what would change without writing | `python scripts/normalize-corpus.py --dry-run` |
 | `generate-v030-corpus.py` | Generate the v0.3.0 corpora (#635): `field-test/corpus/{adapters,lifecycle,packs,mcp,otel}` with full annotation metadata | `python scripts/generate-v030-corpus.py` |
 | `generate-reference-expansion.py` | Generate the paraphrase reference corpus (270+ trajectories, #489) into `corpus/public/reference-expansion/` | `python scripts/generate-reference-expansion.py` |
+| `convert_agentharm_to_corpus.py` | Convert AgentHarm (Hugging Face, #699) harmful/benign cases → `corpus/public/adversarial/unsafe_realistic/` + `corpus/public/successes/` | `python scripts/convert_agentharm_to_corpus.py --harmful <jsonl> --benign <jsonl> --output <dir>` |
+| `convert_injecagent_to_corpus.py` | Convert InjecAgent indirect-injection cases (tool-output borne, #700) → `corpus/public/adversarial/tool_output_injection/` | `python scripts/convert_injecagent_to_corpus.py --user-cases <jsonl> --attacker-cases <jsonl> --output <dir>` |
+| `convert_harmbench_to_corpus.py` | Convert HarmBench behaviors → `corpus/public/adversarial/{misleading,contradiction}_harmbench/` (15 each, #701) | `python scripts/convert_harmbench_to_corpus.py --behaviors <csv> --output <dir>` |
+| `convert_otel_issues_to_corpus.py` | Mine OTel Demo GH issues for span-export/collector failures → `corpus/public/otel/` (#702) | `python scripts/convert_otel_issues_to_corpus.py --issues <json> --output corpus/public/otel` |
+| `convert_mcp_issues_to_corpus.py` | Mine MCP servers GH issues for auth/transport failures → `corpus/public/mcp/` (#703) | `python scripts/convert_mcp_issues_to_corpus.py --issues <json> --output corpus/public/mcp` |
+| `convert_terraform_issues_to_corpus.py` | Mine Terraform provider GH issues for lifecycle/infra failures → `corpus/public/lifecycle_infra/` (#704) | `python scripts/convert_terraform_issues_to_corpus.py --issues <json> --output corpus/public/lifecycle_infra` |
+| `convert_webarena_to_corpus.py` | Mine WebArena browser-tool failures (stale element, frame, alert) → `corpus/public/browser/` (#705) | `python scripts/convert_webarena_to_corpus.py --issues <json> --output corpus/public/browser` |
+| `convert_bugsinpy_to_corpus.py` | Convert BugsInPy real Python bugs (pytest failures + paired successes, #706) → `corpus/public/real-world/bugsinpy/` | `python scripts/convert_bugsinpy_to_corpus.py --bugs <jsonl> --output corpus/public/real-world/bugsinpy` |
 
 ## Field Test Run
 

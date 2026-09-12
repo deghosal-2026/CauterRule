@@ -63,7 +63,7 @@ Optional extras (`llm`, `otel`, `matching`) are **not** installed in the base im
 | Preflight | `preflight --cost-table` + `--max-cost` enforcement | subprocess | ✅ NEW (M6 #486) |
 | Badge / Webhook | `badge` SVG + shields URL; promote fires webhook to listener | subprocess + local HTTP listener | ✅ NEW (M5 #581/#585) |
 | Corpus & benchmarks | `corpus validate/lint/build/export` + `benchmark list`/`benchmark run` | subprocess + pytest-benchmark | ✅ NEW (M6 #606/#605) |
-| Adversarial | 5 base vectors + 2 new #696 vectors (tool-output-borne injection, multi-turn/compounding) produce 0 promoted rules | `pytest tests/adversarial/`; corpus invariants in `tests/corpus/test_adversarial_vectors.py`; corpus sweep via `run-field-test.py` adversarial path | ✅ new vectors (#696) |
+| Adversarial | 10 vectors (5 base + #696 tool-output/multi-turn + #699 AgentHarm + #701 HarmBench) — 130 trajectories — produce 0 promoted rules | `pytest tests/adversarial/`; corpus invariants in `tests/corpus/test_adversarial_vectors.py`; sweep via `run-field-test.py` | ✅ #696/#699/#701 |
 | Scale | latency/memory/indexing targets | `pytest tests/scale/` (slow) | — |
 | Demo | full loop <60s via compose profile | `docker compose --profile demo up` | ✅ changed |
 | Image size | measure + diff vs baseline | `docker images` | ✅ NEW |

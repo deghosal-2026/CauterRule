@@ -58,7 +58,7 @@ The v0.3.0 field test inherits the v0.2.0 corpus (720 trajectories) and adds new
 | **Cost corpus (NEW)** | `field-test/corpus/cost/` | 0 | **1000** | Fixed 1k-trajectory sample for $/1k measurement (#486/#653) |
 | Reference corpus (expanded) | `corpus/public/` | 230 phrasings | **500+** (#489) | Diverse phrasings for matcher robustness |
 
-**Target total:** ~1,770+ trajectories (up from 720). The 1000-trajectory cost corpus is a fixed sample reused across all models for the $/1k measurement.
+**Target total:** ~1,850+ trajectories (up from 720; +80 adversarial #696/#699/#701). The 1000-trajectory cost corpus is a fixed sample reused across all models for the $/1k measurement.
 
 ### 3.2 Corpus Metadata (v0.2.0 fields + v0.3.0 additions)
 
@@ -485,7 +485,7 @@ New validation suites added to `VALIDATION_SUITES` (§4.1): `adapter_conformance
 
 ### 14.1 Corpus Inventory
 
-Total: **~1,770+ trajectories** across 27 sources (v0.2.0's 20 + 7 new).
+Total: **~1,850+ trajectories** across 27 sources (v0.2.0's 20 + 7 new, plus 80 #699/#700/#701 adversarial).
 
 | Source | Count | Expected Outcome | Gate Mode | Sweep Role |
 |--------|-------|-----------------|-----------|------------|
@@ -508,7 +508,7 @@ Total: **~1,770+ trajectories** across 27 sources (v0.2.0's 20 + 7 new).
 | public/staleness | 10 | `should_reject` | relaxed | Staleness detection |
 | public/synthetic | 50 | mixed | relaxed | Shareable benchmark |
 | public/domains | 50 | mixed | relaxed | Per-domain coverage |
-| public/adversarial | 70 | `should_reject` | strict | Security testing — 5 base vectors + 2 #696 vectors (tool-output injection, multi-turn/compounding) |
+| public/adversarial | 130 | `should_reject` | strict | Security testing — 5 base vectors + #696 (tool-output, multi-turn) + #699 AgentHarm (unsafe) + #701 HarmBench (misleading/contradiction) (130 trajectories) |
 | **adapters/langgraph (NEW)** | **20** | `should_extract` | relaxed | Adapter capture |
 | **adapters/crewai (NEW)** | **20** | `should_extract` | relaxed | Adapter capture |
 | **adapters/pydanticai (NEW)** | **20** | `should_extract` | relaxed | Adapter capture |
@@ -517,7 +517,7 @@ Total: **~1,770+ trajectories** across 27 sources (v0.2.0's 20 + 7 new).
 | **mcp (NEW)** | **20** | mixed (valid/malformed/abusive) | strict | MCP security field |
 | **cost (NEW)** | **1000** | mixed | relaxed | $/1k measurement |
 
-Reference corpus expansion: 230 → 500+ diverse phrasings (#489) folded into `public/synthetic` + `public/domains`. **#698** adds the `agent`/`lifecycle`/`mcp` reference sets (`corpus/public/{adapters,lifecycle,mcp}/reference.jsonl`, +27 trajectories, runner reference set 220 → 247) and `reference-expansion/paraphrase-diversity/`; these close the #690 uncovered-domain gaps.
+Reference corpus expansion: 230 → 500+ diverse phrasings (#489) folded into `public/synthetic` + `public/domains`. **#698–#706** add `agent`/`lifecycle`/`mcp`/`otel`/`browser`/`python/test` reference sets (`corpus/public/{adapters,lifecycle,mcp,otel,browser,real-world/bugsinpy,lifecycle_infra}/`, `+~118` trajectories, runner reference set 220 → 327) and `reference-expansion/paraphrase-diversity/`; these close the #690 uncovered-domain gaps.
 
 ### 14.2 Sweep Corpus Allocation
 
