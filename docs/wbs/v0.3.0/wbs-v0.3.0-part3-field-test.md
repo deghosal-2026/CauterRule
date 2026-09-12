@@ -58,7 +58,7 @@
 | 7.27 | Corpus expansion: real production agent-trajectory sources + synthetic gaps | [#698](https://github.com/deghosal-2026/CauterRule/issues/698) | ✓ internal (agent/lifecycle/mcp refs + paraphrase); external #699-#706 pending |
 | 7.28 | Corpus source: AgentHarm (Hugging Face) for adversarial/unsafe realism | [#699](https://github.com/deghosal-2026/CauterRule/issues/699) | ✓ done |
 | 7.29 | Corpus source: InjecAgent (GitHub) for tool-output-borne injection | [#700](https://github.com/deghosal-2026/CauterRule/issues/700) | ✓ done |
-| 7.30 | Corpus source: HarmBench (GitHub) for adversarial/misleading + contradiction | [#701](https://github.com/deghosal-2026/CauterRule/issues/701) |
+| 7.30 | Corpus source: HarmBench (GitHub) for adversarial/misleading + contradiction | [#701](https://github.com/deghosal-2026/CauterRule/issues/701) | ✓ done |
 | 7.31 | Corpus source: OpenTelemetry Demo (GitHub) for otel reference-corpus gap | [#702](https://github.com/deghosal-2026/CauterRule/issues/702) |
 | 7.32 | Corpus source: modelcontextprotocol/servers (GitHub) for mcp reference-corpus gap | [#703](https://github.com/deghosal-2026/CauterRule/issues/703) |
 | 7.33 | Corpus source: Terraform provider issue trackers for lifecycle/infra failures | [#704](https://github.com/deghosal-2026/CauterRule/issues/704) |

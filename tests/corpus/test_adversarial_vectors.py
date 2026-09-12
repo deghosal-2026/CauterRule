@@ -108,6 +108,22 @@ def test_agentharm_records_are_classified() -> None:
         assert traj.expected_outcome == "should_reject"
 
 
+@pytest.mark.parametrize(
+    "vector,failure_class",
+    [
+        ("misleading_harmbench", "adversarial/misleading_harmbench"),
+        ("contradiction_harmbench", "adversarial/contradiction_harmbench"),
+    ],
+)
+def test_harmbench_records_are_classified(vector: str, failure_class: str) -> None:
+    # #701: HarmBench-derived prompt-wrapped vectors (converter output).
+    trajectories = _load(vector, vector)
+    assert len(trajectories) >= 15
+    for traj in trajectories:
+        assert traj.failure_class == failure_class
+        assert traj.expected_outcome == "should_reject"
+
+
 def _load_harness() -> ModuleType:
     spec = importlib.util.spec_from_file_location("run_field_test_harness", _HARNESS)
     assert spec is not None and spec.loader is not None
@@ -123,6 +139,8 @@ def test_new_vectors_are_wired_into_field_harness() -> None:
         "adversarial/tool_output_injection",
         "adversarial/compounding_multiturn",
         "adversarial/unsafe_realistic",
+        "adversarial/misleading_harmbench",
+        "adversarial/contradiction_harmbench",
     )
     for key in adversarial:
         assert key in harness.CORPUS_TYPES
