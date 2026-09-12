@@ -1,0 +1,212 @@
+{
+  "name": "cauterule",
+  "networks": {
+    "default": {
+      "name": "cauterule_default",
+      "ipam": {}
+    }
+  },
+  "services": {
+    "cauterule-demo": {
+      "profiles": [
+        "demo"
+      ],
+      "build": {
+        "context": "/Users/deghosal/desktop/code/github/CauterRule",
+        "dockerfile": "Dockerfile"
+      },
+      "command": [
+        "demo"
+      ],
+      "container_name": "cauterule-demo",
+      "entrypoint": null,
+      "environment": {
+        "CAUTERULE_LLM_PROVIDER": null,
+        "CAUTERULE_MODEL": null,
+        "OPENAI_API_KEY": null
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "cauterule --help \u003e /dev/null 2\u003e\u00261 || exit 1"
+        ],
+        "interval": "30s",
+        "retries": 3
+      },
+      "networks": {
+        "default": null
+      },
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "/Users/deghosal/desktop/code/github/CauterRule/rules",
+          "target": "/app/rules",
+          "bind": {}
+        },
+        {
+          "type": "bind",
+          "source": "/Users/deghosal/desktop/code/github/CauterRule/corpus",
+          "target": "/app/corpus",
+          "bind": {}
+        }
+      ]
+    },
+    "cauterule-mcp": {
+      "profiles": [
+        "mcp"
+      ],
+      "build": {
+        "context": "/Users/deghosal/desktop/code/github/CauterRule",
+        "dockerfile": "Dockerfile"
+      },
+      "command": [
+        "mcp",
+        "--transport",
+        "stdio"
+      ],
+      "container_name": "cauterule-mcp",
+      "depends_on": {
+        "cauterule-demo": {
+          "condition": "service_started",
+          "required": true
+        }
+      },
+      "entrypoint": null,
+      "environment": {
+        "CAUTERULE_LLM_PROVIDER": null,
+        "CAUTERULE_MCP_TOKEN": null,
+        "CAUTERULE_MODEL": null,
+        "OPENAI_API_KEY": null
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "cauterule --help \u003e /dev/null 2\u003e\u00261 || exit 1"
+        ],
+        "interval": "30s",
+        "retries": 3
+      },
+      "networks": {
+        "default": null
+      },
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "/Users/deghosal/desktop/code/github/CauterRule/rules",
+          "target": "/app/rules",
+          "bind": {}
+        }
+      ]
+    },
+    "cauterule-mcp-http": {
+      "profiles": [
+        "mcp-http"
+      ],
+      "build": {
+        "context": "/Users/deghosal/desktop/code/github/CauterRule",
+        "dockerfile": "Dockerfile"
+      },
+      "command": [
+        "mcp",
+        "--transport",
+        "http",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8025",
+        "--auth-mode",
+        "bearer"
+      ],
+      "container_name": "cauterule-mcp-http",
+      "entrypoint": null,
+      "environment": {
+        "CAUTERULE_LLM_PROVIDER": null,
+        "CAUTERULE_MCP_TOKEN": null,
+        "CAUTERULE_MODEL": null,
+        "OPENAI_API_KEY": null
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "cauterule --help \u003e /dev/null 2\u003e\u00261 || exit 1"
+        ],
+        "interval": "30s",
+        "retries": 3
+      },
+      "networks": {
+        "default": null
+      },
+      "ports": [
+        {
+          "mode": "ingress",
+          "target": 8025,
+          "published": "8025",
+          "protocol": "tcp"
+        }
+      ],
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "/Users/deghosal/desktop/code/github/CauterRule/rules",
+          "target": "/app/rules",
+          "bind": {}
+        }
+      ]
+    },
+    "cauterule-test": {
+      "profiles": [
+        "test"
+      ],
+      "build": {
+        "context": "/Users/deghosal/desktop/code/github/CauterRule",
+        "dockerfile": "Dockerfile"
+      },
+      "command": [
+        "pip install --user -q pytest pytest-benchmark \u0026\u0026 python -m pytest tests/ -m 'not slow and not docker' --tb=short -q -p no:cacheprovider"
+      ],
+      "container_name": "cauterule-test",
+      "depends_on": {
+        "cauterule-demo": {
+          "condition": "service_started",
+          "required": true
+        }
+      },
+      "entrypoint": [
+        "sh",
+        "-c"
+      ],
+      "environment": {
+        "CAUTERULE_LLM_PROVIDER": null,
+        "CAUTERULE_MODEL": null,
+        "OPENAI_API_KEY": null
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "cauterule --help \u003e /dev/null 2\u003e\u00261 || exit 1"
+        ],
+        "interval": "30s",
+        "retries": 3
+      },
+      "networks": {
+        "default": null
+      },
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "/Users/deghosal/desktop/code/github/CauterRule/tests",
+          "target": "/app/tests",
+          "read_only": true,
+          "bind": {}
+        },
+        {
+          "type": "bind",
+          "source": "/Users/deghosal/desktop/code/github/CauterRule/src",
+          "target": "/app/src",
+          "read_only": true,
+          "bind": {}
+        }
+      ]
+    }
+  }
+}

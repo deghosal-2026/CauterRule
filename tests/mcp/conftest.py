@@ -1,10 +1,8 @@
-"""Field-test conftest — records docker test outcomes to field-test/results/0.3.0/docker/.
+"""MCP docker conftest — records docker test outcomes to same dir as field/.
 
-Every test marked ``@pytest.mark.docker`` that runs under this conftest gets a
-JSON record appended to ``field-test/results/0.3.0/docker/docker-results.jsonl`` with
-its node id, outcome, and duration. A markdown summary is written at the end of
-the session. This satisfies the v0.3.0 requirement that all docker test results
-land under ``field-test/results/0.3.0/docker/`` (#642/#676/#629).
+The field conftest lives under tests/field/ and only sees tests under that dir.
+This sibling ensures the 4 tests in tests/mcp/test_docker_http_transport.py are
+also captured in field-test/results/0.3.0/docker/ (#642 recommendation).
 """
 
 from __future__ import annotations
@@ -26,12 +24,11 @@ def _is_docker_test(item: pytest.Item) -> bool:
 
 
 @pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item: pytest.Item, call) -> object:
+def pytest_runtest_makereport(item: pytest.Item, call) -> object:  # type: ignore[no-untyped-def]
     outcome = yield
     rep: pytest.TestReport = outcome.get_result()
     if not _is_docker_test(item):
         return
-    # Authoritative outcome: the 'call' phase for pass/fail, or a setup-phase skip.
     if rep.when == "call" or (rep.when == "setup" and rep.outcome == "skipped"):
         _records.append(
             {
@@ -43,11 +40,12 @@ def pytest_runtest_makereport(item: pytest.Item, call) -> object:
         )
 
 
-def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
+def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:  # type: ignore[no-untyped-def]
     if not _records:
         return
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    # Merge with any records already written by tests/mcp/conftest in same session.
+    # Merge with any records from tests/field/ run in same session:
+    # if field conftest already wrote, append rather than overwrite.
     existing: list[dict[str, object]] = []
     if RESULTS_JSONL.exists():
         try:
@@ -55,6 +53,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
         except Exception:
             existing = []
     merged = existing + _records
+    # Deduplicate by nodeid
     seen: set[str] = set()
     deduped: list[dict[str, object]] = []
     for rec in merged:
@@ -78,15 +77,11 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
         "|------|---------|--------------|",
     ]
     for rec in sorted(deduped, key=lambda r: str(r["nodeid"])):
-        lines.append(
-            f"| `{rec['nodeid']}` | {rec['outcome']} | {rec['duration_s']} |"
-        )
+        lines.append(f"| `{rec['nodeid']}` | {rec['outcome']} | {rec['duration_s']} |")
     RESULTS_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def pytest_terminal_summary(terminalreporter, config) -> None:
+def pytest_terminal_summary(terminalreporter, config) -> None:  # type: ignore[no-untyped-def]
     if not _records:
         return
-    terminalreporter.write_line(
-        f"docker results -> {RESULTS_JSONL} ({RESULTS_MD})"
-    )
+    terminalreporter.write_line(f"docker results -> {RESULTS_JSONL} ({RESULTS_MD})")

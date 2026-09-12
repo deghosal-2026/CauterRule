@@ -1,0 +1,74 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.5, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.3.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /Users/deghosal/Desktop/code/github/CauterRule
+configfile: pyproject.toml
+plugins: cov-7.1.0, benchmark-5.3.0, anyio-4.15.1
+collected 215 items / 56 deselected / 159 selected
+
+tests/field/test_docker_build.py .....                                   [  3%]
+tests/field/test_docker_cli.py .......................                   [ 17%]
+tests/field/test_docker_compose.py .FF..                                 [ 20%]
+tests/field/test_docker_export_import.py .............                   [ 28%]
+tests/field/test_docker_git.py ..........                                [ 35%]
+tests/field/test_docker_loop.py ......                                   [ 38%]
+tests/field/test_docker_mcp.py ..........                                [ 45%]
+tests/field/test_docker_multienv.py ......                               [ 49%]
+tests/field/test_docker_pipeline.py ..........                           [ 55%]
+tests/field/test_docker_redaction.py ......                              [ 59%]
+tests/field/test_docker_tui.py ..........                                [ 65%]
+tests/field/test_docker_v020_cli.py ...............                      [ 74%]
+tests/field/test_docker_v020_metrics.py ........                         [ 79%]
+tests/field/test_docker_v030.py ............................             [ 97%]
+tests/mcp/test_docker_http_transport.py ....                             [100%]
+
+=================================== FAILURES ===================================
+___________________________ test_compose_mcp_accepts ___________________________
+
+    @pytest.mark.docker
+    @pytest.mark.slow
+    def test_compose_mcp_accepts() -> None:
+        _compose("up", "-d", "cauterule-mcp")
+>       assert _wait_for_service("cauterule-mcp", running=True), "cauterule-mcp did not start"
+E       AssertionError: cauterule-mcp did not start
+E       assert False
+E        +  where False = _wait_for_service('cauterule-mcp', running=True)
+
+tests/field/test_docker_compose.py:75: AssertionError
+___________________________ test_compose_test_passes ___________________________
+
+    @pytest.mark.docker
+    @pytest.mark.slow
+    def test_compose_test_passes() -> None:
+        result = _compose("up", "cauterule-test", "--abort-on-container-exit")
+>       assert result.returncode == 0, result.stderr
+E       AssertionError:  Image cauterule-field-test-cauterule-test Building 
+E          Image cauterule-field-test-cauterule-test Built 
+E          Container cauterule-test Creating 
+E          Container cauterule-test Created 
+E          Container cauterule-demo Starting 
+E          Container cauterule-demo Started 
+E          Container cauterule-test Starting 
+E          Container cauterule-test Started 
+E         cauterule-test  |   WARNING: The script cpuinfo is installed in '/home/cauterule/.local/bin' which is not on PATH.
+E         cauterule-test  |   Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+E         cauterule-test  |   WARNING: The scripts py.test and pytest are installed in '/home/cauterule/.local/bin' which is not on PATH.
+E         cauterule-test  |   Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+E         cauterule-test  |   WARNING: The scripts py.test-benchmark and pytest-benchmark are installed in '/home/cauterule/.local/bin' which is not on PATH.
+E         cauterule-test  |   Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+E          Compose Stopping Aborting on container exit...
+E          Container cauterule-test Stopping 
+E          Container cauterule-test Stopped 
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['docker', 'compose', '-f', 'docker-compose.yaml', '-p', 'cauterule-field-test', '--profile', 'd...e Stopping Aborting on container exit...\n Container cauterule-test Stopping \n Container cauterule-test Stopped \n\n").returncode
+
+tests/field/test_docker_compose.py:126: AssertionError
+- generated xml file: /Users/deghosal/Desktop/code/github/CauterRule/field-test/results/0.3.0/docker/docker-junit.xml -
+docker results -> field-test/results/0.3.0/docker/docker-results.jsonl (field-test/results/0.3.0/docker/docker-test-report.md)
+docker results -> field-test/results/0.3.0/docker/docker-results.jsonl (field-test/results/0.3.0/docker/docker-test-report.md)
+=========================== short test summary info ============================
+FAILED tests/field/test_docker_compose.py::test_compose_mcp_accepts - Asserti...
+FAILED tests/field/test_docker_compose.py::test_compose_test_passes - Asserti...
+=========== 2 failed, 157 passed, 56 deselected in 363.01s (0:06:03) ===========

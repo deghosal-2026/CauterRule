@@ -1,0 +1,80 @@
+[
+    {
+        "Id": "sha256:561a8852043820b8a6c65be73ce94bdb94f064b4e4dcca2c62583ac75b8abdc1",
+        "RepoTags": [
+            "cauterule:field-test"
+        ],
+        "RepoDigests": [
+            "cauterule@sha256:561a8852043820b8a6c65be73ce94bdb94f064b4e4dcca2c62583ac75b8abdc1"
+        ],
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-09-12T01:37:22.423243709Z",
+        "Config": {
+            "User": "cauterule",
+            "Env": [
+                "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "LANG=C.UTF-8",
+                "GPG_KEY=7169605F62C751356D054A26A821E680E5FA6305",
+                "PYTHON_VERSION=3.12.14",
+                "PYTHON_SHA256=5c8462af5790baf43a321a1559dbe0db06d1be4300fb85fb53c40060668e548a",
+                "PYTHONUNBUFFERED=1"
+            ],
+            "Entrypoint": [
+                "cauterule"
+            ],
+            "Cmd": [
+                "--help"
+            ],
+            "WorkingDir": "/app",
+            "Labels": {
+                "org.opencontainers.image.description": "Self-improving rule engine for AI agents",
+                "org.opencontainers.image.licenses": "MIT",
+                "org.opencontainers.image.source": "https://github.com/deghosal-2026/CauterRule",
+                "org.opencontainers.image.title": "CauterRule"
+            },
+            "ArgsEscaped": true,
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "cauterule --help > /dev/null 2>&1 || exit 1"
+                ],
+                "Interval": 30000000000,
+                "Timeout": 5000000000,
+                "Retries": 3
+            }
+        },
+        "Architecture": "arm64",
+        "Os": "linux",
+        "Size": 125252734,
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:41d6505109809884e681a97f978542a2d4d3506af0124f18b3f3a471edfcc9b7",
+                "sha256:c26df6d1045bcd70c62e835f44e2ce60fef71630493a92f17faa184941c0af7f",
+                "sha256:1fb14899b8ee7fc3e7a87a848cb065309798a1d922935345520f4d51701287e0",
+                "sha256:de965252ed39aa516a700a7d73a3441f6aceb27dca16b329e958c447d191347b",
+                "sha256:7629daf2691773548c9b821bfe5f11bae2da3671766f8889828857314b606ec9",
+                "sha256:3eeee5767391d52bd36bb1d9a27a91932acc0ae54a3fa3f6a3c9faab4ff40687",
+                "sha256:ffb1f267dcd82a8ddef8219fbe41ac15b999535d4d7cdae3606129c4e5e853ee",
+                "sha256:5162afd2436d8d0b449b413c09d92b478d104cc17336421d642ade61c5253cf5",
+                "sha256:9b1d8cecdc62fe567bc9b0af81199db726553c5d50f98f3c1d901e0655cda8ba"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2026-09-12T01:38:11.311999301Z"
+        },
+        "Descriptor": {
+            "mediaType": "application/vnd.oci.image.index.v1+json",
+            "digest": "sha256:561a8852043820b8a6c65be73ce94bdb94f064b4e4dcca2c62583ac75b8abdc1",
+            "size": 856
+        },
+        "Identity": {
+            "Build": [
+                {
+                    "Ref": "vjgoefkvrxsq7h5unhoq3lw50",
+                    "CreatedAt": "2026-09-12T01:38:11.315432843Z"
+                }
+            ]
+        }
+    }
+]

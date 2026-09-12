@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.5, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.3.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /Users/deghosal/Desktop/code/github/CauterRule
+configfile: pyproject.toml
+plugins: cov-7.1.0, benchmark-5.3.0, anyio-4.15.1
+collected 215 items / 56 deselected / 159 selected
+
+tests/field/test_docker_build.py .....                                   [  3%]
+tests/field/test_docker_cli.py .......................                   [ 17%]
+tests/field/test_docker_compose.py .
