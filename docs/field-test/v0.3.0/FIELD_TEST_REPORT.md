@@ -10,9 +10,51 @@
 
 ---
 
+> ## ⚠️ Data verification (re-derived from `field-test/results/0.3.0/`, cloud models only)
+>
+> Several headline numbers below were re-checked against the committed per-corpus
+> artifacts (`field-test/results/0.3.0/*/*/summary.json` and `results.jsonl`,
+> `openai/gpt-4o-mini` + `openai/meta-llama/llama-3.1-8b-instruct`). Where a
+> headline does not reproduce from those artifacts, this is noted inline and the
+> fix is tracked as an issue. Key corrections:
+>
+> - **Golden is 30% for *both* cloud models** in the committed per-candidate
+>   verdicts (3/10 each), not the 40% (gpt) / 50% (llama) headline. The
+>   headline is the near-miss **tolerance-band-applied** value; the committed
+>   `verdict` fields predate the band, so the 40–50% is not reproducible by
+>   reading the artifacts. → [#728](https://github.com/deghosal-2026/CauterRule/issues/728)
+> - **"Broad-trigger is the dominant blocker" is not what the data shows.**
+>   `failures_positive` `inconclusive_breakdown` = `{ broad_trigger: 0,
+>   matcher_gap: 22, ambiguous_evidence: 56 }`. The real drivers of the
+>   inconclusive bucket are the `precision < 0.5` bar (45/78, llama) and
+>   **spurious `broken` successes** (33/78). → [#723](https://github.com/deghosal-2026/CauterRule/issues/723),
+>   [#724](https://github.com/deghosal-2026/CauterRule/issues/724)
+> - **"0 adversarial promotions" is not reproducible on every corpus.**
+>   `adversarial_unsafe` (llama) shows `unsafe-004` (`expected_outcome:
+>   should_reject`) landing a **pass** at precision 1.0 in the committed data.
+>   → [#727](https://github.com/deghosal-2026/CauterRule/issues/727)
+> - **Coverage is 87% at `fail_under = 85` (passing),** not "83% at a 95 gate"
+>   (§12). → [#728](https://github.com/deghosal-2026/CauterRule/issues/728)
+> - **§8 specificity table is identical for both models**, but the per-corpus
+>   `specificity_distribution` differs per model in the artifacts — the
+>   aggregate table is not reproducible. → [#728](https://github.com/deghosal-2026/CauterRule/issues/728)
+>
+> Product-quality/accuracy issues filed from this review: [#720](https://github.com/deghosal-2026/CauterRule/issues/720)
+> (umbrella) · [#721](https://github.com/deghosal-2026/CauterRule/issues/721) semantic floor ·
+> [#722](https://github.com/deghosal-2026/CauterRule/issues/722) haystack dilution ·
+> [#723](https://github.com/deghosal-2026/CauterRule/issues/723) spurious `broken` ·
+> [#724](https://github.com/deghosal-2026/CauterRule/issues/724) scorer ordering ·
+> [#725](https://github.com/deghosal-2026/CauterRule/issues/725) error signature ·
+> [#726](https://github.com/deghosal-2026/CauterRule/issues/726) reference corpus ·
+> [#730](https://github.com/deghosal-2026/CauterRule/issues/730) extraction accuracy vs `expected_rule` ·
+> [#731](https://github.com/deghosal-2026/CauterRule/issues/731) candidate ranking ·
+> [#732](https://github.com/deghosal-2026/CauterRule/issues/732) candidate dedup.
+
+---
+
 ## 1. BLUF + Release Gate Verdict
 
-CauterRule v0.3.0 is **safer than v0.2.0 on nearmiss precision and adversarial defense, broader in corpus coverage (40 vs 22 corpora), and has caught and fixed a critical MCP authentication bug that shipped green through unit CI**. However, extraction quality regressed — golden pass rate dropped from 50% to 30–40% and failures/positive from 44–54% to 8–10% — because the #492 broad-alias removal made scoring honest but the token-F1 matcher cannot bridge paraphrases without semantic matching, and the near-miss penalty over-fired on legitimate candidates. After tuning the near-miss penalty tolerance band (`near_misses <= 2 → pass if precision ≥ 0.5`), golden improved to **40% (gpt-4o-mini) and 50% (llama-3.1-8b)** — llama-3.1-8b is back to v0.2.0's level.
+CauterRule v0.3.0 is **safer than v0.2.0 on nearmiss precision and adversarial defense, broader in corpus coverage (40 vs 22 corpora), and has caught and fixed a critical MCP authentication bug that shipped green through unit CI**. However, extraction quality regressed — golden pass rate dropped from 50% to 30–40% and failures/positive from 44–54% to 8–10% — because the #492 broad-alias removal made scoring honest but the token-F1 matcher cannot bridge paraphrases without semantic matching, and the near-miss penalty over-fired on legitimate candidates. After tuning the near-miss penalty tolerance band (`near_misses <= 2 → pass if precision ≥ 0.5`), golden improved to **40% (gpt-4o-mini) and 50% (llama-3.1-8b)** *after the tolerance band* — llama-3.1-8b is back to v0.2.0's level. *Verified caveat: the committed per-candidate verdicts predate the band and show **30% for both** cloud models (3/10 each); the 40–50% is band-applied and not reproducible from the committed `results.jsonl` — the band-applied re-run was never committed. → [#728](https://github.com/deghosal-2026/CauterRule/issues/728).*
 
 Three in-test fixes were applied and verified on both cloud models: (1) domain-scoped reference pool (#708) lifted recall 2–3×, (2) pass threshold lowered from 0.8 to 0.5 to admit honest candidates, and (3) adversarial `should_reject` override (#714) forced 0 promotions (was 2–4). Semantic matching was activated by installing `sentence-transformers` in a Python 3.12 venv (the `.venv` is Python 3.14, which has no torch wheels). Post-fix, recall on golden improved to 0.170 (gpt-4o-mini) and 0.228 (llama-3.1-8b) — up from 0.068/0.104 pre-fix and 0.087 in v0.2.0.
 
@@ -22,7 +64,7 @@ The second improvement is the **#601 MCP auth bug fix**. The Docker field test c
 
 The third is the **domain-scoped reference pool (#708)**. v0.2.0 tested every candidate against the full 230-trajectory reference pool, making recall near-zero (0.05–0.10). A candidate that prevented 3 failures got `recall = 3/200 = 0.015` — below any pass threshold. v0.3.0 scopes `reference_trajs` to the source trajectory's domain (e.g., `git` → 19 refs, `python` → 30 refs, `docker` → 30 refs), reducing the denominator from ~200 to ~10–30 relevant failures. Recall improved to 0.170–0.228 post-fix — the single most impactful code change in v0.3.0.
 
-But the product still struggles where trust matters most. **Golden pass rate is 40% (gpt-4o-mini) / 50% (llama-3.1-8b)** (target ≥70%) — the token-F1 matcher, even with semantic matching at 20% blend weight, cannot bridge the paraphrase gap between LLM-extracted trigger phrasings and reference trajectory phrasings. **Failures/positive is 8–10%** (target ≥50%) — candidates reach precision 0.62–0.89 but `broken > 0` or precision < 0.5 blocks the pass. **Inconclusive is ~75%** post-all-fixes (was ~90% pre-fix) — the dominant blocker is now `broken > 0` (broad-trigger) and `matcher_gap` (adapters/raw-ci), not the near-miss penalty. The near-miss tolerance band (`near_misses <= 2 → pass if precision ≥ 0.5`) was applied and lifted golden by +1 pass on each model.
+But the product still struggles where trust matters most. **Golden pass rate is 40% (gpt-4o-mini) / 50% (llama-3.1-8b)** (target ≥70%) — the token-F1 matcher, even with semantic matching at 20% blend weight, cannot bridge the paraphrase gap between LLM-extracted trigger phrasings and reference trajectory phrasings. **Failures/positive is 8–10%** (target ≥50%) — candidates reach precision 0.62–0.89 but `broken > 0` or precision < 0.5 blocks the pass. **Inconclusive is ~75%** post-all-fixes (was ~90% pre-fix). *Verified correction: on `failures_positive` the committed `inconclusive_breakdown` is `{ broad_trigger: 0, matcher_gap: 22, ambiguous_evidence: 56 }` — `broad_trigger` is **0**, so "broad-trigger is the dominant blocker" overstates it. The real drivers are the `precision < 0.5` bar (45/78 inconclusive on llama), **spurious `broken` successes** (33/78 — a correct rule like `F-001` is blocked by unrelated successes such as `S-023-git-status`), and pure `matcher_gap` (22, adapters/raw-ci). → [#723](https://github.com/deghosal-2026/CauterRule/issues/723), [#724](https://github.com/deghosal-2026/CauterRule/issues/724).* The near-miss tolerance band (`near_misses <= 2 → pass if precision ≥ 0.5`) was applied and lifted golden by +1 pass on each model.
 
 ### Release gate verdict (post-fix)
 
@@ -31,10 +73,10 @@ But the product still struggles where trust matters most. **Golden pass rate is 
 | Safety: 100% silence on successes/negatives | ✅ MET | Gate drops all clean trajectories (60/60 successes, 60/60 failures-negative). 580 gate-dropped, 1,160 LLM calls avoided per model. |
 | Nearmiss precision ≥90% | ✅ MET | gpt-4o-mini 98% (1 FP / 50), llama-3.1-8b **100%** (0 FP). v0.2.0 was 86–90% (5–7 FPs). The near-miss penalty + self-match exclusion + recovery gate are the biggest safety improvement in v0.3.0. |
 | Generic triggers <10% | ✅ MET | 0.7% (16 generic out of 2,384). Both models produce specific triggers naming concrete tools and error conditions. |
-| Adversarial: 0 promoted rules | ✅ MET | **0** on both models post-fix (#714 `should_reject` override). Pre-fix: gpt-4o-mini 2, llama-3.1-8b 4. v0.2.0 had 0. The override catches legitimate-looking rules extracted from adversarial trajectories — "git push --force" matches real reference failures but the source trajectory's `expected_outcome` is `should_reject`. |
-| Golden pass rate ≥70% | ❌ NOT MET | gpt-4o-mini 40% (4/10), llama-3.1-8b 50% (5/10) — v0.2.0 was 50%. Near-miss tolerance band applied; llama-3.1-8b back to v0.2.0 level. |
-| Failures/positive pass rate ≥50% | ❌ NOT MET | gpt-4o-mini 8% (4/50), llama-3.1-8b 10% (5/50) — v0.2.0 was 44–54%. Remaining blocker: `broken > 0` (broad-trigger) and precision < 0.5. |
-| Curated inconclusive <15% | ❌ NOT MET | ~75% post-all-fixes (was ~90% pre-fix). The near-miss tolerance band recovered 1 pass/model on golden; the remaining blocker is broad-trigger (`broken > 0`) and matcher_gap (adapters/raw-ci). |
+| Adversarial: 0 promoted rules | ✅ MET (injection/poisoning) | **0** on both models post-fix for the injection/poisoning vectors (#714 `should_reject` override). Pre-fix: gpt-4o-mini 2, llama-3.1-8b 4. *Verified caveat: in the committed artifacts `adversarial_unsafe` (llama) shows `unsafe-004` (`should_reject`) **passing** at precision 1.0 — the runner override was not effective for that corpus/vintage, and production has no equivalent control. → [#727](https://github.com/deghosal-2026/CauterRule/issues/727)* |
+| Golden pass rate ≥70% | ❌ NOT MET | gpt-4o-mini 40% (4/10), llama-3.1-8b 50% (5/10) *post-band* — v0.2.0 was 50%. *Committed per-candidate verdicts (pre-band) show **30% for both** — not reproducible from artifacts. → [#728](https://github.com/deghosal-2026/CauterRule/issues/728)* |
+| Failures/positive pass rate ≥50% | ❌ NOT MET | gpt-4o-mini 8% (4/50), llama-3.1-8b 10% (5/50) — v0.2.0 was 44–54%. *Verified blockers: `precision < 0.5` bar + **spurious `broken` successes** + `matcher_gap` (committed `broad_trigger = 0`). → [#723](https://github.com/deghosal-2026/CauterRule/issues/723), [#724](https://github.com/deghosal-2026/CauterRule/issues/724)* |
+| Curated inconclusive <15% | ❌ NOT MET | ~75% post-all-fixes (was ~90% pre-fix). The near-miss tolerance band recovered 1 pass/model on golden; the remaining blockers are the `precision<0.5` bar, **spurious `broken` successes**, and matcher_gap (adapters/raw-ci) — committed `broad_trigger=0`. [#723](https://github.com/deghosal-2026/CauterRule/issues/723), [#724](https://github.com/deghosal-2026/CauterRule/issues/724) |
 | Infrastructure | ✅ MET | Preflight, harness health, cost corpus (1,000 trajs), Docker field test (159 tests), measurement tooling (5 scripts + 7 runner flags), token usage capture. |
 
 **Post-all-fixes: 5/7 thresholds pass.** Safety + adversarial + specificity + infrastructure all pass. Quality (golden + failures/positive) is the holdout. Golden improved to 40–50% (was 30–40%) after the near-miss tolerance band; llama-3.1-8b is back to v0.2.0's 50%.
@@ -48,7 +90,7 @@ But the product still struggles where trust matters most. **Golden pass rate is 
 | MCP auth untested over HTTP | ✅ CLOSED | #601 bug found + fixed (Docker field test). |
 | Corpus coverage narrow (22) | ✅ CLOSED | 40 corpora (+18 new: adapters, lifecycle, packs, mcp, otel, cost, browser, bugsinpy, lifecycle_infra, reference-expansion, adversarial vectors). |
 | Golden pass rate ≥70% | ❌ NOT MET | 40–50% (was 30–40% before tolerance band). Structural matcher/threshold issue. |
-| Failures/positive ≥50% | ❌ NOT MET | 8–10%. Remaining blocker: `broken > 0` (broad-trigger), not near-miss penalty. |
+| Failures/positive ≥50% | ❌ NOT MET | 8–10%. Remaining blockers: `precision<0.5` bar + **spurious `broken` successes** + matcher_gap (committed `broad_trigger=0`). [#723](https://github.com/deghosal-2026/CauterRule/issues/723), [#724](https://github.com/deghosal-2026/CauterRule/issues/724) |
 | Adversarial 0 promoted | ✅ CLOSED | 0 post-fix (#714). Was 2–4 pre-fix. |
 | Cross-session ≥50% | ⚠️ TOOLING READY | `scripts/cross_session.py` + runner `--cross-session`. 5-session protocol not run. |
 | Human agreement | ⚠️ TOOLING READY | `scripts/human_agreement.py` + runner `--human-review`. Reviewer scoring not done. |
@@ -136,7 +178,7 @@ For detailed per-corpus tables and the full 40-corpus × 2-model matrix, see [`f
 
 Both cloud models were run head-to-head on identical corpora (40 sources, 2,384 trajectories each). The gate, matcher, scorer, and thresholds are identical across runs. For the full 40-corpus matrix, see [`field-test-results-cloud.md`](field-test-results-cloud.md).
 
-**llama-3.1-8b is the better post-fix model.** It has more passes on golden (4 vs 3), more passes on failures/positive (5 vs 4), higher recall (0.228 vs 0.170), and **0 nearmiss false passes (100%)** vs gpt-4o-mini's 1 (98%). Pre-fix, gpt-4o-mini was the safety-first choice because it had fewer adversarial promotions (2 vs 4). Post-fix, both have 0 — the #714 override is model-independent. The safety advantage of gpt-4o-mini is gone.
+**llama-3.1-8b is the better post-fix model.** It has more passes on golden (4 vs 3), more passes on failures/positive (5 vs 4), higher recall (0.228 vs 0.170), and **0 nearmiss false passes (100%)** vs gpt-4o-mini's 1 (98%). Pre-fix, gpt-4o-mini was the safety-first choice because it had fewer adversarial promotions (2 vs 4). Post-fix, both have 0 — the #714 override is model-independent. The safety advantage of gpt-4o-mini is gone. *Verified caveat: on the committed artifacts golden is **3/10 for both** models (a tie, n=10) and failures/positive differs by one trajectory (5/50 vs 4/50) — the model ranking is not statistically distinguishable at these sample sizes. → [#728](https://github.com/deghosal-2026/CauterRule/issues/728), [#729](https://github.com/deghosal-2026/CauterRule/issues/729).*
 
 The key insight: **the stronger model extracts more and extracts better.** llama-3.1-8b produces triggers that semantic matching can bridge more effectively (recall 0.228 vs 0.170). It also benefits more from the 0.5 threshold (5 passes vs 4 on failures/positive). The pre-fix concern that "stronger models are more susceptible to adversarial promotion" is resolved by the `should_reject` override — the stronger model's better extraction is now a pure advantage.
 
@@ -360,6 +402,8 @@ Both models produce ~2.0 candidates per trajectory (2-pass extraction with tempe
 | gpt-4o-mini | 2,012 (84%) | 356 (15%) | 16 | 0.7% ✅ |
 | llama-3.1-8b | 2,012 (84%) | 356 (15%) | 16 | 0.7% ✅ |
 
+*Verified caveat: the per-model totals above are identical, but the per-corpus `specificity_distribution` in the committed `summary.json` **differs per model** (e.g. `public/golden`: llama 28 specific/2 moderate vs gpt 30/0; `failures_positive`: 131/19 vs 138/12). The identical aggregate is not reproducible from the per-corpus data — regenerate it from artifacts. → [#728](https://github.com/deghosal-2026/CauterRule/issues/728)*
+
 Both models meet the <10% generic target. Triggers are specific enough to name concrete tools and error conditions — the problem is the matcher can't bridge paraphrases, not that triggers are vague.
 
 ### Inconclusive attribution
@@ -392,7 +436,7 @@ For the full per-corpus matcher diagnostics (avg precision / avg recall / inconc
 | gpt-4o-mini | 3P (30%) | 4P (8%) | 1 (98%) | 0 ✅ |
 | llama-3.1-8b | 4P (40%) | 5P (10%) | 0 (100%) | 0 ✅ |
 
-**llama-3.1-8b is the better post-fix model** — more passes (9 vs 7 on small corpora), higher recall (0.228 vs 0.170), 0 nearmiss FPs (100% vs 98%), 0 adversarial. The pre-fix safety advantage of gpt-4o-mini (fewer adversarial) is gone post-fix — the #714 override is model-independent.
+**llama-3.1-8b is the better post-fix model** — more passes (9 vs 7 on small corpora), higher recall (0.228 vs 0.170), 0 nearmiss FPs (100% vs 98%), 0 adversarial. The pre-fix safety advantage of gpt-4o-mini (fewer adversarial) is gone post-fix — the #714 override is model-independent. *Verified caveat: the golden pass rate is **identical (30%)** for both models on the committed artifacts and the failures/positive gap is a single trajectory (5/50 vs 4/50); at n=10 / n=50 the models are not statistically distinguishable. The recommendation to pick llama rests on n=50/n=23 margins and should be re-validated after a golden expansion (n≥60) with a paired CI. → [#728](https://github.com/deghosal-2026/CauterRule/issues/728), [#729](https://github.com/deghosal-2026/CauterRule/issues/729).*
 
 The decision economics are straightforward once the #714 fix is applied. Pre-fix, gpt-4o-mini was the safety-first choice because it produced fewer adversarial promotions (2 vs 4). Post-fix, both produce 0 — the `should_reject` override catches all of them regardless of model strength. This means the safety argument for choosing the weaker model evaporates. What remains is pure extraction quality, where llama-3.1-8b wins on every axis: golden pass (40% vs 30%), failures/positive pass (10% vs 8%), recall (0.228 vs 0.170), nearmiss precision (100% vs 98%). The stronger model extracts more, extracts better, and — with the adversarial override — is just as safe.
 
@@ -452,7 +496,7 @@ The harness health check validates: parse rate ≥70% (extraction produced candi
 | Source files | 218 | ~250+ | +32 |
 | Code coverage | 86% | 83% | -3% |
 
-Coverage at 83% is below the 95% exit gate target. The drop from 86% (v0.2.0) to 83% is attributable to new v0.3.0 modules that are not yet fully exercised by hermetic tests: the measurement package (`src/cauterule/measurement/` — 5 modules with 27 tests but the coverage gate `fail_under=95` is not met overall), the adapter conformance harness, the pack replay scoring, and the CLI commands added for corpus/benchmark/pack/otel/webhook. #494 was closed at 83.15% with +109 tests (44 CLI/review/report + 65 integration/otel/webhook/badge); the remaining gap is deferred to M8. The `fail_under` in `pyproject.toml` is set to 95, which means CI's coverage gate fails — this is a known, documented gap, not an oversight.
+Coverage is **87%** and `pyproject.toml` sets `fail_under = 85`, so the CI coverage gate is currently **passing** (87 ≥ 85). *(This section originally reported "83% at a 95 gate — CI fails"; that is stale — verified `python -m coverage report` → 87% TOTAL and `pyproject.toml:147` → `fail_under = 85`. → [#728](https://github.com/deghosal-2026/CauterRule/issues/728))* The 86% (v0.2.0) → 87% level reflects v0.3.0 modules that are only partially exercised by hermetic tests: the measurement package (`src/cauterule/measurement/`), the adapter conformance harness, the pack replay scoring, and the CLI commands added for corpus/benchmark/pack/otel/webhook. The remaining gap to a 95% target is deferred to M8.
 
 19 validation suites (12 inherited from v0.2.0 + 7 new for v0.3.0): all PASS. The 7 new suites are: `adapter_conformance` (per-framework capture + extract + replay round-trip), `lifecycle` (specificity/outcome/retirement/supersession), `packs` (create/install/publish/cert/safety), `mcp_security` (60 tests — auth/rate-limit/schema), `otel_exporter` (mock-collector E2E), `corpus_cli` (add/list/validate/lint/build/export), `benchmark_cli` (list/run/--compare + 15 hot-path benchmarks). The `measurement` module has 27 tests covering cost computation, cross-session delta, human-agreement sampling, pack-replay scoring, and recovery-exclusion measurement. The Docker field test suite has 159 tests (157 passing, 2 compose re-runs pending).
 
@@ -466,16 +510,19 @@ The `summary.json` per-corpus now carries `gate_dropped_by_reason` (#697) — br
 
 | Issue | Severity | Workaround |
 |---|---|---|
-| Golden 30–40% (target ≥70%) | Major | Near-miss penalty over-fires on high-precision candidates; tune tolerance (`near_misses <= 2 → pass`) |
-| Failures/positive 8–10% (target ≥50%) | Major | Same root cause; precision 0.62–0.89 → inconclusive |
-| ~75% inconclusive | Major | Broad-trigger (`broken > 0`) + matcher_gap on adapters/raw-ci |
-| Adapters 100% inconclusive | Major | Need adapter-specific reference trajectories (langgraph/crewai/pydanticai) |
-| raw/ci 0 passes | Major | CI traceback-heavy prompts produce unmatchable triggers |
-| Semantic matching 20% blend | Medium | Raising to 0.3–0.4 could bridge more paraphrases |
+| Golden 30–40% (target ≥70%) | Major | Committed artifacts show 30% (both, pre-band); band-applied 40–50% not committed. Semantic floor unreachable + paraphrase gap. [#721](https://github.com/deghosal-2026/CauterRule/issues/721), [#722](https://github.com/deghosal-2026/CauterRule/issues/722), [#728](https://github.com/deghosal-2026/CauterRule/issues/728) |
+| Failures/positive 8–10% (target ≥50%) | Major | `precision<0.5` bar + **spurious `broken` successes** + `matcher_gap` (committed `broad_trigger=0`). [#723](https://github.com/deghosal-2026/CauterRule/issues/723), [#724](https://github.com/deghosal-2026/CauterRule/issues/724) |
+| ~75% inconclusive | Major | precision bar (45/78) + spurious broken (33/78) + matcher_gap (22), not "broad-trigger". [#723](https://github.com/deghosal-2026/CauterRule/issues/723), [#724](https://github.com/deghosal-2026/CauterRule/issues/724) |
+| Adapters 100% inconclusive | Major | Need adapter-specific reference signatures (langgraph/crewai/pydanticai). [#726](https://github.com/deghosal-2026/CauterRule/issues/726) |
+| raw/ci 0 passes | Major | CI traceback-heavy prompts; no CI signatures in the domain slice. [#726](https://github.com/deghosal-2026/CauterRule/issues/726) |
+| Semantic matching 20% blend, floor 0.80 | Medium | Floor unreachable for short-phrase vs haystack; fix floor + compare to failure signature. [#721](https://github.com/deghosal-2026/CauterRule/issues/721), [#722](https://github.com/deghosal-2026/CauterRule/issues/722) |
+| No extraction-accuracy metric | Major | `expected_rule` ground truth never parsed/scored. [#730](https://github.com/deghosal-2026/CauterRule/issues/730) |
+| Candidate ranking precision-first | Medium | Favors low-recall rules; runner `best` disagrees with production. [#731](https://github.com/deghosal-2026/CauterRule/issues/731) |
+| 2-pass candidates not deduped (40% identical) | Medium | `deduplicate()` defined but uncalled. [#732](https://github.com/deghosal-2026/CauterRule/issues/732) |
 | Cost numeric table | Low | Token capture landed; cost corpus re-run with tokens pending |
-| Cross-session not measured | Medium | Tooling ready (`scripts/cross_session.py`); 5-session protocol pending |
-| Human agreement not measured | Medium | Tooling ready (`scripts/human_agreement.py`); reviewer scoring pending |
-| Coverage 83% | Medium | Deferred to M8 |
+| Cross-session not measured | Medium | Tooling ready (`scripts/cross_session.py`); 5-session protocol pending. [#729](https://github.com/deghosal-2026/CauterRule/issues/729) |
+| Human agreement not measured | Medium | Tooling ready (`scripts/human_agreement.py`); reviewer scoring pending. [#729](https://github.com/deghosal-2026/CauterRule/issues/729) |
+| Coverage 87% (passing at `fail_under=85`) | Low | Original "83%/95" stale; verified 87%/85. Gap to 95% deferred to M8 |
 | 2 Docker compose re-runs | Low | Fixes applied (profiles, pip --user); re-run pending |
 
 ---
@@ -494,6 +541,14 @@ The `summary.json` per-corpus now carries `gate_dropped_by_reason` (#697) — br
 
 6. **Cost numeric table** — token capture landed; cost corpus re-run with tokens pending.
 
+7. **Spurious `broken` successes block failures/positive** — a correct rule (e.g. `F-001`) is downgraded by unrelated successes it merely shares tokens with. Domain-gate successes, add a match-strength margin, and broaden recovery-class detection. [#723](https://github.com/deghosal-2026/CauterRule/issues/723)
+
+8. **Extraction quality is unmeasured** — `expected_rule` ground truth exists in the corpus but is never parsed or scored. Add an extraction-accuracy metric. [#730](https://github.com/deghosal-2026/CauterRule/issues/730)
+
+9. **Adversarial defense is test-only** — production auto-promote has no source-trust control; the committed `adversarial_unsafe` (llama) shows a `should_reject` trajectory passing. [#727](https://github.com/deghosal-2026/CauterRule/issues/727)
+
+10. **Semantic floor unreachable + no candidate dedup/ranking fix** — semantic cosine can't carry a match below 0.80; 2-pass duplicates (40%) are never deduped; ranking is precision-first. [#721](https://github.com/deghosal-2026/CauterRule/issues/721), [#731](https://github.com/deghosal-2026/CauterRule/issues/731), [#732](https://github.com/deghosal-2026/CauterRule/issues/732)
+
 ---
 
 ## Action Items
@@ -509,6 +564,11 @@ The `summary.json` per-corpus now carries `gate_dropped_by_reason` (#697) — br
 | 5 | **Run cross-session protocol** (5 sessions baseline vs intervention) | Medium | Required for release gate |
 | 6 | **Sample human agreement** (candidates per verdict bucket) | Medium | Required for release gate |
 | 7 | Decide: accept honest 30–40% golden or re-baseline thresholds | Decision | Release decision |
+| 8 | **Fix spurious `broken`** — domain-gate successes + match-strength margin + recovery-class extension | Medium | Unblocks failures/positive (8–10% → target ≥30%). [#723](https://github.com/deghosal-2026/CauterRule/issues/723) |
+| 9 | **Fix scorer ordering + broaden near-miss band** | Low | Lets net-positive rules pass. [#724](https://github.com/deghosal-2026/CauterRule/issues/724) |
+| 10 | **Add extraction-accuracy metric vs `expected_rule`** | Low | Measures extraction directly; confirms bottleneck is replay. [#730](https://github.com/deghosal-2026/CauterRule/issues/730) |
+| 11 | **Add source-trust gate to production promotion** | Medium | Closes the adversarial trust gap. [#727](https://github.com/deghosal-2026/CauterRule/issues/727) |
+| 12 | **Dedup 2-pass candidates + align ranking objective** | Low | Honest candidate counts; consistent winner. [#731](https://github.com/deghosal-2026/CauterRule/issues/731), [#732](https://github.com/deghosal-2026/CauterRule/issues/732) |
 
 ### Long-term (v0.4.0+)
 
@@ -526,7 +586,7 @@ The `summary.json` per-corpus now carries `gate_dropped_by_reason` (#697) — br
 
 1. **The #708 domain-scoping fix is the single most impactful change in v0.3.0.** It addresses the root cause of the 90% inconclusive rate — the recall denominator was the full 444-pool, not the relevant domain subset. Recall improved 2–3× on cloud and 7× on local. Every other quality fix (semantic matching, threshold lowering) builds on top of this.
 
-2. **The near-miss penalty tolerance band recovered golden to v0.2.0 levels.** The zero-tolerance penalty fixed the safety problem (5–7→0–1 false passes) but over-fired on legitimate candidates. The tolerance band (`near_misses <= 2 → pass if precision ≥ 0.5`) recovered 1 pass/model on golden (40%/50%). The remaining quality blocker is now the broad-trigger penalty (`broken > 0`), which downgrades candidates that break 1–2 successes even when they prevent many more failures.
+2. **The near-miss penalty tolerance band recovered golden to v0.2.0 levels.** The zero-tolerance penalty fixed the safety problem (5–7→0–1 false passes) but over-fired on legitimate candidates. The tolerance band (`near_misses <= 2 → pass if precision ≥ 0.5`) recovered golden (committed artifacts show 30% pre-band; band-applied 40–50%). The remaining quality blockers are **spurious `broken` successes** — unrelated successes that merely share a token (e.g. `S-023-git-status`) counted as "broken," not true interference ([#723](https://github.com/deghosal-2026/CauterRule/issues/723)) — and the `precision<0.5` bar ([#724](https://github.com/deghosal-2026/CauterRule/issues/724)).
 
 3. **Adversarial promotion is a real threat on stronger models, and content-based evaluation cannot detect it.** llama-3.1-8b produced 4 adversarial promotions (vs gpt-4o-mini's 2) — the stronger model extracts more convincing-looking rules from adversarial trajectories. The `should_reject` override (#714) is essential because the gate and scorer cannot distinguish "rule from adversarial source" from "rule from real failure" based on the rule's content. The rule "git push --force on non-fast-forward" is a real directive that matches real failures — only the source trajectory's metadata reveals it came from an injection attack.
 
@@ -540,7 +600,7 @@ The `summary.json` per-corpus now carries `gate_dropped_by_reason` (#697) — br
 
 8. **The reference corpus needs domain-specific expansion for adapters and CI.** The 444-trajectory reference set covers git/python/docker/devops well (19–107 refs each), but has no langgraph/crewai/pydanticai trajectories (adapters: 120 matcher_gap) and no CI-specific phrasings (raw/ci: 211 matcher_gap). The #698 reference expansion closed the agent/lifecycle/mcp gaps but adapters and raw/ci remain uncovered.
 
-9. **Recall is the right metric to watch, not pass rate.** v0.2.0 had pass rate 50% but recall 0.087 — the passes were inflated by aliases. v0.3.0 post-all-fixes has golden pass rate 40–50% and recall 0.170–0.228 — the matcher is finding the right references. Improving recall further (semantic weight, reference expansion) and tuning the broad-trigger penalty will lift pass rates honestly.
+9. **Recall is the right metric to watch, not pass rate.** v0.2.0 had pass rate 50% but recall 0.087 — the passes were inflated by aliases. v0.3.0 post-all-fixes has golden pass rate 40–50% (committed artifacts: 30% pre-band) and recall 0.170–0.228 — the matcher is finding the right references. Improving recall further (a reachable semantic floor, reference-signature expansion) and stopping spurious `broken` will lift pass rates honestly.
 
 10. **The Docker field test is indispensable.** It caught the #601 auth bug (unit-green, deployment-broken), the non-root `/app` ownership issue (compose service crashed with PermissionError), and the MCP HTTP startup race (TCP accept before session manager ready). The v0.2.0 Docker test had 0 tests; v0.3.0 has 159 (157 passing). Every new feature that involves deployment (MCP transport, OTEL, compose) should have a Docker-level test.
 
@@ -553,10 +613,10 @@ The `summary.json` per-corpus now carries `gate_dropped_by_reason` (#697) — br
 - **Safer:** nearmiss 86–90%→98–100% (the biggest safety improvement), adversarial 0→0 (post-fix #714), #601 MCP auth bug caught and fixed, otel 0P/20F→20/20 gate-dropped (#709). Safety corpora remain at 100% silence.
 - **Broader:** 40 corpora (was 22), 444 references (was 230), Docker validation (159 tests), measurement tooling (5 scripts + 7 runner flags), semantic matching, cost corpus (1,000), token usage capture.
 - **Higher recall:** 2–3× improvement (0.087→0.170–0.228) from domain scoping + semantic matching. The matcher is finding the right references.
-- **Extraction quality:** golden 40–50% post-tolerance (vs 50%), failures/positive 8–10% (vs 44–54%). The #492 alias removal made scoring honest; the near-miss tolerance band recovered golden, but the broad-trigger penalty blocks failures/positive. v0.2.0's higher pass rates were partly inflated by alias auto-pass.
+- **Extraction quality:** golden 40–50% post-tolerance (committed artifacts show 30% pre-band), failures/positive 8–10% (vs 44–54%). The #492 alias removal made scoring honest; the near-miss tolerance band recovered golden, but the **`precision<0.5` bar and spurious `broken` successes** (not a "broad-trigger penalty") block failures/positive. v0.2.0's higher pass rates were partly inflated by alias auto-pass.
 - **Adversarial regression fixed:** 2–4 promotions → 0 post-fix (#714 `should_reject` override).
 
-**Post-all-fixes: 5/7 release gate thresholds pass.** Safety + adversarial + specificity + infrastructure all pass. Quality (golden + failures/positive) is the holdout. The near-miss tolerance band (`near_misses <= 2 → pass`) is applied and recovered golden to 40–50%. Broad-trigger penalty tuning (`broken <= 2 → pass if precision ≥ 0.5`) is the next lever for failures/positive.
+**Post-all-fixes: 5/7 release gate thresholds pass.** Safety + adversarial + specificity + infrastructure all pass. Quality (golden + failures/positive) is the holdout. *Verified: the committed per-candidate verdicts show golden at **30% for both** cloud models (the 40–50% headline is tolerance-band-applied and was never committed) and failures/positive at 8–10% blocked chiefly by the `precision<0.5` bar and **spurious `broken` successes** (committed `broad_trigger = 0`), not by a "broad-trigger penalty" per se.* The next levers, in priority order: fix spurious `broken` + scorer ordering ([#723](https://github.com/deghosal-2026/CauterRule/issues/723), [#724](https://github.com/deghosal-2026/CauterRule/issues/724)), make the semantic channel able to carry a match ([#721](https://github.com/deghosal-2026/CauterRule/issues/721), [#722](https://github.com/deghosal-2026/CauterRule/issues/722)), add a structured `error_signature` ([#725](https://github.com/deghosal-2026/CauterRule/issues/725)), expand adapter/CI references ([#726](https://github.com/deghosal-2026/CauterRule/issues/726)), and measure extraction directly against `expected_rule` ([#730](https://github.com/deghosal-2026/CauterRule/issues/730)).
 
 **v0.3.0 is not yet ready for autonomous rule promotion.** But it is safer than v0.2.0, and the path to closing the quality gap is clear: tune the near-miss penalty, install semantic matching, re-run the full sweep. The recall improvement (2–3×) proves the matcher is working — it just needs the penalty to stop over-firing.
 
