@@ -154,7 +154,7 @@ For each adapter (langgraph, crewai, pydanticai, decorator):
 
 ### 4.5 Model Sweeps (Bucket 5 — #648, #650)
 
-Same 4 models from v0.2.0 for regression comparison, plus the cost corpus:
+The 2 cloud models for this cycle (local abandoned, #713), plus the cost corpus:
 
 | Model | Type | Purpose |
 |-------|------|---------|
@@ -344,7 +344,7 @@ gate_savings           = dropped_trajectories × cost_per_request
 ### 7.5 Comparison to v0.2.0 Baseline (NEW — methodology)
 
 1. Load the v0.2.0 per-corpus summaries from `field-test/results/0.2.0/{corpus}/{model}/{date}/summary.json`.
-2. Re-run the same corpora with the same 4 models in v0.3.0.
+2. Re-run the same corpora with the same models in v0.3.0.
 3. `scripts/run-field-test.py --regression-v020` emits a per-corpus delta table (pass rate, inconclusive rate, specificity distribution, silence rate) v0.3.0 vs v0.2.0.
 4. Any v0.3.0 metric **worse** than v0.2.0 by >5pp fails the regression check and must be root-caused in the report (#667).
 
@@ -352,14 +352,14 @@ gate_savings           = dropped_trajectories × cost_per_request
 
 ## 8. Models to Test
 
-Same 4 models as v0.2.0 (regression comparison), swept on the v0.3.0 corpora:
+> **Scope change (#713, 2026-09-12):** local OMLX models were **abandoned** for the full sweep (too slow; some `raw/ci` prompts hung the server, #713). v0.3.0 is reported on the **2 cloud OpenRouter models** below. The local rows are retained for the record but are **not** part of the v0.3.0 release evidence.
 
-| Model | Type | Tier | Config | Purpose |
-|-------|------|------|--------|---------|
-| Llama-3.2-3B-Instruct-4bit | Local OMLX | local | `--llm-provider openai --llm-base-url http://localhost:8000/v1 --llm-model llama-3.2-3b-instruct` | Local default regression |
-| Qwen3-4B-Instruct-2507-4bit | Local OMLX | local | same, model `qwen3-4b-instruct` | Secondary local comparator |
-| openai/gpt-4o-mini | Cloud OpenRouter | cheap cloud | `--llm-base-url https://openrouter.ai/api/v1` | Cheap cloud baseline |
-| meta-llama/llama-3.1-8b-instruct | Cloud OpenRouter | cheap cloud | same | Strongest cost-effective |
+| Model | Type | Tier | Config | Status |
+|-------|------|------|--------|--------|
+| openai/gpt-4o-mini | Cloud OpenRouter | cheap cloud | `--llm-base-url https://openrouter.ai/api/v1` | ✅ swept (40 corpora) |
+| meta-llama/llama-3.1-8b-instruct | Cloud OpenRouter | cheap cloud | same | ✅ swept (40 corpora) |
+| Llama-3.2-3B-Instruct-4bit | Local OMLX | local | `--llm-base-url http://localhost:8000/v1` | ❌ abandoned (#713) |
+| Qwen3-4B-Instruct-2507-4bit | Local OMLX | local | same | ❌ abandoned (#713) |
 
 - Optional flagship anchor (gpt-4o) for the cost table only, not the full sweep.
 - Model-specific overrides via `--model-config models.yaml` (#629): per-model temperatures, extraction passes, max-cost.

@@ -1,111 +1,116 @@
 # FIELD_TEST_REPORT — CauterRule v0.3.0
 
-**Date:** 2026-09-11  
-**Milestone:** M7 — Field Test (milestone 62)  
-**Scope:** 4-model × 30-corpus sweep (4,537 trajectory-runs), Docker field test (153 tests), 5 field-test-found fixes, v0.2.0 regression comparison.
-
-**Issue references (see also):** GitHub issue numbers cited in this report (#601, #642, #653, #663, #667, #671, #673, #677–#684, …) are mirrored locally with status in [`docs/wbs/v0.3.0/wbs-v0.3.0-part3-field-test.md`](../../wbs/v0.3.0/wbs-v0.3.0-part3-field-test.md) and [`docs/wbs/v0.3.0/wbs-v0.3.0-index.md`](../../wbs/v0.3.0/wbs-v0.3.0-index.md).
-
----
-
-## Update — 2026-09-12: Llama-3.2-3B re-run (fresh, 39 corpora)
-
-> Supersedes the Llama-3.2-3B numbers in the 2026-09-11 4-model sections below. The other 3 models have **not** been re-run yet.
-
-- **39 target corpora, 1,384 trajectories** · 95 pass / 305 fail / 817 inconclusive / 167 gate-dropped. (`cost` excluded — needs a priced cloud model; local OMLX cost is $0.)
-- **Safety holds:** `successes` 60/60 silence, `failures/negative` 60/60 silence, `public/nearmiss` 20/20 silence; gate reasons `no_failure_signal` 120 + `nearmiss_recovery_succeeded` 47 (334 LLM calls avoided).
-- **Adversarial: 0 promoted** across all 9 adversarial corpora.
-- **Nearmiss:** 3/50 false pass → **94% correctly not promoted** ✅ (≥90% target).
-- **Specificity:** specific 73% · moderate 26% · generic 1.2% ✅ (<10% generic target).
-- **Quality gate still unmet:** golden 1/10 (10%), failures/positive 6/50 (12%), curated inconclusive 90%/72% ❌ — root cause unchanged (#677/#680); semantic matching (#689) is the v0.4.0 lever.
-- **New target corpora run:** `public/browser` (20), `public/real-world/bugsinpy` (36), `public/lifecycle_infra` (20) — promoted from reference-only.
-- **Authoritative tables:** [`generated-results.md`](generated-results.md) · per-model sheet: [`field-test-results-llama-3.2-3b.md`](field-test-results-llama-3.2-3b.md).
-- **Measurement tooling added (plan §5):** `cost`/`cross_session`/`human_agreement`/`pack_replay`/`fix8_recovery` + runner flags. `pack-replay.md` = 4/4 replayable packs score 1.00; `fix8-recovery-exclusion.md` = 0.671 overall. `cost`, `cross-session`, `human-agreement` land after a priced cloud sweep / reviewer scoring.
-
----
-
-## 0. v0.3.0 vs v0.2.0 — What Changed
-
-| Dimension | v0.2.0 | v0.3.0 | Delta |
-|-----------|--------|--------|-------|
-| **Safety: successes silence** | 100% (60/60) | 100% (60/60) | ✅ Held |
-| **Safety: failures/negative silence** | 100% | 100% | ✅ Held |
-| **Nearmiss false passes** | 3-7 per model | **1 per model (all 4)** | ✅ Dramatic improvement |
-| **Adversarial: 0 promoted** | ✅ 6 vectors | ✅ 6 vectors | ✅ Held |
-| **Golden pass rate (cloud)** | 50% (5P/10) post-Fix8 | **10% (1P/10)** | ❌ Dropped |
-| **Golden pass rate (local)** | 20% (2P/10) pre-Fix8 | 10% (1P/10) | ❌ Dropped |
-| **Failures/positive (cloud)** | 44-54% post-Fix8 | **8-12% (3-4P/50)** | ❌ Dropped sharply |
-| **Reference corpus size** | 230 trajectories | **518** (+288 #489) | ✅ More than doubled |
-| **Corpora tested** | 22 | **30** (+8 new) | ✅ Broader |
-| **Models tested** | 4 (2 local + 2 cloud) | 4 (same) | ✅ Same coverage |
-| **Total trajectory-runs** | ~4,000 | **4,537** (raw results.jsonl line totals) | Comparable |
-| **Docker tests** | 0 | **153** (151 passing, 2 re-run pending) | ✅ New |
-| **Test suite** | 1,008 | **1,278** (+270) | ✅ Grew |
-| **Near-miss penalty in scorer** | Not implemented | **pass→inconclusive when near_misses>0** | ✅ New fix |
-| **Self-match exclusion** | Not implemented | **Source trajectory excluded from references** | ✅ New fix |
-| **Recovery gate (Fix 8 gate-side)** | Replay-side only | **Gate-side: success+recovery→silence** | ✅ Extended |
-| **#492 broad aliases** | Added (5 entries) | **Removed** (over-fired, precision regression) | ✅ Amended |
-| **MCP auth over HTTP** | Untested | **#601 bug found + fixed** (fastmcp→mcp SDK Context) | ✅ Critical fix |
-| **Runner multi-record JSONL** | Not needed | **Fixed** (adapters 1→18, ref-exp 32→288) | ✅ Bug fix |
-
-### Bottom Line: v0.2.0 vs v0.3.0
-
-v0.2.0 was "safe but quality-gated." v0.3.0 is **safer** (nearmiss 3-7→1 false-pass; the #601 auth bug is fixed) but **quality dropped** — golden and failures/positive pass rates fell on ALL 4 models. The cause is NOT the models (cloud == local on quality) but the **matcher changes**: removing the broad #492 aliases + adding the near-miss penalty + self-match exclusion made scoring honest but stricter. v0.2.0's higher pass rates were partly inflated by alias auto-pass and self-match precision=1.0. The v0.3.0 numbers are the **true** quality floor.
+**Date:** 2026-09-12
+**Milestone:** M7 — Field Test (milestone 62)
+**Scope:** 2 cloud OpenRouter models × 40 corpora = 4,768 trajectory-runs (gpt-4o-mini + llama-3.1-8b). Local OMLX models abandoned (#713 — too slow / hung on `raw/ci`).
+**Authoritative tables:** [`generated-results.md`](generated-results.md) (auto-generated from raw `results.jsonl`).
+**Per-model:** [`field-test-results-gpt-4o-mini.md`](field-test-results-gpt-4o-mini.md) · [`field-test-results-llama-3.1-8b.md`](field-test-results-llama-3.1-8b.md) · [`field-test-results-cloud.md`](field-test-results-cloud.md) (2-model comparison).
 
 ---
 
 ## 1. BLUF + Release Gate Verdict
 
-CauterRule v0.3.0 is the **safest version shipped** — safety corpora 100% silence on 4/4 models, nearmiss down to 1 false-pass (98% correct), adversarial 0 promoted, and the #601 MCP auth bug caught and fixed. But the quality pass-rate thresholds (golden ≥70%, failures/positive ≥50%) are **unreachable on any model** — cloud and local perform identically at ~10%, confirming this is a structural matcher-threshold issue, not model capability.
+CauterRule v0.3.0 is **safer on nearmiss and broader in coverage than v0.2.0**, but it has **regressed on extraction quality and introduced a new adversarial promotion regression on cloud models**. It is **not ready for autonomous rule promotion**.
 
-The field test found and fixed 5 issues during the sweep (near-miss penalty, self-match exclusion, recovery gate, #492 alias revert, runner JSONL bug) plus 1 critical security bug (#601 MCP auth never enforced over HTTP — found by the Docker field test). These are documented in `learnings-fixes.md`.
+The single most important improvement in v0.3.0 is the **nearmiss precision fix**. v0.2.0 produced 5–7 false passes per cloud model on nearmiss (86–90% precision). v0.3.0's near-miss penalty + recovery gate + self-match exclusion reduced that to **1 false pass (98% precision)** on both cloud models — the safety-correct outcome.
+
+The second improvement is the **domain-scoped reference pool (#708)**. v0.2.0 tested candidates against the full 230-trajectory reference pool, making recall near-zero. v0.3.0 scopes to same-domain references (444 total, ~20–50 per domain), lifting recall from ~0.03 to ~0.07–0.10 on cloud. Golden pass rate on local OMLX improved 10%→40% after the fix; cloud shows 30–40%.
+
+The third is the **#601 MCP auth bug fix**. The Docker field test caught that the HTTP auth guard was never enforced (imported `fastmcp.server.dependencies` — a package not installed — inside a blanket `try/except` that silently returned `{}`). Fixed by switching to the official `mcp` SDK `Context` API. Unit tests passed; deployment was broken.
+
+But the product still struggles where trust matters most: **golden pass rate is 30–40%** (target ≥70%), **failures/positive is 6–8%** (target ≥50%), **inconclusive is ~90%**, and **adversarial corpora now produce 2–4 promotions** (v0.2.0 had 0).
 
 ### Release gate verdict
 
 | Objective | Status | Why |
 |---|---|---|
-| Safety: 100% silence on successes/negatives | ✅ MET | 60/60 gate-dropped on all 4 models |
-| Nearmiss precision ≥90% | ✅ MET | 98% correct (1 FP / 50) on all 4 models |
-| Adversarial: 0 promoted rules | ✅ MET | 0/50 across all 5 vectors, all 4 models |
-| MCP remote security (#601) | ✅ MET | Auth guard fixed (fastmcp→mcp SDK Context); bearer auth enforced |
-| Docker field test | 🟡 MET (2 re-runs pending) | 151/153 tests passing; 2 compose re-runs (mcp-accepts, test-service) pending |
-| Golden pass rate ≥70% | ❌ NOT MET | 10% (1/10) on all 4 models |
-| Failures/positive pass rate ≥50% | ❌ NOT MET | 6-10% (3-5/50) on all 4 models |
-| Reference recall ≥0.10 | ❌ NOT MET | 0.02-0.04 on reference-expansion (all 4) |
-| Curated inconclusive <15% | ❌ NOT MET | golden 60-70%, failures/positive 26-38% |
+| Safety: 100% silence on successes/negatives | ✅ MET | Gate drops all clean trajectories (60/60 successes, 60/60 failures-negative) |
+| Nearmiss precision ≥90% | ✅ MET | 98% (1 FP / 50) on both cloud models — v0.2.0 was 86–90% |
+| Generic triggers <10% | ✅ MET | 0.7% (16 generic out of 2,384) |
+| Adversarial: 0 promoted rules | ❌ NOT MET | gpt-4o-mini 2, llama-3.1-8b 4 — v0.2.0 had 0 |
+| Golden pass rate ≥70% | ❌ NOT MET | gpt-4o-mini 30% (3/10), llama-3.1-8b 40% (4/10) — v0.2.0 was 50% |
+| Failures/positive pass rate ≥50% | ❌ NOT MET | gpt-4o-mini 8% (4/50), llama-3.1-8b 6% (3/50) — v0.2.0 was 44–54% |
+| Curated inconclusive <15% | ❌ NOT MET | ~80–90% — v0.2.0 was 23–40% |
+| Infrastructure: preflight, harness, cost tracking | ✅ MET | All built and verified; cost corpus (1,000 trajs) ran on both cloud models |
 
-> **Critical finding:** Cloud models (gpt-4o-mini, llama-3.1-8b) perform **identically** to local 3B/4B models on the quality metrics. The quality gap is **structural** (matcher threshold vs reference similarity after the #492 alias removal), not model-capability. In v0.2.0, cloud golden was 50% — but that was inflated by broad aliases auto-passing at the 0.70 floor on the 0.65 OMLX threshold, and by self-match precision=1.0. The v0.3.0 honest numbers are the real quality floor.
+### v0.2.0 gap closure
+
+| v0.2.0 gap | v0.3.0 status | Evidence |
+|---|---|---|
+| Nearmiss "wrong failure" FPs | ✅ CLOSED | 5–7 FPs → 1 FP (98% precision); near-miss penalty + self-match exclusion + recovery gate |
+| Reference corpus too small (230) | ✅ CLOSED | Expanded to 444 + domain-scoped (#708, #698–#706) |
+| MCP auth untested over HTTP | ✅ CLOSED | #601 bug found + fixed (Docker field test) |
+| Corpus coverage narrow (22 corpora) | ✅ CLOSED | 40 corpora (+18 new: adapters, lifecycle, packs, mcp, otel, cost, browser, bugsinpy, lifecycle_infra, reference-expansion, adversarial vectors) |
+| Golden pass rate ≥70% | ❌ NOT MET | 30–40% — structural matcher/threshold issue |
+| Failures/positive ≥50% | ❌ NOT MET | 6–8% — same root cause; #492 alias removal made scoring honest but stricter |
+| Adversarial 0 promoted | ❌ REGRESSED | 2–4 promotions on cloud — new regression, gate does not silence adversarial corpora |
+| Cross-session reduction ≥50% | ⚠️ TOOLING READY | `scripts/cross_session.py` + runner `--cross-session`; 5-session protocol not yet run |
+| Human agreement | ⚠️ TOOLING READY | `scripts/human_agreement.py` + runner `--human-review`; reviewer scoring not yet done |
 
 ---
 
 ## 2. v0.2.0 vs v0.3.0 Comparison
 
-### Curated corpus results — v0.3.0
+### Is v0.3.0 better than v0.2.0? Mixed.
+
+| Dimension | v0.2.0 (cloud) | v0.3.0 (cloud) | Better? |
+|-----------|----------------|----------------|---------|
+| Safety: successes silence | 100% (60/60) | 100% (60/60) | ✅ Held |
+| Safety: failures/negative silence | 100% (60/60) | 100% (60/60) | ✅ Held |
+| Nearmiss precision | 86–90% (5–7 FPs) | **98% (1 FP)** | ✅ Dramatically improved |
+| Nearmiss gate-dropped | 0 | 27/50 (recovery detection) | ✅ New |
+| Adversarial: 0 promoted | 0 (5 corpora) | **2–4** (10 corpora) | ❌ **Regression** |
+| Golden pass rate | 50% (5/10) | 30–40% (3–4/10) | ❌ Dropped |
+| Failures/positive pass rate | 44–54% (22–27/50) | 6–8% (3–4/50) | ❌ Dropped sharply |
+| Inconclusive rate (curated) | 23–40% | ~80–90% | ❌ Doubled |
+| Trigger specificity (generic) | 0–5.6% | 0.7% | ✅ Improved |
+| Reference corpus | 230 | 444 (+ domain-scoped) | ✅ Near-doubled |
+| Corpora tested | 22 | 40 | ✅ Broader |
+| Trajectory-runs per model | ~750 | 2,384 | ✅ 3× larger |
+| Docker validation | None | 159 tests (157 pass) | ✅ New |
+| MCP auth over HTTP | Untested | Bug found + fixed | ✅ Critical |
+| Cost corpus (1k) | None | Ran on both cloud models | ✅ New |
+| Measurement tooling | None | 5 scripts + 7 runner flags | ✅ New |
+| raw/opencode passes | 7–12 | 7–10 | ≈ Flat |
+| raw/synthetic passes | 20–37 | 22–24 | ❌ Dropped |
+
+### Curated corpus results — v0.3.0 (cloud)
 
 | Model | golden | failures/positive | successes | failures/negative | nearmiss |
 |---|---|---|---|---|---|
-| Llama-3.2-3B (local) | 1P/3F/6I | 5P/24F/18I (50 trajs) | 0P/0F/0I/60G | 0P/0F/0I/60G | 1P/2F/10I/37G |
-| Qwen3-4B (local) | 1P/3F/6I | 3P/28F/19I (50 trajs) | 0P/0F/0I/60G | 0P/0F/0I/60G | 1P/2F/9I/37G |
-| gpt-4o-mini (cloud) | 1P/3F/6I | 4P/19F/27I (50 trajs) | 0P/0F/0I/60G | 0P/0F/0I/60G | 1P/2F/10I/37G |
-| llama-3.1-8b (cloud) | 1P/2F/7I | 3P/10F/13I (26 trajs) | 0P/0F/0I/60G | 0P/0F/0I/60G | 1P/3F/9I/37G |
+| gpt-4o-mini | 3P / 0F / 7I | 4P / 6F / 40I | 0P / 0F / 0I / 60G | 0P / 0F / 0I / 60G | 1P / 3F / 19I / 27G |
+| llama-3.1-8b | 4P / 0F / 6I | 3P / 7F / 40I | 0P / 0F / 0I / 60G | 0P / 0F / 0I / 60G | 1P / 1F / 21I / 27G |
 
-### Curated corpus results — v0.2.0 (for comparison)
+### Curated corpus results — v0.2.0 (cloud, post-Fix8)
 
 | Model | golden | failures/positive | successes | failures/negative | nearmiss |
 |---|---|---|---|---|---|
-| Llama-3.2-3B (local) | 2P/2F/6I | 10P/5F/34I | 0P/0F/0I/60G | 0P/0F/0I/60G | 3P/28F/19I |
-| Qwen3-4B (local) | 2P/2F/6I | 9P/7F/34I | 0P/0F/0I/60G | 0P/0F/0I/60G | 5P/21F/24I |
-| gpt-4o-mini (cloud) | 5P/1F/4I | 22P/5F/23I | 0P/0F/0I/60G | 0P/0F/0I/60G | 5P/22F/23I |
-| llama-3.1-8b (cloud) | 5P/1F/4I | 27P/5F/18I | 0P/0F/0I/60G | 0P/0F/0I/60G | 7P/24F/19I |
+| gpt-4o-mini | 5P / 1F / 4I | 22P / 5F / 23I | 0P / 0F / 0I / 60G | 0P / 0F / 0I / 100G | 5P / 22F / 23I |
+| llama-3.1-8b | 5P / 1F / 4I | 27P / 5F / 18I | 0P / 0F / 0I / 60G | 0P / 0F / 0I / 100G | 7P / 24F / 19I |
 
-### What changed and why
+### What changed from v0.2.0 to v0.3.0
 
-| Metric | v0.2.0 | v0.3.0 | Cause |
+| Dimension | v0.2.0 | v0.3.0 | Delta |
 |---|---|---|---|
-| Golden P (all models) | 2-5 | 1 | #492 alias removal (0.70 floor no longer auto-passes at 0.65) + self-match exclusion (precision=1.0/1 no longer possible) + near-miss penalty (pass→inconclusive) |
-| Failures/positive P (cloud) | 22-27 | 3-4 | Same fixes — honest scoring is stricter |
-| Nearmiss FP (all models) | 3-7 | **1** | Gate-side Fix 8 (37/50 gate-dropped) + scorer near-miss penalty + self-match exclusion |
-| Recall (reference-expansion) | N/A (no corpus) | 0.02-0.04 | Reference corpus expanded (#489: +288) but matcher recall still low — the expansion alone doesn't lift recall without semantic matching help |
+| Corpora | 22 | 40 | +18 new |
+| Trajectory-runs per model | ~750 | 2,384 | +1,634 |
+| Reference corpus | 230 | 444 | +214 |
+| Nearmiss FPs (cloud) | 5–7 | 1 | ✅ -4–6 |
+| Adversarial promotions | 0 | 2–4 | ❌ New regression |
+| Golden pass rate (cloud) | 50% | 30–40% | ❌ -10–20pp |
+| Failures/positive (cloud) | 44–54% | 6–8% | ❌ -36–48pp |
+| Inconclusive rate | 23–40% | ~90% | ❌ +50–67pp |
+| Docker tests | 0 | 159 (157 pass) | ✅ New |
+| #492 broad aliases | Added (5) | Removed | ✅ Honest scoring |
+| Near-miss penalty | Not implemented | pass→inconclusive when near_misses>0 | ✅ New |
+| Self-match exclusion | Not implemented | Source trajectory excluded from references | ✅ New |
+| Recovery gate (Fix 8 gate-side) | Replay-side only | Gate-side: success+recovery→silence | ✅ Extended |
+| MCP auth over HTTP | Untested | #601 bug found + fixed | ✅ Critical |
+| Domain-scoped references | No | Yes (#708) | ✅ New |
+| Semantic matching | None | Opt-in (#689, `[matching]` extra) | ✅ New (off by default) |
+| Measurement scripts | None | 5 scripts + 7 runner flags | ✅ New |
+| Runner per-trajectory timeout | None | 120s default (#713) | ✅ New |
+| Runner quarantine | None | `CAUTERULE_QUARANTINE_IDS` env | ✅ New |
 
 ---
 
@@ -113,65 +118,120 @@ The field test found and fixed 5 issues during the sweep (near-miss penalty, sel
 
 ### What worked ✅
 
-1. **Safety gate: 100% silence** on successes + failures/negative (60/60 each, all 4 models). The #1 v0.1.0 gap remains closed.
-2. **Nearmiss: 98% correct (1 FP)** on all 4 models — down from 3-7 in v0.2.0. The gate-side Fix 8 (recovery keyword detection + nearmiss → SAFETY_CORPORA), near-miss scorer penalty, and self-match exclusion together eliminated the false passes.
-3. **Adversarial: 0 promoted** across all 5 vectors, all 4 models. Security holds.
-4. **MCP #601 auth bug found and fixed** — the Docker field test caught that `_request_headers()` imported from `fastmcp` (never installed) inside a try/except, silently allowing all HTTP traffic. Fixed via official `mcp` SDK `Context` API. Unauth → 401 payload; authed → rules. This is the kind of bug only a field test catches.
-5. **Docker field test: 153 tests, 151 passing.** Hardened image (non-root, git, HEALTHCHECK, OCI labels, .dockerignore), compose profiles, MCP HTTP in-container (#676). See `docker-test-results.md`.
-6. **Runner multi-record JSONL fix** — the v0.3.0 corpora (adapters/lifecycle/packs/mcp/otel) were silently under-counted (adapters traj=1 instead of 18). Fixed: line-by-line JSONL + per-record discovery.
-7. **Reference corpus expanded** (#489): 230 → 518 trajectories across 32 canonical failure classes with diverse paraphrases.
-8. **Test suite: 1,278 passed** (was 1,008 in v0.2.0; +270 new tests).
-9. **Fix-8 gate-side is model-independent** — confirmed on both Llama-3.2-3B and Qwen3-4B (37/50 nearmiss gate-drops on both).
-10. **#492 alias removal is safe for Qwen** — Qwen recall is commensurate with Llama (0.022 vs 0.031 on reference-expansion). Qwen does not depend on the broad aliases.
+1. **Safety gate: 100% silence** on successes (60/60) and failures/negative (60/60) — held from v0.2.0. 580 gate-dropped, 1,160 LLM calls avoided per model.
+2. **Nearmiss precision: 98%** (1 FP / 50) on both cloud models — v0.2.0 was 86–90%. The near-miss penalty + recovery gate + self-match exclusion are the biggest safety improvement in v0.3.0.
+3. **Recovery gate (#709):** clean successes (`success=True`, no failure signals) are now silenced even in relaxed mode — fixed the otel corpus (20/20 gate-dropped, was 0P/20F).
+4. **Domain-scoped references (#708):** candidates are tested against same-domain references, not the full 444-pool. Verified to lift recall 7× on local (0.032→0.242); cloud shows 0.068–0.104.
+5. **#601 MCP auth bug caught + fixed:** the Docker field test found the HTTP auth guard was never enforced. Fixed via `mcp` SDK `Context` API.
+6. **Docker field test: 157/159 pass** — hardened image, compose profiles, MCP HTTP + bearer auth, OTEL, preflight cost, badge/webhook, persistence, multi-arch.
+7. **Corpus expansion: 40 corpora** (was 22) — adapters, lifecycle, packs, mcp, otel, cost (1,000), browser, bugsinpy, lifecycle_infra, reference-expansion (303), 5 new adversarial vectors.
+8. **Reference corpus: 444 trajectories** (was 230) — +214 from #698–#706 (adapters, lifecycle, mcp, otel, browser, bugsinpy, lifecycle_infra, successes).
+9. **Measurement tooling:** 5 scripts (`measure_cost`, `cross_session`, `human_agreement`, `pack_replay`, `fix8_recovery`) + 7 runner block flags. Pack replay: 4/4 packs score 1.00. Fix-8 recovery exclusion: 0.671.
+10. **Specificity: 0.7% generic** (16/2,384) — well under 10% target.
+11. **public/real-world/bugsinpy: 28–29/36 pass (78–81%)** — strongest positive signal; real-world python test failures extract well.
+12. **public/browser: 12–16/20 pass (60–80%)** — browser-automation failures extract well.
+13. **Token usage capture:** `LLMResponse` now carries `prompt_tokens`/`completion_tokens` from the OpenAI provider — enables real cost measurement.
 
 ### What didn't work ❌
 
-1. **Golden pass rate 10% (1/10)** on all 4 models (target ≥70%). v0.2.0's 50% cloud was inflated by the broad aliases and self-match. The v0.3.0 honest number is the real quality floor.
-2. **Failures/positive pass rate 6-10%** (3-5/50) on all 4 models (target ≥50%). Same cause — honest scoring is stricter.
-3. **Reference recall 0.02-0.04** (target ≥0.10). The #489 expansion added trajectories but the matcher (token-F1 + bigram) can't bridge the paraphrase gap without semantic matching.
-4. **Curated inconclusive 60-70%** on golden (target <15%). Most candidates extract correctly but don't match references at threshold.
-5. **Quality gap is NOT model-dependent** — cloud == local on golden (1/10), failures/positive (3-5/50). This is structural, not capability.
+1. **Adversarial promotion: 2–4 passes** (v0.2.0 had 0). gpt-4o-mini: 2 (injection). llama-3.1-8b: 4 (injection ×2, compounding multi-turn, unsafe). The gate does not silence adversarial corpora (not in `SAFETY_CORPORA`). **Release blocker.**
+2. **Golden pass rate 30–40%** (target ≥70%). v0.2.0 was 50%. The #492 alias removal made scoring honest but stricter; the domain-scoping helped but the token-F1 matcher still can't bridge paraphrases.
+3. **Failures/positive pass rate 6–8%** (target ≥50%). v0.2.0 was 44–54%. Same root cause — the scorer's pass threshold (precision ≥0.8) is rarely reached because candidates match few references.
+4. **Inconclusive rate ~90%.** v0.2.0 was 23–40%. Candidates reach `match_score()` (per `corpus-diagnostics.md`) but match 0–1 references → `prevented=0, broken=0` → inconclusive. The token-F1 matcher cannot bridge the paraphrase gap between LLM-extracted triggers and reference phrasings.
+5. **Adapters 100% inconclusive** (0P/0F/60I on both models). 93 candidates scored, 0 decided. Pure matcher paralysis.
+6. **raw/ci 0 passes** (was 7 on gpt-4o-mini in v0.2.0). 110 trajectories, all inconclusive. CI traceback-heavy prompts produce triggers the matcher can't match.
+7. **Cost corpus: 667 inconclusive, 333 gate-dropped, 0 pass.** The 1,000-trajectory mixed sample produced no useful candidates — the matcher issue is systemic.
+8. **Semantic matching (#689) has no effect.** `sentence-transformers` is not installed (the `[matching]` extra). Enabling `CAUTERULE_SEMANTIC_MATCHING=1` silently no-ops. Fixed to warn (#710), but the feature cannot be evaluated without installing the dependency.
+9. **Cross-session / human-agreement not measured.** Tooling is complete but the 5-session protocol and reviewer scoring have not been run.
 
 ---
 
-## 3a. Local OMLX vs Cloud LLM Comparison
+## 3a. Cloud Model Comparison (gpt-4o-mini vs llama-3.1-8b)
 
-The cloud sweep (#650) is complete: gpt-4o-mini and llama-3.1-8b have been run on all 30 corpora alongside the local OMLX models. **Unlike v0.2.0 — where cloud golden reached 50% and failures/positive reached 44-54% while local stayed at 20% — v0.3.0 shows NO cloud advantage on quality metrics.** Cloud and local perform identically: golden 1/10, failures/positive 3-5/50, nearmiss 1 FP, adversarial 0. This is the strongest evidence that the quality gap is structural (matcher threshold), not model capability. The v0.2.0 cloud advantage was an artifact of the broad #492 aliases auto-passing at the 0.70 floor on the 0.65 OMLX threshold — now removed.
+Both cloud models were run head-to-head on identical corpora (40 sources, 2,384 trajectories each). The gate, matcher, scorer, and thresholds are identical across runs.
 
-### Key metrics — all 4 models
+### Key metrics — both cloud models
 
-| Model | Gold | Fail+ | NM FP | Adv | Silence | TotP | TotF | TotI |
-|---|---|---|---|---|---|---:|---:|---:|
-| Llama-3.2-3B (local) | 1P | 5P (10%) | 1 FP | 0P | 100% | 54 | 336 | 496 |
-| Qwen3-4B (local) | 1P | 3P (6%) | 1 FP | 0P | 100% | 30 | 318 | 619 |
-| gpt-4o-mini (cloud) | 1P | 4P (8%) | 1 FP | 0P | 100% | 51 | 260 | 668 |
-| llama-3.1-8b (cloud) | 1P | 3P (12%) | 1 FP | 0P | 100% | 44 | 325 | 586 |
+| Metric | gpt-4o-mini | llama-3.1-8b |
+|---|---|---|
+| Total trajectories | 2,384 | 2,384 |
+| Total pass | 116 | 119 |
+| Total fail | 65 | 72 |
+| Total inconclusive | 1,623 (90%) | 1,613 (89%) |
+| Gate-dropped | 580 | 580 |
+| LLM calls avoided | 1,160 | 1,160 |
+| Golden pass | 3/10 (30%) | 4/10 (40%) |
+| Failures/positive pass | 4/50 (8%) | 3/50 (6%) |
+| Nearmiss FP | 1 (98%) | 1 (98%) |
+| Adversarial promotions | **2** | **4** |
+| Avg precision (scored) | 0.149 | 0.192 |
+| Avg recall (scored) | 0.068 | 0.104 |
+| Generic triggers | 16 (0.7%) | 16 (0.7%) |
+| public/browser | 12/20 (60%) | 16/20 (80%) |
+| public/real-world/bugsinpy | 29/36 (81%) | 28/36 (78%) |
 
 ### Key takeaways
 
-1. **No cloud quality advantage** — golden 1/10 on ALL 4 models, failures/positive 3-5/50 on ALL 4. v0.2.0's 50% cloud golden was inflated by broad aliases + self-match. v0.3.0's honest numbers are the real quality floor.
-2. **Safety holds identically** — 100% silence on successes + failures/negative, all 4 models. Fix-8 gate-side fires identically (37/50 nearmiss gate-drops on all).
-3. **Llama-3.2-3B leads total pass count** (54) — it extracts more aggressively on raw corpora (raw/synthetic 32P vs 12-21P on others). Qwen3-4B is the most conservative (30P, fewest fails on lifecycle).
-4. **gpt-4o-mini has the most inconclusives** (668) — cloud models produce more candidates but most don't match references at threshold.
-5. **llama-3.1-8b has the best public/golden** (2P/10) — the only model to pass on public golden; but it also has the most nearmiss fails (3F).
+1. **llama-3.1-8b extracts more** (higher recall 0.104 vs 0.068, more passes 119 vs 116, more candidates) but is **more susceptible to adversarial promotion** (4 vs 2). The stronger model is not the safer model.
+2. **gpt-4o-mini is the safety-first choice** — fewer adversarial promotions (2), fewer fails (65 vs 72), comparable nearmiss precision.
+3. **Both models are identical on safety corpora** — 100% silence on successes/failures-negative, 98% nearmiss precision. The gate is model-independent.
+4. **The 90% inconclusive rate is model-independent** — both models produce candidates that reach scoring but match too few references. This is a matcher/threshold issue, not a model capability issue.
+5. **public/real-world/bugsinpy is the strongest signal** — 78–81% pass rate on both models. Real-world python test failures extract and replay well.
 
 ---
 
 ## 3b. LLM vs LLM Comparison
 
-All four models were run head-to-head on identical corpora (30 sources, ~1,150 trajectories each). The comparison below isolates model behavior from pipeline behavior — the gate, matcher, scorer, and thresholds are identical across runs.
+### Full results matrix (all 40 corpora)
 
-**The defining v0.3.0 finding: all 4 models converge to the same quality profile.** Golden 1/10, nearmiss 1 FP, adversarial 0 — the variance between models is negligible on quality metrics. The variance is in volume: Llama-3.2-3B extracts more aggressively on raw corpora (32P on raw/synthetic); gpt-4o-mini produces the most candidates but mostly inconclusive; Qwen3-4B is the most conservative (30P total). The differences are in extraction aggressiveness, not quality.
+| Corpus | gpt-4o-mini | llama-3.1-8b |
+|---|---|---|
+| golden | 3P/0F/7I/0G | 4P/0F/6I/0G |
+| failures/positive | 4P/6F/40I/0G | 3P/7F/40I/0G |
+| failures/negative | 0P/0F/0I/60G | 0P/0F/0I/60G |
+| successes | 0P/0F/0I/60G | 0P/0F/0I/60G |
+| nearmiss | 1P/3F/19I/27G | 1P/1F/21I/27G |
+| noisy | 2P/0F/3I/0G | 2P/0F/3I/0G |
+| corrections | 2P/0F/3I/0G | 2P/0F/3I/0G |
+| raw/opencode | 10P/1F/14I/0G | 7P/1F/17I/0G |
+| raw/synthetic | 22P/15F/108I/0G | 24P/12F/109I/0G |
+| raw/ci | 0P/0F/110I/0G | 0P/1F/109I/0G |
+| raw/sibling-repos | 0P/0F/10I/0G | 0P/0F/10I/0G |
+| raw/corrections | 2P/0F/3I/0G | 2P/0F/3I/0G |
+| raw/cross-session | 0P/1F/4I/0G | 0P/0F/5I/0G |
+| public/golden | 3P/1F/6I/0G | 3P/0F/7I/0G |
+| public/counterexample | 0P/0F/0I/20G | 0P/0F/0I/20G |
+| public/nearmiss | 0P/0F/0I/20G | 0P/0F/0I/20G |
+| public/staleness | 0P/0F/10I/0G | 0P/0F/10I/0G |
+| public/synthetic | 0P/0F/10I/20G | 0P/0F/10I/20G |
+| public/domains | 0P/0F/30I/20G | 0P/0F/30I/20G |
+| public/browser | 12P/0F/8I/0G | 16P/0F/4I/0G |
+| public/real-world/bugsinpy | 29P/0F/7I/0G | 28P/0F/8I/0G |
+| public/lifecycle_infra | 1P/0F/19I/0G | 0P/0F/20I/0G |
+| adversarial/injection | **2P**/6F/2I/0G | **2P**/6F/2I/0G |
+| adversarial/misleading | 0P/2F/8I/0G | 0P/2F/8I/0G |
+| adversarial/contradiction | 0P/0F/10I/0G | 0P/1F/9I/0G |
+| adversarial/unsafe | 0P/0F/10I/0G | **1P**/0F/9I/0G |
+| adversarial/poisoning | 0P/0F/10I/0G | 0P/0F/10I/0G |
+| adversarial/tool_output_injection | 0P/0F/20I/0G | 0P/0F/20I/0G |
+| adversarial/compounding_multiturn | 0P/0F/10I/0G | **1P**/0F/9I/0G |
+| adversarial/unsafe_realistic | 0P/0F/20I/0G | 0P/0F/20I/0G |
+| adversarial/misleading_harmbench | 0P/0F/15I/0G | 0P/0F/15I/0G |
+| adversarial/contradiction_harmbench | 0P/0F/15I/0G | 0P/0F/15I/0G |
+| adapters | 0P/0F/60I/0G | 0P/0F/60I/0G |
+| lifecycle | 0P/0F/40I/0G | 0P/10F/30I/0G |
+| packs | 0P/10F/30I/0G | 1P/7F/32I/0G |
+| mcp | 0P/5F/15I/0G | 0P/5F/15I/0G |
+| otel | 0P/0F/0I/20G | 0P/0F/0I/20G |
+| cost | 0P/0F/667I/333G | 0P/0F/667I/333G |
+| reference-expansion | 19P/12F/272I/0G | 19P/17F/267I/0G |
+| reference-expansion/paraphrase-diversity | 4P/3F/8I/0G | 3P/2F/10I/0G |
 
 ### Per-model analysis
 
-**Llama-3.2-3B (local) — most aggressive extractor.** Leads total passes (54) and raw/synthetic passes (32P, highest of any model). Also has the most fails (336) — it extracts broadly and many candidates fail replay. Best for regression sweeps where recall matters more than precision. Nearmiss 1 FP (98% precision).
+**gpt-4o-mini — safety-first choice.** Fewer adversarial promotions (2 vs 4), fewer fails (65 vs 72), comparable nearmiss precision (98%). Golden 30% (3/10), failures/positive 8% (4/50). Strongest on public/real-world/bugsinpy (29/36, 81%). The clear choice for a safety-first release gate.
 
-**Qwen3-4B (local) — most conservative.** Fewest total passes (30) and fewest raw/synthetic passes (12P). Produces the fewest candidates but also the fewest fails on lifecycle (9F vs 23-27F on others). The #492 alias removal did NOT hurt Qwen recall (0.022 on reference-expansion, commensurate with Llama 0.031) — confirming the broad aliases were not load-bearing. Best for low-noise regression.
-
-**gpt-4o-mini (cloud) — highest candidate volume, most inconclusive.** Produces the most inconclusives (668) — it extracts broadly but the matcher can't resolve most candidates. Same quality profile as local models (golden 1/10, nearmiss 1 FP, adversarial 0). The cloud advantage of v0.2.0 (golden 50%) is gone — the #492 alias removal + self-match exclusion + near-miss penalty made scoring honest.
-
-**llama-3.1-8b (cloud) — balanced.** 44 total passes, 325 fails, 586 inconclusive. The only model to pass on public/golden (2P). Has the most nearmiss fails (3F) but still only 1 false pass. Same structural quality ceiling as the others.
+**llama-3.1-8b — extraction-first choice.** Higher recall (0.104 vs 0.068), more passes (119 vs 116), golden 40% (4/10). But 4 adversarial promotions (injection ×2, compounding multi-turn, unsafe) — the stronger model extracts more convincing-looking candidates from adversarial trajectories. Better for extraction coverage where adversarial filtering is handled separately.
 
 ---
 
@@ -179,127 +239,188 @@ All four models were run head-to-head on identical corpora (30 sources, ~1,150 t
 
 | Fix | Description | Status |
 |-----|-------------|--------|
-| Near-miss scorer penalty | `compute_scores(near_misses>0)` → `pass→inconclusive` — near-miss references were computed but never penalised | ✅ Working — eliminated over-broad-trigger passes |
-| Self-match exclusion | Source trajectory excluded from reference set during replay | ✅ Working — eliminated precision=1.0/1 false passes (N-003, N-004) |
-| Recovery gate (Fix 8 gate-side) | `success=True` + recovery keyword in `failure_class` → silence (`SILENCE_REASON_NEARMISS`) | ✅ Working — 37/50 nearmiss gate-dropped on all 4 models |
-| Nearmiss → SAFETY_CORPORA | Nearmiss now runs in strict gate mode (was relaxed) | ✅ Working — gate-side Fix 8 fires on nearmiss sweep |
-| #492 broad alias removal | Removed 5 overly-broad Qwen aliases (command fails → exit code, pipeline fails → test failed, not found error → not found, auth error, tool fails) — the 0.70 alias floor auto-passed them at the 0.65 OMLX threshold | ✅ Working — precision recovered; Qwen recall NOT hurt (confirmed) |
-| Runner multi-record JSONL | `load_trajectory` reads JSONL line-by-line; discovery expands per-record tasks | ✅ Working — adapters 1→18, ref-exp 32→288 |
-| #601 MCP auth guard | `fastmcp` import → `mcp` SDK `Context` API; tool functions declare `ctx: Context` | ✅ Working — unauth → 401 payload; authed → rules |
-| Corpus relabel | 10 nearmiss files `should_extract` → `should_reject` | ✅ Working — honest corpus labels |
+| #708 | Domain-scope reference pool — `replay_test_candidate` scopes to same-domain refs (≥3, else full pool) | ✅ Recall 7× on local; cloud 0.068–0.104 |
+| #709 | Relaxed gate silences clean successes — `success=True` + no failure signals → silence even in relaxed mode | ✅ otel 0P/20F → 20/20 gate-dropped |
+| #710 | Semantic matching warns when `[matching]` extra missing — was silently no-op | ✅ Warning logged |
+| #692 | Recovery-keyword whole-token match — prevents substring false-positive silencing | ✅ Working |
+| #693 | `_step_shows_success` checks exit_code before output — error text in output no longer treated as success | ✅ Working |
+| #694 | `check_domain_mismatch` wired into `rule_matches` — failure trajectories only | ✅ Working |
+| #677 | Domain-aware context matching — matcher context matches trajectory `domain` field | ✅ Calibration golden recall 0.50→0.90 |
+| #601 | MCP auth guard fixed — `fastmcp` → `mcp` SDK `Context` API | ✅ Critical security fix |
+| Near-miss penalty | `pass→inconclusive` when `near_misses>0` | ✅ Nearmiss 5–7 FP → 1 FP |
+| Self-match exclusion | Source trajectory excluded from references | ✅ Eliminated precision=1.0 self-match inflation |
+| #492 alias removal | 5 broad aliases removed | ✅ Honest scoring (pass rates dropped but are real) |
+| Runner multi-record JSONL | `load_trajectory` reads multi-record `.jsonl` | ✅ adapters 1→60, ref-exp 32→303 |
+| Runner per-trajectory timeout | `future.result(timeout=120)` + `shutdown(wait=False)` | ✅ #713 raw/ci hang fixed |
+| Runner quarantine | `CAUTERULE_QUARANTINE_IDS` env skips trajectories | ✅ #713 |
+| Token usage capture | `LLMResponse.prompt_tokens`/`completion_tokens` from OpenAI provider | ✅ Enables real cost measurement |
 
 ### What Changed in Detail
 
-**The Near-Miss Scorer Penalty:** v0.2.0's `build_evidence_report()` computed `near_misses` but `compute_scores()` ignored them. A candidate matching both real failures AND near-miss references scored `pass` with precision 1.0 — the over-broad trigger was invisible to the scorer. v0.3.0 adds `near_misses > 0` → `inconclusive` (over-broad trigger, not dangerous but not trustworthy).
+**The Domain-Scoped Reference Pool (#708):** v0.2.0 tested every candidate against the full 230-trajectory reference pool. With 200 failures in the pool, a candidate that prevented 3 failures got `recall = 3/200 = 0.015` — near zero on every corpus. v0.3.0 scopes `reference_trajs` to the source trajectory's domain (e.g., `git` → 19 refs, `python` → 30 refs, `docker` → 30 refs), reducing the denominator to ~10–30 relevant failures. Recall improved from ~0.03 to ~0.07–0.10 on cloud; on local OMLX it improved 0.032→0.242 (7×). The fix falls back to the full pool when the domain slice is < 3 references. This is the single most impactful code change in v0.3.0 — it addresses the root cause of the 90% inconclusive rate.
 
-**The Self-Match Exclusion:** v0.2.0's replay loaded the same corpus as both target and reference. A nearmiss trajectory's extracted candidate matched its own trajectory as a "prevented" reference → precision = 1/1 = 1.0 → pass on a single trajectory. v0.3.0 excludes the source trajectory's ID from the reference set.
+**The Near-Miss Penalty + Self-Match Exclusion:** v0.2.0's nearmiss corpus produced 5–7 false passes per cloud model because: (1) candidates matched near-miss references (recovered failures) but the scorer didn't penalize this, and (2) a trajectory counted itself as a "prevented" failure (self-match), inflating precision to 1.0. v0.3.0 adds: (a) `near_misses > 0 → pass→inconclusive` in the scorer, (b) the source trajectory's ID is excluded from the reference set, (c) the gate detects recovery patterns (`success=True` + early error + later success → silence). Combined effect: nearmiss false passes dropped from 5–7 to 1 (98% precision). The remaining 1 false pass is an irreducible "wrong failure" scenario (pandas import — the rule genuinely prevents 6 real python-import failures).
 
-**The Recovery Gate (Fix 8 gate-side):** v0.2.0's Fix 8 reclassified recovery trajectories on the *replay reference* side (simulator). v0.3.0 extends it to the *extraction gate* side: `success=True` + recovery keyword in `failure_class` → silence (no LLM call). This catches the N-00x "success that looks like failure" nearmiss series that fabricated `failure_class` values to pass the gate.
+**The #492 Broad-Alias Removal:** v0.2.0 added 5 broad aliases (SSL, DNS/NXDOMAIN, npm, network, cache) that auto-matched triggers without real token-F1 scoring. This inflated golden (50%) and failures/positive (44–54%) pass rates. v0.3.0 removed them — scoring is now honest. The pass-rate drop (golden 50%→30–40%, failures/positive 44–54%→6–8%) is partly real (the aliases were gaming) and partly a collateral precision cost (some legitimate matches lost the alias boost). The domain-scoping fix (#708) partially compensates.
 
-**The #492 Alias Revert:** v0.2.0 added 5 broad Qwen-oriented aliases ("command fails" → "exit code", "pipeline fails" → "test failed", etc.). These phrases appear in almost every failure trajectory, so the 0.70 alias-phrase floor auto-passed any candidate mentioning them — on the 0.65 OMLX curated threshold, this meant every alias hit passed. v0.3.0 reverts them; specific aliases (non-fast-forward → updates were rejected) stay. Qwen recall confirmed not hurt.
+**The Relaxed-Gate Clean-Success Fix (#709):** v0.2.0's relaxed gate always returned `should_extract=True` — even for clean successes (`success=True`, no failure signals). The otel corpus (20 success trajectories with `expected_outcome="should_silence"`) was extracted and every candidate broke reference successes → 0P/20F. v0.3.0 silences clean successes even in relaxed mode (`success=True AND not signals → silence`). otel is now 20/20 gate-dropped. Failures without signals still proceed (relaxed mode stays permissive for raw corpora).
 
-| Fix | File | Description | Impact |
-|-----|------|-------------|--------|
-| Near-miss scorer penalty | `scorer.py`, `report.py` | `near_misses>0` → `pass→inconclusive` | Eliminated over-broad-trigger passes on nearmiss |
-| Self-match exclusion | `run-field-test.py` | Source trajectory excluded from reference set | Eliminated precision=1.0/1 false passes (N-003, N-004) |
-| Recovery gate (Fix 8 gate-side) | `gate.py` | `success=True` + recovery keyword in `failure_class` → silence | 37/50 nearmiss trajectories gate-dropped |
-| Nearmiss → SAFETY_CORPORA | `run-field-test.py` | Nearmiss now runs in strict gate mode | Gate-side Fix 8 fires on nearmiss sweep |
-| #492 broad alias removal | `matcher.py` | Removed 5 overly-broad Qwen aliases (command fails, pipeline fails, etc.) | Stopped 0.70 alias floor from auto-passing at 0.65 OMLX threshold |
-| Runner multi-record JSONL | `run-field-test.py` | `load_trajectory` reads JSONL line-by-line | adapters 1→18, ref-exp 32→288 |
-| #601 MCP auth guard | `server.py` | `fastmcp` import → `mcp` SDK `Context` API | Unauth HTTP tool calls now rejected (401) |
-| Corpus relabel | 10 nearmiss files | `should_extract` → `should_reject` | Honest corpus labels |
+**The MCP Auth Bug Fix (#601):** The Docker field test found that `_request_headers()` in `src/cauterule/mcp/server.py` imported `fastmcp.server.dependencies` — a package that is not (and never was) installed — inside a blanket `try/except Exception: return {}`. The guard then treated every HTTP request as stdio (local transport) and allowed it through. An unauthenticated `list_rules` call from outside the container returned the full rule list. Unit tests passed because they monkeypatched `_request_headers` directly. Fixed by switching to the official `mcp` SDK `Context` API (tool functions declare `ctx: Context`; headers come from `ctx.request_context.request`). Post-fix, unauthenticated tool calls receive the structured `{"status": 401}` rejection and authenticated calls succeed.
+
+**The Runner Hardening (#713):** v0.2.0's runner used `as_completed(futures)` with no timeout — a single hung LLM call (e.g., OMLX on `raw/ci` ci-fail-015) blocked the whole corpus. v0.3.0 adds: (a) `future.result(timeout=120)` per trajectory — hung workers are recorded as `timeout` and the sweep continues, (b) `executor.shutdown(wait=False, cancel_futures=True)` — the process doesn't wait for stuck threads on exit, (c) `CAUTERULE_QUARANTINE_IDS` env — skip specific trajectories by ID, (d) `max_tokens=4096` on `chat.completions.create()` — prevents OMLX from generating infinitely, (e) timeouts are non-retryable in `_is_transient()` — a timeout means the prompt triggers pathological generation, not a transient server issue.
 
 ---
 
 ## 5. Methodology
 
-**Test harness:** `scripts/run-field-test.py` (v0.3.0 updated). Output to `field-test/results/0.3.0/`. Per-run artifacts: `meta.json`, `results.jsonl`, `summary.json`, `harness_health.json`.
+**Test harness:** `scripts/run-field-test.py` — single corpus or `--all`. Output to `field-test/results/0.3.0/`. Per-run artifacts: `meta.json`, `results.jsonl`, `summary.json`, `harness_health.json`.
 
 **Extraction pipeline:**
-1. Preflight — `cauterule preflight` (provider + corpus + cost estimate). `--skip-preflight` for local runs.
-2. Gate — strict on safety corpora (successes, failures/negative, nearmiss); relaxed on positive corpora. Recovery keyword gate (Fix 8 gate-side): `success=True` + recovery keyword → silence.
-3. LLM extraction — multi-pass (2 passes, temperatures 0.2 + 0.5).
-4. Replay testing — `build_evidence_report(cand, trajs, threshold=threshold_for_corpus(corpus, omlx))`. Corpus-aware thresholds: 0.65 curated OMLX, 0.70 nearmiss, 0.35 raw, 0.40 cross-repo.
-5. Scoring — broad-trigger penalty (`broken > prevented = fail`), near-miss penalty (`near_misses > 0 → inconclusive`), self-match exclusion.
+1. Preflight — `run_preflight(config, corpus_path, cost_per_request_usd)` validates provider + corpus + cost. Abort on FAIL. `--skip-preflight` for sweeps.
+2. Gate — `run_gate(trajectory, mode)` per trajectory: strict (safety corpora: drop if no signal), relaxed (positive corpora: proceed, but silence clean successes #709). Dropped trajectories tracked as `gate_dropped`, LLM calls avoided counted.
+3. LLM extraction — multi-pass (default 2 passes, temperatures 0.2 + 0.5). `max_tokens=4096`, `timeout=30` on `chat.completions.create()`.
+4. Replay testing — `build_evidence_report(cand, domain_scoped_refs, threshold=threshold_for_corpus(corpus))`. Domain-scoped references (#708): same-domain refs (≥3, else full pool). Corpus-type-aware thresholds: 0.70 curated, 0.60 public, 0.45 raw, 0.40 cross-repo.
+5. Broad-trigger penalty — `broken > prevented = fail`, `broken ≤ prevented = inconclusive`, `broken == 0 = pass` (if precision ≥0.8).
+6. Near-miss penalty — `near_misses > 0 → pass→inconclusive`.
+7. Specificity scoring — `score_specificity(trigger)`: specific/moderate/generic. Generic <10% target.
+8. Inconclusive attribution — `attribute_inconclusive()`: broad_trigger / matcher_gap / corpus_mismatch / ambiguous_evidence.
 
 **Scoring:**
-- Safety-adjusted: `safety_adjusted_pass = total_pass - successes_pass - failures_negative_pass`.
-- Near-miss penalty: `near_misses > 0` and `broken == 0` → `inconclusive` (new in v0.3.0).
-- Pack replay: `pack_score = pack_prevented / (pack_prevented + pack_broke)`.
-- Cross-session delta: `reduction = 1 - (rate_intervention / rate_baseline)`.
+- Safety scoring: `silence → pass`, any extraction → fail. `safety_summary()` returns `silence_rate` and verdict.
+- Safety-adjusted ranking: `safety_adjusted_pass = total_pass - successes_pass - failures_negative_pass`.
+- Decision economics: `wrong_decision_rate = new_fail / (new_pass + new_fail)` for model-pair upgrade.
+- Confidence intervals: Wilson CI on `pass_rate` and `safety_silence_rate` (`src/cauterule/stats.py`, #695).
+- Gate-drop by reason: `gate_dropped_by_reason` in `summary.json` (#697).
 
-**Models tested:** Llama-3.2-3B-Instruct-4bit (local OMLX), Qwen3-4B-Instruct-2507-4bit (local OMLX), gpt-4o-mini (cloud OpenRouter), llama-3.1-8b-instruct (cloud OpenRouter). All 4 models run on all 30 corpora.
+**Models tested:** gpt-4o-mini (cloud OpenRouter), llama-3.1-8b-instruct (cloud OpenRouter). Both run on all 40 corpora. Local OMLX models abandoned (#713).
 
-**Corpus:** ~1,750 trajectories across 30 sources. Reference corpus: 518 trajectories (230 curated + 288 reference-expansion #489).
+**Corpus:** 2,384 trajectories per model across 40 sources. Reference corpus: 444 trajectories (domain-scoped per run).
 
 ---
 
 ## 6. Per-Corpus Performance
 
-### Full 30-corpus × 4-model matrix
+### gpt-4o-mini (v0.3.0)
 
-| Corpus | Llama-3.2-3B | Qwen3-4B | gpt-4o-mini | llama-3.1-8b |
-|---|---|---|---|---|
-| golden | 1P/3F/6I | 1P/3F/6I | 1P/3F/6I | 1P/2F/7I |
-| failures/positive | 5P/24F/18I | 3P/28F/19I | 4P/19F/27I | 3P/10F/13I |
-| failures/negative | 0P/0F/0I/60G | 0P/0F/0I/60G | 0P/0F/0I/60G | 0P/0F/0I/60G |
-| successes | 0P/0F/0I/60G | 0P/0F/0I/60G | 0P/0F/0I/60G | 0P/0F/0I/60G |
-| nearmiss | 1P/2F/10I/37G | 1P/2F/9I/37G | 1P/2F/10I/37G | 1P/3F/9I/37G |
-| noisy | 0P/0F/5I | 0P/0F/5I | 0P/0F/5I | 0P/0F/5I |
-| corrections | 2P/0F/3I | 0P/0F/4I | 2P/0F/3I | 1P/0F/4I |
-| raw/opencode | 4P/12F/9I | 3P/14F/8I | 7P/10F/8I | 7P/11F/7I |
-| raw/synthetic | 32P/38F/71I | 12P/37F/90I | 21P/36F/88I | 21P/41F/83I |
-| raw/ci | 0P/10F/37I | 0P/13F/97I | 0P/0F/110I | 0P/6F/104I |
-| raw/sibling-repos | 2P/0F/8I | 0P/0F/9I | 2P/0F/8I | 1P/0F/9I |
-| raw/corrections | 3P/0F/2I | 0P/0F/4I | 2P/0F/3I | 1P/1F/3I |
-| raw/cross-session | 0P/3F/2I | 0P/5F/0I | 0P/4F/1I | 0P/5F/0I |
-| public/golden | 0P/2F/6I | 1P/2F/7I | 2P/2F/6I | 2P/3F/5I |
-| public/counterexample | 0P/9F/10I | 0P/7F/13I | 0P/7F/13I | 0P/10F/10I |
-| public/nearmiss | 0P/0F/0I/20G | 0P/0F/0I/20G | 0P/0F/0I/20G | 0P/0F/0I/20G |
-| public/staleness | 0P/0F/10I | 0P/0F/10I | 0P/0F/10I | 0P/0F/10I |
-| public/synthetic | 0P/20F/8I | 0P/5F/25I | 0P/0F/30I | 0P/13F/17I |
-| public/domains | 0P/12F/37I | 0P/15F/35I | 0P/5F/45I | 0P/10F/40I |
-| adversarial/injection | 0P/10F/0I | 0P/10F/0I | 0P/10F/0I | 0P/10F/0I |
-| adversarial/misleading | 0P/0F/6I | 0P/3F/7I | 0P/4F/6I | 0P/5F/5I |
-| adversarial/contradiction | 0P/4F/6I | 0P/2F/8I | 0P/1F/9I | 0P/3F/7I |
-| adversarial/unsafe | 0P/5F/5I | 0P/2F/8I | 0P/0F/10I | 0P/1F/9I |
-| adversarial/poisoning | 0P/2F/6I | 0P/1F/9I | 0P/2F/8I | 0P/2F/8I |
-| **adapters** | 0P/0F/15I | 0P/0F/18I | 0P/0F/18I | 0P/0F/18I |
-| **lifecycle** | 0P/27F/11I | 0P/9F/31I | 0P/0F/40I | 0P/23F/17I |
-| **packs** | 0P/33F/7I | 0P/30F/10I | 0P/40F/0I | 0P/36F/4I |
-| **mcp** | 0P/4F/15I | 0P/5F/15I | 0P/5F/15I | 0P/5F/15I |
-| **otel** | 0P/20F/0I | 0P/0F/20I | 0P/0F/20I | 0P/0F/20I |
-| **reference-expansion** | 4P/96F/183I | 9P/125F/152I | 9P/110F/169I | 6P/125F/157I |
+| Corpus | Trajs | Candidates | Pass | Fail | Inconclusive | Gate | Notes |
+|---|---|---|---|---|---|---|---|
+| golden | 10 | 20 | 3 | 0 | 7 | 0 | 30% pass; 4 matcher_gap, 10 ambiguous_evidence |
+| failures/positive | 50 | 100 | 4 | 6 | 40 | 0 | 8% pass; 22 matcher_gap, 58 ambiguous_evidence |
+| successes | 60 | 0 | 0 | 0 | 0 | 60 | 100% silence ✅ |
+| failures/negative | 60 | 0 | 0 | 0 | 0 | 60 | 100% silence ✅ |
+| nearmiss | 50 | 46 | 1 | 3 | 19 | 27 | 98% precision ✅; 27 recovery gate-drops |
+| noisy | 5 | 10 | 2 | 0 | 3 | 0 | 40% pass |
+| corrections | 5 | 10 | 2 | 0 | 3 | 0 | 40% pass |
+| public/golden | 10 | 20 | 3 | 1 | 6 | 0 | 30% pass |
+| public/browser | 20 | 40 | 12 | 0 | 8 | 0 | 60% pass ✅ strongest; prec 0.850 |
+| public/real-world/bugsinpy | 36 | 72 | 29 | 0 | 7 | 0 | 81% pass ✅ strongest; prec 0.806 |
+| public/lifecycle_infra | 20 | 40 | 1 | 0 | 19 | 0 | 5% pass |
+| public/counterexample | 20 | 0 | 0 | 0 | 0 | 20 | 100% gate-dropped ✅ |
+| public/nearmiss | 20 | 0 | 0 | 0 | 0 | 20 | 100% gate-dropped ✅ |
+| public/synthetic | 30 | 20 | 0 | 0 | 10 | 20 | 0% pass; 20 gate-dropped |
+| public/domains | 50 | 60 | 0 | 0 | 30 | 20 | 0% pass; 20 gate-dropped |
+| public/staleness | 10 | 20 | 0 | 0 | 10 | 0 | 0% pass |
+| adapters | 60 | 120 | 0 | 0 | 60 | 0 | 100% inconclusive ❌; 120 matcher_gap |
+| lifecycle | 40 | 80 | 0 | 0 | 40 | 0 | 100% inconclusive ❌; 80 matcher_gap |
+| packs | 40 | 80 | 0 | 10 | 30 | 0 | 0% pass; 60 ambiguous_evidence |
+| mcp | 20 | 40 | 0 | 5 | 15 | 0 | 0% pass; 30 matcher_gap |
+| otel | 20 | 0 | 0 | 0 | 0 | 20 | 100% gate-dropped ✅ (#709) |
+| cost | 1000 | 1334 | 0 | 0 | 667 | 333 | 33% gate-dropped; 0 pass |
+| raw/opencode | 25 | 50 | 10 | 1 | 14 | 0 | 40% pass |
+| raw/synthetic | 145 | 290 | 22 | 15 | 108 | 0 | 15% pass; 147 matcher_gap |
+| raw/ci | 110 | 220 | 0 | 0 | 110 | 0 | 100% inconclusive ❌; 211 matcher_gap |
+| raw/sibling-repos | 10 | 20 | 0 | 0 | 10 | 0 | 0% pass |
+| raw/corrections | 5 | 10 | 2 | 0 | 3 | 0 | 40% pass |
+| raw/cross-session | 5 | 10 | 0 | 1 | 4 | 0 | 0% pass |
+| adversarial/injection | 10 | 20 | **2** | 6 | 2 | 0 | ❌ 2 promotions |
+| adversarial/misleading | 10 | 20 | 0 | 2 | 8 | 0 | 0 promoted ✅ |
+| adversarial/contradiction | 10 | 20 | 0 | 0 | 10 | 0 | 0 promoted ✅ |
+| adversarial/unsafe | 10 | 20 | 0 | 0 | 10 | 0 | 0 promoted ✅ |
+| adversarial/poisoning | 10 | 20 | 0 | 0 | 10 | 0 | 0 promoted ✅ |
+| adversarial/tool_output_injection | 20 | 40 | 0 | 0 | 20 | 0 | 0 promoted ✅ |
+| adversarial/compounding_multiturn | 10 | 20 | 0 | 0 | 10 | 0 | 0 promoted ✅ |
+| adversarial/unsafe_realistic | 20 | 40 | 0 | 0 | 20 | 0 | 0 promoted ✅ |
+| adversarial/misleading_harmbench | 15 | 30 | 0 | 0 | 15 | 0 | 0 promoted ✅ |
+| adversarial/contradiction_harmbench | 15 | 30 | 0 | 0 | 15 | 0 | 0 promoted ✅ |
+| reference-expansion | 303 | 606 | 19 | 12 | 272 | 0 | 6% pass; 298 matcher_gap |
+| reference-expansion/paraphrase-diversity | 15 | 30 | 4 | 3 | 8 | 0 | 27% pass |
+
+### llama-3.1-8b (v0.3.0)
+
+| Corpus | Trajs | Candidates | Pass | Fail | Inconclusive | Gate | Notes |
+|---|---|---|---|---|---|---|---|
+| golden | 10 | 20 | 4 | 0 | 6 | 0 | 40% pass; 3 matcher_gap, 9 ambiguous_evidence |
+| failures/positive | 50 | 100 | 3 | 7 | 40 | 0 | 6% pass; 20 matcher_gap, 60 ambiguous_evidence |
+| successes | 60 | 0 | 0 | 0 | 0 | 60 | 100% silence ✅ |
+| failures/negative | 60 | 0 | 0 | 0 | 0 | 60 | 100% silence ✅ |
+| nearmiss | 50 | 46 | 1 | 1 | 21 | 27 | 98% precision ✅; 3 broad_trigger |
+| noisy | 5 | 10 | 2 | 0 | 3 | 0 | 40% pass |
+| corrections | 5 | 10 | 2 | 0 | 3 | 0 | 40% pass |
+| public/golden | 10 | 20 | 3 | 0 | 7 | 0 | 30% pass |
+| public/browser | 20 | 40 | 16 | 0 | 4 | 0 | 80% pass ✅ strongest; prec 0.958 |
+| public/real-world/bugsinpy | 36 | 72 | 28 | 0 | 8 | 0 | 78% pass ✅; prec 0.778 |
+| public/lifecycle_infra | 20 | 40 | 0 | 0 | 20 | 0 | 0% pass |
+| public/counterexample | 20 | 0 | 0 | 0 | 0 | 20 | 100% gate-dropped ✅ |
+| public/nearmiss | 20 | 0 | 0 | 0 | 0 | 20 | 100% gate-dropped ✅ |
+| public/synthetic | 30 | 20 | 0 | 0 | 10 | 20 | 0% pass; 20 gate-dropped |
+| public/domains | 50 | 60 | 0 | 0 | 30 | 20 | 0% pass; 20 gate-dropped |
+| public/staleness | 10 | 20 | 0 | 0 | 10 | 0 | 0% pass |
+| adapters | 60 | 120 | 0 | 0 | 60 | 0 | 100% inconclusive ❌; 120 matcher_gap |
+| lifecycle | 40 | 80 | 0 | 10 | 30 | 0 | 0% pass; 51 matcher_gap, 1 broad_trigger |
+| packs | 40 | 80 | 1 | 7 | 32 | 0 | 3% pass; 5 matcher_gap, 59 ambiguous_evidence |
+| mcp | 20 | 40 | 0 | 5 | 15 | 0 | 0% pass; 30 matcher_gap |
+| otel | 20 | 0 | 0 | 0 | 0 | 20 | 100% gate-dropped ✅ (#709) |
+| cost | 1000 | 1330 | 0 | 0 | 667 | 333 | 33% gate-dropped; 0 pass |
+| raw/opencode | 25 | 50 | 7 | 1 | 17 | 0 | 28% pass |
+| raw/synthetic | 145 | 289 | 24 | 12 | 109 | 0 | 17% pass; 128 matcher_gap, 14 broad_trigger |
+| raw/ci | 110 | 220 | 0 | 1 | 109 | 0 | 100% inconclusive ❌; 213 matcher_gap |
+| raw/sibling-repos | 10 | 20 | 0 | 0 | 10 | 0 | 0% pass |
+| raw/corrections | 5 | 9 | 2 | 0 | 3 | 0 | 40% pass |
+| raw/cross-session | 5 | 10 | 0 | 0 | 5 | 0 | 0% pass |
+| adversarial/injection | 10 | 20 | **2** | 6 | 2 | 0 | ❌ 2 promotions |
+| adversarial/misleading | 10 | 20 | 0 | 2 | 8 | 0 | 0 promoted ✅ |
+| adversarial/contradiction | 10 | 20 | 0 | 1 | 9 | 0 | 0 promoted ✅ |
+| adversarial/unsafe | 10 | 20 | **1** | 0 | 9 | 0 | ❌ 1 promotion |
+| adversarial/poisoning | 10 | 20 | 0 | 0 | 10 | 0 | 0 promoted ✅ |
+| adversarial/tool_output_injection | 20 | 40 | 0 | 0 | 20 | 0 | 0 promoted ✅ |
+| adversarial/compounding_multiturn | 10 | 20 | **1** | 0 | 9 | 0 | ❌ 1 promotion |
+| adversarial/unsafe_realistic | 20 | 9 | 0 | 0 | 20 | 0 | 0 promoted ✅ |
+| adversarial/misleading_harmbench | 15 | 15 | 0 | 0 | 15 | 0 | 0 promoted ✅ |
+| adversarial/contradiction_harmbench | 15 | 5 | 0 | 0 | 15 | 0 | 0 promoted ✅ |
+| reference-expansion | 303 | 606 | 19 | 17 | 267 | 0 | 6% pass; 265 matcher_gap, 6 broad_trigger |
+| reference-expansion/paraphrase-diversity | 15 | 30 | 3 | 2 | 10 | 0 | 20% pass |
 
 ### Model totals
 
-| Model | Type | Total trajs | Pass | Fail | Inconclusive | Gate dropped |
-|---|---|---|---:|---:|---:|---:|
-| Llama-3.2-3B | local OMLX | 1,093 | 54 | 336 | 496 | 177 |
-| Qwen3-4B | local OMLX | 1,156 | 30 | 318 | 619 | 177 |
-| gpt-4o-mini | cloud | 1,156 | 51 | 260 | 668 | 177 |
-| llama-3.1-8b | cloud | 1,132 | 44 | 325 | 586 | 177 |
+| Model | Type | Total trajs | Candidates | Pass | Fail | Inconclusive | Gate dropped |
+|---|---|---:|---:|---:|---:|---:|---:|
+| `gpt-4o-mini` | cloud | 2,384 | 3,608 | 116 | 65 | 1,623 | 580 |
+| `llama-3.1-8b` | cloud | 2,384 | 3,531 | 119 | 72 | 1,613 | 580 |
 
-### Adversarial corpus results (all 4 models)
+Both models produce ~2.0 candidates per trajectory (2-pass extraction with temperatures 0.2/0.5). gpt-4o-mini produces slightly more candidates (3,608 vs 3,531) but fewer passes (116 vs 119). llama-3.1-8b has higher recall (0.104 vs 0.068) but more fails (72 vs 65) and more adversarial promotions (4 vs 2).
 
-| Vector | Llama-3.2-3B | Qwen3-4B | gpt-4o-mini | llama-3.1-8b |
-|---|---|---|---|---|
-| injection | 0P/10F/0I | 0P/10F/0I | 0P/10F/0I | 0P/10F/0I |
-| misleading | 0P/0F/6I | 0P/3F/7I | 0P/4F/6I | 0P/5F/5I |
-| contradiction | 0P/4F/6I | 0P/2F/8I | 0P/1F/9I | 0P/3F/7I |
-| unsafe | 0P/5F/5I | 0P/2F/8I | 0P/0F/10I | 0P/1F/9I |
-| poisoning | 0P/2F/6I | 0P/1F/9I | 0P/2F/8I | 0P/2F/8I |
+### Adversarial corpus results
 
-**0 promoted rules across all 5 vectors × 4 models = 0/200.** ✅
+| Corpus | gpt-4o-mini | llama-3.1-8b |
+|---|---|---|
+| injection | **2P**/6F/2I | **2P**/6F/2I |
+| misleading | 0P/2F/8I | 0P/2F/8I |
+| contradiction | 0P/0F/10I | 0P/1F/9I |
+| unsafe | 0P/0F/10I | **1P**/0F/9I |
+| poisoning | 0P/0F/10I | 0P/0F/10I |
+| tool_output_injection | 0P/0F/20I | 0P/0F/20I |
+| compounding_multiturn | 0P/0F/10I | **1P**/0F/9I |
+| unsafe_realistic | 0P/0F/20I | 0P/0F/20I |
+| misleading_harmbench | 0P/0F/15I | 0P/0F/15I |
+| contradiction_harmbench | 0P/0F/15I | 0P/0F/15I |
 
 ### Raw corpus results
 
-| Model | raw/opencode | raw/synthetic | raw/ci |
-|---|---|---|---|
-| Llama-3.2-3B | 4P/12F/9I | 32P/38F/71I | 0P/10F/37I |
-| Qwen3-4B | 3P/14F/8I | 12P/37F/90I | 0P/13F/97I |
-| gpt-4o-mini | 7P/10F/8I | 21P/36F/88I | 0P/0F/110I |
-| llama-3.1-8b | 7P/11F/7I | 21P/41F/83I | 0P/6F/104I |
+| Corpus | gpt-4o-mini | llama-3.1-8b |
+|---|---|---|
+| raw/opencode | 10P/1F/14I | 7P/1F/17I |
+| raw/synthetic | 22P/15F/108I | 24P/12F/109I |
+| raw/ci | 0P/0F/110I | 0P/1F/109I |
 
 ---
 
@@ -309,39 +430,112 @@ All four models were run head-to-head on identical corpora (30 sources, ~1,150 t
 
 | Corpus | Total | Gate Dropped | Silence Rate | Verdict |
 |---|---|---|---|---|
-| successes (all 4 models) | 60 | 60 | 100% | ✅ PASS |
-| failures/negative (all 4 models) | 60 | 60 | 100% | ✅ PASS |
-| nearmiss (all 4 models) | 50 | 37 | 74% gate + 24% reject = 98% correct | ✅ PASS |
+| successes (gpt-4o-mini) | 60 | 60 | 100% | ✅ PASS |
+| successes (llama-3.1-8b) | 60 | 60 | 100% | ✅ PASS |
+| failures/negative (gpt-4o-mini) | 60 | 60 | 100% | ✅ PASS |
+| failures/negative (llama-3.1-8b) | 60 | 60 | 100% | ✅ PASS |
+| public/nearmiss (both) | 20 | 20 | 100% | ✅ PASS |
+| public/counterexample (both) | 20 | 20 | 100% | ✅ PASS |
+| otel (both) | 20 | 20 | 100% | ✅ PASS (#709) |
+| nearmiss (both) | 50 | 27 | 54% (recovery gate) | ✅ PASS |
+
+Both models achieve 100% silence on all safety corpora. The pre-extraction gate is the sole reason — no model-level safety tuning needed. The #709 fix extended silence to relaxed-mode clean successes (otel).
 
 ### Safety-adjusted ranking
 
-| Model | Total Pass | Successes Pass | Fail/Neg Pass | Safety-Adjusted Pass | Violation Rate |
-|---|---|---|---:|---:|---:|
-| Llama-3.2-3B | 54 | 0 | 0 | 54 | 0% |
-| Qwen3-4B | 30 | 0 | 0 | 30 | 0% |
-| gpt-4o-mini | 51 | 0 | 0 | 51 | 0% |
-| llama-3.1-8b | 44 | 0 | 0 | 44 | 0% |
+| Model | Total Pass | Successes Pass | Fail/Neg Pass | Safety-Adjusted Pass | Adversarial Promoted | Violation Rate |
+|---|---|---|---:|---:|---:|---:|
+| gpt-4o-mini | 116 | 0 | 0 | 116 | **2** | 0% (safety) / 1.7% (adversarial) |
+| llama-3.1-8b | 119 | 0 | 0 | 119 | **4** | 0% (safety) / 3.4% (adversarial) |
 
-All 4 models: **0% violation rate.** Safety violations eliminated (v0.1.0: 1-3 per model).
+Both models show 0% safety-violation rate (no successes/negative passes). But adversarial promotions are a new safety concern not captured in the traditional safety-adjusted formula — **2–4 rules promoted from adversarial trajectories that should have been rejected.**
+
+### Safety gate verification
+
+| Corpus | Trajectories | Gate dropped | Silence rate |
+|---|---|---|---|
+| successes | 60 | 60 (100%) | 100% ✅ |
+| failures/negative | 60 | 60 (100%) | 100% ✅ |
+| public/nearmiss | 20 | 20 (100%) | 100% ✅ |
+| public/counterexample | 20 | 20 (100%) | 100% ✅ |
+| otel | 20 | 20 (100%) | 100% ✅ (#709) |
+| nearmiss | 50 | 27 (54%) | 54% (recovery detection) ✅ |
 
 ---
 
 ## 8. Extraction Quality Metrics
 
-### Specificity distribution (all models)
+### Extraction rate (candidates per trajectory)
 
-All models meet the <10% generic trigger target. Most triggers are specific (name concrete tools + error codes). The quality problem is NOT trigger vagueness — it's that specific triggers don't match the reference corpus at the 0.65/0.70 threshold after the #492 alias removal.
+| Model | Total Candidates | Active Trajectories | Extraction Rate |
+|---|---|---|---|
+| gpt-4o-mini | ~3,608 | 1,804 | ~2.0 |
+| llama-3.1-8b | ~3,531 | 1,804 | ~1.96 |
 
-### Recall
+Both models produce ~2.0 candidates per trajectory (2-pass extraction). Stable — extraction pipeline working correctly.
 
-| Model | reference-expansion recall | raw/synthetic recall |
-|---|---|---|
-| Llama-3.2-3B | 0.031 | 0.039 |
-| Qwen3-4B | 0.022 | 0.021 |
-| gpt-4o-mini | 0.020 | 0.025 |
-| llama-3.1-8b | 0.039 | 0.032 |
+### Specificity distribution
 
-Recall is **0.02-0.04** across all models — far below the 0.10 target. The reference corpus expansion (#489: +288 trajectories) did not lift recall because the matcher (token-F1 + bigram) can't bridge paraphrase gaps without semantic/embedding-based matching.
+| Model | Specific | Moderate | Generic | Generic % |
+|---|---|---|---|---|
+| gpt-4o-mini | 2,012 (84%) | 356 (15%) | 16 | 0.7% ✅ |
+| llama-3.1-8b | 2,012 (84%) | 356 (15%) | 16 | 0.7% ✅ |
+
+Both models meet the <10% generic target. Triggers are specific enough to name concrete tools and error conditions — the problem is the matcher can't bridge paraphrases, not that triggers are vague.
+
+### Inconclusive attribution breakdown (gpt-4o-mini)
+
+| Reason | Golden | Failures/Positive | Nearmiss | Raw/Synthetic | Raw/CI | Adapters | Packs |
+|---|---|---|---|---|---|---|---|
+| broad_trigger | 0 | 0 | 1 | 0 | 1 | 0 | 0 |
+| matcher_gap | 4 | 22 | 19 | 147 | 211 | 120 | 0 |
+| corpus_mismatch | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| ambiguous_evidence | 10 | 58 | 18 | 69 | 8 | 0 | 60 |
+
+**Key insight:** `matcher_gap` dominates on `adapters` (120), `raw/ci` (211), `raw/synthetic` (147), `lifecycle` (80), `mcp` (30) — the LLM produces candidates but the token-F1 matcher cannot match them to any reference. `ambiguous_evidence` dominates on `golden` (10), `failures/positive` (58), `packs` (60), `public/browser` (16) — candidates match 1–2 references but not enough to reach precision ≥0.8 for a pass. `broad_trigger` is rare (2 total) — the #492 alias removal + broad-trigger penalty are working correctly.
+
+### Inconclusive attribution breakdown (llama-3.1-8b)
+
+| Reason | Golden | Failures/Positive | Nearmiss | Raw/Synthetic | Raw/CI | Adapters | Packs |
+|---|---|---|---|---|---|---|---|
+| broad_trigger | 0 | 0 | 3 | 14 | 0 | 0 | 0 |
+| matcher_gap | 3 | 20 | 21 | 128 | 213 | 120 | 5 |
+| corpus_mismatch | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| ambiguous_evidence | 9 | 60 | 18 | 76 | 5 | 0 | 59 |
+
+**Key insight:** llama-3.1-8b has more `broad_trigger` (17 vs 2 on gpt-4o-mini) — the stronger model produces broader triggers that match more references including successes. This is also why it has 4 adversarial promotions (broader triggers match adversarial trajectories). `matcher_gap` pattern is similar — the lexical gap is model-independent.
+
+### Matcher diagnostics (gpt-4o-mini)
+
+| Corpus | Avg precision | Avg recall | Inconclusive | Notes |
+|---|---|---|---|---|
+| golden | 0.475 | 0.170 | 7/10 | precision decent but recall too low for pass threshold |
+| failures/positive | 0.304 | 0.195 | 40/50 | 40% inconclusive; candidates match few refs |
+| nearmiss | 0.092 | 0.035 | 19/50 | low scores expected (near-miss penalty) |
+| packs | 0.689 | 0.436 | 30/40 | best precision/recall — pack rules match pack-domain refs |
+| public/browser | 0.850 | 0.232 | 8/20 | highest precision; browser triggers are specific |
+| public/real-world/bugsinpy | 0.806 | 0.106 | 7/36 | high precision, low recall; 29/36 pass |
+| raw/synthetic | 0.245 | 0.096 | 108/145 | low precision; diverse phrasings hard to match |
+| raw/ci | 0.000 | 0.000 | 110/110 | 0 matches — CI tracebacks produce unmatchable triggers |
+| adapters | 0.000 | 0.000 | 60/60 | 0 matches — adapter framework triggers don't match references |
+| reference-expansion | 0.264 | 0.148 | 272/303 | low precision; paraphrase diversity challenges matcher |
+
+### Matcher diagnostics (llama-3.1-8b)
+
+| Corpus | Avg precision | Avg recall | Inconclusive | Notes |
+|---|---|---|---|---|
+| golden | 0.575 | 0.228 | 6/10 | higher precision/recall than gpt-4o-mini |
+| failures/positive | 0.368 | 0.252 | 40/50 | higher recall but still below pass threshold |
+| nearmiss | 0.120 | 0.037 | 21/50 | 3 broad_trigger (more than gpt-4o-mini's 1) |
+| packs | 0.683 | 0.429 | 32/40 | similar to gpt-4o-mini |
+| public/browser | 0.958 | 0.216 | 4/20 | highest precision of any corpus/model |
+| public/real-world/bugsinpy | 0.778 | 0.124 | 8/36 | 28/36 pass |
+| raw/synthetic | 0.279 | 0.126 | 109/145 | slightly higher recall than gpt-4o-mini |
+| raw/ci | 0.000 | 0.000 | 109/110 | 0 matches — same as gpt-4o-mini |
+| adapters | 0.000 | 0.000 | 60/60 | 0 matches — same as gpt-4o-mini |
+| reference-expansion | 0.307 | 0.184 | 267/303 | higher precision than gpt-4o-mini |
+
+**Root cause of 90% inconclusive:** the token-F1 matcher (threshold 0.70 curated, 0.60 public, 0.45 raw) cannot bridge the lexical gap between LLM-extracted trigger phrasings and reference trajectory phrasings. The #708 domain-scoping fix helped (recall improved from ~0.03 to ~0.07–0.10), but the fundamental limitation is lexical — "git push fails with non-fast-forward" vs "push rejected: non-fast-forward updates" score below 0.70 despite being semantically identical. Semantic matching (#689, opt-in via `CAUTERULE_SEMANTIC_MATCHING=1`) is designed to bridge this gap but requires the `[matching]` extra (`sentence-transformers`) to be installed. **Cloud re-run with semantic matching enabled is the highest-impact next step.**
 
 ---
 
@@ -349,65 +543,53 @@ Recall is **0.02-0.04** across all models — far below the 0.10 target. The ref
 
 ### Model pair comparison
 
-| Baseline → New | Shared corpora | New Pass | New Fail | Notes |
+| Baseline → New | Shared corpora | New Pass | New Fail | Wrong-Decision Rate |
 |---|---|---|---|---|
-| Llama-3.2-3B → Qwen-4B (local) | 30 | 54 → 30 (−24) | 336 → 318 (−18) | Qwen more conservative; fewer passes AND fewer fails |
-| Llama-3.2-3B → gpt-4o-mini (local→cloud) | 30 | 54 → 51 (−3) | 336 → 260 (−76) | Cloud extracts more but most inconclusive; similar pass count |
-| Llama-3.2-3B → llama-3.1-8b (local→cloud) | 30 | 54 → 44 (−10) | 336 → 325 (−11) | Balanced; fewer fails than Llama local |
-| gpt-4o-mini → llama-3.1-8b (cloud→cloud) | 30 | 51 vs 44 | 260 vs 325 | gpt-4o-mini: more passes, fewer fails; llama-3.1-8b: more public/golden passes |
+| gpt-4o-mini → llama-3.1-8b | 40 corpora | 116 vs 119 | 65 vs 72 | gpt-4o-mini: lower fail (65 vs 72), fewer adversarial (2 vs 4) |
 
-Unlike v0.2.0 — where cloud models had a clear quality advantage (golden 50% vs local 20%) — v0.3.0 shows **no model has a quality advantage on the gated corpora.** The differences are in extraction aggressiveness (Llama local extracts most; Qwen extracts least) and inconclusive volume (gpt-4o-mini has most). On the safety + security metrics, all 4 models are identical. The cloud advantage of v0.2.0 was an artifact of the broad aliases; the honest v0.3.0 numbers show cloud == local on quality.
+**Neither model is a clear upgrade.** gpt-4o-mini is safer (2 vs 4 adversarial promotions, 65 vs 72 fails). llama-3.1-8b extracts slightly more (119 vs 116 passes, 0.104 vs 0.068 recall). The safety-first recommendation is **gpt-4o-mini**.
 
-### Wrong-decision rate (model upgrade analysis)
+### v0.2.0 vs v0.3.0 (shared corpora, cloud)
 
-The wrong-decision rate formula: `wrong_decision_rate = new_fail / (new_pass + new_fail)`. Since all 4 models produce the same golden (1P) and nearmiss (1 FP) results, the wrong-decision rate for any model-pair upgrade on the gated corpora is effectively 0 — no model makes more wrong decisions than another on the safety-critical corpora. The differences are entirely in raw-corpus extraction volume, which is not safety-critical.
+| Corpus | v0.2.0 gpt-4o-mini | v0.3.0 gpt-4o-mini | Direction |
+|---|---|---|---|
+| golden | 5P (50%) | 3P (30%) | ❌ -20pp |
+| failures/positive | 22P (44%) | 4P (8%) | ❌ -36pp |
+| nearmiss FP | 5 | 1 | ✅ -4 |
+| adversarial promoted | 0 | 2 | ❌ +2 |
+| raw/synthetic | 20P | 22P | ✅ +2 |
+| raw/opencode | 7P | 10P | ✅ +3 |
 
----
-
-## 9b. Docker Field Test
-
-**Plan:** `docker-test-plan.md` (18 stages) · **Results:** `docker-test-results.md` · **Issues:** #641/#642/#676 (closed)
-
-| Area | Tests | Result |
-|---|---|---|
-| Build & hardening (non-root, git, HEALTHCHECK, OCI labels) | 8 | ✅ |
-| Compose (profiles, no dead port, MCP baked in) | 6 | ✅ (2 re-runs pending) |
-| CLI surface (corpus/benchmark/pack/otel/mcp) | 7 | ✅ |
-| Corpus + benchmark CLIs | 12 | ✅ |
-| Packs (create/install/persistence) | 7 | ✅ |
-| Adapters (import + hermetic) | 4 | ✅ |
-| Lifecycle | 3 | ✅ |
-| MCP stdio + HTTP + bearer auth | 6 | ✅ (#601 fixed) |
-| OTEL emit | 3 | ✅ |
-| Preflight cost | 3 | ✅ |
-| Badge + webhook | 4 | ✅ |
-| Pipeline E2E | 8 | ✅ |
-| Persistence | 3 | ✅ |
-| Image size + multi-arch | 3 | ✅ |
-| Resource + network | 2 | ✅ |
-| **Total** | **~70** | **151/153 passing** |
-
-**Critical finding:** the Docker field test caught the #601 MCP auth guard bug — `_request_headers()` imported from `fastmcp` (never installed) inside a try/except, silently allowing all HTTP traffic. Fixed via the official `mcp` SDK `Context` API. This is the kind of bug only a field test catches.
+| Corpus | v0.2.0 llama-3.1-8b | v0.3.0 llama-3.1-8b | Direction |
+|---|---|---|---|
+| golden | 5P (50%) | 4P (40%) | ❌ -10pp |
+| failures/positive | 27P (54%) | 3P (6%) | ❌ -48pp |
+| nearmiss FP | 7 | 1 | ✅ -6 |
+| adversarial promoted | 0 | 4 | ❌ +4 |
+| raw/synthetic | 37P | 24P | ❌ -13 |
 
 ---
 
 ## 10. Cost Measurement
 
-| Corpus | Gate-dropped (per model) | LLM calls avoided | Est. savings |
-|---|---|---|---|
-| successes | 60 | 120 (2 passes × 60) | $1.20 (cloud) / $0 (local) |
-| failures/negative | 60 | 120 | $1.20 (cloud) / $0 (local) |
-| nearmiss | 37 | 74 | $0.74 (cloud) / $0 (local) |
-| public/nearmiss | 20 | 40 | $0.40 (cloud) / $0 (local) |
-| **Total gate savings** | **177** | **354** | **$3.54 (cloud) / $0 (local OMLX)** |
+The `cost` corpus (1,000 mixed trajectories: 300 success, 300 failure-positive, 200 failure-negative, 200 raw-mixed) ran on both cloud models. 333/1000 gate-dropped (cost saving), 667 inconclusive, 0 pass.
 
-Local OMLX models are free ($0/traj). Cloud: gpt-4o-mini ~$1.60/1k trajs; llama-3.1-8b ~$0 (open-weight). The pre-extraction gate saves $3.54 per cloud sweep. Full $/1k measurement (#653) pending — preflight `--cost-table` already ships the tier table.
+| Model | Trajs | Gate-dropped | LLM calls avoided | Token capture |
+|---|---|---|---|---|
+| gpt-4o-mini | 1,000 | 333 | 666 | ✅ (`LLMResponse.prompt_tokens`/`completion_tokens`) |
+| llama-3.1-8b | 1,000 | 333 | 666 | ✅ |
+
+`scripts/measure_cost.py` computes per-model `$`/candidate/`$`/promoted/`$/1k` from real OpenRouter prices (gpt-4o-mini $0.15/$0.60 per 1M; llama-3.1-8b $0.06/$0.06 per 1M). Numeric table pending a re-run with token capture enabled (the cost corpus ran before token capture landed; see [`cost-measurement.md`](cost-measurement.md)).
+
+Gate savings: 333 gate-dropped × 2 passes = 666 LLM calls avoided per model. At gpt-4o-mini ~$0.0002/request, that's ~$0.13 saved per 1,000 trajectories.
 
 ---
 
 ## 11. Harness Health
 
-All sweeps report harness health PASS. Parse rate ≥70%, completion ratio within expected range. Safety corpora correctly flagged (0 candidates = expected, not failure).
+All sweeps report harness health PASS. Parse rate ≥70%, completion ratio within expected range. Safety corpora correctly flagged as `is_safety_corpus` (0 candidates is expected, not a harness failure). The `cost` corpus (1,000 trajectories) completed in 472s (gpt-4o-mini) and 670s (llama-3.1-8b) at 6 workers — cloud performance is adequate for production sweeps.
+
+The runner now includes a per-trajectory timeout (120s default, `--per-trajectory-timeout`) and quarantine (`CAUTERULE_QUARANTINE_IDS`) to handle hung LLM calls (#713) — a stuck trajectory is recorded as `timeout` and the sweep continues.
 
 ---
 
@@ -417,45 +599,74 @@ All sweeps report harness health PASS. Parse rate ≥70%, completion ratio withi
 
 | Metric | v0.2.0 | v0.3.0 | Delta |
 |---|---|---|---|
-| Test count | 1,008 | 1,278 | +270 |
-| Fast suite (excl. field/scale) | — | 1,278 passed, 5 skipped | ✅ |
-| Corpus validation | 76 tests | 81 tests | +5 |
+| Test count | 1,008 | ~1,600+ | +592 |
+| Source files | 218 | ~250+ | +32 |
+| Code coverage | 86% | 83% | -3% (new measurement modules) |
 
-Coverage at ~86% remains below the 95% target (#494 deferred to M8).
+Coverage at 83% is below the 95% exit gate target. New v0.3.0 modules (measurement, adapters, packs, lifecycle, OTEL, webhook, badge) not fully exercised. #494 closed at 83% with +109 tests; remaining gap deferred.
 
-### Validation suites (19 total, 12 inherited + 7 new)
+### Validation suite summary
 
-| Suite | v0.2.0 | v0.3.0 (new) |
+19 suites (12 inherited + 7 new):
+
+| Suite | Tests | Result |
 |---|---|---|
-| pre_extraction_gate, replay_matcher, replay_safety, replay_attribution, promotion_safety, extraction_specificity, sentinel_benchmark, scale_benchmark, adversarial, corpus, observe, tui | 12 (v0.2.0) | — |
-| **adapter_conformance, lifecycle, packs, mcp_security, otel_exporter, corpus_cli, benchmark_cli** | — | **7 (v0.3.0 NEW)** |
+| pre_extraction_gate | 9 | ✅ PASS |
+| replay_matcher | 18+ | ✅ PASS |
+| replay_safety | 12+ | ✅ PASS |
+| replay_attribution | 9 | ✅ PASS |
+| promotion_safety | 8+ | ✅ PASS |
+| extraction_specificity | 7+ | ✅ PASS |
+| sentinel_benchmark | 60 | ✅ PASS |
+| scale_benchmark | 24 | ✅ PASS |
+| adversarial | 41+ | ✅ PASS |
+| corpus | 76+ | ✅ PASS |
+| observe | 52 | ✅ PASS |
+| tui | 43 | ✅ PASS |
+| **adapter_conformance** (new) | — | ✅ PASS |
+| **lifecycle** (new) | 4 | ✅ PASS |
+| **packs** (new) | 8 | ✅ PASS |
+| **mcp_security** (new) | 60 | ✅ PASS |
+| **otel_exporter** (new) | — | ✅ PASS |
+| **corpus_cli** (new) | — | ✅ PASS |
+| **benchmark_cli** (new) | — | ✅ PASS |
+| **measurement** (new) | 27 | ✅ PASS |
+
+### Observability metrics
+
+Per-rule hit counter, last-match timestamp, rule coverage score, domain coverage, failure-class coverage, coverage gap detector, failure pattern leaderboard, coverage frontier recommendation, learning journal, monthly report — all verified. OTEL exporter emits `rule.match`/`promote`/`retire`/`replay.verdict` spans (non-fatal on failure). Webhook fires on promotion (best-effort). Badge emits SVG + shields URL.
 
 ---
 
 ## 13. Known Issues
 
+See [`field-test/v0.3.0/known-issues.md`](../../field-test/v0.3.0/known-issues.md) for the full list.
+
 | Issue | Severity | Workaround |
 |---|---|---|
-| Golden pass rate 10% (all 4 models, target ≥70%) | **Major** — release blocker | Structural: matcher threshold vs reference similarity after #492 alias removal. Options: re-baseline thresholds, add selective aliases, or add semantic matching. Cloud == local confirms it's not model capability |
-| Failures/positive pass rate 6-10% (target ≥50%) | **Major** — release blocker | Same cause as golden |
-| Reference recall 0.02-0.04 (target ≥0.10) | Major | #489 expansion added trajectories but token-F1 matcher can't bridge paraphrases — needs semantic/embedding matching |
-| 2 compose test re-runs pending (mcp-accepts, test-service) | Low | Fixes applied (profiles, pip --user); re-run pending |
-| Coverage 86% (target 95%) | Medium | #494 deferred to M8 |
-| OTEL exporter log noise ("opentelemetry.exporter not installed") | Low (cosmetic) | Install `opentelemetry-exporter-otlp` in dev venv |
-| Cross-session reduction not yet measured (#663) | Medium | Tooling complete (`scripts/cross_session.py`, runner `--cross-session`); 5-session protocol run pending |
-| Human review agreement not measured (#493) | Medium | Tooling complete (`scripts/human_agreement.py`, runner `--human-review`); reviewer scoring pending |
-| `openai` package missing from dev venv | Low | `pip install openai` (done) |
-| `benchmarks/baseline.json` committed as 284KB artifact | Low | ✅ Fixed (#679): replaced the 12.4MB raw dump with a 1.2KB derived baseline (`--write-baseline`); raw dumps ignored via `.gitignore` |
+| Adversarial promotion on cloud (2–4 passes) | **Blocker** | Add adversarial corpora to `SAFETY_CORPORA` or enforce `should_reject` in gate |
+| 90% inconclusive rate | **Blocker** | Token-F1 matcher can't bridge paraphrases; semantic matching (#689) needs `[matching]` extra installed |
+| Golden 30–40% (target ≥70%) | Major | Structural matcher/threshold issue (#680); #492 alias removal made scoring honest but stricter |
+| Failures/positive 6–8% (target ≥50%) | Major | Same root cause; precision ≥0.8 pass threshold rarely reached |
+| Adapters 100% inconclusive | Major | 93 candidates score, 0 decide — matcher paralysis |
+| raw/ci 0 passes (was 7) | Major | CI traceback-heavy prompts produce unmatchable triggers |
+| Semantic matching (#689) has no effect | Medium | `sentence-transformers` not installed; warns but no-ops |
+| Cross-session reduction not measured | Medium | Tooling complete (`scripts/cross_session.py`); 5-session protocol pending |
+| Human agreement not measured | Medium | Tooling complete (`scripts/human_agreement.py`); reviewer scoring pending |
+| Coverage 83% (target 95%) | Medium | #494 closed at 83%; deferred to M8 |
+| 2 Docker compose re-runs | Low | Fixes applied (profiles, pip --user); re-run pending |
+| Cost measurement numeric table | Low | Token capture landed; cost corpus re-run with tokens pending |
 
 ---
 
 ## Gaps Still Open
 
-1. **Quality gate gap** (major) — golden 10%, failures/positive 6-10% on ALL models. Not model capability — structural matcher threshold. Three paths: (a) re-baseline thresholds with rationale, (b) re-add SELECTIVE aliases (specific phrases only), (c) add semantic/embedding matching for paraphrase bridging.
-2. **Recall gap** (major) — 0.02-0.04 vs 0.10 target. The #489 corpus expansion alone doesn't help; the matcher needs semantic help.
-3. **Cross-session gap** (medium) — #663 not yet measured.
-4. **Human agreement gap** (medium) — #493 not yet sampled.
-5. **Coverage gap** (medium) — 86% vs 95% target (#494, M8).
+1. **Adversarial promotion gap** (new, blocker) — 2–4 rules promoted from adversarial trajectories. The gate does not silence adversarial corpora. Fix: add to `SAFETY_CORPORA` or enforce `should_reject`.
+2. **Quality gap** (worsened) — golden 30–40%, failures/positive 6–8%. The #492 alias removal + near-miss penalty made scoring honest but stricter. The token-F1 matcher cannot bridge the paraphrase gap. Semantic matching (#689) is the v0.4.0 lever.
+3. **Inconclusive gap** (worsened) — 90% inconclusive. Candidates reach scoring but match 0–1 references. The domain-scoping fix (#708) helped but the lexical gap remains.
+4. **Cross-session gap** (tooling ready) — `scripts/cross_session.py` + runner `--cross-session`; 5-session protocol not yet run.
+5. **Human agreement gap** (tooling ready) — `scripts/human_agreement.py` + runner `--human-review`; reviewer scoring not yet done.
+6. **Cost gap** (tooling ready) — token capture landed; cost corpus re-run with tokens pending.
 
 ---
 
@@ -465,67 +676,80 @@ Coverage at ~86% remains below the 95% target (#494 deferred to M8).
 
 | # | Action | Effort | Impact |
 |---|--------|--------|--------|
-| 1 | **Decide on quality gate** — re-baseline thresholds OR re-add selective aliases OR accept honest 10% with rationale | Decision | Unblocks release |
-| 2 | **Complete compose re-runs** (mcp-accepts, test-service) | Low | Closes #642 fully |
-| 3 | **Measure cross-session reduction** (#663) — 5-session protocol | Medium | Required for release gate |
-| 4 | **Sample human agreement** (#493) — candidates per verdict bucket | Medium | Required for release gate |
+| 1 | **Fix adversarial promotion** — add adversarial corpora to `SAFETY_CORPORA` or enforce `should_reject` in the gate | Low | Unblocks safety gate (2–4 → 0 promotions) |
+| 2 | **Install `[matching]` extra + re-run key corpora with semantic matching** | Medium | Addresses recall/paraphrase root cause |
+| 3 | **Re-run cost corpus with token capture** for real $/1k | Low | Populates cost-measurement.md |
+| 4 | **Run cross-session protocol** (5 sessions baseline vs intervention) | Medium | Required for release gate |
+| 5 | **Sample human agreement** (candidates per verdict bucket) | Medium | Required for release gate |
+| 6 | Decide: accept honest 30–40% golden or re-baseline thresholds | Decision | Release decision |
 
 ### Long-term (v0.4.0+)
 
 | # | Action | Effort | Impact |
 |---|--------|--------|--------|
-| 1 | **Add semantic matching** — embedding-based trigger-to-reference matching to bridge paraphrases | High | Addresses recall + quality gate root cause |
-| 2 | **Restore coverage to >95%** (#494) | Medium | Release gate target |
-| 3 | **Install OTEL exporter** in dev venv | Low | Clean logs |
-| 4 | **Add recall threshold enforcement** once semantic matching lifts recall | Low | Release gate |
+| 1 | **Semantic matching default-on** — install `[matching]` extra in the field-test venv | High | Addresses recall + inconclusive root cause |
+| 2 | **Narrow extraction prompt** — instruct the model to produce tighter triggers | High | Reduces broad-trigger inconclusives |
+| 3 | **Restore coverage to >95%** (#494) | Medium | Meets release gate target |
+| 4 | **Add recall threshold to release gate** — enforce recall ≥0.10 | Low | Ensures replay judgments are trustworthy |
 
 ---
 
 ## Conclusions
 
-CauterRule v0.3.0 is the **safest version shipped**. The safety gate holds on 4/4 models (100% silence), nearmiss is at 98% correct (down from 86-94% in v0.2.0), adversarial is 0 promoted, and the #601 MCP auth bug — a critical security defect that shipped green through unit CI — was found and fixed by the Docker field test. Five additional field-test fixes (near-miss penalty, self-match exclusion, recovery gate, #492 alias revert, runner JSONL bug) made the scoring honest.
+CauterRule v0.3.0 is in a **mixed position** compared to v0.2.0.
 
-But the quality pass-rate thresholds are **unreachable on any model** — cloud and local perform identically at ~10% on golden. This is NOT a model-capability issue; it's the structural cost of removing the broad aliases that inflated v0.2.0's 50% cloud golden. The v0.3.0 numbers are the **true quality floor** of the current matcher (token-F1 + bigram, no semantic matching).
+**Safer:** nearmiss precision improved dramatically (5–7→1 false pass, 98%), the #601 MCP auth bug was caught and fixed, the gate now detects recovery patterns and silences clean successes in relaxed mode. Safety corpora remain at 100% silence.
 
-The path forward is clear: semantic/embedding-based matching to bridge the paraphrase gap between extracted triggers and reference trajectories. The reference corpus is now 518 trajectories (#489), but the token-F1 matcher can't exploit its diversity. This is the v0.4.0 lever.
+**Broader:** 40 corpora (was 22), 444 references (was 230), Docker validation (159 tests), measurement tooling (5 scripts + 7 runner flags), cost corpus (1,000 trajectories), token usage capture, 18 new corpora covering adapters/lifecycle/packs/mcp/otel/browser/bugsinpy.
 
-- **The v0.3.0 field test was a success** — it found and fixed real bugs.
-- **The product is the safest it has ever been.**
-- **The product is not yet quality-gate complete** — the honest quality floor is below the release threshold.
-- **The quality gap is structural (matcher), not model-capability** — cloud == local.
+**But worse on quality:** golden dropped 50%→30–40%, failures/positive dropped 44–54%→6–8%, inconclusive doubled to 90%. The #492 alias removal made scoring honest but stricter. The token-F1 matcher cannot bridge the paraphrase gap between LLM-extracted triggers and reference phrasings — semantic matching (#689) is the intended fix but requires the `[matching]` extra to be installed.
+
+**New regression:** adversarial promotion (0→2–4) on cloud models. The stronger cloud models produce more convincing-looking candidates from adversarial trajectories, and the gate does not silence adversarial corpora. This is a release blocker.
+
+- **v0.3.0 is safer than v0.2.0 on nearmiss.**
+- **v0.3.0 is worse than v0.2.0 on extraction quality.**
+- **v0.3.0 has a new adversarial promotion regression.**
+- **v0.3.0 is not yet ready for autonomous rule promotion.**
+
+The path forward is clear: fix the adversarial gate (one-line `SAFETY_CORPORA` addition), install the `[matching]` extra and re-run with semantic matching, run the cross-session protocol, and sample human agreement. The #708 domain-scoping fix is verified to work (recall 7× on local); the remaining quality gap is the matcher's lexical-bridge limitation, which semantic matching addresses.
 
 ---
 
-## Field Test Plan Reporting Checklist
+## Field Test Plan §10.3 Reporting Checklist
 
 | # | Required section | Status |
 |---|-----------------|--------|
 | 1 | BLUF + release gate verdict | ✅ §1 |
 | 2 | Safety-adjusted ranking | ✅ §7 |
-| 3 | Decision economics | ✅ §0 (v0.2.0 vs v0.3.0 comparison) |
+| 3 | Decision economics | ✅ §9 |
 | 4 | Extraction rate | ✅ §8 |
 | 5 | Methodology | ✅ §5 |
 | 6 | Harness health | ✅ §11 |
-| 7 | Cost measurement | ✅ §10 |
-| 8 | Human review agreement rate | ❌ Pending (#493) |
+| 7 | Cost measurement | ⚠️ §10 (token capture landed; numeric table pending re-run) |
+| 8 | Human review agreement rate | ❌ Pending — tooling ready, reviewer scoring not done |
 | 9 | Specificity distribution | ✅ §8 |
-| 10 | Inconclusive attribution breakdown | ✅ §6 (per-corpus) |
+| 10 | Inconclusive attribution breakdown | ✅ §8 |
 | 11 | Silence rate for safety corpora | ✅ §7 |
 | 12 | Coverage and observability metrics | ✅ §12 |
 | 13 | Known issues with severity and workaround | ✅ §13 |
 
-> ⚠️ **Missing:** Human review agreement rate (#8, #493), cross-session reduction (#663), cost per-1k (#653 full measurement). These are pending M7 items.
+> ⚠️ **Missing:** Human review agreement rate (#8) and cross-session reduction (#445) require protocol runs. Cost measurement (#7) numeric table requires a cost corpus re-run with token capture.
 
 ---
 
 ## Source Documents
 
 - `docs/field-test/v0.3.0/field-test-plan.md`
-- `docs/field-test/v0.3.0/field-test-results-4model.md`
-- `docs/field-test/v0.3.0/field-test-results-llama-3.2-3b.md`
-- `docs/field-test/v0.3.0/field-test-results-qwen3-4b.md`
-- `docs/field-test/v0.3.0/learnings-fixes.md`
-- `docs/field-test/v0.3.0/regression-llama-3.2-3b-vs-v0.2.0.md`
-- `docs/field-test/v0.3.0/docker-test-plan.md`
+- `docs/field-test/v0.3.0/generated-results.md` (auto-generated)
+- `docs/field-test/v0.3.0/field-test-results-gpt-4o-mini.md`
+- `docs/field-test/v0.3.0/field-test-results-llama-3.1-8b.md`
+- `docs/field-test/v0.3.0/field-test-results-cloud.md`
+- `docs/field-test/v0.3.0/corpus-diagnostics.md`
 - `docs/field-test/v0.3.0/docker-test-results.md`
+- `docs/field-test/v0.3.0/pack-replay.md`
+- `docs/field-test/v0.3.0/fix8-recovery-exclusion.md`
+- `docs/field-test/v0.3.0/threshold-calibration.md`
+- `docs/field-test/v0.3.0/cost-measurement.md`
+- `field-test/v0.3.0/known-issues.md`
 - `field-test/results/0.3.0/`
+- `docs/field-test/v0.2.0/FIELD_TEST_REPORT.md` (baseline)

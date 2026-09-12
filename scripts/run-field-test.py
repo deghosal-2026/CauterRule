@@ -397,17 +397,21 @@ def extract_candidates(
     llm_model: str,
     llm_base_url: str,
     temperatures: list[float],
-) -> list[dict]:
+) -> tuple[list[dict], dict[str, int]]:
     from cauterule.extraction.extractor import _parse_candidate_json
     from cauterule.extraction.prompt import build_extraction_prompt
     from cauterule.models.trajectory import Trajectory
     llm = _get_llm(llm_provider, llm_model, llm_base_url)
     traj = Trajectory.from_dict(trajectory)
     candidates: list[dict] = []
+    usage = {"prompt_tokens": 0, "completion_tokens": 0, "llm_requests": 0}
     for idx, temp in enumerate(temperatures, start=1):
+        usage["llm_requests"] += 1
         try:
             prompt = build_extraction_prompt(traj)
             result = llm.complete(prompt, temperature=temp)
+            usage["prompt_tokens"] += int(getattr(result, "prompt_tokens", 0) or 0)
+            usage["completion_tokens"] += int(getattr(result, "completion_tokens", 0) or 0)
             raw_text = result.text if hasattr(result, "text") else str(result)
             candidate = _parse_candidate_json(raw_text, extraction_pass=idx, template=None)
             from cauterule.extraction.quality import check_quality
@@ -423,7 +427,7 @@ def extract_candidates(
             })
         except Exception as exc:
             print(f"NO CANDIDATE (pass {idx}, temp={temp}): {exc}")
-    return candidates
+    return candidates, usage
 
 
 # ── Gate ───────────────────────────────────────────────────────────────
@@ -608,7 +612,7 @@ def process_one_trajectory(
             "llm_calls_avoided": len(temperatures),
         }
 
-    candidates = extract_candidates(
+    candidates, llm_usage = extract_candidates(
         trajectory, args.llm_provider, args.llm_model, args.llm_base_url, temperatures,
     )
     if not candidates:
@@ -621,6 +625,7 @@ def process_one_trajectory(
             "task_specificity": task_specificity,
             "pre_extraction_drop": False,
             "llm_calls_avoided": 0,
+            **llm_usage,
         }
 
     test_results = []
@@ -675,6 +680,7 @@ def process_one_trajectory(
         "task_specificity": task_specificity,
         "pre_extraction_drop": False,
         "llm_calls_avoided": 0,
+        **llm_usage,
     }
 
 

@@ -107,13 +107,25 @@ def _run_meta(run_dir: Path) -> dict[str, Any]:
     return {}
 
 
-def load_runs(results_root: str | Path | None = None) -> list[RunSummary]:
-    """Load and aggregate every sweep run under *results_root*."""
+def load_runs(
+    results_root: str | Path | None = None,
+    *,
+    exclude_local: bool = True,
+) -> list[RunSummary]:
+    """Load and aggregate every sweep run under *results_root*.
+
+    Local OMLX runs (``omlx-*`` model dirs) are excluded by default: the
+    v0.3.0 field test reports cloud OpenRouter models only (#713 — local LLMs
+    are too slow for the full corpus sweep). Pass ``exclude_local=False`` to
+    include them.
+    """
     root = Path(results_root) if results_root is not None else DEFAULT_RESULTS_ROOT
     runs: list[RunSummary] = []
     for results_file in sorted(root.glob("*/*/*/results.jsonl")):
         parts = results_file.relative_to(root).parts
         corpus_dir, model_dir = parts[0], parts[1]
+        if exclude_local and model_dir.lower().startswith("omlx"):
+            continue
         meta = _run_meta(results_file.parent)
         corpus = str(meta.get("corpus_type") or corpus_dir)
         model_label = _MODEL_LABELS.get(model_dir, model_dir)

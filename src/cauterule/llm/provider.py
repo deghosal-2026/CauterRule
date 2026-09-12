@@ -21,6 +21,8 @@ class LLMResponse:
     text: str
     model: str
     provider: str
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
 
 
 def _require_optional(package: str, extra: str) -> None:
@@ -68,7 +70,7 @@ def _is_transient(exc: BaseException) -> bool:
     return any(hint in text for hint in _TRANSIENT_HINTS)
 
 
-def _call_with_retries(fn: Callable[[], str], max_retries: int) -> str:
+def _call_with_retries(fn: Callable[[], Any], max_retries: int) -> Any:
     """Call *fn*, retrying transient failures with exponential backoff (#508)."""
     attempt = 0
     while True:
@@ -136,18 +138,25 @@ class OpenAIProvider(LLMProvider):
         max_tokens = kwargs.get("max_tokens", self._max_tokens)
         client = openai.OpenAI(**client_kwargs)
 
-        def _call() -> str:
-            resp = client.chat.completions.create(
+        def _call() -> Any:
+            return client.chat.completions.create(
                 model=self._model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
                 max_tokens=max_tokens,
                 timeout=timeout,
             )
-            return resp.choices[0].message.content or ""
 
-        text = _call_with_retries(_call, int(kwargs.get("max_retries", self._max_retries)))
-        return LLMResponse(text=text, model=self._model, provider=self.name)
+        resp = _call_with_retries(_call, int(kwargs.get("max_retries", self._max_retries)))
+        text = resp.choices[0].message.content or ""
+        usage = getattr(resp, "usage", None)
+        return LLMResponse(
+            text=text,
+            model=self._model,
+            provider=self.name,
+            prompt_tokens=int(getattr(usage, "prompt_tokens", 0) or 0),
+            completion_tokens=int(getattr(usage, "completion_tokens", 0) or 0),
+        )
 
 
 class AnthropicProvider(LLMProvider):

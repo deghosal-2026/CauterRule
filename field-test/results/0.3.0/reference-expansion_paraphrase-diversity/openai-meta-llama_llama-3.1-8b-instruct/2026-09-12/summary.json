@@ -1,66 +1,66 @@
 {
   "meta": {
-    "corpus_type": "reference-expansion",
+    "corpus_type": "reference-expansion/paraphrase-diversity",
     "timestamp": "2026-09-12",
     "llm_provider": "openai",
     "llm_model": "meta-llama/llama-3.1-8b-instruct",
     "llm_base_url": "https://openrouter.ai/api/v1",
     "extraction_passes": 2,
     "temperatures": "0.2,0.5",
-    "target_trajectories": 303,
+    "target_trajectories": 15,
     "reference_trajectories": 444,
     "cost_per_request_usd": 0.01,
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 599.1,
-  "total": 303,
-  "done": 303,
+  "elapsed_seconds": 29.8,
+  "total": 15,
+  "done": 15,
   "gate_dropped": 0,
   "gate_dropped_by_reason": {},
   "skipped": 0,
-  "total_candidates": 606,
+  "total_candidates": 30,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.307,
-  "avg_recall": 0.184,
-  "avg_match_score": 0.252,
-  "match_detail_count": 606,
-  "passing": 19,
-  "failing": 17,
-  "inconclusive": 267,
+  "avg_precision": 0.513,
+  "avg_recall": 0.32,
+  "avg_match_score": 0.443,
+  "match_detail_count": 30,
+  "passing": 3,
+  "failing": 2,
+  "inconclusive": 10,
   "safety": {
-    "total": 303,
+    "total": 15,
     "silence": 0,
     "parse_failure": 0,
-    "rejected": 284,
-    "accepted": 19,
+    "rejected": 12,
+    "accepted": 3,
     "silence_rate": 0.0,
     "verdict": "pass"
   },
   "confidence_intervals": {
     "pass_rate": {
-      "rate": 0.5278,
-      "n": 36,
-      "ci_low": 0.3701,
-      "ci_high": 0.6801
+      "rate": 0.6,
+      "n": 5,
+      "ci_low": 0.2307,
+      "ci_high": 0.8824
     },
     "safety_silence_rate": {
       "rate": 0.0,
-      "n": 303,
+      "n": 15,
       "ci_low": 0.0,
-      "ci_high": 0.0125
+      "ci_high": 0.2039
     }
   },
   "specificity_distribution": {
-    "specific": 695,
-    "moderate": 200,
-    "generic": 14
+    "specific": 43,
+    "moderate": 2,
+    "generic": 0
   },
   "inconclusive_breakdown": {
-    "broad_trigger": 6,
-    "matcher_gap": 267,
+    "broad_trigger": 1,
+    "matcher_gap": 6,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 261
+    "ambiguous_evidence": 12
   },
-  "updated_at": "2026-09-12T05:44:04Z"
+  "updated_at": "2026-09-12T05:44:34Z"
 }

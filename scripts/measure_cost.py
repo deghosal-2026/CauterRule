@@ -46,14 +46,44 @@ def _model_for(results_file: Path, root: Path) -> str:
     return parts[-3] if len(parts) >= 3 else parts[0]
 
 
-def collect(root: Path, model: CostModel, *, extraction_passes: int = 2) -> dict[str, list[dict]]:
-    """Return {model: [per-corpus report dict, ...]}."""
+# Real OpenRouter list prices (USD per 1k tokens), matched by model substring.
+# Source: openrouter.ai model pages, 2026-09. Override with --input-price /
+# --output-price for models not listed.
+_PRICE_MAP: dict[str, CostModel] = {
+    "gpt-4o-mini": CostModel(input_price_per_1k=0.00015, output_price_per_1k=0.0006),
+    "llama-3.1-8b": CostModel(input_price_per_1k=0.00006, output_price_per_1k=0.00006),
+}
+
+
+def _cost_model_for(model_name: str, fallback: CostModel) -> CostModel:
+    for key, cost_model in _PRICE_MAP.items():
+        if key in model_name:
+            return cost_model
+    return fallback
+
+
+def collect(
+    root: Path,
+    model: CostModel,
+    *,
+    extraction_passes: int = 2,
+    exclude_local: bool = True,
+) -> dict[str, list[dict]]:
+    """Return {model: [per-corpus report dict, ...]}.
+
+    Local OMLX runs are excluded by default (they are not part of the v0.3.0
+    cloud-only reports, #713).
+    """
     by_model: dict[str, list[dict]] = {}
     for results_file in sorted(root.rglob("results.jsonl")):
+        model_name = _model_for(results_file, root)
+        if exclude_local and "omlx" in model_name.lower():
+            continue
+        cost_model = _cost_model_for(model_name, model)
         records = records_from_results(_load_results(results_file), extraction_passes=extraction_passes)
-        report: CostReport = measure_cost(records, cost_model=model)
+        report: CostReport = measure_cost(records, cost_model=cost_model)
         corpus = results_file.relative_to(root).parts[0]
-        by_model.setdefault(_model_for(results_file, root), []).append(
+        by_model.setdefault(model_name, []).append(
             {
                 "corpus": corpus,
                 "trajectories": report.trajectories,
@@ -61,11 +91,19 @@ def collect(root: Path, model: CostModel, *, extraction_passes: int = 2) -> dict
                 "candidates": report.candidates_produced,
                 "promoted": report.rules_promoted,
                 "gate_dropped": report.gate_dropped,
+                "prompt_tokens": report.prompt_tokens,
+                "completion_tokens": report.completion_tokens,
                 "total_cost_usd": report.total_cost_usd,
                 "cost_per_candidate": report.cost_per_candidate,
                 "cost_per_promoted_rule": report.cost_per_promoted_rule,
                 "cost_per_1k_trajectories": report.cost_per_1k_trajectories,
-                "gate_savings_usd": report.gate_savings_usd,
+                # Gate savings = cost avoided on gate-dropped trajectories, using
+                # the measured average cost per LLM request for this model.
+                "gate_savings_usd": (
+                    report.total_cost_usd / report.llm_requests * report.gate_dropped
+                    if report.llm_requests
+                    else 0.0
+                ),
             }
         )
     return by_model
@@ -77,9 +115,10 @@ def render_markdown(by_model: dict[str, list[dict]], model: CostModel) -> str:
         "",
         "**Issues:** #653/#486 · **Plan:** §5.4/§7.4",
         "",
-        f"**Pricing:** input ${model.input_price_per_1k}/1k, output "
-        f"${model.output_price_per_1k}/1k, fallback "
-        f"${model.cost_per_request_usd}/request",
+        f"**Pricing:** real per-model token prices (gpt-4o-mini $0.15/$0.60 per 1M; "
+        f"llama-3.1-8b $0.06/$0.06 per 1M). Fallback request price "
+        f"${model.cost_per_request_usd}/request for models not in the price map. "
+        "**Cloud models only** (#713).",
         "",
         "| Model | Trajs | LLM reqs | Candidates | Promoted | Total $ | $/candidate | $/promoted | $/1k trajs | Gate savings |",
         "|-------|-------|----------|------------|----------|---------|-------------|------------|------------|--------------|",
@@ -114,6 +153,11 @@ def main(argv: list[str] | None = None) -> int:
         default=str(REPO / "docs" / "field-test" / "v0.3.0" / "cost-measurement.md"),
     )
     parser.add_argument("--json-output", default=None)
+    parser.add_argument(
+        "--include-local",
+        action="store_true",
+        help="Include local OMLX runs (excluded by default; #713).",
+    )
     args = parser.parse_args(argv)
 
     root = Path(args.results)
@@ -125,7 +169,7 @@ def main(argv: list[str] | None = None) -> int:
         output_price_per_1k=args.output_price,
         cost_per_request_usd=args.cost_per_request,
     )
-    by_model = collect(root, model)
+    by_model = collect(root, model, exclude_local=not args.include_local)
     if not by_model:
         print(f"[error] no results.jsonl found under {root}")
         return 1
