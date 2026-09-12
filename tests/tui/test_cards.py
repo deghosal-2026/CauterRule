@@ -36,12 +36,14 @@ def test_card_render_no_evidence() -> None:
 
 def test_card_render_dict() -> None:
     card = EvidenceCard()
-    card.render_dict({
-        "failures_prevented": ["F-1"],
-        "successes_broken": [],
-        "precision": 0.75,
-        "recall": 0.25,
-    })
+    card.render_dict(
+        {
+            "failures_prevented": ["F-1"],
+            "successes_broken": [],
+            "precision": 0.75,
+            "recall": 0.25,
+        }
+    )
     output = str(card.render())
     assert "Prevented 1 failures" in output
     assert "broke 0 successes" in output

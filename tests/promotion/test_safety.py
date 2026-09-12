@@ -9,7 +9,9 @@ from cauterule.promotion.safety import check_safety
 
 
 def _cand() -> CandidateRule:
-    return CandidateRule(when=RuleWhen(trigger="git push fails"), do=RuleDo(directive="pull first"), confidence=0.9)
+    return CandidateRule(
+        when=RuleWhen(trigger="git push fails"), do=RuleDo(directive="pull first"), confidence=0.9
+    )
 
 
 def _evidence(verdict: str = "pass", prevented: int = 1, broken: int = 0) -> EvidenceReport:
@@ -41,7 +43,9 @@ def test_safety_no_block_without_corpus() -> None:
 
 
 def test_safety_nearmiss_low_precision() -> None:
-    ev = EvidenceReport(failures_prevented=("F1",), successes_broken=(), verdict="pass", precision=0.5)
+    ev = EvidenceReport(
+        failures_prevented=("F1",), successes_broken=(), verdict="pass", precision=0.5
+    )
     warnings = check_safety(ev, corpus_name="nearmiss")
     assert len(warnings) > 0
 

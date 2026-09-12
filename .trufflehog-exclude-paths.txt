@@ -1,0 +1,14 @@
+(^|/)\.git/
+(^|/)\.venv
+(^|/)venv
+(^|/)__pycache__/
+\.pyc$
+(^|/)\.mypy_cache/
+(^|/)\.pytest_cache/
+(^|/)\.ruff_cache/
+(^|/)\.benchmarks/
+(^|/)dist/
+(^|/)build/
+(^|/)\.egg-info/
+(^|/)node_modules/
+(^|/)htmlcov/

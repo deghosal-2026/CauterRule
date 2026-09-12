@@ -1,15 +1,13 @@
 from __future__ import annotations
 
+import time
+
 import click
 
-from cauterule.store.manager import StoreManager
-from cauterule.replay.report import build_evidence_report
-from cauterule.models.candidate import CandidateRule
-from cauterule.serialization.trajectory_jsonl import load_trajectories, dump_trajectories
-from cauterule.capture.failure import detect_failure_point, detect_failure_class
+from cauterule.capture.failure import detect_failure_class
 from cauterule.capture.metadata import enrich_trajectory
 from cauterule.models.trajectory import Step, Trajectory
-import time
+from cauterule.serialization.trajectory_jsonl import dump_trajectories
 
 
 def _seed_failure(task: str, tool: str, error: str, step_number: int = 1) -> Trajectory:
@@ -38,31 +36,33 @@ def _run_demo_pipeline(failures: int) -> None:
     for i in range(failures - len(seeded)):
         seeded.append(
             _seed_failure(
-                f"failure scenario {i+6}",
+                f"failure scenario {i + 6}",
                 "tool",
-                f"error code {i+1}",
+                f"error code {i + 1}",
             )
         )
 
     click.echo(f"Seeded {len(seeded)} failure trajectories.")
 
     from pathlib import Path
+
     traj_dir = Path("trajectories")
     traj_dir.mkdir(parents=True, exist_ok=True)
     traj_path = traj_dir / "demo.jsonl"
     dump_trajectories(seeded, traj_path)
     click.echo(f"Wrote trajectories to {traj_path}")
 
-    click.echo(f"\n{'='*60}")
+    click.echo(f"\n{'=' * 60}")
     click.echo("Extraction phase (dry-run):")
     from cauterule.extraction.dryrun import dry_run
-    for t in seeded[:min(3, len(seeded))]:
+
+    for t in seeded[: min(3, len(seeded))]:
         info = dry_run(t)
         click.echo(f"  Trajectory '{t.id}':")
         click.echo(f"    when: {info.when.trigger}")
         click.echo(f"    do: {info.do.directive}")
 
-    click.echo(f"\n{'='*60}")
+    click.echo(f"\n{'=' * 60}")
     click.echo("Promotion phase (no LLM — skipping):")
     click.echo("Run `cauterule extract <trajectory.jsonl>` with a configured LLM to promote rules.")
 

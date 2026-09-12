@@ -16,13 +16,17 @@ def _cand(trigger: str) -> CandidateRule:
 
 
 def _traj(task: str, error: str = "") -> Trajectory:
-    return Trajectory(id="T-001", timestamp="t", task=task, steps=(Step(1, "bash", error=error),), success=False)
+    return Trajectory(
+        id="T-001", timestamp="t", task=task, steps=(Step(1, "bash", error=error),), success=False
+    )
 
 
 def test_strategy_for_curated() -> None:
     assert strategy_for_corpus("golden") == "strict"
     assert strategy_for_corpus("successes") == "strict"
-    assert strategy_for_corpus("failures/positive") == "semantic"  # not in CURATED set, defaults semantic
+    assert (
+        strategy_for_corpus("failures/positive") == "semantic"
+    )  # not in CURATED set, defaults semantic
     assert strategy_for_corpus("curated/golden") == "strict"
 
 
@@ -66,3 +70,49 @@ def test_threshold_param_overrides_default() -> None:
     # With Fix 3 (alias_phrase_hit floor raised to 0.70), strict passes now.
     assert rule_matches(cand, traj, threshold=0.45) is True
     assert rule_matches(cand, traj, threshold=0.70) is True
+
+
+# ---------------------------------------------------------------------------
+# #691 — exact threshold mapping + substring-matching robustness
+# ---------------------------------------------------------------------------
+
+_EXPECTED_THRESHOLDS: dict[str, float] = {
+    "golden": 0.70,
+    "successes": 0.70,
+    "nearmiss": 0.70,
+    "noisy": 0.70,
+    "corrections": 0.70,
+    "curated/golden": 0.70,
+    "failures/positive": 0.60,
+    "raw/ci": 0.35,
+    "raw/opencode": 0.35,
+    "raw/synthetic": 0.35,
+    "raw/sibling-repos": 0.40,
+    "sibling-repos": 0.40,
+    "cross-repo/transfer": 0.40,
+}
+
+
+def test_threshold_for_corpus_exact_values() -> None:
+    for name, expected in _EXPECTED_THRESHOLDS.items():
+        assert threshold_for_corpus(name) == expected, name
+
+
+def test_threshold_for_corpus_omlx_overrides() -> None:
+    # omlx lowers the strict (0.70) threshold to 0.65, except nearmiss.
+    assert threshold_for_corpus("golden", omlx=True) == 0.65
+    assert threshold_for_corpus("successes", omlx=True) == 0.65
+    assert threshold_for_corpus("nearmiss", omlx=True) == 0.70
+    assert threshold_for_corpus("curated/golden", omlx=True) == 0.65
+    # non-strict strategies are unaffected by the omlx flag.
+    assert threshold_for_corpus("raw/ci", omlx=True) == 0.35
+    assert threshold_for_corpus("failures/positive", omlx=True) == 0.60
+    assert threshold_for_corpus("sibling-repos", omlx=True) == 0.40
+
+
+def test_strategy_for_corpus_no_false_positive_substring_match() -> None:
+    # #691: substring checks must not misroute unrelated corpus names.
+    assert strategy_for_corpus("raw-material-handling") == "semantic"
+    assert strategy_for_corpus("drawback-analysis") == "semantic"
+    assert strategy_for_corpus("crossover") == "semantic"
+    assert strategy_for_corpus("siblinghood") == "semantic"

@@ -1,0 +1,25 @@
+id: R-PY-005
+when:
+  trigger: python CI breaks from unpinned dependencies resolving to new releases
+  context:
+    - bare package names in requirements
+do:
+  directive: Pin direct dependencies and lock transitives with a lockfile
+  because: Unpinned requirements rebuild a different environment every day
+confidence: 0.86
+provenance:
+  source_trajectory: packs/pack-python/R-PY-005
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - python
+  - pip
+  - pinning
+taxonomy: python/pip
+pack: pack-python

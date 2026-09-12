@@ -15,8 +15,24 @@ def generate_devops_trajectories(count: int = 10) -> list[Trajectory]:
         ts = datetime.now(UTC).isoformat()
         task = "Deploy microservice to k8s" if success else "Rollback failed deployment"
         steps = (
-            Step(step_number=1, tool="bash", input="kubectl apply -f deploy.yaml", output="deployment.apps/svc created" if success else "Error: resource limit exceeded", error=None if success else "ResourceQuotaExceeded", state={"namespace": "prod"}),
-            Step(step_number=2, tool="bash", input="kubectl rollout status svc", output=None, error="timeout waiting for condition" if not success else "rolling update complete", state=None),
+            Step(
+                step_number=1,
+                tool="bash",
+                input="kubectl apply -f deploy.yaml",
+                output="deployment.apps/svc created"
+                if success
+                else "Error: resource limit exceeded",
+                error=None if success else "ResourceQuotaExceeded",
+                state={"namespace": "prod"},
+            ),
+            Step(
+                step_number=2,
+                tool="bash",
+                input="kubectl rollout status svc",
+                output=None,
+                error="timeout waiting for condition" if not success else "rolling update complete",
+                state=None,
+            ),
         )
         result.append(
             Trajectory(

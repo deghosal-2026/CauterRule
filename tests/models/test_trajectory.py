@@ -60,11 +60,18 @@ def test_trajectory_valid() -> None:
     d2 = dict(d)
     d2["id"] = d2.pop("trajectory_id")
     # keep trajectory_id also? from_dict checks trajectory_id first, so need to remove it
-    assert Trajectory.from_dict({"id": "T-999", "timestamp": "t", "task": "task", "steps": [], "success": True}).id == "T-999"
+    assert (
+        Trajectory.from_dict(
+            {"id": "T-999", "timestamp": "t", "task": "task", "steps": [], "success": True}
+        ).id
+        == "T-999"
+    )
 
 
 def test_trajectory_minimal() -> None:
-    t = Trajectory(id="T-001", timestamp="2026-09-03T18:25:00Z", task="do thing", steps=(), success=True)
+    t = Trajectory(
+        id="T-001", timestamp="2026-09-03T18:25:00Z", task="do thing", steps=(), success=True
+    )
     d = t.to_dict()
     assert "failure_point" not in d
     assert Trajectory.from_dict(d) == t
@@ -78,7 +85,9 @@ def test_trajectory_validation() -> None:
     with pytest.raises(ValueError, match="trajectory.task"):
         Trajectory(id="T-1", timestamp="t", task=" ", steps=(), success=True)
     with pytest.raises(ValueError, match="quality_label"):
-        Trajectory(id="T-1", timestamp="t", task="task", steps=(), success=True, quality_label="bad")  # type: ignore[arg-type]
+        Trajectory(
+            id="T-1", timestamp="t", task="task", steps=(), success=True, quality_label="bad"
+        )  # type: ignore[arg-type]
     with pytest.raises(ValueError, match="severity"):
         Trajectory(id="T-1", timestamp="t", task="task", steps=(), success=True, severity="bad")  # type: ignore[arg-type]
     with pytest.raises(ValueError, match="tags"):

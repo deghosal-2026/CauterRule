@@ -15,7 +15,9 @@ def _traj() -> Trajectory:
     )
 
 
-def _candidate(trigger: str = "git push fails", directive: str = "pull --rebase first", confidence: float = 0.9) -> CandidateRule:
+def _candidate(
+    trigger: str = "git push fails", directive: str = "pull --rebase first", confidence: float = 0.9
+) -> CandidateRule:
     return CandidateRule(
         when=RuleWhen(trigger=trigger),
         do=RuleDo(directive=directive),
@@ -66,3 +68,30 @@ def test_quality_phrase_tautology() -> None:
     # Our check is when fail in trigger and don't fail in directive
     # Here trigger contains "when fail" and directive contains "don't fail"
     assert any("tautological" in w for w in warnings)
+
+
+def test_quality_threshold_param() -> None:
+    # #497: threshold comes from the caller, not a hardcode.
+    c = _candidate(confidence=0.65)
+    assert check_quality(c, _traj()) == []
+    assert check_quality(c, _traj(), threshold=0.7) != []
+    assert is_valid(c, _traj(), threshold=0.7) is False
+
+
+def test_empty_task_grounding() -> None:
+    # #518: task with no overlap shouldn't bypass grounding when failure tokens exist.
+    traj = Trajectory(
+        id="T-empty",
+        timestamp="t",
+        task="x",
+        steps=(Step(step_number=1, tool="git", error="non-fast-forward"),),
+        success=False,
+        failure_class="git/push",
+    )
+    c = CandidateRule(
+        when=RuleWhen(trigger="unrelated"),
+        do=RuleDo(directive="unrelated"),
+        confidence=0.9,
+    )
+    warnings = check_quality(c, traj)
+    assert any("does not reference" in w for w in warnings)

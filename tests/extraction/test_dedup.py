@@ -4,7 +4,11 @@ from cauterule.models.rule import RuleDo, RuleWhen
 
 
 def _cand(trigger: str, directive: str, context: tuple[str, ...] = ()) -> CandidateRule:
-    return CandidateRule(when=RuleWhen(trigger=trigger, context=context), do=RuleDo(directive=directive), confidence=0.9)
+    return CandidateRule(
+        when=RuleWhen(trigger=trigger, context=context),
+        do=RuleDo(directive=directive),
+        confidence=0.9,
+    )
 
 
 def test_is_duplicate() -> None:

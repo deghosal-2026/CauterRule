@@ -15,7 +15,7 @@ def test_version_fallback(monkeypatch: MonkeyPatch) -> None:
     if "cauterule" in sys.modules:
         del sys.modules["cauterule"]
     mod = importlib.import_module("cauterule")
-    assert mod.__version__ == "0.1.0"
+    assert mod.__version__ == "0.3.0"
     # Restore real module for other tests.
     del sys.modules["cauterule"]
     import cauterule

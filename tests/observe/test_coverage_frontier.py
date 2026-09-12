@@ -28,9 +28,7 @@ def _rule(rid: str, tags: tuple[str, ...] = ()) -> StandingRule:
     )
 
 
-def _trajectory(
-    tid: str, success: bool = False, domain: str | None = None
-) -> Trajectory:
+def _trajectory(tid: str, success: bool = False, domain: str | None = None) -> Trajectory:
     return Trajectory(
         id=tid,
         timestamp="2025-01-01T00:00:00",

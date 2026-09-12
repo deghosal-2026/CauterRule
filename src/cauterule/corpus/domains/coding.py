@@ -13,9 +13,20 @@ def generate_coding_trajectories(count: int = 10) -> list[Trajectory]:
     for i in range(count):
         success = i < count // 2
         ts = datetime.now(UTC).isoformat()
-        task = "Implement merge sort in Python" if success else f"Debug index-out-of-range in {['search','sort','filter'][i%3]}.py"
+        task = (
+            "Implement merge sort in Python"
+            if success
+            else f"Debug index-out-of-range in {['search', 'sort', 'filter'][i % 3]}.py"
+        )
         steps = (
-            Step(step_number=1, tool="read", input="def sort(arr): ...", output=None, error=None, state=None),
+            Step(
+                step_number=1,
+                tool="read",
+                input="def sort(arr): ...",
+                output=None,
+                error=None,
+                state=None,
+            ),
             Step(
                 step_number=2,
                 tool="edit",

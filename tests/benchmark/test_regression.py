@@ -42,19 +42,35 @@ def _failure_traj(tid: str, task: str) -> Trajectory:
 BREAKING_RULES: list[tuple[CandidateRule, list[Trajectory]]] = [
     (
         _breaking_rule("git push"),
-        [_success_traj("S1", "git push succeeds"), _success_traj("S2", "git push works"), _failure_traj("F1", "docker fails")],
+        [
+            _success_traj("S1", "git push succeeds"),
+            _success_traj("S2", "git push works"),
+            _failure_traj("F1", "docker fails"),
+        ],
     ),
     (
         _breaking_rule("npm install"),
-        [_success_traj("S3", "npm install works"), _success_traj("S4", "npm install passes"), _failure_traj("F2", "test fails")],
+        [
+            _success_traj("S3", "npm install works"),
+            _success_traj("S4", "npm install passes"),
+            _failure_traj("F2", "test fails"),
+        ],
     ),
     (
         _breaking_rule("docker build"),
-        [_success_traj("S5", "docker build ok"), _success_traj("S6", "docker build done"), _failure_traj("F3", "deploy fails")],
+        [
+            _success_traj("S5", "docker build ok"),
+            _success_traj("S6", "docker build done"),
+            _failure_traj("F3", "deploy fails"),
+        ],
     ),
     (
         _breaking_rule("deploy"),
-        [_success_traj("S7", "deploy success"), _success_traj("S8", "deploy completed"), _failure_traj("F4", "config error")],
+        [
+            _success_traj("S7", "deploy success"),
+            _success_traj("S8", "deploy completed"),
+            _failure_traj("F4", "config error"),
+        ],
     ),
 ]
 

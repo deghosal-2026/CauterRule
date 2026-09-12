@@ -1,5 +1,8 @@
 """Redaction corpus — 100% success validation."""
 
+# SECURITY-FIXTURE: token-like strings below are intentional fake credentials
+# used to verify redaction. None are real secrets.
+
 from cauterule.models.trajectory import Step, Trajectory
 from cauterule.redaction.engine import contains_secret, redact_trajectory
 
@@ -16,14 +19,22 @@ CORPUS: list[Trajectory] = [
         id="T-ghp-1",
         timestamp="2026-09-03T18:25:00Z",
         task="git push",
-        steps=(Step(step_number=1, tool="bash", output="ghp_123456789012345678901234567890123456"),),
+        steps=(
+            Step(step_number=1, tool="bash", output="ghp_123456789012345678901234567890123456"),
+        ),
         success=False,
     ),
     Trajectory(
         id="T-jwt-1",
         timestamp="2026-09-03T18:25:00Z",
         task="api call",
-        steps=(Step(step_number=1, tool="bash", error="eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.sig"),),
+        steps=(
+            Step(
+                step_number=1,
+                tool="bash",
+                error="eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.sig",
+            ),
+        ),
         success=False,
     ),
     Trajectory(
@@ -65,7 +76,11 @@ CORPUS: list[Trajectory] = [
         id="T-secret-1",
         timestamp="2026-09-03T18:25:00Z",
         task="secret: mysecretvalue",
-        steps=(Step(step_number=1, tool="bash", state={"secret": "mysecret", "data": "secret: hidden"}),),
+        steps=(
+            Step(
+                step_number=1, tool="bash", state={"secret": "mysecret", "data": "secret: hidden"}
+            ),
+        ),
         success=False,
     ),
     Trajectory(
@@ -73,8 +88,18 @@ CORPUS: list[Trajectory] = [
         timestamp="2026-09-03T18:25:00Z",
         task="AKIAIOSFODNN7EXAMPLE and ghp_123456789012345678901234567890123456",
         steps=(
-            Step(step_number=1, tool="bash", input="password: foo", output="sk-12345678901234567890abc"),
-            Step(step_number=2, tool="bash", error="Bearer token123", state={"jwt": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0In0.sig"}),
+            Step(
+                step_number=1,
+                tool="bash",
+                input="password: foo",
+                output="sk-12345678901234567890abc",
+            ),
+            Step(
+                step_number=2,
+                tool="bash",
+                error="Bearer token123",
+                state={"jwt": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0In0.sig"},
+            ),
         ),
         success=False,
     ),
@@ -116,5 +141,7 @@ def test_corpus_100_percent() -> None:
     )
     redacted_custom = redact_trajectory(custom, extra_patterns=["CUSTOM_SECRET_\\d+"])
     assert not contains_secret(redacted_custom.task, extra_patterns=["CUSTOM_SECRET_\\d+"])
-    assert not contains_secret(redacted_custom.steps[0].input or "", extra_patterns=["CUSTOM_SECRET_\\d+"])
+    assert not contains_secret(
+        redacted_custom.steps[0].input or "", extra_patterns=["CUSTOM_SECRET_\\d+"]
+    )
     assert redacted_custom.redacted

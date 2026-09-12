@@ -184,6 +184,14 @@ class StandingRule:
     retired_at: str | None = None
     retirement_reason: str | None = None
     superseded_by: str | None = None
+    prevented_count: int = 0
+    broke_count: int = 0
+    neutral_count: int = 0
+    last_outcome: str | None = None
+    last_outcome_at: str | None = None
+    outcome_trend: tuple[int, ...] = field(default_factory=tuple)
+    specificity: float | None = None
+    specificity_inputs: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         _require_nonblank(self.id, "id")
@@ -193,6 +201,24 @@ class StandingRule:
             raise ValueError(f"status must be one of {_VALID_STATUSES}, got {self.status}")
         if self.hit_count < 0:
             raise ValueError(f"hit_count must be >=0, got {self.hit_count}")
+        if self.prevented_count < 0:
+            raise ValueError(f"prevented_count must be >=0, got {self.prevented_count}")
+        if self.broke_count < 0:
+            raise ValueError(f"broke_count must be >=0, got {self.broke_count}")
+        if self.neutral_count < 0:
+            raise ValueError(f"neutral_count must be >=0, got {self.neutral_count}")
+        if self.last_outcome is not None and self.last_outcome not in (
+            "prevented",
+            "broke",
+            "neutral",
+        ):
+            raise ValueError(f"invalid last_outcome {self.last_outcome!r}")
+        if self.outcome_trend:
+            for v in self.outcome_trend:
+                if v not in (1, 0, -1):
+                    raise ValueError(f"outcome_trend items must be in (-1, 0, 1), got {v}")
+        if self.specificity is not None and not 0.0 <= self.specificity <= 1.0:
+            raise ValueError(f"specificity must be in [0.0, 1.0], got {self.specificity}")
         for t in self.tags:
             _require_nonblank(t, "tags item")
 
@@ -224,18 +250,42 @@ class StandingRule:
             d["retirement_reason"] = self.retirement_reason
         if self.superseded_by is not None:
             d["superseded_by"] = self.superseded_by
+        if self.prevented_count:
+            d["prevented_count"] = self.prevented_count
+        if self.broke_count:
+            d["broke_count"] = self.broke_count
+        if self.neutral_count:
+            d["neutral_count"] = self.neutral_count
+        if self.last_outcome is not None:
+            d["last_outcome"] = self.last_outcome
+        if self.last_outcome_at is not None:
+            d["last_outcome_at"] = self.last_outcome_at
+        if self.outcome_trend:
+            d["outcome_trend"] = list(self.outcome_trend)
+        if self.specificity is not None:
+            d["specificity"] = self.specificity
+        if self.specificity_inputs:
+            d["specificity_inputs"] = dict(self.specificity_inputs)
         return d
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> StandingRule:
-        """Create from a dict produced by :meth:`to_dict`."""
+        """Create from a dict produced by :meth:`to_dict`.
+
+        Raises:
+            ValueError: If the required ``status`` field is absent (#593 —
+                a missing status must not silently resurrect a retired rule
+                as ``active``).
+        """
+        if "status" not in data or data.get("status") is None:
+            raise ValueError("StandingRule missing required 'status' field")
         return cls(
             id=data.get("id", ""),
             when=RuleWhen.from_dict(data.get("when", {})),
             do=RuleDo.from_dict(data.get("do", {})),
             confidence=float(data.get("confidence", 0.0)),
             provenance=Provenance.from_dict(data.get("provenance", {})),
-            status=data.get("status", "active"),
+            status=data["status"],
             promoted_at=data.get("promoted_at", ""),
             hit_count=int(data.get("hit_count", 0)),
             last_match=data.get("last_match"),
@@ -246,4 +296,14 @@ class StandingRule:
             retired_at=data.get("retired_at"),
             retirement_reason=data.get("retirement_reason"),
             superseded_by=data.get("superseded_by"),
+            prevented_count=int(data.get("prevented_count", 0)),
+            broke_count=int(data.get("broke_count", 0)),
+            neutral_count=int(data.get("neutral_count", 0)),
+            last_outcome=data.get("last_outcome"),
+            last_outcome_at=data.get("last_outcome_at"),
+            outcome_trend=tuple(int(v) for v in data.get("outcome_trend", [])),
+            specificity=(
+                float(data["specificity"]) if data.get("specificity") is not None else None
+            ),
+            specificity_inputs=dict(data.get("specificity_inputs", {})),
         )

@@ -28,7 +28,13 @@ def test_private_corpus_empty_dir(tmp_path: Path) -> None:
 def test_private_corpus_single_file(tmp_path: Path) -> None:
     d = tmp_path / "single"
     d.mkdir()
-    t = Trajectory(id="priv-001", timestamp="t", task="test", steps=(Step(step_number=1, tool="bash", input="echo"),), success=True)
+    t = Trajectory(
+        id="priv-001",
+        timestamp="t",
+        task="test",
+        steps=(Step(step_number=1, tool="bash", input="echo"),),
+        success=True,
+    )
     _write_trajectory(d / "traces.jsonl", t)
     pc = PrivateCorpus(str(d))
     assert pc.count() == 1
@@ -40,6 +46,20 @@ def test_private_corpus_root_dir_property(tmp_path: Path) -> None:
     d.mkdir()
     pc = PrivateCorpus(str(d))
     assert pc.root_dir == str(d)
+
+
+def test_private_corpus_skips_bad_lines(tmp_path: Path) -> None:
+    # Review: one corrupt line must not abort the private corpus load.
+    d = tmp_path / "skips_bad"
+    d.mkdir()
+    t = Trajectory(id="priv-9", timestamp="t", task="test", steps=(), success=True)
+    _write_trajectory(d / "traces.jsonl", t)
+    with (d / "traces.jsonl").open("a", encoding="utf-8") as f:
+        f.write("{bad json\n")
+        f.write(json.dumps({"id": "no-success", "task": "x"}) + "\n")
+    pc = PrivateCorpus(str(d))
+    assert pc.count() == 1
+    assert pc.trajectories()[0].id == "priv-9"
 
 
 def test_private_corpus_filter_by_domain(tmp_path: Path) -> None:
@@ -59,7 +79,9 @@ def test_private_corpus_filter_by_quality_label(tmp_path: Path) -> None:
     d = tmp_path / "filter_label"
     d.mkdir()
     t1 = Trajectory(id="a", timestamp="t", task="t1", steps=(), success=True, quality_label="clear")
-    t2 = Trajectory(id="b", timestamp="t", task="t2", steps=(), success=True, quality_label="ambiguous")
+    t2 = Trajectory(
+        id="b", timestamp="t", task="t2", steps=(), success=True, quality_label="ambiguous"
+    )
     _write_trajectory(d / "data.jsonl", t1)
     _write_trajectory(d / "data.jsonl", t2)
     pc = PrivateCorpus(str(d))
@@ -72,7 +94,15 @@ def test_private_corpus_filter_by_success(tmp_path: Path) -> None:
     d = tmp_path / "filter_success"
     d.mkdir()
     t1 = Trajectory(id="a", timestamp="t", task="t1", steps=(), success=True)
-    t2 = Trajectory(id="b", timestamp="t", task="t2", steps=(), success=False, failure_point="s1", failure_class="err")
+    t2 = Trajectory(
+        id="b",
+        timestamp="t",
+        task="t2",
+        steps=(),
+        success=False,
+        failure_point="s1",
+        failure_class="err",
+    )
     _write_trajectory(d / "data.jsonl", t1)
     _write_trajectory(d / "data.jsonl", t2)
     pc = PrivateCorpus(str(d))

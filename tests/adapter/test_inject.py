@@ -1,4 +1,4 @@
-from cauterule.adapter.inject import inject
+from cauterule.adapter.inject import ainject, inject
 from cauterule.models.rule import Provenance, RuleDo, RuleWhen, StandingRule
 
 
@@ -51,5 +51,29 @@ def test_inject_empty_trigger() -> None:
 
 def test_inject_with_kwargs() -> None:
     r = _rule("git push")
-    with inject("git push", rules=[r], tool="bash", error="boom") as matched:
+    # error context: "git push" in error text matches -> rule kept.
+    with inject("git push", rules=[r], error="git push failed completely") as matched:
         assert len(matched) == 1
+    # error context unrelated to trigger -> rule filtered out.
+    with inject("git push", rules=[r], error="something else") as matched:
+        assert matched == []
+
+
+def test_ainject_async_matches() -> None:
+    import asyncio
+
+    async def main() -> list[str]:
+        r1 = _rule("git push fails")
+        r2 = _rule("docker network")
+        async with ainject("git push fails with non-fast-forward", rules=[r1, r2]) as matched:
+            return [r.id for r in matched]
+
+    assert asyncio.run(main()) == ["R-001"]
+
+
+def test_inject_max_rules_bounds() -> None:
+    r1 = _rule("git push")
+    r2 = _rule("git pull")
+    r3 = _rule("git rebase")
+    with inject("git", rules=[r1, r2, r3], max_rules=2) as matched:
+        assert len(matched) <= 2

@@ -1,3 +1,7 @@
+from typing import Any, cast
+
+import pytest
+
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.rule import RuleDo, RuleWhen
 from cauterule.models.trajectory import Step, Trajectory
@@ -15,7 +19,10 @@ def _traj(id: str, task: str, success: bool, error: str = "") -> Trajectory:
 
 def test_report_prevented() -> None:
     cand = _cand("git push")
-    trajs = [_traj("T-1", "git push fails", False, error="non-fast-forward"), _traj("T-2", "docker", False, error="err")]
+    trajs = [
+        _traj("T-1", "git push fails", False, error="non-fast-forward"),
+        _traj("T-2", "docker", False, error="err"),
+    ]
     report = build_evidence_report(cand, trajs)
     assert "T-1" in report.failures_prevented
     assert report.precision > 0
@@ -56,3 +63,30 @@ def test_report_trace() -> None:
     report = build_evidence_report(cand, trajs)
     assert len(report.replay_trace) == 1
     assert report.replay_trace[0]["trajectory_id"] == "T-1"
+
+
+def test_min_sample_override_surfaced() -> None:
+    # #521: 2-trajectory all-prevented input yields inconclusive + a reason
+    # string naming the min-sample policy and the computed verdict, with the
+    # underlying data (failures_prevented, precision) untouched.
+    cand = _cand("git push")
+    trajs = [
+        _traj("T-1", "git push fails", False, "non-fast-forward"),
+        _traj("T-2", "git push fails", False, "non-fast-forward"),
+    ]
+    report = build_evidence_report(cand, trajs)
+    assert report.verdict == "inconclusive"
+    assert report.verdict_reason is not None
+    assert "min_sample" in report.verdict_reason
+    assert len(report.failures_prevented) == 2
+    assert report.precision > 0
+
+
+def test_frozen_report_cannot_mutate() -> None:
+    import dataclasses
+
+    cand = _cand("git push")
+    trajs = [_traj("T-1", "git push fails", False, "err")]
+    report = build_evidence_report(cand, trajs)
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        cast(Any, report).verdict = "pass"

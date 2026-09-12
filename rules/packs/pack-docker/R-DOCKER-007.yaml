@@ -1,0 +1,25 @@
+id: R-DOCKER-007
+when:
+  trigger: docker pull or push fails with registry authentication required
+  context:
+    - unauthorized authentication required from registry
+do:
+  directive: Run docker login with a fresh token and check the credential helper configuration
+  because: Expired or missing credentials block every registry operation
+confidence: 0.9
+provenance:
+  source_trajectory: packs/pack-docker/R-DOCKER-007
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - docker
+  - registry
+  - auth
+taxonomy: docker/network/registry
+pack: pack-docker

@@ -12,7 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 VALID_DOMAINS = {"git", "python", "docker", "test", "ci", "deploy", "shell", "env", "workflow"}
@@ -77,30 +77,34 @@ def create_trajectory_interactive() -> dict:
         inp = input(f"  Step {step_num} input: ").strip() or None
         out = input(f"  Step {step_num} output: ").strip() or None
         err = input(f"  Step {step_num} error: ").strip() or None
-        steps.append({
-            "step_number": step_num,
-            "tool": tool,
-            "input": inp,
-            "output": out,
-            "error": err,
-            "state": None,
-        })
+        steps.append(
+            {
+                "step_number": step_num,
+                "tool": tool,
+                "input": inp,
+                "output": out,
+                "error": err,
+                "state": None,
+            }
+        )
         step_num += 1
 
     if not steps:
         # Default single step
-        steps.append({
-            "step_number": 1,
-            "tool": domain,
-            "input": task,
-            "output": None,
-            "error": failure_point or None,
-            "state": None,
-        })
+        steps.append(
+            {
+                "step_number": 1,
+                "tool": domain,
+                "input": task,
+                "output": None,
+                "error": failure_point or None,
+                "state": None,
+            }
+        )
 
     trajectory = {
         "trajectory_id": traj_id,
-        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "timestamp": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "task": task,
         "domain": domain,
         "failure_class": failure_class,
@@ -121,7 +125,7 @@ def create_trajectory_interactive() -> dict:
     # Save
     outpath = CORPUS_DIR / "raw" / source / f"{traj_id}.jsonl"
     outpath.parent.mkdir(parents=True, exist_ok=True)
-    with open(outpath, "w") as f:
+    with Path(outpath).open("w") as f:
         f.write(json.dumps(trajectory) + "\n")
     print(f"\n✅ Saved: {outpath}")
     return trajectory
@@ -141,7 +145,7 @@ def list_trajectories() -> None:
         print(f"\n{source}/ ({len(files)}):")
         for f in sorted(files):
             try:
-                with open(f) as fh:
+                with Path(f).open() as fh:
                     traj = json.loads(fh.read().strip())
                 success = "✅" if traj.get("success") else "❌"
                 domain = traj.get("domain", "?")
@@ -171,7 +175,7 @@ def batch_import(filepath: str) -> int:
         print(f"❌ File not found: {filepath}")
         return 1
 
-    with open(path) as f:
+    with Path(path).open() as f:
         data = json.load(f)
 
     if isinstance(data, dict):
@@ -183,7 +187,7 @@ def batch_import(filepath: str) -> int:
         source = item.get("source", "manual")
         outpath = CORPUS_DIR / "raw" / source / f"{traj_id}.jsonl"
         outpath.parent.mkdir(parents=True, exist_ok=True)
-        with open(outpath, "w") as f:
+        with Path(outpath).open("w") as f:
             f.write(json.dumps(item) + "\n")
         count += 1
 

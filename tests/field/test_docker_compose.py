@@ -6,13 +6,26 @@ import json
 import subprocess
 import time
 from subprocess import CompletedProcess
+from typing import Any
 
 import pytest
 
 COMPOSE_FILE = "docker-compose.yaml"
 PROJECT_NAME = "cauterule-field-test"
 
-BASE_CMD: list[str] = ["docker", "compose", "-f", COMPOSE_FILE, "-p", PROJECT_NAME]
+# v0.3.0 (#607): every service is profiled — activate all profiles explicitly.
+ALL_PROFILES = [
+    "--profile",
+    "demo",
+    "--profile",
+    "test",
+    "--profile",
+    "mcp",
+    "--profile",
+    "mcp-http",
+]
+
+BASE_CMD: list[str] = ["docker", "compose", "-f", COMPOSE_FILE, "-p", PROJECT_NAME, *ALL_PROFILES]
 
 
 def _compose(*args: str, input_data: str | None = None) -> CompletedProcess[str]:
@@ -28,7 +41,7 @@ def _wait_for_service(service: str, running: bool = True, timeout: int = 180) ->
     deadline = time.time() + timeout
     while time.time() < deadline:
         ps = _compose("ps", "--format", "json")
-        services: list[dict] = []
+        services: list[dict[str, Any]] = []
         try:
             parsed = json.loads(ps.stdout)
             if isinstance(parsed, list):
@@ -51,7 +64,8 @@ def _wait_for_service(service: str, running: bool = True, timeout: int = 180) ->
 @pytest.mark.docker
 @pytest.mark.slow
 def test_compose_start_demo() -> None:
-    result = _compose("up", "--build", "cauterule-demo", "--abort-on-container-exit")
+    # Image is built by the suite start / hardening test — `up` reuses it.
+    result = _compose("up", "cauterule-demo", "--abort-on-container-exit")
     assert result.returncode == 0, result.stderr
     assert "Seeded" in result.stdout
     assert "Extraction" in result.stdout
@@ -62,7 +76,7 @@ def test_compose_start_demo() -> None:
 @pytest.mark.docker
 @pytest.mark.slow
 def test_compose_mcp_accepts() -> None:
-    _compose("up", "--build", "-d", "cauterule-mcp")
+    _compose("up", "-d", "cauterule-mcp")
     assert _wait_for_service("cauterule-mcp", running=True), "cauterule-mcp did not start"
     request = (
         json.dumps(
@@ -113,7 +127,7 @@ def test_compose_mcp_accepts() -> None:
 @pytest.mark.docker
 @pytest.mark.slow
 def test_compose_test_passes() -> None:
-    result = _compose("up", "--build", "cauterule-test", "--abort-on-container-exit")
+    result = _compose("up", "cauterule-test", "--abort-on-container-exit")
     assert result.returncode == 0, result.stderr
     _compose("down")
 

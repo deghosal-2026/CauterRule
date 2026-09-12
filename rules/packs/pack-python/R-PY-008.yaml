@@ -1,0 +1,25 @@
+id: R-PY-008
+when:
+  trigger: pip install fails compiling a package that needs system libraries
+  context:
+    - gcc errors about missing headers for mysqlclient or lxml
+do:
+  directive: Install the OS development package first, or switch to the binary wheel variant
+  because: Source builds need headers that wheels already bundle
+confidence: 0.86
+provenance:
+  source_trajectory: packs/pack-python/R-PY-008
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - python
+  - pip
+  - system
+taxonomy: python/pip
+pack: pack-python

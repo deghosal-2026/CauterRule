@@ -1,0 +1,25 @@
+id: R-PY-010
+when:
+  trigger: python script imports fine from one directory but fails from another
+  context:
+    - cwd-dependent imports and path hacks
+do:
+  directive: Run the code as a module with python -m and keep an editable install for src layouts
+  because: Module execution anchors imports to the package root instead of the shell directory
+confidence: 0.86
+provenance:
+  source_trajectory: packs/pack-python/R-PY-010
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - python
+  - imports
+  - path
+taxonomy: python/import
+pack: pack-python

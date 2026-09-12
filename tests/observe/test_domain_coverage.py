@@ -9,9 +9,7 @@ from cauterule.observe.domain_coverage import domain_coverage
 from cauterule.store.manager import StoreManager
 
 
-def _rule(
-    rid: str, hit_count: int = 0, tags: tuple[str, ...] = ()
-) -> StandingRule:
+def _rule(rid: str, hit_count: int = 0, tags: tuple[str, ...] = ()) -> StandingRule:
     return StandingRule(
         id=rid,
         when=RuleWhen(trigger="test trigger"),
@@ -65,9 +63,7 @@ def test_domain_coverage_retired_excluded(tmp_path: Path) -> None:
     store = StoreManager(str(tmp_path / "rules"))
     from dataclasses import replace
 
-    retired = replace(
-        _rule("R-001", hit_count=5, tags=("git",)), status="retired"
-    )
+    retired = replace(_rule("R-001", hit_count=5, tags=("git",)), status="retired")
     store.add_rule(retired)
     store.add_rule(_rule("R-002", hit_count=0, tags=("git",)))
     cov = domain_coverage(store)

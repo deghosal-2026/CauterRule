@@ -2,14 +2,47 @@
 
 from __future__ import annotations
 
+import re
+import time
+from dataclasses import replace
 from pathlib import Path
 
 from cauterule.models.rule import StandingRule
 from cauterule.serialization.rule_yaml import (
-    dump_rule_to_file,
+    dump_rule_to_file_atomic,
     load_rule_from_file,
     load_rules_from_dir,
 )
+
+# Allowlist for rule ids used in filesystem paths (#499). Rule ids are
+# program-generated (`R-001`-style); anything outside this set is rejected
+# before any I/O happens.
+_RULE_ID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+def validate_rule_id(rule_id: str) -> None:
+    """Reject rule ids unsafe for filesystem paths (#499).
+
+    Raises:
+        ValueError: If *rule_id* is outside the allowlist or the
+            resolved path escapes *base_dir*.
+    """
+    if not isinstance(rule_id, str) or not _RULE_ID_RE.match(rule_id):
+        msg = f"invalid rule_id {rule_id!r}"
+        raise ValueError(msg)
+
+
+def resolve_inside(base_dir: Path, *parts: str) -> Path:
+    """Join *parts* onto *base_dir* and assert containment (#499).
+
+    Raises:
+        ValueError: If the resolved path escapes *base_dir*.
+    """
+    path = (base_dir.joinpath(*parts)).resolve()
+    if not path.is_relative_to(base_dir.resolve()):
+        msg = f"path escapes directory {str(base_dir)!r}: {parts!r}"
+        raise ValueError(msg)
+    return path
 
 
 class StoreManager:
@@ -31,7 +64,15 @@ class StoreManager:
     # Helpers
     # ------------------------------------------------------------------
     def _rule_path(self, rule_id: str) -> Path:
-        return self.base_dir / f"{rule_id}.yaml"
+        """Return the file path for *rule_id*, rejecting traversal (#499).
+
+        Single choke point for all rule file I/O (get/add/retire/supersede
+        plus observe callers). Raises:
+            ValueError: If *rule_id* is outside the allowlist or the
+                resolved path escapes *base_dir*.
+        """
+        validate_rule_id(rule_id)
+        return resolve_inside(self.base_dir, f"{rule_id}.yaml")
 
     def _ensure_dir(self) -> None:
         self.base_dir.mkdir(parents=True, exist_ok=True)
@@ -71,19 +112,16 @@ class StoreManager:
             The rule's id.
         """
         self._ensure_dir()
-        dump_rule_to_file(rule, self._rule_path(rule.id))
+        dump_rule_to_file_atomic(rule, self._rule_path(rule.id))
         return rule.id
 
     def retire_rule(self, rule_id: str, reason: str) -> None:
-        """Mark a rule as retired and update its ``id`` to include a suffix.
+        """Mark a rule as retired.
 
         Args:
             rule_id: Id of the rule to retire.
-            reason: Reason for retirement (stored via rule provenance or
-                    a status flag — currently the rule is re-written with
-                    status ``"retired"``).
+            reason: Reason for retirement.
         """
-        import time
         rule = self.get_rule(rule_id)
         if rule is None:
             msg = f"Rule {rule_id!r} not found"
@@ -92,24 +130,22 @@ class StoreManager:
             msg = f"Cannot retire rule {rule_id!r}: status is {rule.status!r}"
             raise ValueError(msg)
         now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        retired = StandingRule(
-            id=rule.id,
-            when=rule.when,
-            do=rule.do,
-            confidence=rule.confidence,
-            provenance=rule.provenance,
+        retired = replace(
+            rule,
             status="retired",
-            promoted_at=rule.promoted_at,
-            hit_count=rule.hit_count,
-            last_match=rule.last_match,
-            tags=rule.tags,
-            taxonomy=rule.taxonomy,
-            template=rule.template,
-            pack=rule.pack,
             retired_at=now,
             retirement_reason=reason,
         )
-        dump_rule_to_file(retired, self._rule_path(rule_id))
+        dump_rule_to_file_atomic(retired, self._rule_path(rule_id))
+        _index_sync_safe(retired, self.base_dir)
+        _commit_safe(f"retire rule {rule_id}: {reason}", str(self.base_dir))
+        # OTEL rule.retire span (#588): best-effort, never blocks retirement.
+        try:
+            from cauterule.integrations.otel import OtelExporter
+
+            OtelExporter().emit_rule_retire(rule_id, reason=reason)
+        except Exception:
+            pass
 
     def supersede_rule(self, rule_id: str, new_id: str) -> None:
         """Mark *rule_id* as superseded by *new_id*.
@@ -120,27 +156,44 @@ class StoreManager:
             rule_id: Id of the rule to supersede.
             new_id: Id of the rule that replaces it.
         """
-        import time
         rule = self.get_rule(rule_id)
         if rule is None:
             msg = f"Rule {rule_id!r} not found"
             raise ValueError(msg)
         now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        superseded = StandingRule(
-            id=rule.id,
-            when=rule.when,
-            do=rule.do,
-            confidence=rule.confidence,
-            provenance=rule.provenance,
+        superseded = replace(
+            rule,
             status="superseded",
-            promoted_at=rule.promoted_at,
-            hit_count=rule.hit_count,
-            last_match=rule.last_match,
-            tags=rule.tags,
-            taxonomy=rule.taxonomy,
-            template=rule.template,
-            pack=rule.pack,
             retired_at=now,
             superseded_by=new_id,
         )
-        dump_rule_to_file(superseded, self._rule_path(rule_id))
+        dump_rule_to_file_atomic(superseded, self._rule_path(rule_id))
+        _index_sync_safe(superseded, self.base_dir)
+        _commit_safe(
+            f"supersede rule {rule_id} (replaced by {new_id})",
+            str(self.base_dir),
+        )
+
+
+# ------------------------------------------------------------------
+# Helpers — best-effort index + git sync (failure is logged, not raised)
+# ------------------------------------------------------------------
+def _index_sync_safe(
+    rule: StandingRule,
+    base_dir: Path,
+) -> None:
+    try:
+        from cauterule.store.index import IndexManager
+
+        IndexManager(str(base_dir)).update_entry(rule)
+    except Exception:
+        pass
+
+
+def _commit_safe(message: str, base_dir: str) -> None:
+    try:
+        from cauterule.store.git import git_commit
+
+        git_commit(message, base_dir)
+    except Exception:
+        pass

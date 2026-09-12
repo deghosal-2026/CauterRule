@@ -15,7 +15,6 @@ import json
 import sys
 from pathlib import Path
 
-
 # Domains where specific failure classes are known
 _DOMAIN_FAILURE_MAP: dict[str, str] = {
     "coding": "coding/test-failure",
@@ -26,7 +25,9 @@ _DOMAIN_FAILURE_MAP: dict[str, str] = {
 }
 
 
-def infer_expected_outcome_confidence(source: str | None, tags: list[str], failure_class: str | None) -> str:
+def infer_expected_outcome_confidence(
+    source: str | None, tags: list[str], failure_class: str | None
+) -> str:
     """Infer expected_outcome_confidence (high/medium/low) from trajectory fields.
 
     - high: known expected rule (golden, synthetic hand-crafted, manual)
@@ -63,7 +64,6 @@ def infer_expected_outcome(
     domain: str | None,
 ) -> tuple[str, str]:
     """Infer expected_outcome and rationale from trajectory fields."""
-    task_lower = task.lower()
 
     # Staleness — historical failures that no longer matter
     if any("deprecated" in t.lower() or "stale" in t.lower() for t in tags):
@@ -233,7 +233,9 @@ def walk_corpus(root: Path, dry_run: bool = False) -> dict:
             totals[k] += stats.get(k, 0)
         if stats["modified"] or stats["errors"] or dry_run:
             op = "DRY-RUN" if dry_run else "OK"
-            print(f"  [{op}] {path.relative_to(root.parent)}: {stats['read']} trajs, {stats['modified']} modified, {stats['errors']} errors")
+            print(
+                f"  [{op}] {path.relative_to(root.parent)}: {stats['read']} trajs, {stats['modified']} modified, {stats['errors']} errors"
+            )
     return totals
 
 
@@ -250,7 +252,9 @@ def main() -> None:
 
     totals = walk_corpus(root, dry_run=args.dry_run)
     action = "Would modify" if args.dry_run else "Modified"
-    print(f"\n{totals['files']} files, {totals['read']} trajectories, {action} {totals['modified']} ({totals['errors']} errors)")
+    print(
+        f"\n{totals['files']} files, {totals['read']} trajectories, {action} {totals['modified']} ({totals['errors']} errors)"
+    )
 
 
 if __name__ == "__main__":

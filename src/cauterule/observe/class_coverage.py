@@ -8,9 +8,7 @@ from cauterule.models.trajectory import Trajectory
 from cauterule.store.manager import StoreManager
 
 
-def class_coverage(
-    store: StoreManager, trajectories: list[Trajectory]
-) -> dict[str, float]:
+def class_coverage(store: StoreManager, trajectories: list[Trajectory]) -> dict[str, float]:
     """Return a dict mapping each recurring failure class to its coverage
     indicator (``1.0`` if covered, ``0.0`` if not).
 

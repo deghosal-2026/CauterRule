@@ -1,0 +1,17 @@
+name: pack-docker
+version: 0.1.0
+description: Rules for Docker build, compose, network, volume and registry failures
+author: CauterRule Team
+license: MIT
+rules:
+  - R-DOCKER-001
+  - R-DOCKER-002
+  - R-DOCKER-003
+  - R-DOCKER-004
+  - R-DOCKER-005
+  - R-DOCKER-006
+  - R-DOCKER-007
+  - R-DOCKER-008
+  - R-DOCKER-009
+  - R-DOCKER-010
+deps: []

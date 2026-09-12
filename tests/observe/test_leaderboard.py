@@ -46,9 +46,7 @@ def _rule_with_evidence(
 
 def test_leaderboard_most_prevented(tmp_path: Path) -> None:
     store = StoreManager(str(tmp_path / "rules"))
-    store.add_rule(
-        _rule_with_evidence("R-001", failures_prevented=("a", "b", "c"))
-    )
+    store.add_rule(_rule_with_evidence("R-001", failures_prevented=("a", "b", "c")))
     store.add_rule(_rule_with_evidence("R-002", failures_prevented=("d",)))
 
     lb = get_leaderboard(store)
@@ -68,12 +66,8 @@ def test_leaderboard_most_broken(tmp_path: Path) -> None:
 
 def test_leaderboard_top_gaps(tmp_path: Path) -> None:
     store = StoreManager(str(tmp_path / "rules"))
-    store.add_rule(
-        _rule_with_evidence("R-001", failures_prevented=("a",), recall=0.3)
-    )
-    store.add_rule(
-        _rule_with_evidence("R-002", failures_prevented=("b",), recall=0.9)
-    )
+    store.add_rule(_rule_with_evidence("R-001", failures_prevented=("a",), recall=0.3))
+    store.add_rule(_rule_with_evidence("R-002", failures_prevented=("b",), recall=0.9))
 
     lb = get_leaderboard(store)
     assert lb["top_gaps"][0]["id"] == "R-001"

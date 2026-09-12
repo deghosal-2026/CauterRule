@@ -1,0 +1,17 @@
+name: ft-pack
+version: 0.1.0
+description: Rules for ft-pack
+author: Debashish Ghosal
+rules:
+- R-001
+license: MIT
+deps: []
+cauterule: ''
+checksum: ''
+marketplace:
+  categories: []
+  keywords: []
+created_with: cauterule 0.3.0
+cert:
+  required: true
+  min_score: 0.8

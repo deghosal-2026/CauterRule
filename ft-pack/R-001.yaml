@@ -1,0 +1,28 @@
+id: R-001
+when:
+  trigger: git push fails with non-fast-forward
+do:
+  directive: pull --rebase before pushing again
+confidence: 0.95
+provenance:
+  source_trajectory: T-001
+  extracted_by: test
+  extract_timestamp: '2026-09-05T12:00:00Z'
+  extraction_pass: 1
+  draft_tournament_rank: 1
+  replay_evidence:
+    failures_prevented:
+    - T-002
+    - T-003
+    successes_broken: []
+    precision: 1.0
+    recall: 0.9
+  promotion_commit: abc123def456abc123def456abc123def456abc1
+  promotion_mode: auto
+status: active
+promoted_at: '2026-09-05T12:30:00Z'
+hit_count: 5
+last_match: '2026-09-05T14:00:00Z'
+tags:
+- git
+- push

@@ -2,13 +2,14 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
-[![PyPI](https://img.shields.io/badge/pypi-v0.2.0-blue)](https://pypi.org/project/cauterule/)
+[![PyPI](https://img.shields.io/badge/pypi-v0.3.0-blue)](https://pypi.org/project/cauterule/)
 [![Ruff](https://img.shields.io/badge/code%20style-ruff-000000)](https://github.com/astral-sh/ruff)
 [![Type checked](https://img.shields.io/badge/mypy-strict-blue)](https://github.com/python/mypy)
-[![Coverage](https://img.shields.io/badge/coverage-84%25-yellow)](https://github.com/deghosal-2026/CauterRule/actions)
+[![Coverage](https://img.shields.io/badge/coverage-87%25%20(deterministic%20subset)-yellow)](https://github.com/deghosal-2026/CauterRule/actions)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14464/badge)](https://www.bestpractices.dev/projects/14464)
-[![Field Test](https://img.shields.io/badge/field%20test-v0.2.0%20%7C%20adversarial%20%2B%20safety%20rankings-brightgreen)](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md)
+[![Field Test](https://img.shields.io/badge/field%20test-v0.3.0%20%7C%2098%E2%80%93100%25%20near-miss%20precision-brightgreen)](docs/field-test/v0.3.0/FIELD_TEST_REPORT.md)
 [![Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
+[![Cauterule](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/deghosal-2026/Cauterule/main/badge.json)](docs/USER_GUIDE.md)
 
 **Automated standing-rule extraction from agent failures.**
 
@@ -21,7 +22,7 @@ After every failure, CauterRule:
 
 No more corrections dying in chat. No more hand-written standing rules. No more vague reflection paragraphs nobody re-reads. Rules are actionable, tested, and permanent.
 
-**Status:** v0.2.0 — Phase 1 (Safety Fixes M1-M4) + Phase 2 (TUI, Observability, Corpus Infra M5-M7) complete. Field test M10 pending.
+**Status:** v0.3.0 — Hardening & Ecosystem: critical fixes, adapters, rule lifecycle, pack ecosystem, corpus/benchmark infra, full field test.
 
 ---
 
@@ -42,15 +43,42 @@ CauterRule automates the extract → test → promote loop. Same pattern as CI/C
 | Framework memory is unstructured (LangGraph) | Rules have provenance, versioning, conflict detection, linter, and retirement |
 | Standing rules maintained by hand | The agent writes its own rules, tests them, and promotes only what survives |
 | `.cursorrules` / `CLAUDE.md` are static files | Rules are living artifacts that grow from real failures, not guesses |
-| No OSS tool ships a corpus or benchmarks | 13 corpus types, 394 trajectories (v0.1.0) + 160 public trajectories (v0.2.0), golden set, safety corpora, public domain corpora, adversarial/staleness/counterexample corpora, field test runner |
+| No OSS tool ships a corpus or benchmarks | 40 corpora, 2,384 trajectories per model, 444 domain-scoped reference trajectories, golden set, safety corpora, public domain corpora, adversarial/staleness/counterexample corpora, corpus + benchmark + leaderboard CLI, field test runner |
+
+---
+
+## Installation
+
+Pick any channel:
+
+```bash
+# PyPI (base)
+pip install cauterule
+# With LLM providers (OpenAI, Anthropic, LiteLLM, Ollama-over-HTTP):
+pip install cauterule[llm]
+# With semantic matching:
+pip install "cauterule[matching]"
+# With OpenTelemetry export:
+pip install cauterule[otel]
+# Everything:
+pip install cauterule[all]
+
+# Homebrew
+brew install deghosal-2026/cauterule/cauterule
+
+# Docker
+docker pull ghcr.io/deghosal-2026/cauterule:v0.3.0
+docker compose up cauterule-demo
+
+# Standalone binary — download from the GitHub Release assets
+# https://github.com/deghosal-2026/CauterRule/releases/tag/v0.3.0
+```
 
 ---
 
 ## Quick Start
 
 ```bash
-pip install cauterule
-
 # Run the demo — seeded failures, full loop in 60s
 cauterule demo
 
@@ -63,22 +91,54 @@ cauterule test R-001
 # Promote to the permanent store
 cauterule promote R-001
 
-# Browse rules
+# Browse rules and lifecycle state
 cauterule list
+cauterule audit
 cauterule health
 cauterule validate
 
 # Export rules to your agent's format
 cauterule export --format agents
+
+# Install an official rule pack (GitHub + version pinning)
+cauterule pack install deghosal-2026/cauterule-packs/pack-docker@v0.3.0
+
+# Corpus + benchmark infrastructure
+cauterule corpus list
+cauterule benchmark run
 ```
+
+Wrap any Python agent with the generic adapter, or use a framework adapter:
+
+```python
+from cauterule.adapter import watch, inject
+from cauterule.store.manager import StoreManager
+
+
+@watch(base_dir="trajectories", redact_keys={"api_key", "token"})
+def my_agent(prompt: str) -> str: ...
+
+
+with inject(task, rules=StoreManager().list_rules(status="active"), tool="git") as matched:
+    prompt = base_prompt + render(matched)
+
+# LangGraph
+from cauterule.adapter.langgraph import inject_rules, langgraph_node
+
+
+@langgraph_node(task="sync billing records", base_dir="trajectories")
+def my_node(state: dict) -> dict: ...
+```
+
+See [Adapters & Rule Lifecycle](docs/ADAPTERS.md) for CrewAI and PydanticAI.
 
 ---
 
-## What's Shipped in v0.2.0
+## What's Shipped in v0.3.0
 
 ### Core Loop
 - Trajectory capture with secret redaction
-- Multi-pass LLM extraction (3x, temperature variation, draft tournament)
+- Multi-pass LLM extraction (temperature variation, draft tournament)
 - Failure clustering — one extraction per failure cluster, not per failure
 - Historical replay engine with deterministic evidence reports
 - Promotion gate — auto, human-review, or hybrid mode
@@ -86,16 +146,42 @@ cauterule export --format agents
 - Conflict detection and rule consolidation
 - Versioned YAML rule store with git provenance
 
-### CLI (25+ Commands)
-- `cauterule init` | `demo` | `extract` (`--dry-run`) | `test` (`--ci`) | `promote` | `inject` | `list` | `show` | `search`
-- `cauterule audit` | `diff` | `retire` | `history` | `conflicts` | `health` | `validate`
-- `cauterule counterfactual` | `story` | `explain` | `config` | `metrics` | `report` | `pack list` | `pack info`
-- `cauterule rewind` (Failure Time Machine) | `cauterule mcp` (MCP server)
-- **NEW** `cauterule review` — TUI review interface with confidence-ordered queue
-- **NEW** `cauterule observe` — observability metrics and learning journal
+### Adapters (New in v0.3.0)
+- First-class **LangGraph**, **CrewAI**, and **PydanticAI** adapters — capture failures and inject matching rules in-framework
+- Generic `@watch` decorator and `inject()` / `ainject()` context manager GA
+- One shared **conformance harness** holds every adapter to the same capture/injection/redaction contract
+- Duck-typed: adapters import cleanly when the framework is not installed
+- Docs: [Adapters & Rule Lifecycle](docs/ADAPTERS.md)
+
+### Rule Lifecycle (New in v0.3.0)
+- Per-rule **outcome tracking** — prevented / broke / neutral counters
+- **Specificity scoring** feeds conflict consolidation and lifecycle decisions
+- **Supersession chains** — replaced-by graph for evolving rules
+- **Automated retirement** for stale and harmful rules
+- **Outcome-learned auto-promotion** thresholds, plus model-level safety judgment
+- `cauterule audit`, `cauterule retire`, `cauterule review`, `cauterule journal`
+
+### CLI (40+ Commands)
+- Core: `init` | `demo` | `extract` (`--dry-run`) | `test` (`--ci`) | `promote` | `inject` | `list` | `show` | `search`
+- Lifecycle: `audit` | `retire` | `review` | `history` | `conflicts` | `diff` | `promote` | `journal`
+- Diagnostics: `health` | `validate` | `preflight` | `harness-health` | `gaps` | `frontier`
+- Analysis: `counterfactual` | `story` | `explain` | `metrics` | `report` | `taxonomy`
+- Ecosystem: `pack` (`list`/`info`/`install`/`create`/`publish`) | `share` | `observe`
+- Infra: `corpus` | `benchmark` | `leaderboard` | `otel`
+- Integrations: `export` (`--format agents`) | `import` | `config` | `mcp` | `webhook` | `badge` | `rewind`
+
+### Pack Ecosystem (New in v0.3.0)
+- `pack install` from GitHub with version pinning
+- `pack create` scaffold from a rule store; `pack publish` with semver + dependency resolution
+- `share <rule-id>` publishes a single rule as a GitHub gist with provenance
+- Official packs: `pack-python`, `pack-testing`, `pack-deploy`, `pack-docker`
+- Pack **certification + safety scoring** on install
+- Docs: [Contributing Packs](docs/packs/CONTRIBUTING-PACKS.md)
 
 ### Replay Engine
 - Replay harness with evidence reports (failures prevented, successes broken, precision, recall, verdict)
+- Domain-scoped reference pool — same-domain scoring, recall 2–3× v0.2.0
+- Near-miss penalty, self-match exclusion, and recovery gate
 - "What if?" mode — apply a hypothetical rule and simulate the outcome
 - Failure Time Machine — `cauterule rewind <trajectory>` with rule overlay
 - Rule Draft Tournament — generate candidates, replay all, rank, promote the winner
@@ -103,7 +189,7 @@ cauterule export --format agents
 ### Rule Store
 - YAML rule files with provenance metadata and tags
 - Auto-classified failure taxonomy (`git/push`, `python/import`, `docker/network`)
-- Git-based versioning, rollback, archive directory
+- Git-based versioning, rollback, archive directory, path-traversal guard
 - Rule consolidation — merge overlapping triggers
 
 ### Rule Injection
@@ -112,93 +198,107 @@ cauterule export --format agents
 - Rule explanations, templating (retry, verify-then-act, check-preconditions)
 - Context budget optimizer, preflight mode
 
-### Rule Packs (Bundled)
-- `pack-git` — 10+ pre-built git rules (push, merge, rebase, conflicts)
-- Zero cold-start: rules work out of the box, zero LLM cost
-
 ### Export & Import (Day-One Interop)
 - Export to `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, `.windsurfrules`, `aider.conf.yml`, markdown, JSON
 - Import from `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, and chat history
 
-### MCP Server
+### MCP Server (Hardened in v0.3.0)
 - 4 tools: `get_matching_rules`, `get_rule`, `list_rules`, `report_failure`
+- Remote HTTP mode: **bearer auth**, per-client **rate limiting**, and payload **schema validation**
 - Any MCP-compatible agent (Claude, etc.) consumes rules with zero code changes
+- Critical HTTP auth bug (#601) found by the Docker field test and fixed via the official `mcp` SDK `Context` API
 
-### Custom Agent Adapter
-- `@cauterule.watch` decorator — wrap any agent function, auto-captures trajectories on failure
-- `cauterule.inject()` context manager — prep context with matching rules before task execution
-- Works with any Python agent — no framework lock-in
+### Corpus, Benchmark & Release Infrastructure (New in v0.3.0)
+- `cauterule corpus` — add/list/validate/lint/build/export trajectory corpora
+- `cauterule benchmark` + `cauterule leaderboard` — determinism, acceptance, rejection, bake-off, mutation, calibration, ablation suites
+- 40 corpora / 2,384 trajectories per model; 444 domain-scoped reference trajectories
+- pytest-benchmark perf-regression CI for hot paths
+- OpenTelemetry standalone exporter (`cauterule otel`); cost/latency tiering guidance
 
-### Corpus & Field Test Infrastructure
-- 13 corpus types totaling 394 trajectories (curated + raw, v0.1.0)
-- v0.2.0 public corpus: 160 trajectories (golden families ×10, domain-specific ×50, counterexample ×20, near-miss ×20, staleness ×10, synthetic ×50)
-- All public trajectories annotated with `expected_outcome` and `expected_outcome_rationale` for ground-truth verification
-- **NEW** 6 adversarial corpora (staleness, counterexample, noise injection, prompt injection, redaction bypass, near-miss escalation)
-- **NEW** Pre-extraction gate with corpus validation, annotations, preflight, and harness health checks
-
-### NEW in v0.2.0
-
-- **TUI review interface** — confidence-ordered review queue, filtering, approval/rejection workflows
-- **Observability subsystem** — hit counters, coverage scoring, learning journal, metrics export
-- **Adversarial corpus generation** — 6 corpora testing rule robustness
-- **Distribution channels** — Docker image, standalone binary, GitHub Action, webhook notifications, OpenTelemetry export
-- **Benchmark leaderboard** — determinism, acceptance, rejection, bake-off, mutation, calibration, ablation suites
-- **Pack certification baseline** — rule pack validation harness with safety scoring
-- **Safety-adjusted ranking** — broad-trigger penalty, silence scoring, trigger specificity metrics
-- **Human review workflow** — sampling strategies, review queue management, TUI integration
-- **Scale and reliability tests** — latency, memory, conflict detection, concurrency
+### Observability
+- `cauterule observe` — hit counters, coverage scoring, learning journal, metrics export
+- Webhook-on-promotion (Slack / Discord / GitHub)
+- OpenTelemetry spans for `rule.match`, `rule.promote`, `rule.retire`, `replay.verdict`
+- Docs: [Observability](docs/observability.md)
 
 ### Configuration
 - `cauterule.toml` — LLM provider, model, thresholds, mode, paths, redaction patterns
-- Environment variable support — `CAUTERULE_LLM_PROVIDER`, `CAUTERULE_MODEL`, etc.
+- Environment variable support — `CAUTERULE_LLM_PROVIDER`, `CAUTERULE_MODEL`, `CAUTERULE_SEMANTIC_MATCHING`, `CAUTERULE_QUARANTINE_IDS`
 - LLM provider abstraction — OpenAI, Anthropic, Ollama, LiteLLM
 - Promotion mode — auto, human-review, hybrid
+
+### Security
+- Remote MCP auth / rate-limit / payload validation; adapter redaction-on-disk; pack checksums/certification
+- 0 verified secrets (truffleHog), 0 production vulnerabilities (pip-audit), custom secret regex clean
+- OpenSSF Scorecard 3.8/10 with structural remediation tracked (#713)
+- Details: [SECURITY.md](SECURITY.md)
 
 ---
 
 ## Field Test Results
 
-The v0.2.0 field test expanded on v0.1.0 with safety-adjusted model rankings, adversarial corpora, and 160 additional public trajectories:
+The v0.3.0 field test ran **40 corpora × 2 cloud models (gpt-4o-mini, llama-3.1-8b) = 4,768 trajectory-runs**, with a 444-trajectory domain-scoped reference corpus.
 
 Key findings:
-- Parser and prompt fixes improved local-model parse reliability from ~30% to near 100%
-- Safety-adjusted ranking surfaces broad-trigger penalties and wrong-decision rates
-- Adversarial corpora expose rule staleness, counterexamples, and redaction bypass
-- Safety corpora remain the hardest unsolved area across all models
+- **Near-miss precision 98–100%** (was 86–90% in v0.2.0) — near-miss penalty + self-match exclusion + recovery gate
+- **Adversarial promotions: 0** on both models (`should_reject` override)
+- **100% safety silence** — 60/60 successes and 60/60 failures-negative gate-dropped
+- **Recall improved 2–3×** (0.170 / 0.228 vs 0.087) after domain-scoping the reference pool (#708)
+- **#601 MCP auth bug** caught by the Docker field test and fixed (unit-green, deployment-broken)
+- **Known gap:** golden pass 40–50% (target ≥70%) and failures/positive 8–10% (target ≥50%) — the matcher's paraphrase limitation, targeted for v0.4.0
 
-Full reports:
-- v0.1.0: [`docs/field-test/v0.1.0/FIELD_TEST_REPORT.md`](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md)
+Full report: [`docs/field-test/v0.3.0/FIELD_TEST_REPORT.md`](docs/field-test/v0.3.0/FIELD_TEST_REPORT.md)
+
+Prior reports:
 - v0.2.0: [`docs/field-test/v0.2.0/FIELD_TEST_REPORT.md`](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md)
+- v0.1.0: [`docs/field-test/v0.1.0/FIELD_TEST_REPORT.md`](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md)
 
 ---
 
 ## Architecture
 
 ```
-                         ┌──────────────────────────────────────────┐
-                         │              CLI / MCP                    │
-                         │  cauterule demo | extract | mcp          │
-                         └──────┬───────────────────────────┬───────┘
-                                │                           │
-                                ▼                           ▼
-┌─────────────────┐     ┌──────────────────┐     ┌───────────────────┐
-│ Trajectory      │ ──> │ Rule Extractor   │ ──> │ Historical Replay │
-│ Capture + Redact│     │ (multi-pass LLM) │     │ Engine + Viz      │
-└─────────────────┘     └──────────────────┘     └───────────────────┘
-       │                        │                         │
-       ▼                        ▼                         ▼
-┌─────────────────┐     ┌──────────────┐          ┌───────────────────┐
-│ Rule Injection  │ <── │ Standing-Rules│ <── ─── │ Promotion Gate    │
-│ + Explanations  │     │ Store (YAML)  │     │   │ + Linter + Conflicts│
-└─────────────────┘     └──────┬───────┘     │
-                               │             │
-                               ▼             ▼
-┌─────────────────┐     ┌──────────────────┐     ┌───────────────────┐
-│ Export / Import │     │ Corpus & Field   │     │ Basic Observability│
-│ 7 formats       │     │ Test Runner      │     │ Metrics + Report  │
-│ MCP server      │     │ 394 trajectories │     │ Health + Validate │
-└─────────────────┘     └──────────────────┘     └───────────────────┘
+                         ┌───────────────────────────────────────────────┐
+                         │                  CLI / MCP                     │
+                         │ extract | test | promote | corpus | benchmark  │
+                         │ pack | share | observe | retire | audit        │
+                         └──────┬────────────────────┬──────────────┬─────┘
+                                │                    │              │
+                                ▼                    ▼              ▼
+ ┌──────────────────┐   ┌───────────────┐   ┌───────────────┐  ┌──────────────┐
+ │ Adapters         │──>│ Rule Extractor│──>│ Historical    │  │ Corpus &     │
+ │ @watch/LangGraph │   │ (multi-pass)  │   │ Replay Engine │  │ Benchmark    │
+ │ CrewAI/PydanticAI│   │               │   │ domain-scoped │  │ 40 corpora   │
+ └──────────────────┘   └───────────────┘   └───────┬───────┘  └──────────────┘
+                                                     │
+                                                     ▼
+ ┌──────────────────┐   ┌───────────────┐   ┌───────────────┐  ┌──────────────┐
+ │ Rule Injection   │<──│ Standing-Rule │<──│ Promotion Gate│  │ Rule         │
+ │ + Explanations   │   │ Store (YAML)  │   │ + Linter +    │  │ Lifecycle    │
+ │ + Budget         │   │ + git prov.   │   │   Conflicts   │  │ outcomes/    │
+ └──────────────────┘   └───────┬───────┘   └───────────────┘  │ retirement   │
+                                │                              └──────────────┘
+              ┌─────────────────┼──────────────────┐
+              ▼                 ▼                  ▼
+ ┌──────────────────┐   ┌───────────────┐  ┌───────────────────┐
+ │ Pack Ecosystem   │   │ Export /      │  │ Observability     │
+ │ install/create/  │   │ Import        │  │ OpenTelemetry +   │
+ │ publish + share  │   │ 7 formats +MCP │  │ journal + metrics │
+ └──────────────────┘   └───────────────┘  └───────────────────┘
 ```
+
+---
+
+## Known Limitations
+
+- **Golden pass rate 40–50%** (target ≥70%) — the token-F1 matcher cannot bridge the paraphrase gap between LLM-extracted triggers and reference phrasings. Targeted for v0.4.0 matcher work.
+- **Failures/positive pass rate 8–10%** (target ≥50%) — blocked by the broad-trigger penalty (`broken > 0`) and precision below 0.5. v0.4.0 matcher work.
+- **Semantic matching is still maturing** — optional via `pip install "cauterule[matching]"`, but it contributes only a 0.2 weight to the score blend today. Raising the semantic weight is v0.4.0 work.
+- **Cross-session repeat-failure reduction and human-vs-replay agreement** — tooling is ready; the measurement protocols have not been run.
+- **Local OMLX models are unusable** (slow, hung on `raw/ci`) — use cloud models.
+- **OpenSSF Scorecard 3.8/10** — structural gaps (branch protection, review, fuzzing, dependency pinning); remediation tracked in #713, #614, #615.
+- **Replay matcher is still heuristic** (substring + token overlap + 0.2 semantic) — the embedding index is planned for a later release.
+- **TUI review requires a color-capable terminal** — use the CLI commands otherwise.
 
 ---
 
@@ -208,10 +308,10 @@ Full reports:
 |---------|-------|-----------------|
 | **v0.1.0** ✅ | Core Loop + DX | Full loop, 25+ CLI commands, MCP, export/import, packs, corpus, field tests |
 | **v0.2.0** ✅ | Distribution + Polish | TUI review, observability, corpus infra (160 public trajs), 12 benchmarks, adversarial corpora, Docker, binary, GitHub Action, webhook, OTEL |
-| **v0.3.0** | Rule Pack Ecosystem | pack install/create/publish, official packs (docker, deploy, testing, python) |
-| **v0.4.0** | Deep Integrations | AgentObservatory, AgentEvalForge, LangSmith/Phoenix |
+| **v0.3.0** ✅ | Hardening & Ecosystem | Critical fixes, adapters (LangGraph/CrewAI/PydanticAI), rule lifecycle, pack ecosystem, corpus/benchmark infra, 40-corpus field test |
+| **v0.4.0** | Intelligence & Scale | Matcher quality + paraphrase bridging, higher semantic weight, cross-session repeat-failure measurement, human-vs-replay agreement, deep integrations, observability dashboard, fleet support |
 | **v0.5.0** | Observability & Analytics | Web dashboard, trend lines, weekly digest |
-| **v0.6.0** | Advanced Retrieval | Semantic matching, hybrid matching, rule embedding index |
+| **v0.6.0** | Advanced Retrieval | Rule embedding index, hybrid retrieval tuning |
 | **v0.7.0** | Multi-Agent | Cross-agent transfer, shared registry, rule governance |
 
 ---
@@ -233,14 +333,21 @@ CauterRule is the **learning layer** in an open-source agent infrastructure stac
 ## Documentation
 
 - [User Guide](docs/USER_GUIDE.md)
+- [Adapters & Rule Lifecycle](docs/ADAPTERS.md)
+- [Observability](docs/observability.md)
+- [Contributing Rule Packs](docs/packs/CONTRIBUTING-PACKS.md)
+- [Field Test Report (v0.3.0)](docs/field-test/v0.3.0/FIELD_TEST_REPORT.md)
 - [Field Test Report (v0.2.0)](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md)
 - [Field Test Report (v0.1.0)](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md)
+- [Release Notes (v0.3.0)](docs/release/v0.3.0/release-notes.md)
 - [Release Notes (v0.2.0)](docs/release/v0.2.0/release-notes.md)
 - [Release Notes (v0.1.0)](docs/release/v0.1.0/release-notes.md)
+- [Security Policy](SECURITY.md)
 - [Changelog](CHANGELOG.md)
 - [Docs Index](docs/README.md)
 - [PRD: Why](docs/design/prd/01-why.md)
 - [Architecture](docs/design/prd/02-architecture.md)
+- [WBS v0.3.0](docs/wbs/v0.3.0/wbs-v0.3.0-index.md)
 - [WBS v0.1.0](docs/wbs/v0.1.0/wbs-v0.1.0-index.md)
 
 ---

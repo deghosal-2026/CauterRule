@@ -91,7 +91,9 @@ def _make_trajectory(
             model=random.choice(["gpt-4o", "claude-3.5", None]),
             tools=("bash", "read"),
         ),
-        environment=Environment(os=random.choice(["linux", "macos"]), ci=random.choice([True, False])),
+        environment=Environment(
+            os=random.choice(["linux", "macos"]), ci=random.choice([True, False])
+        ),
         redacted=False,
     )
 

@@ -8,13 +8,19 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-QualityLabel = Literal["clear", "ambiguous", "multi-causal", "misleading", "operator-induced"]
+from cauterule.log import get_logger
+
+_log = get_logger(__name__)
+
+QualityLabel = Literal[
+    "clear", "noisy", "ambiguous", "multi-causal", "misleading", "operator-induced", "open-ended"
+]
 Severity = Literal["low", "medium", "high"]
 ExpectedOutcome = Literal["should_extract", "should_silence", "should_reject"]
 ExpectedOutcomeConfidence = Literal["high", "medium", "low", None]
 
 _VALID_QUALITY_LABELS: frozenset[str] = frozenset(
-    {"clear", "ambiguous", "multi-causal", "misleading", "operator-induced"}
+    {"clear", "noisy", "ambiguous", "multi-causal", "misleading", "operator-induced", "open-ended"}
 )
 _VALID_SEVERITIES: frozenset[str] = frozenset({"low", "medium", "high"})
 _VALID_EXPECTED_OUTCOMES: frozenset[str] = frozenset(
@@ -101,10 +107,32 @@ class Step:
         return d
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Step:
-        """Create from a dict produced by :meth:`to_dict`."""
+    def from_dict(cls, data: dict[str, Any], default_index: int | None = None) -> Step:
+        """Create from a dict produced by :meth:`to_dict`.
+
+        Args:
+            data: Step mapping. Must contain ``step_number`` unless
+                *default_index* is given.
+            default_index: Zero-based position of this step in its trajectory.
+                Used to auto-number steps missing ``step_number`` (#595);
+                a warning is logged when this fallback fires.
+
+        Raises:
+            ValueError: If ``step_number`` is missing and no *default_index*
+                was provided (fail loud instead of collapsing to step 1).
+        """
+        if "step_number" not in data:
+            if default_index is None:
+                raise ValueError("Step missing required 'step_number' field")
+            _log.warning(
+                "step missing step_number; auto-numbering by position",
+                extra={"default_index": default_index},
+            )
+            step_number = default_index + 1
+        else:
+            step_number = int(data["step_number"])
         return cls(
-            step_number=int(data.get("step_number", 1)),
+            step_number=step_number,
             tool=data.get("tool", ""),
             input=data.get("input"),
             output=data.get("output"),
@@ -187,11 +215,22 @@ class Trajectory:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Trajectory:
-        """Create from a dict produced by :meth:`to_dict`."""
+        """Create from a dict produced by :meth:`to_dict`.
+
+        Raises:
+            ValueError: If the required ``success`` field is absent (#594 —
+                a missing flag must not silently label a success as failure).
+        """
+        if "success" not in data or data.get("success") is None:
+            raise ValueError("Trajectory missing required 'success' field")
         # Accept both 'id' and 'trajectory_id' for flexibility.
         tid = data.get("trajectory_id") or data.get("id", "")
         steps_raw = data.get("steps", [])
-        steps = tuple(Step.from_dict(s) for s in steps_raw if isinstance(s, dict))
+        steps = tuple(
+            Step.from_dict(s, default_index=i)
+            for i, s in enumerate(steps_raw)
+            if isinstance(s, dict)
+        )
         ac_raw = data.get("agent_config")
         env_raw = data.get("environment")
         return cls(
@@ -199,7 +238,7 @@ class Trajectory:
             timestamp=str(data.get("timestamp", "")),
             task=str(data.get("task", "")),
             steps=steps,
-            success=bool(data.get("success", False)),
+            success=bool(data["success"]),
             failure_point=data.get("failure_point"),
             failure_class=data.get("failure_class"),
             quality_label=data.get("quality_label"),

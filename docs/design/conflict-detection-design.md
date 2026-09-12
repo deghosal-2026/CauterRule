@@ -58,6 +58,10 @@ When overlapping rules are detected:
 5. Merge creates a new rule with combined context and the union of provenance
 6. Consolidation is a git commit with merge reasoning
 
+## Minimum-Fraction Overlap (v0.3.0)
+
+Duplicate and conflict detection uses a minimum-fraction overlap threshold: two triggers are treated as overlapping only when their shared tokens/phrases cross a configurable fraction of the shorter trigger. This suppresses spurious overlaps between rules that merely share a common word, while still catching genuine duplicates. When an overlap is confirmed, consolidation picks the winner by specificity score and archives the rest with `superseded_by` (consolidation via specificity). The rule store is loaded recursively from every YAML file, including nested pack directories, before detection runs, so no rule is missed because of a nested path.
+
 ## Rule Linter Integration
 
 The linter runs conflict detection as part of its checks:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from cauterule.models.rule import StandingRule
+from cauterule.store.manager import resolve_inside, validate_rule_id
 
 
 def check_readonly(rule: StandingRule, base_dir: str = "rules") -> bool:
@@ -22,5 +23,11 @@ def check_readonly(rule: StandingRule, base_dir: str = "rules") -> bool:
     """
     if rule.pack is None:
         return False
-    pack_dir = Path(base_dir) / "packs" / rule.pack
-    return pack_dir.is_dir() and (pack_dir / "manifest.yaml").is_file()
+    try:
+        validate_rule_id(rule.pack)
+        pack_dir = resolve_inside(Path(base_dir) / "packs", rule.pack)
+    except ValueError:
+        return False
+    return pack_dir.is_dir() and (
+        (pack_dir / "pack.yaml").is_file() or (pack_dir / "manifest.yaml").is_file()
+    )

@@ -246,11 +246,10 @@ class TestCauteruleMCPServer:
 # ======================================================================
 class TestLaunchMcp:
     def test_launch_stdio(self) -> None:
-        with patch(
-            "cauterule.mcp.launch.CauteruleMCPServer"
-        ) as mock_server_cls, patch(
-            "cauterule.mcp.launch.StoreManager"
-        ) as mock_store_cls:
+        with (
+            patch("cauterule.mcp.launch.CauteruleMCPServer") as mock_server_cls,
+            patch("cauterule.mcp.launch.StoreManager") as mock_store_cls,
+        ):
             instance = mock_server_cls.return_value
             launch_mcp(transport="stdio")
         mock_store_cls.assert_called_once()
@@ -258,15 +257,18 @@ class TestLaunchMcp:
         instance.run_stdio.assert_called_once()
 
     def test_launch_http(self) -> None:
-        with patch(
-            "cauterule.mcp.launch.CauteruleMCPServer"
-        ) as mock_server_cls, patch(
-            "cauterule.mcp.launch.StoreManager"
-        ) as mock_store_cls:
+        with (
+            patch("cauterule.mcp.launch.CauteruleMCPServer") as mock_server_cls,
+            patch("cauterule.mcp.launch.StoreManager") as mock_store_cls,
+        ):
             instance = mock_server_cls.return_value
             launch_mcp(transport="http", host="0.0.0.0", port=8080)
         mock_store_cls.assert_called_once()
-        mock_server_cls.assert_called_once_with(mock_store_cls.return_value, host="0.0.0.0", port=8080)
+        _, kwargs = mock_server_cls.call_args
+        assert kwargs["host"] == "0.0.0.0"
+        assert kwargs["port"] == 8080
+        assert kwargs["auth_mode"] == "none"
+        assert "rate_limiter" in kwargs
         instance.run_http.assert_called_once_with()
 
     def test_invalid_transport(self) -> None:

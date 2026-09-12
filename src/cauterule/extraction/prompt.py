@@ -40,10 +40,15 @@ def build_extraction_prompt(trajectory: Trajectory, template: str | None = None)
         f"{template_hint}\n"
         f"\nExtract a single standing rule from this failure. "
         f"Return ONLY a JSON object with these exact keys:\n"
-        f"- when: object with \"trigger\" (string) and \"context\" (array of strings)\n"
-        f"- do: object with \"directive\" (string) and \"because\" (string)\n"
+        f'- when: object with "trigger" (string) and "context" (array of strings)\n'
+        f'- do: object with "directive" (string) and "because" (string)\n'
         f"- confidence: number between 0.0 and 1.0\n"
         f"- reasoning: string\n"
+        f"\nCRITICAL: The trigger MUST name the specific error code, error message, "
+        f"or failure signature — not just the tool name. "
+        f'For example, write "when git push fails with non-fast-forward" '
+        f'NOT "when git push fails". '
+        f"The error signature is the key distinction; without it the rule is too broad.\n"
         f"\nDo not include any text before or after the JSON object.\n"
         f"Context entries must be non-empty strings or omit the context array entirely.\n"
         f"\nExample output:\n"

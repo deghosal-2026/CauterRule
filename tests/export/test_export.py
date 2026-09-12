@@ -1,4 +1,9 @@
-"""Tests for the export module."""
+"""Tests for the export module.
+
+# SECURITY-FIXTURE: token-like strings in this module are intentional fake
+# credentials used to verify redaction. None are real secrets.
+"""
+
 from __future__ import annotations
 
 import json
@@ -159,6 +164,7 @@ def test_export_rules_dispatch() -> None:
 
 def test_export_rules_unknown_format() -> None:
     import pytest
+
     with pytest.raises(ValueError, match="Unknown export format"):
         export_rules([_make_rule()], "bogus")
 

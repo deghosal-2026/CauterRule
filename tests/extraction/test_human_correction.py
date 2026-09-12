@@ -3,15 +3,35 @@ from cauterule.models.trajectory import Step, Trajectory
 
 
 def _traj() -> Trajectory:
-    return Trajectory(id="T-001", timestamp="t", task="git push", steps=(Step(1, "bash", error="fail"),), success=False, failure_class="git/push")
+    return Trajectory(
+        id="T-001",
+        timestamp="t",
+        task="git push",
+        steps=(Step(1, "bash", error="fail"),),
+        success=False,
+        failure_class="git/push",
+    )
 
 
 def _traj_with_step_output() -> Trajectory:
-    return Trajectory(id="T-002", timestamp="t", task="build", steps=(Step(1, "bash", output="compile error: undefined reference"),), success=False)
+    return Trajectory(
+        id="T-002",
+        timestamp="t",
+        task="build",
+        steps=(Step(1, "bash", output="compile error: undefined reference"),),
+        success=False,
+    )
 
 
 def _traj_no_error() -> Trajectory:
-    return Trajectory(id="T-003", timestamp="t", task="deploy", steps=(), success=False, failure_class="deploy/fail")
+    return Trajectory(
+        id="T-003",
+        timestamp="t",
+        task="deploy",
+        steps=(),
+        success=False,
+        failure_class="deploy/fail",
+    )
 
 
 def test_parse_next_time() -> None:

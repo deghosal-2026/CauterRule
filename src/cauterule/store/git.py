@@ -19,14 +19,15 @@ def git_commit(message: str, base_dir: str = "rules") -> str | None:
 
     Returns:
         The commit hash, or ``None`` if the directory is not inside a git
-        repository.
+        repository. Callers MUST check for ``None`` — it means no commit
+        was created (#505).
     """
     import subprocess
 
     repo = Path(base_dir).resolve()
     try:
         subprocess.run(
-            ["git", "add", str(repo)],
+            ["git", "add", "--", str(repo)],
             capture_output=True,
             check=True,
             cwd=repo if repo.is_dir() else repo.parent,
@@ -46,11 +47,13 @@ def git_commit(message: str, base_dir: str = "rules") -> str | None:
             cwd=repo if repo.is_dir() else repo.parent,
         )
         return result.stdout.strip()
-    except subprocess.CalledProcessError:
-        _log.warning("git_commit failed — not in a git repo or git not available")
+    except subprocess.CalledProcessError as exc:
+        raw = exc.stderr or exc.output or ""
+        detail = raw.decode("utf-8", "replace") if isinstance(raw, bytes) else str(raw)
+        _log.error("git_commit failed (rc=%s): %s", exc.returncode, detail[:500])
         return None
     except FileNotFoundError:
-        _log.warning("git_commit failed — git executable not found")
+        _log.error("git_commit failed — git executable not found")
         return None
 
 

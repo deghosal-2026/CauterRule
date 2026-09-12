@@ -1,0 +1,25 @@
+id: R-TEST-002
+when:
+  trigger: pytest network-dependent test flakes on external service latency
+  context:
+    - live HTTP calls inside unit tests
+do:
+  directive: Wrap the call with tenacity retry and jitter, or record and replay fixtures instead
+  because: Controlled retries absorb transient blips without masking real breakage
+confidence: 0.87
+provenance:
+  source_trajectory: packs/pack-testing/R-TEST-002
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - testing
+  - flaky
+  - network
+taxonomy: test/flaky
+pack: pack-testing

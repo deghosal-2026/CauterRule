@@ -35,10 +35,20 @@ def test_similarity_different_class() -> None:
 
 def test_similarity_tool_jaccard() -> None:
     a = Trajectory(
-        id="T-1", timestamp="t", task="t", steps=(Step(1, "bash"), Step(2, "read")), success=False, failure_class="git/push"
+        id="T-1",
+        timestamp="t",
+        task="t",
+        steps=(Step(1, "bash"), Step(2, "read")),
+        success=False,
+        failure_class="git/push",
     )
     b = Trajectory(
-        id="T-2", timestamp="t", task="t", steps=(Step(1, "bash"), Step(2, "write")), success=False, failure_class="git/push"
+        id="T-2",
+        timestamp="t",
+        task="t",
+        steps=(Step(1, "bash"), Step(2, "write")),
+        success=False,
+        failure_class="git/push",
     )
     s = similarity(a, b)
     assert 0.5 < s < 1.0

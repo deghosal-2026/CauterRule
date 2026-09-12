@@ -1,4 +1,5 @@
 """Loop orchestration package — capture, extract, promote, inject."""
+
 from __future__ import annotations
 
 from cauterule.loop.errors import (

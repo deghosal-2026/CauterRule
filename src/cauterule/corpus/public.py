@@ -22,7 +22,9 @@ def load_public_corpus(path: str | None = None) -> list[Trajectory]:
     """
     if path is None:
         # Look relative to this file's project location
-        here = Path(__file__).resolve().parent.parent.parent.parent  # src/cauterule/corpus/ -> project root
+        here = (
+            Path(__file__).resolve().parent.parent.parent.parent
+        )  # src/cauterule/corpus/ -> project root
         path = str(here / "corpus" / "public")
 
     p = Path(path)

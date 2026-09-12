@@ -24,7 +24,9 @@ def test_throughput_small() -> None:
         for i in range(100)
     ]
     candidates = [
-        CandidateRule(when=RuleWhen(trigger=f"task {i}"), do=RuleDo(directive="fix"), confidence=0.9)
+        CandidateRule(
+            when=RuleWhen(trigger=f"task {i}"), do=RuleDo(directive="fix"), confidence=0.9
+        )
         for i in range(10)
     ]
     start = time.time()

@@ -8,15 +8,36 @@ candidate immediately without calling the LLM.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Literal
 
-from cauterule.models.trajectory import Trajectory
+from cauterule.models.trajectory import Step, Trajectory
 
 GateMode = Literal["strict", "relaxed"]
 SILENCE_REASON_NO_FAILURE = "no_failure_signal"
 SILENCE_REASON_NEARMISS = "nearmiss_recovery_succeeded"
-_SILENCE_REASONS = frozenset({SILENCE_REASON_NO_FAILURE, SILENCE_REASON_NEARMISS})
+SILENCE_REASON_NO_SIGNAL_AND_FAILURE = "failure_without_signal"
+
+# Recovery/near-miss keywords (Fix 8 set, applied gate-side): a success=True
+# trajectory whose failure_class mentions one of these self-resolved — the
+# agent recovered, so no rule should be extracted (v0.3.0 field-test fix:
+# the N-00x "success-that-looks-like-failure" nearmiss series slipped the
+# gate via failure_class-only signals).
+_RECOVERY_KEYWORDS: frozenset[str] = frozenset(
+    {"temp", "near", "retry", "recover", "intermittent", "flaky"}
+)
+_SILENCE_REASONS = frozenset(
+    {SILENCE_REASON_NO_FAILURE, SILENCE_REASON_NEARMISS, SILENCE_REASON_NO_SIGNAL_AND_FAILURE}
+)
+
+# Failure-indicating text that may be captured in ``step.output`` rather than
+# ``step.error`` (e.g. a shell command that prints to stdout).  Such output
+# must not be mistaken for a success signal (#693).
+_FAILURE_TEXT_RE = re.compile(
+    r"\b(error|failed|failure|exception|traceback|fatal|refused|denied)\b",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -32,16 +53,63 @@ class GateResult:
         return not self.should_extract and self.reason in _SILENCE_REASONS
 
 
+def _step_shows_success(step: Step) -> bool:
+    """Return True if *step* indicates success by state or output (#518).
+
+    The reliable explicit signals (non-zero exit_code, assertion/schema
+    violation, step error) are checked before inferring success from the
+    mere presence of output.  Output text that itself looks like an error
+    (printed to stdout rather than captured in ``step.error``) is not a
+    success signal (#693).
+    """
+    state = step.state or {}
+    exit_code = state.get("exit_code")
+    if exit_code is not None:
+        try:
+            if int(exit_code) != 0:
+                return False
+            # exit_code 0 — still a failure if assertion/schema violated
+            if state.get("assertion_failed") or state.get("schema_violation"):
+                return False
+            return True
+        except (ValueError, TypeError):
+            pass
+    if state.get("assertion_failed") or state.get("schema_violation"):
+        return False
+    if step.error and step.error.strip():
+        return False
+    if step.output and step.output.strip():
+        # Failure text printed to output is not evidence of success (#693).
+        if _FAILURE_TEXT_RE.search(step.output):
+            return False
+        return True
+    return True
+
+
 def _detect_nearmiss_recovery(trajectory: Trajectory) -> bool:
     """Detect a near-miss pattern: first step fails, later step succeeds.
 
     A near-miss is a trajectory where:
-    - At least one early step has an error
-    - A later step succeeds (has output, no error)
+    - At least one early step has an error or failure signal
+    - A later step succeeds (has output, exit_code 0, or no error)
     - Overall trajectory success = True (retry/recovery succeeded)
 
     These should not produce rules — the failure was transient.
+
+    State-only recovery is recognized (#518): a step whose retry succeeds
+    via state change (``exit_code: 0``, no assertion/schema violation)
+    with empty output still counts as recovery.
     """
+    # A success=True trajectory whose failure_class carries a recovery
+    # keyword self-resolved regardless of the step pattern — the N-00x
+    # nearmiss series (successful steps, fabricated failure_class like
+    # "nearmiss/coding") has no early-error pattern but is still a
+    # recovered trajectory.  Keyword set mirrors Fix 8 (replay side).
+    if trajectory.success and trajectory.failure_class:
+        fc_tokens = re.split(r"[/_\-\s]+", trajectory.failure_class.lower())
+        if any(kw in fc_tokens for kw in _RECOVERY_KEYWORDS):
+            return True
+
     if not trajectory.success:
         return False
     if len(trajectory.steps) < 2:
@@ -53,7 +121,7 @@ def _detect_nearmiss_recovery(trajectory: Trajectory) -> bool:
     for i, step in enumerate(trajectory.steps):
         if step.error and step.error.strip():
             has_early_error = True
-        elif has_early_error and step.output and step.output.strip():
+        elif has_early_error and _step_shows_success(step):
             has_later_success = True
 
     return has_early_error and has_later_success
@@ -124,12 +192,28 @@ def run_gate(
     signals = _detect_failure_signals(trajectory)
 
     if mode == "relaxed":
+        # A clean success (success=True, no failure signals) must not be
+        # extracted even in relaxed mode: non-failure corpora (e.g. otel span
+        # events, all success=True) would otherwise produce rules that break
+        # reference successes (#709). Failures without signals still proceed —
+        # relaxed mode stays permissive for the raw corpora.
+        if trajectory.success and not signals:
+            return GateResult(
+                should_extract=False,
+                reason=SILENCE_REASON_NO_FAILURE,
+                failure_signals=(),
+            )
         return GateResult(should_extract=True, failure_signals=tuple(signals))
 
-    if not signals and trajectory.success:
+    if not signals:
+        reason = (
+            SILENCE_REASON_NO_SIGNAL_AND_FAILURE
+            if not trajectory.success
+            else SILENCE_REASON_NO_FAILURE
+        )
         return GateResult(
             should_extract=False,
-            reason=SILENCE_REASON_NO_FAILURE,
+            reason=reason,
             failure_signals=(),
         )
 

@@ -24,6 +24,7 @@ def multipass_extract(
     temperatures: tuple[float, ...] = DEFAULT_TEMPERATURES,
     template: str | None = None,
     gate_mode: str = "strict",
+    confidence_threshold: float = 0.6,
 ) -> list[CandidateRule]:
     """Run extraction multiple times with different temperatures.
 
@@ -36,6 +37,8 @@ def multipass_extract(
         temperatures: Temperatures to use per pass.
         template: Optional template hint.
         gate_mode: ``"strict"`` or ``"relaxed"`` (see :func:`~cauterule.extraction.gate.run_gate`).
+        confidence_threshold: Quality-gate threshold; failing candidates
+            never enter the tournament (#497).
 
     Returns:
         List of successfully extracted candidates (one per successful pass).
@@ -48,7 +51,12 @@ def multipass_extract(
     candidates: list[CandidateRule] = []
     for idx, temp in enumerate(temperatures, start=1):
         candidate, error = extract_candidate_safe(
-            trajectory, llm, template=template, extraction_pass=idx, temperature=temp
+            trajectory,
+            llm,
+            template=template,
+            extraction_pass=idx,
+            temperature=temp,
+            confidence_threshold=confidence_threshold,
         )
         if candidate is not None:
             candidates.append(candidate)

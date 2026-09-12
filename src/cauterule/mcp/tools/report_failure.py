@@ -44,7 +44,10 @@ def report_failure(trajectory_json: str) -> dict[str, Any]:
     try:
         traj = Trajectory.from_dict(data)
         prompt = build_extraction_prompt(traj)
-        msg = f"Trajectory accepted for extraction ({length} steps). Prompt ({len(prompt)} chars) generated."
+        msg = (
+            f"Trajectory accepted for extraction ({length} steps). "
+            f"Prompt ({len(prompt)} chars) generated."
+        )
     except Exception as exc:
         msg = f"Trajectory accepted for extraction ({length} steps), but construction failed: {exc}"
 

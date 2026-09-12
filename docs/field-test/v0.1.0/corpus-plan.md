@@ -506,7 +506,9 @@ def create_trajectory():
     task = input("Task description: ").strip()
     domain = input("Domain (git/python/docker/test/ci/deploy/shell/env/workflow): ").strip()
     failure_class = input("Failure class (e.g. git/push, python/import): ").strip()
-    quality = input("Quality label (clear/ambiguous/multi-causal/misleading/operator-induced): ").strip()
+    quality = input(
+        "Quality label (clear/ambiguous/multi-causal/misleading/operator-induced): "
+    ).strip()
     severity = input("Severity (low/medium/high): ").strip()
     success = input("Success? (y/n): ").strip().lower() == "n"
     correction = input("Human correction (or leave blank): ").strip()
@@ -522,14 +524,16 @@ def create_trajectory():
         inp = input("Input: ").strip()
         out = input("Output: ").strip()
         err = input("Error (or blank): ").strip()
-        steps.append({
-            "step_number": step_num,
-            "tool": tool,
-            "input": inp or None,
-            "output": out or None,
-            "error": err or None,
-            "state": None,
-        })
+        steps.append(
+            {
+                "step_number": step_num,
+                "tool": tool,
+                "input": inp or None,
+                "output": out or None,
+                "error": err or None,
+                "state": None,
+            }
+        )
         step_num += 1
 
     trajectory = {
@@ -579,24 +583,24 @@ from pathlib import Path
 
 def parse_ci_log(log_path: str) -> dict:
     text = Path(log_path).read_text()
-    
+
     # Extract the command that was run
     cmd_match = re.search(r"Run (.+)", text)
     command = cmd_match.group(1) if cmd_match else "unknown"
-    
+
     # Extract the first error
     error_match = re.search(r"Error: (.+)", text)
     error = error_match.group(1) if error_match else None
-    
+
     # Extract the full error block
     error_block = ""
     if error:
         lines = text.split("\n")
         for i, line in enumerate(lines):
             if "Error:" in line:
-                error_block = "\n".join(lines[i:i+10])
+                error_block = "\n".join(lines[i : i + 10])
                 break
-    
+
     # Determine domain from command
     domain = "ci"
     if "ruff" in command or "flake8" in command:
@@ -611,7 +615,7 @@ def parse_ci_log(log_path: str) -> dict:
         domain = "git"
     elif "pip" in command:
         domain = "python"
-    
+
     return {
         "trajectory_id": f"ci-{Path(log_path).stem}",
         "timestamp": "2026-09-05T00:00:00Z",

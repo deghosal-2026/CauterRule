@@ -42,7 +42,9 @@ def test_enrich_preserves_existing() -> None:
 
 def test_enrich_overrides() -> None:
     t = Trajectory(id="T-003", timestamp="t", task="task", steps=(), success=False)
-    enriched = enrich_trajectory(t, domain="docker", severity="high", tags=("docker",), quality_label="misleading")
+    enriched = enrich_trajectory(
+        t, domain="docker", severity="high", tags=("docker",), quality_label="misleading"
+    )
     assert enriched.domain == "docker"
     assert enriched.severity == "high"
     assert enriched.tags == ("docker",)
@@ -50,7 +52,14 @@ def test_enrich_overrides() -> None:
 
 
 def test_enrich_environment() -> None:
-    t = Trajectory(id="T-004", timestamp="t", task="task", steps=(), success=True, environment=Environment(ci=True))
+    t = Trajectory(
+        id="T-004",
+        timestamp="t",
+        task="task",
+        steps=(),
+        success=True,
+        environment=Environment(ci=True),
+    )
     enriched = enrich_trajectory(t)
     assert enriched.environment is not None
     assert enriched.environment.ci is True

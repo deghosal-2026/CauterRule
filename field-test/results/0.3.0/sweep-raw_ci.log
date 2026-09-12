@@ -1,0 +1,34 @@
+
+============================================================
+Field Test (v0.2.0): raw/ci
+  LLM:      openai/Llama-3.2-3B-Instruct-4bit
+  Base URL: http://localhost:8000/v1
+  Corpus:   field-test/corpus/raw/ci
+============================================================
+
+  Reference corpus: 444 trajectories loaded
+  Target corpus: 110 trajectories
+
+  [1/110] adversarial-debate-33239703973 ...   [2/110] adversarial-debate-33239742320 ...   [3/110] adversarial-debate-33239955042 ...   [4/110] adversarial-debate-33268807430 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [5/110] adversarial-debate-33268966690 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [6/110] agent-eval-forge-31835463096 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [7/110] agent-eval-forge-31835463136 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [8/110] agent-eval-forge-31835470326 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [9/110] agent-eval-forge-31835470566 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [10/110] agent-eval-forge-31835474336 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [11/110] agent-eval-forge-31835474339 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [12/110] agent-self-edit-33823047256 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [13/110] agent-self-edit-33823453903 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [14/110] agent-self-edit-33823679663 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [15/110] agent-self-edit-33823719567 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [16/110] agent-self-edit-33823934566 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [17/110] agent-tooltrust-31673159824 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [18/110] agent-tooltrust-31880149877 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [19/110] agent-tooltrust-31880198480 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [20/110] agent-tooltrust-31880510310 ... NO CANDIDATE (pass 1, temp=0.2): No balanced JSON object found in LLM output
+1 candidates, best: precision=0.33 recall=0.01 verdict=fail
+  [21/110] agent-tooltrust-31880536577 ... NO CANDIDATE (pass 2, temp=0.5): No balanced JSON object found in LLM output
+1 candidates, best: precision=0.33 recall=0.01 verdict=fail
+  [22/110] ansible-30102927666 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [23/110] ansible-31065278485 ... 2 candidates, best: precision=0.00 recall=0.00 verdict=inconclusive
+  [24/110] ansible-31130638761 ... 

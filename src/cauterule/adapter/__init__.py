@@ -1,6 +1,6 @@
-"""Agent adapter: watch decorator and inject context manager."""
+"""Agent adapter: watch decorator, inject context managers, framework adapters."""
 
 from cauterule.adapter.decorator import watch
-from cauterule.adapter.inject import inject
+from cauterule.adapter.inject import ainject, inject
 
-__all__ = ["inject", "watch"]
+__all__ = ["ainject", "inject", "watch"]

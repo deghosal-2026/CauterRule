@@ -10,9 +10,7 @@ from cauterule.observe.class_coverage import class_coverage
 from cauterule.store.manager import StoreManager
 
 
-def _rule(
-    rid: str, tags: tuple[str, ...] = (), taxonomy: str | None = None
-) -> StandingRule:
+def _rule(rid: str, tags: tuple[str, ...] = (), taxonomy: str | None = None) -> StandingRule:
     return StandingRule(
         id=rid,
         when=RuleWhen(trigger="test trigger"),

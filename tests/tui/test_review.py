@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from cauterule.models.candidate import CandidateRule
@@ -83,6 +82,7 @@ def test_populate_from_store_with_rules() -> None:
     with TemporaryDirectory() as tmp:
         store = StoreManager(base_dir=tmp)
         from cauterule.models.rule import Provenance, StandingRule
+
         rule = StandingRule(
             id="R-001",
             when=RuleWhen(trigger="deploy fails"),

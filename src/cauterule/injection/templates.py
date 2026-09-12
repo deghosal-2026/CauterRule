@@ -1,4 +1,5 @@
 """Rule templates — retry, verify-then-act, check-preconditions."""
+
 from __future__ import annotations
 
 from typing import Any

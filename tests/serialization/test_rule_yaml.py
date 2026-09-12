@@ -82,25 +82,85 @@ def test_file_roundtrip(tmp_path: Path) -> None:
 
 
 def test_load_rules_from_dir(tmp_path: Path) -> None:
-    rule = _valid_rule()
     # empty dir
     assert load_rules_from_dir(tmp_path) == []
-    # two files
-    dump_rule_to_file(rule, tmp_path / "R-001.yaml")
-    dump_rule_to_file(rule, tmp_path / "R-002.yml")
+    # two files with distinct ids
+    dump_rule_to_file(_rule_with_id("R-001"), tmp_path / "R-001.yaml")
+    dump_rule_to_file(_rule_with_id("R-002"), tmp_path / "R-002.yml")
     # not yaml file ignored
     (tmp_path / "ignore.txt").write_text("hello")
     rules = load_rules_from_dir(tmp_path)
     assert len(rules) == 2
     # non-existent dir returns []
     assert load_rules_from_dir(tmp_path / "nope") == []
-    # file with .yaml but invalid content still raises? ensure load works
-    # test that index skip works — create subdirectory
-    sub = tmp_path / "sub"
-    sub.mkdir()
-    dump_rule_to_file(rule, sub / "R-003.yaml")
-    # non-recursive, so not found
-    assert len(load_rules_from_dir(tmp_path)) == 2
+    # recursion: subdirectory rules loaded (#613)
+    sub = tmp_path / "packs" / "git"
+    sub.mkdir(parents=True)
+    dump_rule_to_file(_rule_with_id("R-003"), sub / "R-003.yaml")
+    rules = load_rules_from_dir(tmp_path)
+    assert {r.id for r in rules} == {"R-001", "R-002", "R-003"}
+    # index skipped at depth (#613)
+    dump_rule_to_file(_rule_with_id("R-004"), sub / "index.yaml")
+    # pack manifest skipped and never quarantined (#613)
+    (sub / "manifest.yaml").write_text("name: pack-git\nversion: '1.0'\n", encoding="utf-8")
+    assert {r.id for r in load_rules_from_dir(tmp_path)} == {"R-001", "R-002", "R-003"}
+    assert (sub / "manifest.yaml").exists()
+    # pack.yaml + packs.lock.yaml are manifests too, never rules (#554)
+    (sub / "pack.yaml").write_text("name: pack-git\nversion: '1.0'\n", encoding="utf-8")
+    (tmp_path / "packs.lock.yaml").write_text("version: 1\n", encoding="utf-8")
+    assert {r.id for r in load_rules_from_dir(tmp_path)} == {"R-001", "R-002", "R-003"}
+    assert (sub / "pack.yaml").exists()
+    assert (tmp_path / "packs.lock.yaml").exists()
+    assert not (tmp_path / ".quarantine").exists()
+
+
+def test_load_rules_from_dir_bad_yaml_quarantined(tmp_path: Path) -> None:
+    dump_rule_to_file(_rule_with_id("R-GOOD-1"), tmp_path / "R-GOOD-1.yaml")
+    dump_rule_to_file(_rule_with_id("R-GOOD-2"), tmp_path / "R-GOOD-2.yaml")
+    bad = tmp_path / "R-BAD.yaml"
+    bad.write_text(": not valid yaml: :", encoding="utf-8")
+
+    from cauterule.serialization.rule_yaml import last_load_errors, load_rules_from_dir
+
+    rules = load_rules_from_dir(tmp_path)
+    assert {r.id for r in rules} == {"R-GOOD-1", "R-GOOD-2"}
+    # bad file moved to quarantine and recorded
+    assert not bad.exists()
+    qdir = tmp_path / ".quarantine"
+    assert (qdir / "R-BAD.yaml").exists()
+    index = (qdir / "index.jsonl").read_text(encoding="utf-8")
+    assert "R-BAD.yaml" in index
+    assert "Error" in index
+    assert len(last_load_errors) == 1
+    assert last_load_errors[0][0].endswith("R-BAD.yaml")
+
+
+def test_load_rules_from_dir_bad_yaml_no_quarantine(tmp_path: Path) -> None:
+    dump_rule_to_file(_rule_with_id("R-GOOD"), tmp_path / "R-GOOD.yaml")
+    bad = tmp_path / "R-BAD.yaml"
+    bad.write_text(": not valid yaml: :", encoding="utf-8")
+
+    from cauterule.serialization.rule_yaml import last_load_errors, load_rules_from_dir
+
+    rules = load_rules_from_dir(tmp_path, quarantine=False)
+    assert [r.id for r in rules] == ["R-GOOD"]
+    assert bad.exists()  # left in place
+    assert len(last_load_errors) == 1
+
+
+def test_load_rules_from_dir_strict(tmp_path: Path) -> None:
+    dump_rule_to_file(_rule_with_id("R-001"), tmp_path / "R-001.yaml")
+    (tmp_path / "R-BAD.yaml").write_text(": not valid yaml: :", encoding="utf-8")
+    from cauterule.serialization.rule_yaml import load_rules_from_dir
+
+    with pytest.raises(ValueError, match="failed to load"):
+        load_rules_from_dir(tmp_path, strict=True)
+
+
+def _rule_with_id(rid: str) -> StandingRule:
+    from dataclasses import replace
+
+    return replace(_valid_rule(), id=rid)
 
 
 def test_yaml_is_valid_yaml() -> None:

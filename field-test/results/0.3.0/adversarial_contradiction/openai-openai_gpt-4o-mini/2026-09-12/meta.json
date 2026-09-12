@@ -1,0 +1,14 @@
+{
+  "corpus_type": "adversarial/contradiction",
+  "timestamp": "2026-09-12",
+  "llm_provider": "openai",
+  "llm_model": "openai/gpt-4o-mini",
+  "llm_base_url": "https://openrouter.ai/api/v1",
+  "extraction_passes": 2,
+  "temperatures": "0.2,0.5",
+  "target_trajectories": 10,
+  "reference_trajectories": 444,
+  "cost_per_request_usd": 0.01,
+  "gate_mode": "relaxed",
+  "quarantined": []
+}

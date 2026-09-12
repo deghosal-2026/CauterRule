@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from tempfile import TemporaryDirectory
-from typing import Any
+from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -112,7 +112,7 @@ def test_candidates_load() -> None:
 def test_evidence_cards_render() -> None:
     async def _run() -> None:
         app = CauterRuleApp()
-        async with app.run_test() as pilot:
+        async with app.run_test():
             evidence = ReplayEvidence(
                 failures_prevented=("F-1", "F-2"),
                 successes_broken=("S-1",),
@@ -134,7 +134,7 @@ def test_evidence_cards_render() -> None:
 def test_confidence_cards_render() -> None:
     async def _run() -> None:
         app = CauterRuleApp()
-        async with app.run_test() as pilot:
+        async with app.run_test():
             rule = _make_standing_rule(confidence=0.9, hit_count=5, tags=("python", "deploy"))
             card = ConfidenceCard()
             card.render_rule(rule)
@@ -230,7 +230,7 @@ def test_approve_promotes() -> None:
             async with CauterRuleApp().run_test() as pilot:
                 pilot.app.push_screen(screen)
                 await pilot.pause()
-                setattr(screen, "push_screen", MagicMock(side_effect=_fake_push))
+                cast(Any, screen).push_screen = MagicMock(side_effect=_fake_push)
                 screen.approve_current()
                 assert mock_promo.called
 
@@ -243,7 +243,7 @@ def test_reject_advances() -> None:
         screen = ReviewScreen()
         screen._candidates = [_make_candidate("trigger-a"), _make_candidate("trigger-b")]
         screen._current_index = 0
-        screen._populate_candidates = MagicMock()
+        cast(Any, screen)._populate_candidates = MagicMock()
         async with CauterRuleApp().run_test() as pilot:
             pilot.app.push_screen(screen)
             await pilot.pause()
@@ -260,7 +260,7 @@ def test_reject_advances() -> None:
 def test_keybindings() -> None:
     async def _run() -> None:
         app = CauterRuleApp()
-        async with app.run_test() as pilot:
+        async with app.run_test():
             bindings = [b for b in app.BINDINGS if isinstance(b, Binding)]
             keys = {b.key: b.action for b in bindings}
             assert keys["q"] == "quit"

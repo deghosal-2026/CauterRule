@@ -15,6 +15,11 @@ class PackManifest:
     description: str = ""
     author: str = ""
     rules: tuple[str, ...] = field(default_factory=tuple)
+    license: str = ""
+    deps: tuple[str, ...] = field(default_factory=tuple)
+    cauterule: str = ""
+    checksum: str = ""
+    marketplace: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         pass
@@ -27,17 +32,36 @@ class PackManifest:
             "description": self.description,
             "author": self.author,
             "rules": list(self.rules),
+            "license": self.license,
+            "deps": list(self.deps),
+            "cauterule": self.cauterule,
+            "checksum": self.checksum,
+            "marketplace": dict(self.marketplace),
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> PackManifest:
         """Create from a dict produced by :meth:`to_dict`."""
+        raw_deps = data.get("deps", [])
+        if isinstance(raw_deps, list):
+            deps = tuple(str(d) for d in raw_deps)
+        elif isinstance(raw_deps, str):
+            deps = (raw_deps,)
+        else:
+            deps = ()
+        raw_marketplace = data.get("marketplace", {})
+        marketplace = dict(raw_marketplace) if isinstance(raw_marketplace, dict) else {}
         return cls(
             name=data.get("name", ""),
             version=data.get("version", ""),
             description=data.get("description", ""),
             author=data.get("author", ""),
             rules=tuple(data.get("rules", [])),
+            license=data.get("license", ""),
+            deps=deps,
+            cauterule=data.get("cauterule", ""),
+            checksum=data.get("checksum", ""),
+            marketplace=marketplace,
         )
 
 

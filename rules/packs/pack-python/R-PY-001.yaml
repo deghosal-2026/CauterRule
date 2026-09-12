@@ -1,0 +1,25 @@
+id: R-PY-001
+when:
+  trigger: python ModuleNotFoundError persists after pip install into the wrong interpreter
+  context:
+    - which python and which pip disagree
+do:
+  directive: Install with python -m pip using the same interpreter that runs the code
+  because: pip and python from different environments never see each other's packages
+confidence: 0.91
+provenance:
+  source_trajectory: packs/pack-python/R-PY-001
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - python
+  - imports
+  - pip
+taxonomy: python/import
+pack: pack-python

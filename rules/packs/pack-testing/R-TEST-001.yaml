@@ -1,0 +1,25 @@
+id: R-TEST-001
+when:
+  trigger: pytest test flips between pass and fail with no code change
+  context:
+    - same test green then red across runs
+do:
+  directive: Quarantine the test out of the gate, file a tracking issue, then fix the root cause
+  because: Blanket re-runs hide flakes instead of removing them
+confidence: 0.9
+provenance:
+  source_trajectory: packs/pack-testing/R-TEST-001
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - testing
+  - flaky
+  - quarantine
+taxonomy: test/flaky
+pack: pack-testing

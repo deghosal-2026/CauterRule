@@ -26,9 +26,13 @@ def _llm_extracted_rule() -> CandidateRule:
     )
 
 
-def _traj(tid: str, task: str, success: bool, error: str = "", failure_class: str | None = None) -> Trajectory:
+def _traj(
+    tid: str, task: str, success: bool, error: str = "", failure_class: str | None = None
+) -> Trajectory:
     steps = (Step(1, "bash", error=error),) if error else (Step(1, "bash", output="ok"),)
-    return Trajectory(id=tid, timestamp="t", task=task, steps=steps, success=success, failure_class=failure_class)
+    return Trajectory(
+        id=tid, timestamp="t", task=task, steps=steps, success=success, failure_class=failure_class
+    )
 
 
 def test_human_rule_at_least_as_good_as_llm() -> None:

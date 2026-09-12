@@ -1,4 +1,5 @@
 """No-match graceful degradation — empty set if no rules match."""
+
 from __future__ import annotations
 
 from cauterule.models.rule import StandingRule

@@ -20,6 +20,8 @@ Output: EvidenceReport {
     precision: float,
     recall: float,
     verdict: "pass" | "fail" | "inconclusive",
+    domain_scoped: bool,
+    reference_pool_size: int,
     replay_trace: ReplayTrace
 }
 ```
@@ -31,10 +33,7 @@ Output: EvidenceReport {
 3. **Simulate** whether applying the rule would have changed the outcome:
    - For failures: Would applying the `do` directive have prevented the failure?
    - For successes: Would applying the `do` directive have caused a failure?
-4. **Score**:
-   - Precision = successes_broken == 0 (must not break anything)
-   - Recall = failures_prevented >= 1 (must help on at least one)
-   - Verdict = pass if precision AND recall
+4. **Score** against a domain-scoped reference pool (v0.3.0). Pass requires precision >= 0.5 after the broad-trigger and near-miss penalties; see "Scoring Changes in v0.3.0" below for the exact rules.
 
 ## Determinism
 
@@ -48,6 +47,20 @@ Same candidate + same corpus = same evidence report, always. No randomness in th
 | Helps >=1 failure, breaks >=1 success | Fail |
 | Helps 0 failures, breaks 0 successes | Inconclusive (insufficient data) |
 | Helps 0 failures, breaks >=1 success | Fail |
+
+## Scoring Changes in v0.3.0
+
+The scorer is safety-first and tuned against the v0.3.0 field test:
+
+- **Domain-scoped reference pool (#708)** — `reference_trajs` is scoped to the source trajectory's domain (git, python, docker, …), falling back to the full pool only when the domain slice has <3 failures. This reduces the recall denominator from ~200 to ~10–30 and lifted recall 2–3× (0.087 → 0.170–0.228).
+- **Self-match exclusion** — the source trajectory is removed from its own reference set so a candidate cannot count the failure it was extracted from as "prevented".
+- **Near-miss penalty with tolerance band** — near-misses are penalized, but `near_misses <= 2` still passes when `precision >= 0.5`, so one near-miss reference cannot disqualify a rule that prevents real failures.
+- **Pass threshold 0.8 → 0.5** — with the broad aliases (#492) removed, honest precision is 0.3–0.7; the 0.8 bar was unreachable and produced inconclusive verdicts for useful candidates.
+- **Broad-trigger penalty** — breaking a success marks a candidate inconclusive regardless of failures prevented (see `promotion-gate-design.md`).
+- **Recovery gate** — `success=True` trajectories with a recovery pattern are silenced rather than scored as preventions.
+- **Semantic matching (optional)** — `CAUTERULE_SEMANTIC_MATCHING=1` adds a MiniLM cosine term to the blend `0.5·token-F1 + 0.3·bigram + 0.2·semantic`. It is off by default; the 0.2 weight is a known ceiling on paraphrase bridging.
+
+Determinism is preserved: the same candidate and same corpus still produce the same evidence report.
 
 ## Inconclusive Attribution
 
@@ -97,7 +110,7 @@ When the extractor produces N candidates:
 If there are <3 historical trajectories, the replay returns "inconclusive" rather than "pass" — the evidence base is too thin.
 
 ### Partial Match (Near Miss)
-If the rule's `when` clause partially matches a trajectory, it's logged as a "near miss" but not counted as prevented or broken. Near-miss precision is tracked (target: >=90% of near-miss scenarios do not trigger the rule).
+If the rule's `when` clause partially matches a trajectory, it's logged as a "near miss" but not counted as prevented or broken. Near-miss precision is tracked (target: >=90% of near-miss scenarios do not trigger the rule). v0.3.0 penalizes near-misses with a tolerance band (`near_misses <= 2 → pass if precision >= 0.5`) and reports 98–100% near-miss precision.
 
 ### Conflicting Rules
 If a candidate contradicts an existing promoted rule, the replay engine flags it. The existing rule's evidence is compared against the candidate's evidence to determine which is more specific.

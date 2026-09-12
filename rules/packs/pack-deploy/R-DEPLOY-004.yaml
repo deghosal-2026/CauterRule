@@ -1,0 +1,25 @@
+id: R-DEPLOY-004
+when:
+  trigger: kubernetes pod evicted or unschedulable from missing resource requests and limits
+  context:
+    - kubectl describe shows Evicted or FailedScheduling
+do:
+  directive: Set requests near median usage and limits with headroom for every container
+  because: The scheduler cannot place or protect workloads without resource declarations
+confidence: 0.87
+provenance:
+  source_trajectory: packs/pack-deploy/R-DEPLOY-004
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - deploy
+  - kubernetes
+  - resources
+taxonomy: tool/network
+pack: pack-deploy

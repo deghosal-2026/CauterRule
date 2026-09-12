@@ -1,0 +1,25 @@
+id: R-DEPLOY-002
+when:
+  trigger: kubernetes pod reports ImagePullBackOff for a missing or private image tag
+  context:
+    - ErrImagePull on kubectl describe pod
+do:
+  directive: Correct the image tag and attach the registry pull secret to the service account
+  because: The kubelet cannot fetch images without the right tag and credentials
+confidence: 0.9
+provenance:
+  source_trajectory: packs/pack-deploy/R-DEPLOY-002
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - deploy
+  - kubernetes
+  - image
+taxonomy: tool/network
+pack: pack-deploy

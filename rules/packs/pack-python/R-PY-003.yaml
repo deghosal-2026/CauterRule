@@ -1,0 +1,25 @@
+id: R-PY-003
+when:
+  trigger: pip install fails with ResolutionImpossible from conflicting version pins
+  context:
+    - incompatible pins across requirements
+do:
+  directive: Read the conflict chain top-down, relax the over-tight pin, then preview with a dry run
+  because: The resolver can only satisfy constraints that admit a common version
+confidence: 0.88
+provenance:
+  source_trajectory: packs/pack-python/R-PY-003
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - python
+  - pip
+  - resolver
+taxonomy: python/pip
+pack: pack-python

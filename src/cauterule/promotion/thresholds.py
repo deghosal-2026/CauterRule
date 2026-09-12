@@ -51,3 +51,23 @@ def get_thresholds(mode: str) -> dict[str, Any]:
     if mode not in _VALID_MODES:
         raise ValueError(f"unknown threshold mode {mode!r}; choose one of {sorted(_VALID_MODES)}")
     return dict(_THRESHOLD_PRESETS[mode])
+
+
+def set_thresholds(mode: str, thresholds: dict[str, Any]) -> None:
+    """Update the preset for *mode* with *thresholds* (#596).
+
+    Only the keys supplied in *thresholds* are overridden; other keys in
+    the preset are preserved. Calibration adjustments persist in the
+    process-wide preset so subsequent ``get_thresholds`` calls observe
+    them.
+
+    Args:
+        mode: One of ``"conservative"``, ``"balanced"``, or ``"aggressive"``.
+        thresholds: Mapping of threshold keys to new values.
+
+    Raises:
+        ValueError: If *mode* is not recognised.
+    """
+    if mode not in _VALID_MODES:
+        raise ValueError(f"unknown threshold mode {mode!r}; choose one of {sorted(_VALID_MODES)}")
+    _THRESHOLD_PRESETS[mode].update(thresholds)

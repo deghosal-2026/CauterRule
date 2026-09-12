@@ -14,9 +14,50 @@ from cauterule.store.manager import StoreManager
 )
 @click.option("--by-domain", is_flag=True, help="Show per-domain coverage")
 @click.option("--by-class", is_flag=True, help="Show per-class coverage")
+@click.option("--rule", "rule_id", default=None, help="Show per-rule outcome summary")
+@click.option("--lowest-spec", is_flag=True, help="Show lowest-specificity rules")
 @click.option("--store-dir", default="rules", help="Rule store directory")
-def metrics(coverage: bool, by_domain: bool, by_class: bool, store_dir: str) -> None:
+def metrics(
+    coverage: bool,
+    by_domain: bool,
+    by_class: bool,
+    rule_id: str | None,
+    lowest_spec: bool,
+    store_dir: str,
+) -> None:
     """CLI summary: rules, precision, repeat-failure rate, store size."""
+    if lowest_spec:
+        from cauterule.lifecycle.specificity import BROAD_SPECIFICITY_THRESHOLD, lowest_specificity
+
+        store = StoreManager(base_dir=store_dir)
+        rules = store.list_rules()
+        table = lowest_specificity(rules, limit=10)
+        if not table:
+            click.echo("No rules found.")
+            return
+        click.echo(f"Lowest-specificity rules (broad threshold {BROAD_SPECIFICITY_THRESHOLD:.2f}):")
+        for r, spec in table:
+            marker = " <-- BROAD" if spec < BROAD_SPECIFICITY_THRESHOLD else ""
+            click.echo(f"  {r.id:8s} spec={spec:.2f} {r.status:12s} {r.when.trigger!r}{marker}")
+        return
+    if rule_id:
+        from cauterule.observe.outcomes import rule_outcome_summary, sparkline
+
+        store = StoreManager(base_dir=store_dir)
+        summary = rule_outcome_summary(store, rule_id)
+        click.echo(f"Rule: {rule_id}")
+        click.echo(f"  prevented: {summary['prevented']}")
+        click.echo(f"  broke:     {summary['broke']}")
+        click.echo(f"  neutral:   {summary['neutral']}")
+        click.echo(f"  prevented-rate: {summary['prevented_rate']:.2%}")
+        click.echo(f"  last outcome:  {summary['last_outcome']}")
+        if summary["last_outcome_at"]:
+            click.echo(f"  last outcome at: {summary['last_outcome_at']}")
+        trend = summary["trend"]
+        if trend:
+            int_trend = [int(v) for v in trend]
+            click.echo(f"  trend: {sparkline(tuple(int_trend))} ({int_trend})")
+        return
     if coverage or by_domain or by_class:
         store = StoreManager(base_dir=store_dir)
         if coverage and not by_domain and not by_class:

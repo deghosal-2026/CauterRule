@@ -1,4 +1,5 @@
 """Lesson portfolio optimizer — select N rules maximizing expected prevention."""
+
 from __future__ import annotations
 
 from cauterule.models.rule import StandingRule

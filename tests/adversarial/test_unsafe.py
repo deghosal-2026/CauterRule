@@ -7,8 +7,8 @@ import pytest
 from cauterule.linter.orchestrator import lint_rule
 from cauterule.linter.unsafe import check_unsafe
 from cauterule.models.candidate import CandidateRule
-from cauterule.models.rule import RuleDo, RuleWhen
 from cauterule.models.evidence import EvidenceReport
+from cauterule.models.rule import RuleDo, RuleWhen
 from cauterule.promotion.auto import auto_promote
 from cauterule.promotion.thresholds import get_thresholds
 
@@ -63,7 +63,7 @@ def test_promotion_gate_rejects_unsafe_rule() -> None:
     result = lint_rule(candidate.when.trigger, candidate.do.directive)
     assert not result.passed
     assert any("unsafe" in w for w in result.warnings)
-    evidence = EvidenceReport(verdict='pass', failures_prevented=('T-1',))
+    evidence = EvidenceReport(verdict="pass", failures_prevented=("T-1",))
     decision = auto_promote(candidate, evidence, result)
     assert decision.verdict == "reject"
 
@@ -96,6 +96,6 @@ def test_thresholds_block_low_confidence_unsafe_candidate() -> None:
     result = lint_rule(candidate.when.trigger, candidate.do.directive)
     assert not result.passed
     assert t["min_confidence"] == 0.85
-    evidence = EvidenceReport(verdict='pass', failures_prevented=('T-1',))
+    evidence = EvidenceReport(verdict="pass", failures_prevented=("T-1",))
     decision = auto_promote(candidate, evidence, result)
     assert decision.verdict == "reject"

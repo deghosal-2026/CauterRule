@@ -3,7 +3,14 @@ from cauterule.models.trajectory import Step, Trajectory
 
 
 def test_dry_run_basic() -> None:
-    t = Trajectory(id="T-001", timestamp="t", task="git push", steps=(Step(1, "bash", error="fail"),), success=False, failure_class="git/push")
+    t = Trajectory(
+        id="T-001",
+        timestamp="t",
+        task="git push",
+        steps=(Step(1, "bash", error="fail"),),
+        success=False,
+        failure_class="git/push",
+    )
     result = dry_run(t)
     assert result.when.trigger == "when git/push"
     assert result.do.directive == "apply fix based on trajectory"

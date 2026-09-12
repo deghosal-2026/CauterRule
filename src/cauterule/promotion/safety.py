@@ -41,14 +41,20 @@ def check_safety(
     if is_success:
         # Any successes_broken >0 or pass verdict is a violation on successes.
         if evidence.successes_broken:
-            warnings.append(f"safety: {corpus_name} has {len(evidence.successes_broken)} successes broken")
+            warnings.append(
+                f"safety: {corpus_name} has {len(evidence.successes_broken)} successes broken"
+            )
         if evidence.verdict == "pass":
             warnings.append(f"safety: {corpus_name} pass is a false positive — must be zero")
 
     if is_failure_neg and evidence.verdict == "pass":
         warnings.append(f"safety: {corpus_name} pass is a rejection failure — must be zero")
 
-    if is_nearmiss and evidence.verdict != "inconclusive" and evidence.precision < NEARMISS_PRECISION_THRESHOLD:
+    if (
+        is_nearmiss
+        and evidence.verdict != "inconclusive"
+        and evidence.precision < NEARMISS_PRECISION_THRESHOLD
+    ):
         warnings.append(
             f"safety: {corpus_name} precision {evidence.precision:.2f} below threshold {NEARMISS_PRECISION_THRESHOLD}"
         )

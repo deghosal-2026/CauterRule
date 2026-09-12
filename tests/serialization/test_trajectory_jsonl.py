@@ -8,6 +8,7 @@ from cauterule.serialization.trajectory_jsonl import (
     dump_trajectories,
     dump_trajectory,
     load_trajectories,
+    load_trajectories_result,
     load_trajectory,
 )
 
@@ -87,3 +88,113 @@ def test_dump_trajectories_empty(tmp_path: Path) -> None:
     dump_trajectories([], p)
     assert p.read_text() == ""
     assert list(load_trajectories(p)) == []
+
+
+def test_load_trajectories_skips_bad_lines(tmp_path: Path) -> None:
+    # #597: one corrupt line must not kill the other 499.
+    import json as _json
+
+    p = tmp_path / "corpus.jsonl"
+    good = _valid_trajectory()
+    with p.open("w", encoding="utf-8") as f:
+        f.write(dump_trajectory(good) + "\n")
+        f.write("{not valid json\n")
+        f.write(_json.dumps({"id": "T-bad", "task": "no success field"}) + "\n")
+        f.write(dump_trajectory(good) + "\n")
+    skipped: list[tuple[int, str]] = []
+    loaded = list(load_trajectories(p, on_skip=lambda ln, err: skipped.append((ln, err))))
+    assert loaded == [good, good]
+    assert [ln for ln, _ in skipped] == [2, 3]
+
+
+def test_load_trajectories_strict_raises(tmp_path: Path) -> None:
+    # #597: strict=True re-enables fail-fast for CI.
+    p = tmp_path / "corpus.jsonl"
+    with p.open("w", encoding="utf-8") as f:
+        f.write(dump_trajectory(_valid_trajectory()) + "\n")
+        f.write("{not valid json\n")
+    with pytest.raises(ValueError, match="skipping bad JSONL line"):
+        list(load_trajectories(p, strict=True))
+
+
+def test_load_trajectories_result_reports_skips(tmp_path: Path) -> None:
+    # #597: skip count exposed via LoadResult.
+    p = tmp_path / "corpus.jsonl"
+    with p.open("w", encoding="utf-8") as f:
+        f.write(dump_trajectory(_valid_trajectory()) + "\n")
+        f.write("boom\n")
+    result = load_trajectories_result(p)
+    assert len(result.loaded) == 1
+    assert result.skipped == 1
+    assert len(result.errors) == 1
+
+
+def test_load_trajectories_result_error_content(tmp_path: Path) -> None:
+    # Review: errors carry file line numbers.
+    p = tmp_path / "corpus.jsonl"
+    with p.open("w", encoding="utf-8") as f:
+        f.write(dump_trajectory(_valid_trajectory()) + "\n")
+        f.write("{bad\n")
+    result = load_trajectories_result(p)
+    assert result.skipped == 1
+    assert result.errors[0].startswith("line 2:")
+
+
+def test_load_trajectories_strict_ignores_blank_lines(tmp_path: Path) -> None:
+    # Review: blank lines never raise, even in strict mode.
+    p = tmp_path / "corpus.jsonl"
+    with p.open("w", encoding="utf-8") as f:
+        f.write("\n")
+        f.write(dump_trajectory(_valid_trajectory()) + "\n")
+        f.write("\n")
+    assert len(list(load_trajectories(p, strict=True))) == 1
+
+
+def test_load_trajectories_multiline_objects(tmp_path: Path) -> None:
+    # #490: multi-line pretty-printed JSON objects load correctly.
+    multi = """{
+  "trajectory_id": "T-multi",
+  "timestamp": "t",
+  "task": "multi-line test",
+  "steps": [
+    {
+      "step_number": 1,
+      "tool": "bash",
+      "input": "echo hello"
+    }
+  ],
+  "success": false
+}"""
+    p = tmp_path / "corpus.jsonl"
+    with p.open("w", encoding="utf-8") as f:
+        f.write(dump_trajectory(_valid_trajectory()) + "\n")
+        f.write(multi + "\n")
+        f.write(dump_trajectory(_valid_trajectory()) + "\n")
+    loaded = list(load_trajectories(p))
+    assert len(loaded) == 3
+    assert loaded[1].id == "T-multi"
+    assert loaded[1].success is False
+
+
+def test_load_trajectories_multiline_with_braces_in_strings(tmp_path: Path) -> None:
+    # #490: braces inside JSON string values must not confuse depth counter.
+    multi = """{
+  "trajectory_id": "T-brace",
+  "timestamp": "t",
+  "task": "test with {brace} in task",
+  "steps": [
+    {
+      "step_number": 1,
+      "tool": "bash",
+      "error": "expected { in format string"
+    }
+  ],
+  "success": false
+}"""
+    p = tmp_path / "corpus.jsonl"
+    with p.open("w", encoding="utf-8") as f:
+        f.write(dump_trajectory(_valid_trajectory()) + "\n")
+        f.write(multi + "\n")
+    loaded = list(load_trajectories(p))
+    assert len(loaded) == 2
+    assert loaded[1].id == "T-brace"

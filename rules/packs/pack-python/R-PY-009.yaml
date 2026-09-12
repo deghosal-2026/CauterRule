@@ -1,0 +1,25 @@
+id: R-PY-009
+when:
+  trigger: jupyter notebook cannot import packages the terminal python sees
+  context:
+    - kernel running a different interpreter than the venv
+do:
+  directive: Register the venv as a kernel and confirm sys.executable inside the notebook
+  because: Notebooks only see packages installed for their own kernel interpreter
+confidence: 0.85
+provenance:
+  source_trajectory: packs/pack-python/R-PY-009
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - python
+  - jupyter
+  - env
+taxonomy: config/env
+pack: pack-python

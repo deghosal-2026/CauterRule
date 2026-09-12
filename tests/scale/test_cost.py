@@ -36,17 +36,21 @@ def _traj() -> Trajectory:
 
 def test_cost_per_extraction() -> None:
     payload = json.dumps(
-        {"when": {"trigger": "git push fails"}, "do": {"directive": "pull --rebase"}, "confidence": 0.9}
+        {
+            "when": {"trigger": "git push fails"},
+            "do": {"directive": "pull --rebase"},
+            "confidence": 0.9,
+        }
     )
     mock = CostTrackingLLM(payload)
-    mock.complete = lambda p: mock.complete(p)  # type: ignore[assignment]
+    mock.complete = lambda p: mock.complete(p)  # type: ignore[assignment, method-assign, misc]
     mock.call_count = 0
 
     def tracking_complete(prompt: str) -> LLMResponse:
         mock.call_count += 1
         return LLMResponse(text=payload, model="gpt-4o", provider="openai")
 
-    mock.complete = tracking_complete  # type: ignore[method-assign]
+    mock.complete = tracking_complete  # type: ignore[assignment]
 
     # We need to test the mock differently since extract_candidate expects an LLM with complete method
     class TrackingLLM:
@@ -67,7 +71,11 @@ def test_cost_per_extraction() -> None:
 
 def test_cost_multiple_extractions() -> None:
     payload = json.dumps(
-        {"when": {"trigger": "git push fails"}, "do": {"directive": "pull --rebase"}, "confidence": 0.9}
+        {
+            "when": {"trigger": "git push fails"},
+            "do": {"directive": "pull --rebase"},
+            "confidence": 0.9,
+        }
     )
 
     class TrackingLLM:
@@ -88,9 +96,7 @@ def test_cost_multiple_extractions() -> None:
 
 def test_cost_estimate_output() -> None:
     """Verify the test prints cost estimates for review."""
-    payload = json.dumps(
-        {"when": {"trigger": "t"}, "do": {"directive": "d"}, "confidence": 0.8}
-    )
+    payload = json.dumps({"when": {"trigger": "t"}, "do": {"directive": "d"}, "confidence": 0.8})
 
     class TrackingLLM:
         def __init__(self, text: str) -> None:

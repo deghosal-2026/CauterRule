@@ -1,0 +1,25 @@
+id: R-TEST-003
+when:
+  trigger: pytest coverage gate fails below the fail-under threshold
+  context:
+    - coverage report shows uncovered new lines
+do:
+  directive: Write tests for the uncovered lines and keep the gate where it is
+  because: Lowering the gate trades a red build for silent untested code
+confidence: 0.89
+provenance:
+  source_trajectory: packs/pack-testing/R-TEST-003
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - testing
+  - coverage
+  - gate
+taxonomy: test/flaky
+pack: pack-testing

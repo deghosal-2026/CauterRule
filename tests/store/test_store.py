@@ -23,10 +23,11 @@ def _rule(
     status: Status = "active",
     tags: tuple[str, ...] = (),
     last_match: str | None = None,
+    trigger: str = "git push fails",
 ) -> StandingRule:
     return StandingRule(
         id=rid,
-        when=RuleWhen(trigger="git push fails"),
+        when=RuleWhen(trigger=trigger),
         do=RuleDo(directive="check remote"),
         confidence=0.85,
         provenance=Provenance(
@@ -335,7 +336,7 @@ def test_git_commit_returns_none_outside_git(tmp_path: Path) -> None:
 def test_rollback_false_outside_git(tmp_path: Path) -> None:
     from cauterule.store.rollback import rollback_promotion
 
-    assert rollback_promotion("abc123", str(tmp_path)) is False
+    assert rollback_promotion("abc1234", str(tmp_path)) is False
 
 
 def test_rollback_false_no_git_executable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -347,7 +348,7 @@ def test_rollback_false_no_git_executable(tmp_path: Path, monkeypatch: pytest.Mo
     monkeypatch.setattr(subprocess, "run", fake_run)
     from cauterule.store.rollback import rollback_promotion
 
-    assert rollback_promotion("abc123", str(tmp_path)) is False
+    assert rollback_promotion("abc1234", str(tmp_path)) is False
 
 
 def test_git_commit_called_process_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -387,3 +388,172 @@ def test_extract_hash_long() -> None:
     long_hash = "abc1234def5678abc1234def5678abc1234abcd1"
     assert len(long_hash) == 40
     assert _extract_hash(f"[main {long_hash}] test") == long_hash
+
+
+@pytest.mark.parametrize(
+    "payload", ["--help", "-h", "--upload-pack=x", "HEAD --extra", "abc123", "xyz", ""]
+)
+def test_rollback_rejects_non_hash(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, payload: str
+) -> None:
+    # #505: option-injection payloads raise before any subprocess runs.
+    import subprocess
+    from collections.abc import Sequence
+    from typing import Any
+
+    from cauterule.store.rollback import rollback_promotion
+
+    def _boom(cmd: Sequence[str], **kwargs: Any) -> Any:
+        raise AssertionError("subprocess must not run for invalid hash")
+
+    monkeypatch.setattr(subprocess, "run", _boom)
+    with pytest.raises(ValueError, match="invalid commit hash"):
+        rollback_promotion(payload, str(tmp_path))
+
+
+def test_rollback_argv_has_separator(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # #505: argv contains -- before the hash.
+    import subprocess
+    from collections.abc import Sequence
+    from typing import Any
+
+    seen: list[list[str]] = []
+
+    def fake_run(cmd: Sequence[str], **kwargs: Any) -> Any:
+        seen.append(list(cmd))
+        raise subprocess.CalledProcessError(1, cmd)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    from cauterule.store.rollback import rollback_promotion
+
+    assert rollback_promotion("abc1234", str(tmp_path)) is False
+    assert seen and seen[0][:4] == ["git", "revert", "--no-edit", "--"]
+    assert seen[0][4] == "abc1234"
+
+
+def test_rollback_rejects_non_string() -> None:
+    # Review: non-string hash raises ValueError, not TypeError.
+    import tempfile
+
+    from cauterule.store.rollback import rollback_promotion
+
+    with tempfile.TemporaryDirectory() as tmp:
+        with pytest.raises(ValueError, match="invalid commit hash"):
+            rollback_promotion(None, tmp)  # type: ignore[arg-type]
+        with pytest.raises(ValueError, match="invalid commit hash"):
+            rollback_promotion(123, tmp)  # type: ignore[arg-type]
+
+
+def test_rollback_success_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Review: valid hash + exit 0 returns True.
+    import subprocess
+    from collections.abc import Sequence
+    from typing import Any
+
+    def fake_run(cmd: Sequence[str], **kwargs: Any) -> Any:
+        assert list(cmd)[:4] == ["git", "revert", "--no-edit", "--"]
+        return subprocess.CompletedProcess(cmd, 0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    from cauterule.store.rollback import rollback_promotion
+
+    assert rollback_promotion("abc1234def", str(tmp_path)) is True
+
+
+def test_git_commit_error_log_content(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    # Review: failure logs returncode + stderr at error level.
+    import logging
+    import subprocess
+
+    def fake_run(*args: object, **kwargs: object) -> object:
+        raise subprocess.CalledProcessError(1, ["git", "commit"], stderr="fatal: oops")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    from cauterule.store.git import git_commit
+
+    with caplog.at_level(logging.ERROR, logger="cauterule.store.git"):
+        assert git_commit("test", str(tmp_path)) is None
+    assert "rc=1" in caplog.text
+    assert "fatal: oops" in caplog.text
+
+
+# ------------------------------------------------------------------
+# #523 — index upsert + malformed index + near-duplicate health + two-pass validator
+# ------------------------------------------------------------------
+def test_index_add_entry_upserts(tmp_path: Path) -> None:
+    idx = IndexManager(str(tmp_path / "rules"))
+    idx.add_entry(_rule("R-UPS"))
+    idx.add_entry(_rule("R-UPS"))
+    data = idx.load_index()
+    assert len(data["rules"]) == 1
+
+
+def test_index_load_malformed_raises(tmp_path: Path) -> None:
+    base = tmp_path / "rules"
+    base.mkdir(parents=True)
+    (base / "index.yaml").write_text("just a list\n- 1\n- 2\n", encoding="utf-8")
+    idx = IndexManager(str(base))
+    with pytest.raises(ValueError, match="index.yaml must be a mapping"):
+        idx.load_index()
+
+
+def test_health_near_duplicate_pairs(tmp_path: Path) -> None:
+    base = str(tmp_path / "rules")
+    m = StoreManager(base)
+    m.add_rule(
+        _rule(
+            "R-ND1",
+            trigger="permission denied pushing to remote",
+            last_match="2026-09-01T00:00:00+00:00",
+        )
+    )
+    m.add_rule(
+        _rule(
+            "R-ND2",
+            trigger="access denied pushing to remote",
+            last_match="2026-09-01T00:00:00+00:00",
+        )
+    )
+    report = health_report(base)
+    assert report["conflict_count"] == 0
+    assert len(report["near_duplicate_pairs"]) >= 1
+
+
+def test_health_near_duplicate_pairs_empty_on_distinct(tmp_path: Path) -> None:
+    base = str(tmp_path / "rules")
+    m = StoreManager(base)
+    m.add_rule(_rule("R-A", trigger="git push fails", last_match="2026-09-01T00:00:00+00:00"))
+    m.add_rule(_rule("R-B", trigger="docker build fails", last_match="2026-09-01T00:00:00+00:00"))
+    report = health_report(base)
+    assert report["near_duplicate_pairs"] == []
+
+
+def test_validator_two_pass_superseded(tmp_path: Path) -> None:
+    base = tmp_path / "rules"
+    base.mkdir(parents=True)
+    import yaml
+
+    aaa = _rule("AAA")
+    zzz = _rule("ZZZ")
+    aaa_data = aaa.to_dict()
+    aaa_data["superseded_by"] = "ZZZ"
+    (base / "aaa.yaml").write_text(yaml.safe_dump(aaa_data, sort_keys=False), encoding="utf-8")
+    zzz_data = zzz.to_dict()
+    (base / "zzz.yaml").write_text(yaml.safe_dump(zzz_data, sort_keys=False), encoding="utf-8")
+    warnings = validate_store(str(base))
+    assert not any("ZZZ" in w and "not found" in w for w in warnings)
+
+
+def test_validator_dangling_superseded_warns(tmp_path: Path) -> None:
+    base = tmp_path / "rules"
+    base.mkdir(parents=True)
+    import yaml
+
+    aaa = _rule("AAA")
+    aaa_data = aaa.to_dict()
+    aaa_data["superseded_by"] = "MISSING"
+    (base / "aaa.yaml").write_text(yaml.safe_dump(aaa_data), encoding="utf-8")
+    warnings = validate_store(str(base))
+    assert any("MISSING" in w and "not found" in w for w in warnings)

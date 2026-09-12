@@ -13,10 +13,26 @@ def generate_research_trajectories(count: int = 10) -> list[Trajectory]:
     for i in range(count):
         success = i < count // 2
         ts = datetime.now(UTC).isoformat()
-        task = "Summarize recent transformer papers" if success else "Extract data from paywalled PDF"
+        task = (
+            "Summarize recent transformer papers" if success else "Extract data from paywalled PDF"
+        )
         steps = (
-            Step(step_number=1, tool="web_fetch", input="https://arxiv.org/search?q=transformer", output="Paper titles found" if success else "403 Forbidden", error=None if success else "HTTP 403", state=None),
-            Step(step_number=2, tool="read", input="downloaded paper", output=None, error=None, state=None),
+            Step(
+                step_number=1,
+                tool="web_fetch",
+                input="https://arxiv.org/search?q=transformer",
+                output="Paper titles found" if success else "403 Forbidden",
+                error=None if success else "HTTP 403",
+                state=None,
+            ),
+            Step(
+                step_number=2,
+                tool="read",
+                input="downloaded paper",
+                output=None,
+                error=None,
+                state=None,
+            ),
         )
         result.append(
             Trajectory(

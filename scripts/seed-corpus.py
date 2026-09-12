@@ -12,12 +12,34 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import UTC
 from pathlib import Path
 
 CORPUS_DIR = Path("field-test/corpus")
 FIXTURES_DIR = Path("tests/fixtures")
 GOLDEN_DIR = CORPUS_DIR / "golden"
-VALID_DOMAINS = {"git", "python", "docker", "test", "ci", "deploy", "shell", "env", "workflow", "coding", "devops", "support", "discussion", "environments", "networking", "testing", "generic", "browser", "research", "browser_automation"}
+VALID_DOMAINS = {
+    "git",
+    "python",
+    "docker",
+    "test",
+    "ci",
+    "deploy",
+    "shell",
+    "env",
+    "workflow",
+    "coding",
+    "devops",
+    "support",
+    "discussion",
+    "environments",
+    "networking",
+    "testing",
+    "generic",
+    "browser",
+    "research",
+    "browser_automation",
+}
 VALID_LABELS = {"clear", "ambiguous", "multi-causal", "misleading", "operator-induced"}
 VALID_SOURCES = {"opencode", "ci", "sibling-repos", "corrections", "manual"}
 
@@ -29,7 +51,7 @@ def seed_from_fixtures() -> int:
     dst_dir.mkdir(parents=True, exist_ok=True)
     count = 0
     for f in sorted(src_dir.glob("*.jsonl")):
-        traj_id = f"fix-{count+1:03d}-{f.stem}"
+        traj_id = f"fix-{count + 1:03d}-{f.stem}"
         dst_path = dst_dir / f"{traj_id}.jsonl"
         traj = json.loads(f.read_text().strip())
         traj["trajectory_id"] = traj_id
@@ -44,7 +66,7 @@ def seed_from_fixtures() -> int:
             traj["domain"] = guess
         if "failure_class" not in traj:
             traj["failure_class"] = f"{traj.get('domain', 'generic')}/failure"
-        with open(dst_path, "w") as fh:
+        with Path(dst_path).open("w") as fh:
             fh.write(json.dumps(traj) + "\n")
         count += 1
     return count
@@ -57,12 +79,12 @@ def seed_from_golden() -> int:
     count = 0
     for f in sorted(GOLDEN_DIR.glob("G-*.jsonl")):
         traj = json.loads(f.read_text().strip())
-        traj_id = traj.get("trajectory_id", f"gld-{count+1:03d}")
+        traj_id = traj.get("trajectory_id", f"gld-{count + 1:03d}")
         traj["source"] = "opencode"
         traj["source_repo"] = "CauterRule"
         dst_path = dst_dir / f"{traj_id}.jsonl"
         if not dst_path.exists():  # Don't overwrite
-            with open(dst_path, "w") as fh:
+            with Path(dst_path).open("w") as fh:
                 fh.write(json.dumps(traj) + "\n")
             count += 1
     return count
@@ -84,8 +106,22 @@ def create_failure_mode_catalog() -> int:
             "severity": "high",
             "failure_point": "Auto-merging failed; fix conflicts and commit the result",
             "steps": [
-                {"step_number": 1, "tool": "git", "input": "git checkout main && git merge feature/login", "output": "Auto-merging src/auth.py", "error": "CONFLICT in src/auth.py", "state": None},
-                {"step_number": 2, "tool": "git", "input": "git status", "output": "both modified: src/auth.py", "error": None, "state": None},
+                {
+                    "step_number": 1,
+                    "tool": "git",
+                    "input": "git checkout main && git merge feature/login",
+                    "output": "Auto-merging src/auth.py",
+                    "error": "CONFLICT in src/auth.py",
+                    "state": None,
+                },
+                {
+                    "step_number": 2,
+                    "tool": "git",
+                    "input": "git status",
+                    "output": "both modified: src/auth.py",
+                    "error": None,
+                    "state": None,
+                },
             ],
             "tags": ["git", "merge", "conflict"],
             "expected_rule": "when git merge fails with conflicts, resolve each conflict file before committing",
@@ -99,9 +135,30 @@ def create_failure_mode_catalog() -> int:
             "severity": "medium",
             "failure_point": "Current branch is HEAD (detached); commits will be lost",
             "steps": [
-                {"step_number": 1, "tool": "git", "input": "git checkout v1.0", "output": "HEAD is now at abc1234... Release v1.0", "error": None, "state": None},
-                {"step_number": 2, "tool": "git", "input": "git commit -m 'fix critical bug'", "output": "1 file changed", "error": None, "state": None},
-                {"step_number": 3, "tool": "git", "input": "git push origin main", "output": None, "error": "Everything up-to-date (missing commits not on a branch)", "state": None},
+                {
+                    "step_number": 1,
+                    "tool": "git",
+                    "input": "git checkout v1.0",
+                    "output": "HEAD is now at abc1234... Release v1.0",
+                    "error": None,
+                    "state": None,
+                },
+                {
+                    "step_number": 2,
+                    "tool": "git",
+                    "input": "git commit -m 'fix critical bug'",
+                    "output": "1 file changed",
+                    "error": None,
+                    "state": None,
+                },
+                {
+                    "step_number": 3,
+                    "tool": "git",
+                    "input": "git push origin main",
+                    "output": None,
+                    "error": "Everything up-to-date (missing commits not on a branch)",
+                    "state": None,
+                },
             ],
             "tags": ["git", "detached-head", "branching"],
             "expected_rule": "when in detached HEAD state, create a branch before committing to avoid losing changes",
@@ -115,8 +172,22 @@ def create_failure_mode_catalog() -> int:
             "severity": "high",
             "failure_point": "Port 8000 already in use: container failed to start",
             "steps": [
-                {"step_number": 1, "tool": "docker", "input": "docker compose up -d", "output": None, "error": "Error: starting container 'web' port 8000: address already in use", "state": None},
-                {"step_number": 2, "tool": "docker", "input": "docker ps", "output": "CONTAINER ID web 0.0.0.0:8000->8000", "error": None, "state": None},
+                {
+                    "step_number": 1,
+                    "tool": "docker",
+                    "input": "docker compose up -d",
+                    "output": None,
+                    "error": "Error: starting container 'web' port 8000: address already in use",
+                    "state": None,
+                },
+                {
+                    "step_number": 2,
+                    "tool": "docker",
+                    "input": "docker ps",
+                    "output": "CONTAINER ID web 0.0.0.0:8000->8000",
+                    "error": None,
+                    "state": None,
+                },
             ],
             "tags": ["docker", "compose", "port-conflict"],
             "expected_rule": "when docker compose fails with port conflict, stop the old container or change the port mapping",
@@ -130,8 +201,22 @@ def create_failure_mode_catalog() -> int:
             "severity": "high",
             "failure_point": "COPY failed: file not found in build context",
             "steps": [
-                {"step_number": 1, "tool": "docker", "input": "docker build -t myapp .", "output": None, "error": "COPY failed: file 'requirements.txt' not found in build context", "state": None},
-                {"step_number": 2, "tool": "ls", "input": "ls -la", "output": "src/ Dockerfile README.md", "error": None, "state": None},
+                {
+                    "step_number": 1,
+                    "tool": "docker",
+                    "input": "docker build -t myapp .",
+                    "output": None,
+                    "error": "COPY failed: file 'requirements.txt' not found in build context",
+                    "state": None,
+                },
+                {
+                    "step_number": 2,
+                    "tool": "ls",
+                    "input": "ls -la",
+                    "output": "src/ Dockerfile README.md",
+                    "error": None,
+                    "state": None,
+                },
             ],
             "tags": ["docker", "build", "missing-file"],
             "expected_rule": "when docker build fails with COPY file not found, check the file path is relative to the build context",
@@ -145,10 +230,38 @@ def create_failure_mode_catalog() -> int:
             "severity": "medium",
             "failure_point": "ModuleNotFoundError: No module named 'pytest'",
             "steps": [
-                {"step_number": 1, "tool": "python", "input": "pip install -r requirements.txt", "output": "Installing collected packages... Successfully installed...", "error": None, "state": None},
-                {"step_number": 2, "tool": "python", "input": "pytest tests/", "output": None, "error": "ModuleNotFoundError: No module named 'pytest'", "state": None},
-                {"step_number": 3, "tool": "python", "input": "which python", "output": "/usr/bin/python3", "error": None, "state": None},
-                {"step_number": 4, "tool": "python", "input": "which pip", "output": "/usr/local/bin/pip (not in venv)", "error": None, "state": None},
+                {
+                    "step_number": 1,
+                    "tool": "python",
+                    "input": "pip install -r requirements.txt",
+                    "output": "Installing collected packages... Successfully installed...",
+                    "error": None,
+                    "state": None,
+                },
+                {
+                    "step_number": 2,
+                    "tool": "python",
+                    "input": "pytest tests/",
+                    "output": None,
+                    "error": "ModuleNotFoundError: No module named 'pytest'",
+                    "state": None,
+                },
+                {
+                    "step_number": 3,
+                    "tool": "python",
+                    "input": "which python",
+                    "output": "/usr/bin/python3",
+                    "error": None,
+                    "state": None,
+                },
+                {
+                    "step_number": 4,
+                    "tool": "python",
+                    "input": "which pip",
+                    "output": "/usr/local/bin/pip (not in venv)",
+                    "error": None,
+                    "state": None,
+                },
             ],
             "tags": ["python", "venv", "module", "pytest"],
             "expected_rule": "when python ModuleNotFoundError occurs after install, check there is an active virtualenv",
@@ -162,7 +275,14 @@ def create_failure_mode_catalog() -> int:
             "severity": "high",
             "failure_point": "SSL: CERTIFICATE_VERIFY_FAILED",
             "steps": [
-                {"step_number": 1, "tool": "python", "input": "pip install my-private-pkg --index-url https://private.pypi.org/simple", "output": None, "error": "CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate", "state": None},
+                {
+                    "step_number": 1,
+                    "tool": "python",
+                    "input": "pip install my-private-pkg --index-url https://private.pypi.org/simple",
+                    "output": None,
+                    "error": "CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate",
+                    "state": None,
+                },
             ],
             "tags": ["python", "pip", "ssl", "certificate"],
             "expected_rule": "when pip install fails with SSL certificate error and target is a private registry, use --trusted-host or add the CA certificate",
@@ -176,9 +296,30 @@ def create_failure_mode_catalog() -> int:
             "severity": "high",
             "failure_point": "kubectl rollout undo failed: no rollback revision found",
             "steps": [
-                {"step_number": 1, "tool": "kubectl", "input": "kubectl apply -f deploy.yaml", "output": "deployment.apps/myapp created", "error": None, "state": None},
-                {"step_number": 2, "tool": "kubectl", "input": "kubectl rollout status deployment/myapp", "output": None, "error": "CrashLoopBackOff: container myapp is crashing", "state": None},
-                {"step_number": 3, "tool": "kubectl", "input": "kubectl rollout undo deployment/myapp", "output": None, "error": "error: no rollback revision found for deployment 'myapp'", "state": None},
+                {
+                    "step_number": 1,
+                    "tool": "kubectl",
+                    "input": "kubectl apply -f deploy.yaml",
+                    "output": "deployment.apps/myapp created",
+                    "error": None,
+                    "state": None,
+                },
+                {
+                    "step_number": 2,
+                    "tool": "kubectl",
+                    "input": "kubectl rollout status deployment/myapp",
+                    "output": None,
+                    "error": "CrashLoopBackOff: container myapp is crashing",
+                    "state": None,
+                },
+                {
+                    "step_number": 3,
+                    "tool": "kubectl",
+                    "input": "kubectl rollout undo deployment/myapp",
+                    "output": None,
+                    "error": "error: no rollback revision found for deployment 'myapp'",
+                    "state": None,
+                },
             ],
             "tags": ["deploy", "kubectl", "rollback", "kubernetes"],
             "expected_rule": "when kubectl rollout undo fails with no revision found, delete and re-create the deployment instead",
@@ -192,8 +333,22 @@ def create_failure_mode_catalog() -> int:
             "severity": "medium",
             "failure_point": "KeyError: 'DATABASE_URL' environment variable not set",
             "steps": [
-                {"step_number": 1, "tool": "python", "input": "python src/app.py", "output": None, "error": "KeyError: 'DATABASE_URL' not set. Ensure all required env vars are configured.", "state": None},
-                {"step_number": 2, "tool": "bash", "input": "echo $DATABASE_URL", "output": "(empty)", "error": None, "state": None},
+                {
+                    "step_number": 1,
+                    "tool": "python",
+                    "input": "python src/app.py",
+                    "output": None,
+                    "error": "KeyError: 'DATABASE_URL' not set. Ensure all required env vars are configured.",
+                    "state": None,
+                },
+                {
+                    "step_number": 2,
+                    "tool": "bash",
+                    "input": "echo $DATABASE_URL",
+                    "output": "(empty)",
+                    "error": None,
+                    "state": None,
+                },
             ],
             "tags": ["env", "configuration", "missing-variable"],
             "expected_rule": "when a Python application fails with KeyError for an environment variable, check the .env file or export the variable",
@@ -207,8 +362,22 @@ def create_failure_mode_catalog() -> int:
             "severity": "medium",
             "failure_point": "Permission denied: ./deploy.sh",
             "steps": [
-                {"step_number": 1, "tool": "bash", "input": "./deploy.sh", "output": None, "error": "bash: ./deploy.sh: Permission denied", "state": None},
-                {"step_number": 2, "tool": "bash", "input": "ls -la deploy.sh", "output": "-rw-r--r-- 1 user user 1234 deploy.sh (not executable)", "error": None, "state": None},
+                {
+                    "step_number": 1,
+                    "tool": "bash",
+                    "input": "./deploy.sh",
+                    "output": None,
+                    "error": "bash: ./deploy.sh: Permission denied",
+                    "state": None,
+                },
+                {
+                    "step_number": 2,
+                    "tool": "bash",
+                    "input": "ls -la deploy.sh",
+                    "output": "-rw-r--r-- 1 user user 1234 deploy.sh (not executable)",
+                    "error": None,
+                    "state": None,
+                },
             ],
             "tags": ["shell", "permission", "executable"],
             "expected_rule": "when a shell script fails with Permission denied, run chmod +x to make it executable",
@@ -222,8 +391,22 @@ def create_failure_mode_catalog() -> int:
             "severity": "medium",
             "failure_point": "Edited the wrong file: edited README.md instead of ci.yaml",
             "steps": [
-                {"step_number": 1, "tool": "editor", "input": "Open README.md and add CI docs", "output": "README.md saved", "error": None, "state": None},
-                {"step_number": 2, "tool": "git", "input": "git diff --staged", "output": "diff --git a/README.md b/README.md (wrong file!)", "error": "User intended to edit .github/workflows/ci.yaml", "state": None},
+                {
+                    "step_number": 1,
+                    "tool": "editor",
+                    "input": "Open README.md and add CI docs",
+                    "output": "README.md saved",
+                    "error": None,
+                    "state": None,
+                },
+                {
+                    "step_number": 2,
+                    "tool": "git",
+                    "input": "git diff --staged",
+                    "output": "diff --git a/README.md b/README.md (wrong file!)",
+                    "error": "User intended to edit .github/workflows/ci.yaml",
+                    "state": None,
+                },
             ],
             "tags": ["workflow", "editing", "targeting"],
             "expected_rule": "when editing a specific configuration file, confirm the file path is correct before making changes",
@@ -239,11 +422,12 @@ def create_failure_mode_catalog() -> int:
         if "success" not in scenario:
             scenario["success"] = False
         if "timestamp" not in scenario:
-            from datetime import datetime as dt, timezone as tz
-            scenario["timestamp"] = dt.now(tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            from datetime import datetime as dt
+
+            scenario["timestamp"] = dt.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         dst_path = dst_dir / f"{scenario['trajectory_id']}.jsonl"
-        with open(dst_path, "w") as fh:
+        with Path(dst_path).open("w") as fh:
             fh.write(json.dumps(scenario) + "\n")
         count += 1
 
@@ -310,9 +494,17 @@ def show_status() -> None:
 def _guess_domain(traj: dict) -> str:
     """Guess domain from trajectory content."""
     task = traj.get("task", "").lower()
-    for kw, domain in [("git", "git"), ("docker", "docker"), ("pip", "python"),
-                        ("python", "python"), ("test", "test"), ("deploy", "deploy"),
-                        ("shell", "shell"), ("kubectl", "deploy"), ("ci", "ci")]:
+    for kw, domain in [
+        ("git", "git"),
+        ("docker", "docker"),
+        ("pip", "python"),
+        ("python", "python"),
+        ("test", "test"),
+        ("deploy", "deploy"),
+        ("shell", "shell"),
+        ("kubectl", "deploy"),
+        ("ci", "ci"),
+    ]:
         if kw in task:
             return domain
     return "generic"

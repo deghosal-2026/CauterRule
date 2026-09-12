@@ -1,0 +1,25 @@
+id: R-PY-006
+when:
+  trigger: python package build fails on an interpreter outside requires-python
+  context:
+    - cryptic build errors on old or new python
+do:
+  directive: Check requires-python and switch to a matching interpreter before installing
+  because: Native builds only succeed on supported interpreter versions
+confidence: 0.85
+provenance:
+  source_trajectory: packs/pack-python/R-PY-006
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - python
+  - version
+  - interpreter
+taxonomy: config/env
+pack: pack-python

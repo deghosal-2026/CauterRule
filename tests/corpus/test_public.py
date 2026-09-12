@@ -21,7 +21,11 @@ def test_load_public_corpus_with_data(tmp_path: Path) -> None:
     d = tmp_path / "public"
     d.mkdir()
     t = Trajectory(
-        id="pub-001", timestamp="t", task="test", steps=(Step(step_number=1, tool="bash", input="echo hi"),), success=True
+        id="pub-001",
+        timestamp="t",
+        task="test",
+        steps=(Step(step_number=1, tool="bash", input="echo hi"),),
+        success=True,
     )
     f = d / "sample.jsonl"
     with f.open("w") as fh:
@@ -36,7 +40,11 @@ def test_load_public_corpus_multiple_files(tmp_path: Path) -> None:
     d.mkdir()
     for i in range(3):
         t = Trajectory(
-            id=f"pub-{i:03d}", timestamp="t", task="task", steps=(Step(step_number=1, tool="bash", input="x"),), success=True
+            id=f"pub-{i:03d}",
+            timestamp="t",
+            task="task",
+            steps=(Step(step_number=1, tool="bash", input="x"),),
+            success=True,
         )
         f = d / f"file{i}.jsonl"
         with f.open("w") as fh:

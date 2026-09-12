@@ -9,7 +9,6 @@ from textual.widgets import Footer, Header, Label, ListView, RichLog
 
 from cauterule.models.candidate import CandidateRule
 from cauterule.promotion.executor import execute_promotion
-from cauterule.serialization.rule_yaml import load_rules_from_dir
 from cauterule.store.manager import StoreManager
 from cauterule.tui.annotate import AnnotationScreen
 from cauterule.tui.cards import EvidenceCard
@@ -83,7 +82,9 @@ class ReviewScreen(Screen[Any]):
     def approve_current(self) -> None:
         if not self._candidates or self._current_index >= len(self._candidates):
             return
-        self.push_screen(AnnotationScreen(self._candidates[self._current_index]), self._on_annotation)
+        self.app.push_screen(
+            AnnotationScreen(self._candidates[self._current_index]), self._on_annotation
+        )
         self._advance()
 
     def _on_annotation(self, annotation: dict[str, object] | None) -> None:

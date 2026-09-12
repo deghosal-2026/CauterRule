@@ -19,11 +19,15 @@ def _traj(tid: str) -> Trajectory:
 
 
 def _prompt_high_conf(traj: Trajectory) -> CandidateRule | None:
-    return CandidateRule(when=RuleWhen(trigger="git push fails"), do=RuleDo(directive="fix"), confidence=0.95)
+    return CandidateRule(
+        when=RuleWhen(trigger="git push fails"), do=RuleDo(directive="fix"), confidence=0.95
+    )
 
 
 def _prompt_low_conf(traj: Trajectory) -> CandidateRule | None:
-    return CandidateRule(when=RuleWhen(trigger="git push fails"), do=RuleDo(directive="fix"), confidence=0.60)
+    return CandidateRule(
+        when=RuleWhen(trigger="git push fails"), do=RuleDo(directive="fix"), confidence=0.60
+    )
 
 
 def _prompt_fails(traj: Trajectory) -> CandidateRule | None:

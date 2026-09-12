@@ -42,7 +42,7 @@ def test_injection_p50() -> None:
         times.append(elapsed)
     times.sort()
     p50 = times[len(times) // 2]
-    assert p50 < 0.1, f"p50 latency {p50*1000:.1f}ms (expected <100ms)"
+    assert p50 < 0.1, f"p50 latency {p50 * 1000:.1f}ms (expected <100ms)"
 
 
 def test_injection_p95() -> None:
@@ -55,4 +55,4 @@ def test_injection_p95() -> None:
         times.append(elapsed)
     times.sort()
     p95 = times[int(len(times) * 0.95)]
-    assert p95 < 0.5, f"p95 latency {p95*1000:.1f}ms (expected <500ms)"
+    assert p95 < 0.5, f"p95 latency {p95 * 1000:.1f}ms (expected <500ms)"

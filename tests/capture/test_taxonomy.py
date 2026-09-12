@@ -2,7 +2,10 @@ from cauterule.capture.taxonomy import classify_taxonomy
 
 
 def test_classify_taxonomy_keywords() -> None:
-    assert classify_taxonomy("bash", error="! [rejected] non-fast-forward") == "git/push/non-fast-forward"
+    assert (
+        classify_taxonomy("bash", error="! [rejected] non-fast-forward")
+        == "git/push/non-fast-forward"
+    )
     assert classify_taxonomy("bash", error="git push") == "git/push"
     assert classify_taxonomy("python", error="ModuleNotFoundError: import foo") == "python/import"
     assert classify_taxonomy("pip", error="pip install failed") == "python/pip"
@@ -22,4 +25,7 @@ def test_classify_taxonomy_fallback() -> None:
 
 def test_classify_taxonomy_precedence() -> None:
     # longer keyword should win over shorter
-    assert classify_taxonomy("bash", error="git push non-fast-forward rejected") == "git/push/non-fast-forward"
+    assert (
+        classify_taxonomy("bash", error="git push non-fast-forward rejected")
+        == "git/push/non-fast-forward"
+    )

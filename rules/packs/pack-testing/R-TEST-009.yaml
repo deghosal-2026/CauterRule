@@ -1,0 +1,25 @@
+id: R-TEST-009
+when:
+  trigger: pytest suite passes serially but fails under parallel workers
+  context:
+    - xdist run with shared ports or temp paths
+do:
+  directive: Give each worker unique temp dirs, dynamic ports and isolated databases
+  because: Parallel workers that share mutable resources race each other
+confidence: 0.85
+provenance:
+  source_trajectory: packs/pack-testing/R-TEST-009
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - testing
+  - parallel
+  - isolation
+taxonomy: test/flaky
+pack: pack-testing

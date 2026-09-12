@@ -62,6 +62,16 @@ Mode: hybrid → auto-promoted (confidence >= 0.8, clean replay + linter)
 | `balanced` (default) | precision=100%, recall>=1, history>=3, confidence>=0.7 |
 | `aggressive` | precision=100%, recall>=0, history>=1, confidence>=0.5 |
 
+## Safety-First Posture (v0.3.0)
+
+The gate orders safety evidence ahead of usefulness:
+
+- **Broad-trigger penalty** — a candidate that breaks any prior success is marked inconclusive (not pass) even when it prevents failures. This blocks broad rules that fire outside their intended condition, at the cost of some high-precision candidates.
+- **Near-miss tolerance band** — `near_misses <= 2` may still pass when `precision >= 0.5`, so a rule that prevents real failures is not disqualified by touching one or two near-miss references.
+- **Adversarial `should_reject` override (#714)** — if the source trajectory's `expected_outcome` is `should_reject`, a passing candidate is forced to `fail` regardless of replay score. Content-based scoring cannot distinguish an adversarial-sourced rule from a real one, so the source metadata is the only signal.
+
+Safety-first is why the v0.3.0 field test reports near-miss precision 98–100% and 0 adversarial promotions even as overall pass rates stayed low.
+
 ## Linter Integration
 
 The rule linter runs before the promotion gate makes a decision:

@@ -1,4 +1,5 @@
 """Tests for the loop package."""
+
 from __future__ import annotations
 
 import json
@@ -19,8 +20,16 @@ class FakeLLM:
 
     def complete(self, prompt: str, **kwargs: object) -> object:
         self.calls += 1
-        payload = json.dumps({"when": {"trigger": "git push fails", "context": ["shared branch"]}, "do": {"directive": "pull --rebase first", "because": "non-fast-forward rejected"}, "confidence": 0.9, "reasoning": "prevents push rejection"})
+        payload = json.dumps(
+            {
+                "when": {"trigger": "git push fails", "context": ["shared branch"]},
+                "do": {"directive": "pull --rebase first", "because": "non-fast-forward rejected"},
+                "confidence": 0.9,
+                "reasoning": "prevents push rejection",
+            }
+        )
         from types import SimpleNamespace
+
         return SimpleNamespace(text=payload, model="fake", provider="fake")
 
 
@@ -37,7 +46,9 @@ def _trajectory() -> Trajectory:
 
 def _traj_hist(id: str, task: str, success: bool) -> Trajectory:
     return Trajectory(
-        id=id, timestamp="t", task=task,
+        id=id,
+        timestamp="t",
+        task=task,
         steps=(Step(1, "bash", error="err"),) if not success else (),
         success=success,
     )
@@ -69,6 +80,7 @@ def test_run_loop_no_candidates() -> None:
     class FailingLLM:
         def complete(self, prompt: str, **kwargs: object) -> object:
             from types import SimpleNamespace
+
             return SimpleNamespace(text="not json", model="fake", provider="fake")
 
     config = LoopConfig(llm=FailingLLM())

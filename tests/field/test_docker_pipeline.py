@@ -28,9 +28,13 @@ def workspace(tmp_path: Path) -> Path:
 def _run(cmd: list[str], workspace: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [
-            "docker", "run", "--rm",
-            "-v", f"{workspace}:{WORKSPACE}",
-            "-w", WORKSPACE,
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{workspace}:{WORKSPACE}",
+            "-w",
+            WORKSPACE,
             DOCKER_TAG,
             *cmd,
         ],

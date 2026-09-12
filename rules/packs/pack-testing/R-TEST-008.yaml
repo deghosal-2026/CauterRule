@@ -1,0 +1,25 @@
+id: R-TEST-008
+when:
+  trigger: pytest date-sensitive test fails on timezone or hardcoded dates
+  context:
+    - midnight rollover or locale-dependent formatting
+do:
+  directive: Freeze time in tests and assert in UTC everywhere
+  because: The calendar moves but the assertions must not
+confidence: 0.86
+provenance:
+  source_trajectory: packs/pack-testing/R-TEST-008
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - testing
+  - time
+  - determinism
+taxonomy: test/flaky
+pack: pack-testing

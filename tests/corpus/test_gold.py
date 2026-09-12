@@ -38,8 +38,20 @@ def test_load_gold_families_with_files(tmp_path: Path) -> None:
 
     d = tmp_path / "families"
     d.mkdir()
-    t1 = Trajectory(id="T-001", timestamp="t", task="Push to main", steps=(Step(step_number=1, tool="bash", input="git push"),), success=False)
-    t2 = Trajectory(id="T-002", timestamp="t", task="Deploy k8s", steps=(Step(step_number=1, tool="bash", input="kubectl apply"),), success=True)
+    t1 = Trajectory(
+        id="T-001",
+        timestamp="t",
+        task="Push to main",
+        steps=(Step(step_number=1, tool="bash", input="git push"),),
+        success=False,
+    )
+    t2 = Trajectory(
+        id="T-002",
+        timestamp="t",
+        task="Deploy k8s",
+        steps=(Step(step_number=1, tool="bash", input="kubectl apply"),),
+        success=True,
+    )
     fam1 = d / "git-push.jsonl"
     with fam1.open("w") as f:
         f.write(json.dumps(t1.to_dict()) + "\n")

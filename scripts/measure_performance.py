@@ -32,7 +32,7 @@ def measure(label: str, cmd: list[str]) -> dict:
         elapsed = (time.perf_counter() - start) * 1000
         times.append(elapsed)
         status = "OK" if result.returncode == 0 else "FAIL"
-        print(f"  [{i+1}/{ITERATIONS}] {label}: {elapsed:.1f}ms  {status}")
+        print(f"  [{i + 1}/{ITERATIONS}] {label}: {elapsed:.1f}ms  {status}")
 
     avg = sum(times) / len(times)
     min_t = min(times)
@@ -76,10 +76,9 @@ def main() -> int:
     if all_passed:
         print("All baselines PASSED")
         return 0
-    else:
-        failed = [r["command"] for r in results if not r["passed"]]
-        print(f"FAILED: {', '.join(failed)}")
-        return 1
+    failed = [r["command"] for r in results if not r["passed"]]
+    print(f"FAILED: {', '.join(failed)}")
+    return 1
 
 
 if __name__ == "__main__":

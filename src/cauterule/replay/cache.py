@@ -10,6 +10,7 @@ from cauterule.models.candidate import CandidateRule
 from cauterule.models.evidence import EvidenceReport
 from cauterule.models.trajectory import Trajectory
 from cauterule.replay.determinism import deterministic_replay
+from cauterule.replay.matcher import DEFAULT_THRESHOLD
 
 
 class ReplayCache:
@@ -19,28 +20,47 @@ class ReplayCache:
         self._cache: dict[str, EvidenceReport] = {}
         self._lock = threading.Lock()
 
-    def _key(self, candidate: CandidateRule, trajectories: list[Trajectory]) -> str:
-        ids = sorted(t.id for t in trajectories)
-        corpus_hash = hashlib.sha256(json.dumps(ids).encode()).hexdigest()[:16]
+    def _key(
+        self,
+        candidate: CandidateRule,
+        trajectories: list[Trajectory],
+        threshold: float = DEFAULT_THRESHOLD,
+    ) -> str:
+        # Content-aware key (#506): id-only hashing served stale verdicts
+        # after content edits. Hash canonical trajectory content, candidate
+        # confidence, and the active threshold. Full hex — no truncation.
+        corpus = sorted(
+            (t.to_dict() for t in trajectories),
+            key=lambda d: str(d.get("trajectory_id", "")),
+        )
+        corpus_hash = hashlib.sha256(
+            json.dumps(corpus, sort_keys=True, default=str).encode()
+        ).hexdigest()
         cand_hash = hashlib.sha256(
             json.dumps(
                 {
                     "trigger": candidate.when.trigger,
                     "directive": candidate.do.directive,
                     "context": list(candidate.when.context),
+                    "confidence": candidate.confidence,
                 },
                 sort_keys=True,
             ).encode()
-        ).hexdigest()[:16]
-        return f"{cand_hash}:{corpus_hash}"
+        ).hexdigest()
+        return f"{cand_hash}:{corpus_hash}:{threshold}"
 
-    def get(self, candidate: CandidateRule, trajectories: list[Trajectory]) -> EvidenceReport:
+    def get(
+        self,
+        candidate: CandidateRule,
+        trajectories: list[Trajectory],
+        threshold: float = DEFAULT_THRESHOLD,
+    ) -> EvidenceReport:
         """Return cached or computed replay result."""
-        key = self._key(candidate, trajectories)
+        key = self._key(candidate, trajectories, threshold)
         with self._lock:
             if key in self._cache:
                 return self._cache[key]
-        report = deterministic_replay(candidate, trajectories)
+        report = deterministic_replay(candidate, trajectories, threshold)
         with self._lock:
             self._cache[key] = report
         return report

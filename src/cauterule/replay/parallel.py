@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import concurrent.futures
-from typing import Any
 
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.evidence import EvidenceReport
 from cauterule.models.trajectory import Trajectory
 from cauterule.replay.cache import ReplayCache
+from cauterule.replay.matcher import DEFAULT_THRESHOLD
 
 
 def run_parallel(
@@ -16,6 +16,7 @@ def run_parallel(
     trajectories: list[Trajectory],
     max_workers: int = 4,
     cache: ReplayCache | None = None,
+    threshold: float = DEFAULT_THRESHOLD,
 ) -> list[EvidenceReport]:
     """Run replay for all *candidates* in parallel.
 
@@ -24,6 +25,7 @@ def run_parallel(
         trajectories: Historical trajectories.
         max_workers: Max parallel workers.
         cache: Optional cache to reuse.
+        threshold: Matcher threshold, forwarded to the cache key (#506).
 
     Returns:
         List of evidence reports (same order as candidates).
@@ -32,8 +34,7 @@ def run_parallel(
         cache = ReplayCache()
 
     def _replay(cand: CandidateRule) -> EvidenceReport:
-        return cache.get(cand, trajectories)
+        return cache.get(cand, trajectories, threshold)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        results = list(executor.map(_replay, candidates))
-    return results
+        return list(executor.map(_replay, candidates))

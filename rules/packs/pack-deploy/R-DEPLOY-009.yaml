@@ -1,0 +1,25 @@
+id: R-DEPLOY-009
+when:
+  trigger: kubernetes service has empty endpoints from a selector label mismatch
+  context:
+    - connection refused though pods are Running
+do:
+  directive: Match the service selector labels to pod labels and align targetPort with containerPort
+  because: A service with no matching pods routes nowhere
+confidence: 0.89
+provenance:
+  source_trajectory: packs/pack-deploy/R-DEPLOY-009
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - deploy
+  - kubernetes
+  - service
+taxonomy: tool/network
+pack: pack-deploy

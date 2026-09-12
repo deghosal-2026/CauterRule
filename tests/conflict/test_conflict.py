@@ -122,7 +122,9 @@ class TestScoreSpecificity:
 
     def test_score_bounds(self) -> None:
         max_spec = _rule(
-            "R-001", "a " * 20 + "b", "fix it",
+            "R-001",
+            "a " * 20 + "b",
+            "fix it",
             context=tuple(f"c{n}" for n in range(10)),
             taxonomy="a/b/c/d/e/f",
             hit_count=99,
@@ -133,7 +135,9 @@ class TestScoreSpecificity:
 
     def test_all_factors_contribute(self) -> None:
         r = _rule(
-            "R-001", "when git push fails on main", "run pull --rebase",
+            "R-001",
+            "when git push fails on main",
+            "run pull --rebase",
             context=("branch=main", "repo=foo"),
             taxonomy="git/workflow/push",
             hit_count=3,

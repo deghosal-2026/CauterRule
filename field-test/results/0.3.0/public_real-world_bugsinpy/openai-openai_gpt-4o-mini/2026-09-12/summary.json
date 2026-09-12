@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "corpus_type": "public/real-world/bugsinpy",
+    "timestamp": "2026-09-12",
+    "llm_provider": "openai",
+    "llm_model": "openai/gpt-4o-mini",
+    "llm_base_url": "https://openrouter.ai/api/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2,0.5",
+    "target_trajectories": 36,
+    "reference_trajectories": 444,
+    "cost_per_request_usd": 0.01,
+    "gate_mode": "relaxed",
+    "quarantined": []
+  },
+  "elapsed_seconds": 26.6,
+  "total": 36,
+  "done": 36,
+  "gate_dropped": 0,
+  "gate_dropped_by_reason": {},
+  "skipped": 0,
+  "total_candidates": 72,
+  "total_llm_calls_avoided": 0,
+  "avg_precision": 0.806,
+  "avg_recall": 0.106,
+  "avg_match_score": 0.16,
+  "match_detail_count": 72,
+  "passing": 29,
+  "failing": 0,
+  "inconclusive": 7,
+  "safety": {
+    "total": 36,
+    "silence": 0,
+    "parse_failure": 0,
+    "rejected": 7,
+    "accepted": 29,
+    "silence_rate": 0.0,
+    "verdict": "pass"
+  },
+  "confidence_intervals": {
+    "pass_rate": {
+      "rate": 1.0,
+      "n": 29,
+      "ci_low": 0.883,
+      "ci_high": 1.0
+    },
+    "safety_silence_rate": {
+      "rate": 0.0,
+      "n": 36,
+      "ci_low": 0.0,
+      "ci_high": 0.0964
+    }
+  },
+  "specificity_distribution": {
+    "specific": 108,
+    "moderate": 0,
+    "generic": 0
+  },
+  "inconclusive_breakdown": {
+    "broad_trigger": 0,
+    "matcher_gap": 7,
+    "corpus_mismatch": 0,
+    "ambiguous_evidence": 11
+  },
+  "updated_at": "2026-09-12T04:57:50Z"
+}

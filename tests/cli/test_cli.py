@@ -54,7 +54,7 @@ def test_cli_extract_dry_run() -> None:
             '{"id": "T-1", "timestamp": "2024-01-01T00:00:00Z", "task": "deploy to prod", "steps": [{"step_number": 1, "tool": "deploy", "input": "deploy", "output": "", "error": "ENV not set"}], "success": false}',
             encoding="utf-8",
         )
-        cwd = os.getcwd()
+        cwd = Path.cwd()
         try:
             os.chdir(tmp)
             runner = CliRunner()
@@ -68,7 +68,7 @@ def test_cli_extract_dry_run() -> None:
 def test_cli_validate_empty_store() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "rules").mkdir(parents=True, exist_ok=True)
-        cwd = os.getcwd()
+        cwd = Path.cwd()
         try:
             os.chdir(tmp)
             runner = CliRunner()
@@ -81,7 +81,7 @@ def test_cli_validate_empty_store() -> None:
 def test_cli_health_empty_store() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "rules").mkdir(parents=True, exist_ok=True)
-        cwd = os.getcwd()
+        cwd = Path.cwd()
         try:
             os.chdir(tmp)
             runner = CliRunner()
@@ -179,7 +179,7 @@ def test_cli_counterfactual() -> None:
 def test_cli_history() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "rules").mkdir(parents=True, exist_ok=True)
-        cwd = os.getcwd()
+        cwd = Path.cwd()
         try:
             os.chdir(tmp)
             runner = CliRunner()
@@ -206,3 +206,73 @@ def test_cli_unknown_command() -> None:
     result = runner.invoke(main, ["nonesuch"])
     assert result.exit_code != 0
     assert "Error" in result.output
+
+
+def test_readme_commands_resolve() -> None:
+    # #501: every README-advertised command must resolve in the click group.
+    import re
+    from pathlib import Path
+
+    import click
+
+    readme = (Path(__file__).resolve().parents[2] / "README.md").read_text(encoding="utf-8")
+    found: set[tuple[str, ...]] = set()
+    for match in re.finditer(r"cauterule\s+([a-z][a-z-]*)(?:\s+([a-z][a-z-]*))?", readme):
+        first, second = match.group(1), match.group(2)
+        # Only pack/observe take subcommands; other second tokens are
+        # arguments (e.g. `extract trajectory.jsonl`).
+        if second is not None and first in {"pack", "observe"}:
+            found.add((first, second))
+        else:
+            found.add((first,))
+    # Subcommands advertised without the `cauterule` prefix (`pack list`).
+    found.add(("pack", "list"))
+    found.add(("pack", "info"))
+    runner = CliRunner()
+    for parts in sorted(found):
+        cmd = main.commands.get(parts[0])
+        assert cmd is not None, f"README advertises unknown command: {parts[0]}"
+        if len(parts) == 2:
+            assert isinstance(cmd, click.Group), f"{parts[0]} is not a group"
+            assert parts[1] in cmd.commands, f"unknown subcommand: {parts[0]} {parts[1]}"
+        else:
+            result = runner.invoke(main, [parts[0], "--help"])
+            assert result.exit_code == 0, f"{parts[0]} --help failed"
+
+
+def test_export_agents_end_to_end(tmp_path: Path) -> None:
+    # #501: export --format agents works on a sample rule store.
+    from cauterule.models.rule import Provenance, RuleDo, RuleWhen, StandingRule
+    from cauterule.store.manager import StoreManager
+
+    store = StoreManager(base_dir=str(tmp_path / "rules"))
+    store.add_rule(
+        StandingRule(
+            id="R-001",
+            when=RuleWhen(trigger="git push fails"),
+            do=RuleDo(directive="pull first"),
+            confidence=0.9,
+            provenance=Provenance(
+                source_trajectory="t",
+                extracted_by="m",
+                extract_timestamp="t",
+                extraction_pass=1,
+            ),
+            status="active",
+            promoted_at="t",
+        )
+    )
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["export", "--format", "agents", "--rules-dir", str(tmp_path / "rules")]
+    )
+    assert result.exit_code == 0
+    assert "git push fails" in result.output
+
+
+def test_observe_group_resolves() -> None:
+    # #501: observe metrics/journal subcommands resolve.
+    runner = CliRunner()
+    assert runner.invoke(main, ["observe", "--help"]).exit_code == 0
+    assert runner.invoke(main, ["observe", "metrics", "--help"]).exit_code == 0
+    assert runner.invoke(main, ["observe", "journal", "--help"]).exit_code == 0

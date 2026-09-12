@@ -1,0 +1,25 @@
+id: R-DOCKER-004
+when:
+  trigger: docker compose fails with host port already allocated on startup
+  context:
+    - Bind for 0.0.0.0 failed port is already allocated
+do:
+  directive: Identify the port holder with docker ps or lsof, then remap the port or stop the squatter
+  because: Two services cannot bind the same host port at once
+confidence: 0.91
+provenance:
+  source_trajectory: packs/pack-docker/R-DOCKER-004
+  extracted_by: pack-author
+  extract_timestamp: "2026-09-01T00:00:00Z"
+  extraction_pass: 1
+  promotion_commit: builtin
+  promotion_mode: builtin
+status: active
+promoted_at: "2026-09-01T00:00:00Z"
+hit_count: 0
+tags:
+  - docker
+  - compose
+  - networking
+taxonomy: docker/network/ports
+pack: pack-docker

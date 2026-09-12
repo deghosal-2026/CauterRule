@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 from cauterule.linter.contradiction import check_contradiction
 from cauterule.linter.duplicate import check_duplicate
-from cauterule.linter.specificity import check_specificity, check_broadness
+from cauterule.linter.specificity import check_broadness, check_specificity
 from cauterule.linter.tautology import check_tautology
 from cauterule.linter.unsafe import check_unsafe
 from cauterule.linter.untestable import check_untestable

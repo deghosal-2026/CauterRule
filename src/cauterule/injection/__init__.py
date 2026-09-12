@@ -1,4 +1,5 @@
 """Rule injection package — match, order, format, budget, preflight."""
+
 from __future__ import annotations
 
 from cauterule.injection.budget import optimize_budget

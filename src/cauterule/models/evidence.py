@@ -29,6 +29,8 @@ class EvidenceReport:
     verdict: Verdict = "inconclusive"
     replay_trace: tuple[dict[str, Any], ...] = field(default_factory=tuple)
     inconclusive_reason: InconclusiveReason | None = None
+    verdict_reason: str | None = None
+    corpus_hash: str | None = None
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.precision <= 1.0:
@@ -56,6 +58,10 @@ class EvidenceReport:
         }
         if self.inconclusive_reason is not None:
             d["inconclusive_reason"] = self.inconclusive_reason
+        if self.verdict_reason is not None:
+            d["verdict_reason"] = self.verdict_reason
+        if self.corpus_hash is not None:
+            d["corpus_hash"] = self.corpus_hash
         return d
 
     @classmethod
@@ -71,4 +77,6 @@ class EvidenceReport:
             verdict=data.get("verdict", "inconclusive"),
             replay_trace=tuple(data.get("replay_trace", [])),
             inconclusive_reason=data.get("inconclusive_reason"),
+            verdict_reason=data.get("verdict_reason"),
+            corpus_hash=data.get("corpus_hash"),
         )

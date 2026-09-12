@@ -1,4 +1,5 @@
 """Structured matcher — match by trigger, tool, error type, context, tags, taxonomy."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -33,25 +34,24 @@ def _tool_matches(rule: StandingRule, **context: Any) -> bool:
     if tool is None:
         return True
     if not rule.when.context:
-        return False
+        # No context = no tool constraint (#503). A context-less rule must
+        # not be filtered out merely because a tool filter was passed.
+        return True
     tool_lower = str(tool).lower()
-    for ctx_item in rule.when.context:
-        if ctx_item.lower() == tool_lower:
-            return True
-    return False
+    return any(ctx_item.lower() == tool_lower for ctx_item in rule.when.context)
 
 
 def _error_matches(rule: StandingRule, **context: Any) -> bool:
+    # AND-filter contract: every provided filter must pass for the rule to
+    # match. A rule matches the error filter iff the trigger or at least
+    # one context item appears in the error string (#498).
     error = context.get("error")
     if error is None:
         return True
     error_lower = str(error).lower()
     if rule.when.trigger.lower() in error_lower:
         return True
-    for ctx_item in rule.when.context:
-        if ctx_item.lower() in error_lower:
-            return True
-    return True
+    return any(ctx_item.lower() in error_lower for ctx_item in rule.when.context)
 
 
 def _tag_matches(rule: StandingRule, **context: Any) -> bool:
@@ -80,6 +80,9 @@ def match_rules(task: str, rules: list[StandingRule], **context: Any) -> list[St
     is not provided it is skipped.  At minimum the trigger must appear in
     *task* (case-insensitive substring).
 
+    A rule with empty ``when.context`` carries no tool constraint: it matches
+    regardless of any ``tool=`` filter (#503).
+
     Args:
         task: Task description to match against.
         rules: List of promoted standing rules.
@@ -104,4 +107,18 @@ def match_rules(task: str, rules: list[StandingRule], **context: Any) -> list[St
         if not _taxonomy_matches(rule, **context):
             continue
         matched.append(rule)
+    # OTEL rule.match spans (#588): best-effort, never blocks injection.
+    if matched:
+        try:
+            from cauterule.integrations.otel import OtelExporter
+
+            exporter = OtelExporter()
+            for rule in matched:
+                exporter.emit_rule_match(
+                    rule.id,
+                    trigger=rule.when.trigger,
+                    confidence=rule.confidence,
+                )
+        except Exception:
+            pass
     return matched

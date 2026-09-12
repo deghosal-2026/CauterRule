@@ -77,14 +77,14 @@ def test_cli_version_under_500ms() -> None:
     """v0.1.0 perf baseline: CLI commands respond <500ms."""
     elapsed, result = _time_run(["--version"], cwd=Path("/tmp"))
     assert result.returncode == 0, result.stderr
-    assert elapsed < 0.5, f"cauterule --version took {elapsed*1000:.0f}ms (expected <500ms)"
+    assert elapsed < 0.5, f"cauterule --version took {elapsed * 1000:.0f}ms (expected <500ms)"
 
 
 @pytest.mark.docker
 def test_cli_help_under_500ms() -> None:
     elapsed, result = _time_run(["--help"], cwd=Path("/tmp"))
     assert result.returncode == 0, result.stderr
-    assert elapsed < 0.5, f"cauterule --help took {elapsed*1000:.0f}ms (expected <500ms)"
+    assert elapsed < 0.5, f"cauterule --help took {elapsed * 1000:.0f}ms (expected <500ms)"
 
 
 @pytest.mark.docker
@@ -153,6 +153,8 @@ def test_inject_records_hits_metric(rules_workspace: Path) -> None:
         shutil.copy(f, traj_dir)
 
     # Ensure R-001 trigger matches
-    _, result = _time_run(["inject", "git push fails with non-fast-forward error"], cwd=rules_workspace)
+    _, result = _time_run(
+        ["inject", "git push fails with non-fast-forward error"], cwd=rules_workspace
+    )
     assert result.returncode == 0, result.stderr
     assert "Recorded hits" in result.stdout

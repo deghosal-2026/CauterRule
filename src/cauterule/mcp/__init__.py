@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 __all__ = ["CauteruleMCPServer", "launch_mcp"]
 
 
-def __getattr__(name: str):  # type: ignore[no-untyped-def]
+def __getattr__(name: str) -> object:
     if name == "CauteruleMCPServer":
         from cauterule.mcp.server import CauteruleMCPServer
 

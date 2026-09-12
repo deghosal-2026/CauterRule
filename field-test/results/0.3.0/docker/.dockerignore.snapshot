@@ -1,0 +1,16 @@
+# .dockerignore — keep build context lean (#524)
+.venv/
+.git/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+field-test/results/
+field-test/0.3.0/
+.benchmarks/
+node_modules/
+*.log

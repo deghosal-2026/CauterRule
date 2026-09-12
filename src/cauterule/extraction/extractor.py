@@ -48,7 +48,9 @@ def _extract_first_json_object(text: str) -> str:
     raise ValueError("No balanced JSON object found in LLM output")
 
 
-def _parse_candidate_json(text: str, extraction_pass: int = 1, template: str | None = None) -> CandidateRule:
+def _parse_candidate_json(
+    text: str, extraction_pass: int = 1, template: str | None = None
+) -> CandidateRule:
     """Parse LLM output JSON into a :class:`CandidateRule`."""
     json_str = _extract_first_json_object(text)
     data = json.loads(json_str)
@@ -94,6 +96,7 @@ def extract_candidate(
     template: str | None = None,
     extraction_pass: int = 1,
     temperature: float = 0.5,
+    confidence_threshold: float = 0.6,
 ) -> CandidateRule:
     """Call LLM to extract a candidate rule from *trajectory*.
 
@@ -103,6 +106,8 @@ def extract_candidate(
         template: Optional template hint.
         extraction_pass: Pass number (1-indexed).
         temperature: LLM temperature for this pass.
+        confidence_threshold: Minimum quality-gate confidence (defaults to
+            ``ExtractionConfig.confidence_threshold``; #497).
 
     Raises:
         ValueError: If LLM output cannot be parsed or fails quality checks with hard fail
@@ -113,7 +118,10 @@ def extract_candidate(
     text = result.text if hasattr(result, "text") else str(result)
     candidate = _parse_candidate_json(text, extraction_pass=extraction_pass, template=template)
 
-    _ = check_quality(candidate, trajectory)
+    warnings = check_quality(candidate, trajectory, confidence_threshold)
+    if warnings:
+        msg = f"candidate failed quality gate: {'; '.join(warnings)}"
+        raise ValueError(msg)
     return candidate
 
 
@@ -123,10 +131,18 @@ def extract_candidate_safe(
     template: str | None = None,
     extraction_pass: int = 1,
     temperature: float = 0.5,
+    confidence_threshold: float = 0.6,
 ) -> tuple[CandidateRule | None, str | None]:
     """Safe wrapper that returns (candidate, error) instead of raising."""
     try:
-        candidate = extract_candidate(trajectory, llm, template=template, extraction_pass=extraction_pass, temperature=temperature)
+        candidate = extract_candidate(
+            trajectory,
+            llm,
+            template=template,
+            extraction_pass=extraction_pass,
+            temperature=temperature,
+            confidence_threshold=confidence_threshold,
+        )
         return candidate, None
     except Exception as exc:
         return None, str(exc)

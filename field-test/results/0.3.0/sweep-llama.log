@@ -1,0 +1,20 @@
+===== RUN golden =====
+All runs complete.
+===== RUN failures/positive =====
+All runs complete.
+===== RUN failures/negative =====
+All runs complete.
+===== RUN successes =====
+All runs complete.
+===== RUN nearmiss =====
+All runs complete.
+===== RUN noisy =====
+All runs complete.
+===== RUN corrections =====
+All runs complete.
+===== RUN raw/opencode =====
+All runs complete.
+===== RUN raw/synthetic =====
+All runs complete.
+===== RUN raw/ci =====
+  [53/110] core-34002924818 ... 

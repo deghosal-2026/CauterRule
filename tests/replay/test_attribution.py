@@ -12,9 +12,7 @@ from cauterule.replay.report import build_evidence_report
 
 
 def _cand(trigger: str) -> CandidateRule:
-    return CandidateRule(
-        when=RuleWhen(trigger=trigger), do=RuleDo(directive="d"), confidence=0.9
-    )
+    return CandidateRule(when=RuleWhen(trigger=trigger), do=RuleDo(directive="d"), confidence=0.9)
 
 
 def _traj(

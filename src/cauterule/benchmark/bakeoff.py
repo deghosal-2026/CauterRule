@@ -48,12 +48,21 @@ class BakeoffHarness:
         self.models: dict[str, ExtractorFn] = dict(models)
 
     def run(self, trajectories: list[Trajectory]) -> dict[str, list[ModelResult]]:
-        """Run all models on *trajectories* and return per-model results."""
+        """Run all models on *trajectories* and return per-model results.
+
+        A crashing model is recorded with ``extraction_error`` instead of
+        aborting the entire bake-off (#611).
+        """
         results: dict[str, list[ModelResult]] = {name: [] for name in self.models}
         for traj in trajectories:
             for name, extractor in self.models.items():
                 t0 = time.perf_counter()
-                candidate = extractor(traj)
+                candidate: CandidateRule | None = None
+                error: str | None = None
+                try:
+                    candidate = extractor(traj)
+                except Exception as exc:
+                    error = f"{type(exc).__name__}: {exc}"
                 elapsed_ms = (time.perf_counter() - t0) * 1000.0
                 results[name].append(
                     ModelResult(
@@ -61,7 +70,9 @@ class BakeoffHarness:
                         candidate=candidate,
                         extraction_time_ms=elapsed_ms,
                         confidence=candidate.confidence if candidate else 0.0,
-                        extraction_error=None if candidate else "extraction returned None",
+                        extraction_error=(
+                            error or (None if candidate else "extraction returned None")
+                        ),
                     )
                 )
         return results

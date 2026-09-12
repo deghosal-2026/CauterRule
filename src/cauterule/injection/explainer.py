@@ -1,4 +1,5 @@
 """Rule explanations — LLM generates human-readable explanation."""
+
 from __future__ import annotations
 
 from cauterule.models.rule import StandingRule
@@ -17,7 +18,7 @@ def explain_rule(rule: StandingRule) -> str:
         A human-readable string explaining what the rule does and why.
     """
     parts: list[str] = [f"Rule **{rule.id}**"]
-    parts.append(f"  Trigger: When you encounter \"{rule.when.trigger}\"")
+    parts.append(f'  Trigger: When you encounter "{rule.when.trigger}"')
     if rule.when.context:
         ctx = ", ".join(rule.when.context)
         parts.append(f"  Context: especially when context includes ({ctx})")

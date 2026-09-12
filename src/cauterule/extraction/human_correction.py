@@ -17,7 +17,9 @@ _CORRECTION_PATTERNS = [
 DEFAULT_CORRECTION_CONFIDENCE: float = 0.8
 
 
-def parse_correction(text: str, trajectory: Trajectory | None = None, confidence: float | None = None) -> CandidateRule | None:
+def parse_correction(
+    text: str, trajectory: Trajectory | None = None, confidence: float | None = None
+) -> CandidateRule | None:
     """Parse a human correction like \"next time do X\" into a candidate.
 
     Args:

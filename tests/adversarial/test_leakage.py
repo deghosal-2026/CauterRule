@@ -1,5 +1,8 @@
 """26.6: Instruction leakage test — secrets do not survive export."""
 
+# SECURITY-FIXTURE: every token-like string in this module is an intentional
+# fake credential used to verify redaction/leak prevention. None are real.
+
 from __future__ import annotations
 
 import pytest
@@ -52,9 +55,7 @@ RULES_WITH_SECRETS = [
 
 @pytest.mark.parametrize(
     "rule,secret_fragment",
-    [
-        (r, s) for r, s in RULES_WITH_SECRETS
-    ],
+    [(r, s) for r, s in RULES_WITH_SECRETS],
     ids=[
         "aws-key",
         "github-token",
@@ -95,7 +96,9 @@ def test_secret_in_because_redacted_by_engine() -> None:
     rule = StandingRule(
         id="R-BEC",
         when=RuleWhen(trigger="login"),
-        do=RuleDo(directive="refresh", because="token ghp_123456789012345678901234567890123456 expired"),
+        do=RuleDo(
+            directive="refresh", because="token ghp_123456789012345678901234567890123456 expired"
+        ),
         confidence=0.9,
         provenance=Provenance(
             source_trajectory="t.json",
