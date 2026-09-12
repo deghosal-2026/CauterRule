@@ -2,12 +2,12 @@
 
 <!-- generated from scripts/diagnose_corpus.py + field-test/results/0.3.0 sweeps -->
 
-> **Update (#698):** the `agent`/`lifecycle`/`mcp` reference gaps identified
-> below are now closed — `corpus/public/{adapters,lifecycle,mcp}/reference.jsonl`
-> (247 reference trajectories total, up from 220) cover those domains, and the
-> runner's `REFERENCE_BUCKETS` loads them. `scripts/diagnose_corpus.py` now
-> reports `uncovered_domains: []` for all five v0.3.0 corpora. Re-run the sweep
-> to measure the effect.
+> **Update (2026-09-12, Llama-3.2-3B re-run):** the #698/#702/#703 reference
+> corpora are now loaded — the runner's `REFERENCE_BUCKETS` reference set grew
+> to **444 trajectories** and `scripts/diagnose_corpus.py` reports
+> `uncovered_domains: []` for all five v0.3.0 corpora. The fresh single-model
+> funnel below shows `mcp` now produces passes (3), confirming the reference
+> gap was real; the remaining 0-pass corpora are matcher-side.
 
 The code-review issue #690 flagged that several corpora showed **0 passes
 across all 4 models** and the field-test report attributed all of them to one
@@ -16,63 +16,67 @@ the three candidate causes: missing references, extraction pre-filter rejection,
 or genuine matcher-threshold failure.
 
 Method: `scripts/diagnose_corpus.py` (reference coverage) plus the candidate
-pre-filter funnel over `field-test/results/0.3.0/<corpus>/*/*/results.jsonl`,
-aggregated across all 4 models (Llama-3.2-3B, Qwen3-4B, gpt-4o-mini,
-llama-3.1-8b).
+pre-filter funnel over `field-test/results/0.3.0/<corpus>/*/*/results.jsonl`.
+The funnel table below is the **2026-09-12 Llama-3.2-3B** re-run (single model);
+the reference-coverage table is model-independent.
 
 ## Reference coverage
 
-Shared curated reference set = 220 trajectories (`curated/failures/positive`,
-`failures/negative`, `successes`, `nearmiss`). **Now 247** after the #698
-`adapters`/`lifecycle`/`mcp` reference sets below.
+Shared reference set = **444 trajectories**, consisting of the curated buckets
+(`failures/positive`, `failures/negative`, `successes`, `nearmiss`, `noisy`,
+`corrections`) plus the v0.3.0 public reference corpora
+(`corpus/public/{adapters,lifecycle,mcp,otel,browser,lifecycle_infra,real-world/bugsinpy,successes}`).
 
 | Corpus | Target trajs | Reference set sufficient | Target domains with **zero** reference coverage |
 |---|---|---|---|
-| adapters | 18 | yes | ~~`agent`~~ → covered (#698) |
-| lifecycle | 40 | yes | ~~`lifecycle`~~ → covered (#698) |
-| mcp | 20 | yes | ~~`mcp`~~ → covered (#698) |
-| otel | 20 | yes | — |
+| adapters | 60 | yes | — (#698) |
+| lifecycle | 40 | yes | — (#698) |
+| mcp | 20 | yes | — (#698, #703) |
+| otel | 20 | yes | — (#702) |
 | packs | 40 | yes | — |
 
-## Candidate pre-filter funnel (all 4 models)
+## Candidate pre-filter funnel (Llama-3.2-3B, 2026-09-12)
 
-| Corpus | Candidates | Degenerate | Generic | Reached scoring |
+| Corpus | Candidates | Generic | Reached scoring | Pass |
 |---|---|---|---|---|
-| lifecycle | 308 | 0 | 0 | 308 |
-| otel | 160 | 0 | 0 | 160 |
-| packs | 318 | 1 | 14 | 303 |
-| raw/ci | 751 | 0 | 0 | 751 |
-| adapters | 130 | 0 | 0 | 130 |
-| mcp | 152 | 0 | 0 | 152 |
+| adapters | 93 | 1 | 93 | 0 |
+| lifecycle | 71 | 0 | 71 | 0 |
+| packs | 75 | 31 | 75 | 0 |
+| mcp | 25 | 0 | 25 | **3** |
+| otel | 40 | 0 | 40 | 0 |
+| raw/ci | 204 | 133 | 204 | 0 |
 
 Candidates overwhelmingly **reach `match_score()`** — the pre-filter
-(hypothesis c) is essentially ruled out.
+(hypothesis c) is essentially ruled out. `packs`/`raw/ci` lose a meaningful
+share to the generic-trigger pre-filter (31/75, 133/204).
 
 ## Root-cause classification
 
 | Corpus | Root cause |
 |---|---|
-| `adapters` | ~~(b) missing references~~ → reference set added (#698); re-sweep to confirm |
-| `lifecycle` | ~~(b) missing references~~ → reference set added (#698); re-sweep to confirm |
-| `mcp` | ~~(b) missing references~~ → reference set added (#698); re-sweep to confirm |
-| `otel` | **(a) matcher/reference-content mismatch** — references exist and candidates score, yet 0 pass |
-| `packs` | **(a) matcher/reference-content mismatch** — same; 15/318 candidates lost to generic pre-filter |
-| `raw/ci` | **(a) matcher/reference-content mismatch** — 751 candidates score, 0 pass |
+| `mcp` | reference gap **was** real (#698/#703); now produces passes (3/25 scored) |
+| `adapters` | ~~(b) missing references~~ → reference set added (#698); still 0 pass → **(a) matcher-content mismatch** |
+| `lifecycle` | ~~(b) missing references~~ → reference set added (#698); still 0 pass → **(a) matcher-content mismatch** |
+| `otel` | **(a) matcher/reference-content mismatch** (#702 references added; candidates score, 0 pass) |
+| `packs` | **(a) matcher/reference-content mismatch** + generic pre-filter (31/75) |
+| `raw/ci` | **(a) matcher/reference-content mismatch** + generic pre-filter (133/204) |
 
 This confirms #690's core claim: the blanket "matcher threshold" explanation is
-wrong for a meaningful slice of the matrix. `adapters`/`lifecycle`/`mcp` need
-reference data first (#698); `otel`/`packs`/`raw/ci` are the genuine
-matcher-side cases that #689 (semantic matching) and threshold work address.
+wrong for a meaningful slice of the matrix. With references now in place, the
+remaining 0-pass corpora (`adapters`/`lifecycle`/`otel`/`packs`/`raw/ci`) are the
+genuine matcher-side cases that #689 (semantic matching) and threshold work
+address.
 
 ## Follow-ups
 
-- #698 — corpus expansion (real + synthetic reference data, incl. adapter/lifecycle/mcp classes).
-- #702 — OpenTelemetry reference corpus (otel).
-- #703 — MCP reference corpus (mcp), informed by #601.
 - #689 — semantic/embedding matching for the matcher-side corpora.
+- #698/#702/#703 — reference corpora added and loaded (done).
+- #677 — domain-aware context matching (landed; lifted calibration golden recall 0.50→0.90).
 
 ## Regression guard
 
 `tests/corpus/test_v030_corpus_coverage.py` fails if a v0.3.0 target corpus or a
 shared reference bucket drops below `MIN_REFERENCE_TRAJECTORIES` (5), so a silent
 empty-reference regression can no longer masquerade as an unexplained 0-pass.
+`tests/test_run_field_test_harness.py::test_all_corpus_types_resolve_to_existing_dirs`
+guards that every `CORPUS_TYPES` entry points at a real directory.

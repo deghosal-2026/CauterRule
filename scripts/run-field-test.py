@@ -300,8 +300,8 @@ def parse_args() -> argparse.Namespace:
         (args.adapter, args.pack, args.mcp_security, args.otel,
          args.cost_corpus, args.cross_session, args.human_review)
     )
-    if not args.all and not args.corpus_type and not args.run_validation and not block_requested:
-        parser.error("specify a corpus_type, --all, --run-validation, or a field-test block flag")
+    if not args.all and not args.corpus_type and not args.run_validation and not args.regression_v020 and not block_requested:
+        parser.error("specify a corpus_type, --all, --run-validation, --regression-v020, or a field-test block flag")
     return args
 
 

@@ -8,6 +8,22 @@
 
 ---
 
+## Update — 2026-09-12: Llama-3.2-3B re-run (fresh, 39 corpora)
+
+> Supersedes the Llama-3.2-3B numbers in the 2026-09-11 4-model sections below. The other 3 models have **not** been re-run yet.
+
+- **39 target corpora, 1,384 trajectories** · 95 pass / 305 fail / 817 inconclusive / 167 gate-dropped. (`cost` excluded — needs a priced cloud model; local OMLX cost is $0.)
+- **Safety holds:** `successes` 60/60 silence, `failures/negative` 60/60 silence, `public/nearmiss` 20/20 silence; gate reasons `no_failure_signal` 120 + `nearmiss_recovery_succeeded` 47 (334 LLM calls avoided).
+- **Adversarial: 0 promoted** across all 9 adversarial corpora.
+- **Nearmiss:** 3/50 false pass → **94% correctly not promoted** ✅ (≥90% target).
+- **Specificity:** specific 73% · moderate 26% · generic 1.2% ✅ (<10% generic target).
+- **Quality gate still unmet:** golden 1/10 (10%), failures/positive 6/50 (12%), curated inconclusive 90%/72% ❌ — root cause unchanged (#677/#680); semantic matching (#689) is the v0.4.0 lever.
+- **New target corpora run:** `public/browser` (20), `public/real-world/bugsinpy` (36), `public/lifecycle_infra` (20) — promoted from reference-only.
+- **Authoritative tables:** [`generated-results.md`](generated-results.md) · per-model sheet: [`field-test-results-llama-3.2-3b.md`](field-test-results-llama-3.2-3b.md).
+- **Measurement tooling added (plan §5):** `cost`/`cross_session`/`human_agreement`/`pack_replay`/`fix8_recovery` + runner flags. `pack-replay.md` = 4/4 replayable packs score 1.00; `fix8-recovery-exclusion.md` = 0.671 overall. `cost`, `cross-session`, `human-agreement` land after a priced cloud sweep / reviewer scoring.
+
+---
+
 ## 0. v0.3.0 vs v0.2.0 — What Changed
 
 | Dimension | v0.2.0 | v0.3.0 | Delta |
@@ -426,8 +442,8 @@ Coverage at ~86% remains below the 95% target (#494 deferred to M8).
 | 2 compose test re-runs pending (mcp-accepts, test-service) | Low | Fixes applied (profiles, pip --user); re-run pending |
 | Coverage 86% (target 95%) | Medium | #494 deferred to M8 |
 | OTEL exporter log noise ("opentelemetry.exporter not installed") | Low (cosmetic) | Install `opentelemetry-exporter-otlp` in dev venv |
-| Cross-session reduction not yet measured (#663) | Medium | Pending — needs 5-session protocol |
-| Human review agreement not measured (#493) | Medium | Pending — needs human sampling |
+| Cross-session reduction not yet measured (#663) | Medium | Tooling complete (`scripts/cross_session.py`, runner `--cross-session`); 5-session protocol run pending |
+| Human review agreement not measured (#493) | Medium | Tooling complete (`scripts/human_agreement.py`, runner `--human-review`); reviewer scoring pending |
 | `openai` package missing from dev venv | Low | `pip install openai` (done) |
 | `benchmarks/baseline.json` committed as 284KB artifact | Low | ✅ Fixed (#679): replaced the 12.4MB raw dump with a 1.2KB derived baseline (`--write-baseline`); raw dumps ignored via `.gitignore` |
 
