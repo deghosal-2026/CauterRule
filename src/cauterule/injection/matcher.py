@@ -1,4 +1,5 @@
 """Structured matcher — match by trigger, tool, error type, context, tags, taxonomy."""
+
 from __future__ import annotations
 
 from typing import Any

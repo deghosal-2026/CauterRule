@@ -35,10 +35,7 @@ def metrics(
         if not table:
             click.echo("No rules found.")
             return
-        click.echo(
-            f"Lowest-specificity rules (broad threshold "
-            f"{BROAD_SPECIFICITY_THRESHOLD:.2f}):"
-        )
+        click.echo(f"Lowest-specificity rules (broad threshold {BROAD_SPECIFICITY_THRESHOLD:.2f}):")
         for r, spec in table:
             marker = " <-- BROAD" if spec < BROAD_SPECIFICITY_THRESHOLD else ""
             click.echo(f"  {r.id:8s} spec={spec:.2f} {r.status:12s} {r.when.trigger!r}{marker}")

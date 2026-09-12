@@ -31,7 +31,7 @@ _ISSUES = [
     {
         "number": 104,
         "title": "element not found in checkout",
-        "body": "NoSuchElementException: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"#checkout-btn\"} element not found",
+        "body": 'NoSuchElementException: no such element: Unable to locate element: {"method":"css selector","selector":"#checkout-btn"} element not found',
     },
     {
         "number": 105,
@@ -57,12 +57,21 @@ def _load() -> ModuleType:
 
 def test_classify_and_extract() -> None:
     module = _load()
-    assert module.classify("StaleElementReferenceException: stale element reference") == "browser/stale_element"
-    assert module.classify("UnexpectedAlertOpenException: unexpected alert open") == "browser/unexpected_alert"
+    assert (
+        module.classify("StaleElementReferenceException: stale element reference")
+        == "browser/stale_element"
+    )
+    assert (
+        module.classify("UnexpectedAlertOpenException: unexpected alert open")
+        == "browser/unexpected_alert"
+    )
     assert module.classify("NoSuchFrameException: no such frame") == "browser/no_such_frame"
     assert module.classify("switch to frame failed") == "browser/no_such_frame"
     assert module.classify("NoSuchElementException: no such element") == "browser/element_not_found"
-    assert module.classify("element not found: Unable to locate element") == "browser/element_not_found"
+    assert (
+        module.classify("element not found: Unable to locate element")
+        == "browser/element_not_found"
+    )
     assert module.classify("TimeoutException: page load timeout timed out") == "browser/timeout"
     assert module.classify("nothing relevant") == "browser/issue"
     error = module.extract_error("```\nStaleElementReferenceException: stale element\n```")
@@ -91,7 +100,10 @@ def test_convert_produces_schema_valid_and_balanced_records() -> None:
 
 def test_convert_respects_limit() -> None:
     module = _load()
-    assert len([r for r in module.convert_webarena_issues(_ISSUES * 5, limit=2) if not r["success"]]) == 2
+    assert (
+        len([r for r in module.convert_webarena_issues(_ISSUES * 5, limit=2) if not r["success"]])
+        == 2
+    )
 
 
 def test_cli_writes_failure_and_success_files(tmp_path: Path) -> None:
@@ -104,7 +116,9 @@ def test_cli_writes_failure_and_success_files(tmp_path: Path) -> None:
         ["--issues", str(src), "--output", str(out), "--success-output", str(succ), "--limit", "2"]
     )
     failure_rows = [
-        json.loads(line) for line in (out / "browser-issues.jsonl").read_text(encoding="utf-8").splitlines() if line
+        json.loads(line)
+        for line in (out / "browser-issues.jsonl").read_text(encoding="utf-8").splitlines()
+        if line
     ]
     success_rows = [
         json.loads(line)
@@ -119,7 +133,9 @@ def test_cli_writes_failure_and_success_files(tmp_path: Path) -> None:
     succ2 = tmp_path / "successes2"
     module.main(["--output", str(out2), "--success-output", str(succ2), "--limit", "5"])
     synth_rows = [
-        json.loads(line) for line in (out2 / "browser-issues.jsonl").read_text(encoding="utf-8").splitlines() if line
+        json.loads(line)
+        for line in (out2 / "browser-issues.jsonl").read_text(encoding="utf-8").splitlines()
+        if line
     ]
     assert len(synth_rows) == 5
 

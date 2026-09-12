@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import pytest
 import yaml
@@ -119,9 +120,7 @@ def test_loop_creates_rule_file(tmp_path: Path) -> None:
 
     candidate = CandidateRule(
         when=RuleWhen(trigger="git push fails", context=("shared branch",)),
-        do=RuleDo(
-            directive="pull --rebase first", because="non-fast-forward rejected"
-        ),
+        do=RuleDo(directive="pull --rebase first", because="non-fast-forward rejected"),
         confidence=0.9,
         reasoning="prevents push rejection",
     )
@@ -138,7 +137,7 @@ def test_loop_creates_rule_file(tmp_path: Path) -> None:
     )
     rule_path = tmp_path / f"{promoted_id}.yaml"
     assert rule_path.exists()
-    loaded: dict = yaml.safe_load(rule_path.read_text(encoding="utf-8"))
+    loaded: dict[str, Any] = yaml.safe_load(rule_path.read_text(encoding="utf-8"))
     assert loaded["id"] == promoted_id
 
 
@@ -153,9 +152,7 @@ def test_loop_creates_git_commit(tmp_path: Path) -> None:
 
     candidate = CandidateRule(
         when=RuleWhen(trigger="git push fails", context=("shared branch",)),
-        do=RuleDo(
-            directive="pull --rebase first", because="non-fast-forward rejected"
-        ),
+        do=RuleDo(directive="pull --rebase first", because="non-fast-forward rejected"),
         confidence=0.9,
         reasoning="prevents push rejection",
     )
@@ -184,12 +181,8 @@ def test_loop_creates_git_commit(tmp_path: Path) -> None:
 def test_loop_all_stages_execute() -> None:
     llm = MockLLM()
     traj = _simple_trajectory()
-    h1 = _simple_trajectory(
-        tid="H-1", task="git push rejected", failure_class="git/push"
-    )
-    h2 = _simple_trajectory(
-        tid="H-2", task="docker build fails", failure_class="docker/build"
-    )
+    h1 = _simple_trajectory(tid="H-1", task="git push rejected", failure_class="git/push")
+    h2 = _simple_trajectory(tid="H-2", task="docker build fails", failure_class="docker/build")
     config = LoopConfig(
         llm=llm,
         historical_trajectories=(h1, h2),

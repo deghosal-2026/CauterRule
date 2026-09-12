@@ -49,7 +49,9 @@ def test_slug_helper() -> None:
 def test_classify_and_extract() -> None:
     module = _load()
     assert module.classify("401 Unauthorized missing bearer token") == "mcp/auth/bearer_token"
-    assert module.classify("transport closed unexpectedly streamable http") == "mcp/transport/closed"
+    assert (
+        module.classify("transport closed unexpectedly streamable http") == "mcp/transport/closed"
+    )
     assert module.classify("tools/list without initialize handshake") == "mcp/protocol/handshake"
     assert module.classify("nothing relevant") == "mcp/issue"
     error = module.extract_error("```\nERROR: bearer token failed\n```")
@@ -67,14 +69,19 @@ def test_convert_produces_schema_valid_and_balanced_records() -> None:
     assert successes
     assert failures[0]["source_repo"] == "modelcontextprotocol/servers"
     assert failures[0]["expected_outcome"] == "should_extract"
-    assert "bearer" in failures[0]["steps"][0]["error"].lower() or "unauthorized" in failures[0]["steps"][0]["error"].lower()
+    assert (
+        "bearer" in failures[0]["steps"][0]["error"].lower()
+        or "unauthorized" in failures[0]["steps"][0]["error"].lower()
+    )
     # failure_class should be slug-like under mcp/
     assert failures[0]["failure_class"].startswith("mcp/")
 
 
 def test_convert_respects_limit() -> None:
     module = _load()
-    assert len([r for r in module.convert_mcp_issues(_ISSUES * 5, limit=2) if not r["success"]]) == 2
+    assert (
+        len([r for r in module.convert_mcp_issues(_ISSUES * 5, limit=2) if not r["success"]]) == 2
+    )
 
 
 def test_cli_writes_failure_and_success_files(tmp_path: Path) -> None:
@@ -87,7 +94,9 @@ def test_cli_writes_failure_and_success_files(tmp_path: Path) -> None:
         ["--issues", str(src), "--output", str(out), "--success-output", str(succ), "--limit", "2"]
     )
     failure_rows = [
-        json.loads(line) for line in (out / "mcp-issues.jsonl").read_text(encoding="utf-8").splitlines() if line
+        json.loads(line)
+        for line in (out / "mcp-issues.jsonl").read_text(encoding="utf-8").splitlines()
+        if line
     ]
     success_rows = [
         json.loads(line)

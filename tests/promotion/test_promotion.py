@@ -21,6 +21,7 @@ from cauterule.promotion.thresholds import get_thresholds
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 def _candidate(confidence: float = 0.95) -> CandidateRule:
     return CandidateRule(
         when=RuleWhen(trigger="git push fails"),
@@ -70,6 +71,7 @@ def _failing_evidence() -> EvidenceReport:
 # thresholds
 # ---------------------------------------------------------------------------
 
+
 def test_get_thresholds_conservative() -> None:
     t = get_thresholds("conservative")
     assert t["min_confidence"] == 0.85
@@ -92,6 +94,7 @@ def test_get_thresholds_aggressive() -> None:
 
 def test_get_thresholds_invalid_mode() -> None:
     import pytest
+
     with pytest.raises(ValueError, match="unknown threshold mode"):
         get_thresholds("invalid")
 
@@ -100,15 +103,20 @@ def test_get_thresholds_invalid_mode() -> None:
 # auto_promote
 # ---------------------------------------------------------------------------
 
+
 def test_auto_promote_clean() -> None:
-    result = auto_promote(_candidate(), _passing_evidence(), _clean_linter(), _empty_conflict_list())
+    result = auto_promote(
+        _candidate(), _passing_evidence(), _clean_linter(), _empty_conflict_list()
+    )
     assert result.verdict == "promote"
     assert result.approver == "auto"
     assert result.linter_warnings == ()
 
 
 def test_auto_promote_linter_warnings() -> None:
-    result = auto_promote(_candidate(), _passing_evidence(), _dirty_linter(), _empty_conflict_list())
+    result = auto_promote(
+        _candidate(), _passing_evidence(), _dirty_linter(), _empty_conflict_list()
+    )
     assert result.verdict == "reject"
     assert result.evidence_summary is not None
     assert "linter_passed=False" in result.evidence_summary
@@ -136,6 +144,7 @@ def test_auto_promote_failing_evidence_rejected() -> None:
 # ---------------------------------------------------------------------------
 # human_review
 # ---------------------------------------------------------------------------
+
 
 def test_human_review_always_needs_review() -> None:
     result = human_review(_candidate(), _passing_evidence(), _clean_linter())
@@ -177,6 +186,7 @@ def test_human_review_includes_reasoning() -> None:
 # hybrid_promote
 # ---------------------------------------------------------------------------
 
+
 def test_hybrid_high_confidence_clean() -> None:
     c = _candidate(confidence=0.95)
     result = hybrid_promote(c, _passing_evidence(), _clean_linter(), None, threshold=0.8)
@@ -204,6 +214,7 @@ def test_hybrid_exact_threshold() -> None:
 
 def test_hybrid_invalid_threshold() -> None:
     import pytest
+
     c = _candidate()
     with pytest.raises(ValueError, match="threshold must be in"):
         hybrid_promote(c, _passing_evidence(), _clean_linter(), None, threshold=1.5)
@@ -212,6 +223,7 @@ def test_hybrid_invalid_threshold() -> None:
 # ---------------------------------------------------------------------------
 # execute_promotion
 # ---------------------------------------------------------------------------
+
 
 def test_execute_promotion_creates_rule_yaml(tmp_path: Path) -> None:
     rules_dir = tmp_path / "rules"
@@ -274,6 +286,7 @@ def test_execute_promotion_writes_index(tmp_path: Path) -> None:
 
 def test_execute_promotion_missing_config_key() -> None:
     import pytest
+
     with pytest.raises(KeyError):
         execute_promotion(_candidate(), {})
 
@@ -284,10 +297,7 @@ def test_execute_promotion_failed_commit_warns(
     # Review: git_commit → None is handled explicitly, promotion stands.
     import logging
 
-
-    monkeypatch.setattr(
-        "cauterule.promotion.executor.git_commit", lambda *a, **k: None
-    )
+    monkeypatch.setattr("cauterule.promotion.executor.git_commit", lambda *a, **k: None)
     config = {
         "rules_dir": str(tmp_path / "rules"),
         "source_trajectory": "traj-001",

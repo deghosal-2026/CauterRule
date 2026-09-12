@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 import pytest
 
 from cauterule.models.candidate import CandidateRule
@@ -17,7 +19,10 @@ def _traj(id: str, task: str, success: bool, error: str = "") -> Trajectory:
 
 def test_report_prevented() -> None:
     cand = _cand("git push")
-    trajs = [_traj("T-1", "git push fails", False, error="non-fast-forward"), _traj("T-2", "docker", False, error="err")]
+    trajs = [
+        _traj("T-1", "git push fails", False, error="non-fast-forward"),
+        _traj("T-2", "docker", False, error="err"),
+    ]
     report = build_evidence_report(cand, trajs)
     assert "T-1" in report.failures_prevented
     assert report.precision > 0
@@ -79,8 +84,9 @@ def test_min_sample_override_surfaced() -> None:
 
 def test_frozen_report_cannot_mutate() -> None:
     import dataclasses
+
     cand = _cand("git push")
     trajs = [_traj("T-1", "git push fails", False, "err")]
     report = build_evidence_report(cand, trajs)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        report.verdict = "pass"  # type: ignore[misc]
+        cast(Any, report).verdict = "pass"

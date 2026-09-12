@@ -62,7 +62,7 @@ def inject_crew_rules(
     if not lines:
         return ""
     return "Standing rules (learned from past failures):\n" + "\n".join(
-        f"{i+1}. {line}" for i, line in enumerate(lines)
+        f"{i + 1}. {line}" for i, line in enumerate(lines)
     )
 
 
@@ -109,7 +109,12 @@ class CrewaiTracer:
                 self.on_task_complete()
             except Exception as exc:
                 self.task_error = str(exc)
-                self._add_step("task", str({"task": task_desc})[:2000], error=str(exc), duration=_t.time() - start)
+                self._add_step(
+                    "task",
+                    str({"task": task_desc})[:2000],
+                    error=str(exc),
+                    duration=_t.time() - start,
+                )
                 self.on_tool_error(task_desc, exc)
                 raise
             finally:
@@ -117,7 +122,9 @@ class CrewaiTracer:
 
         return _ctx()
 
-    def record_tool(self, tool: str, input_: str = "", output: str = "", error: str | None = None) -> None:
+    def record_tool(
+        self, tool: str, input_: str = "", output: str = "", error: str | None = None
+    ) -> None:
         """Record one tool invocation within the current task."""
         if error:
             self._add_step(tool, input_, error=error)
@@ -134,7 +141,9 @@ class CrewaiTracer:
         pass
 
     # -- internals ----------------------------------------------------------
-    def _add_step(self, tool: str, input_: str, output: str = "", error: str = "", duration: float = 0.0) -> None:
+    def _add_step(
+        self, tool: str, input_: str, output: str = "", error: str = "", duration: float = 0.0
+    ) -> None:
         self.steps.append(
             {
                 "tool": tool,

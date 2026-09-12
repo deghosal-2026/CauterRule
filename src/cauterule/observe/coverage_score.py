@@ -29,7 +29,8 @@ def compute_coverage_score(store: StoreManager) -> float:
 
     now = datetime.now(UTC)
     non_stale_pct = sum(
-        1 for r in active
+        1
+        for r in active
         if r.last_match is not None
         and (now - datetime.fromisoformat(r.last_match).replace(tzinfo=UTC)).days < 30
     ) / len(active)

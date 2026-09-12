@@ -31,12 +31,16 @@ def test_completion_healthy() -> None:
 
 
 def test_candidate_range_within() -> None:
-    check = check_candidate_range(candidates=7, corpus_name="golden", expected_min=5, expected_max=10)
+    check = check_candidate_range(
+        candidates=7, corpus_name="golden", expected_min=5, expected_max=10
+    )
     assert check.passed is True
 
 
 def test_candidate_range_outside() -> None:
-    check = check_candidate_range(candidates=3, corpus_name="golden", expected_min=5, expected_max=10)
+    check = check_candidate_range(
+        candidates=3, corpus_name="golden", expected_min=5, expected_max=10
+    )
     assert check.passed is False
     assert "HARNESS_FAILURE" in check.message
 

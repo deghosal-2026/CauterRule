@@ -31,14 +31,18 @@ class HarnessHealth:
         return [c.message for c in self.checks if not c.passed]
 
 
-def check_parse_rate(parsed: int, total: int, threshold: float = DEFAULT_PARSE_RATE_THRESHOLD) -> HealthCheck:
+def check_parse_rate(
+    parsed: int, total: int, threshold: float = DEFAULT_PARSE_RATE_THRESHOLD
+) -> HealthCheck:
     """Check parse rate floor."""
     rate = (parsed / total) if total else 0.0
     passed = rate >= threshold
     msg = f"Parse rate {rate:.1%} ({parsed}/{total})"
     if not passed:
         msg += f" below threshold {threshold:.0%} — harness defect suspected"
-    return HealthCheck(name="parse_rate", passed=passed, message=msg, value=rate, threshold=threshold)
+    return HealthCheck(
+        name="parse_rate", passed=passed, message=msg, value=rate, threshold=threshold
+    )
 
 
 def check_completion_ratio(
@@ -54,7 +58,9 @@ def check_completion_ratio(
     msg = f"Completion {candidates}/{trajectories} ({ratio:.1%})"
     if not passed:
         msg += " — harness failure suspected (0 candidates from trajectories)"
-    return HealthCheck(name="completion_ratio", passed=passed, message=msg, value=ratio, threshold=threshold)
+    return HealthCheck(
+        name="completion_ratio", passed=passed, message=msg, value=ratio, threshold=threshold
+    )
 
 
 def check_candidate_range(
@@ -68,7 +74,9 @@ def check_candidate_range(
     msg = f"{corpus_name}: {candidates} candidates (expected {expected_min}-{expected_max})"
     if not passed:
         msg += " — HARNESS_FAILURE"
-    return HealthCheck(name=f"candidate_range:{corpus_name}", passed=passed, message=msg, value=float(candidates))
+    return HealthCheck(
+        name=f"candidate_range:{corpus_name}", passed=passed, message=msg, value=float(candidates)
+    )
 
 
 def harness_health(

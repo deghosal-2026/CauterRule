@@ -55,7 +55,7 @@ def inject_system_rules(
     if not lines:
         return ""
     return "Standing rules (learned from past failures):\n" + "\n".join(
-        f"{i+1}. {line}" for i, line in enumerate(lines)
+        f"{i + 1}. {line}" for i, line in enumerate(lines)
     )
 
 
@@ -140,11 +140,17 @@ def watch_run(
                 result = inner(*args, **kwargs)
                 if not capture_success:
                     return result
-                collector.add(tool=inner.__name__, input=_run_input_repr(args, kwargs), output=str(result)[:2000])
+                collector.add(
+                    tool=inner.__name__,
+                    input=_run_input_repr(args, kwargs),
+                    output=str(result)[:2000],
+                )
                 _capture(collector, task_desc, error=None, base_dir=base_dir)
                 return result
             except Exception as exc:
-                collector.add(tool=inner.__name__, input=_run_input_repr(args, kwargs), error=str(exc))
+                collector.add(
+                    tool=inner.__name__, input=_run_input_repr(args, kwargs), error=str(exc)
+                )
                 _capture(collector, task_desc, error=str(exc), base_dir=base_dir)
                 raise
 
@@ -202,4 +208,6 @@ def _redact_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
 def _run_input_repr(args: tuple[Any, ...], kwargs: dict[str, Any]) -> str:
     """Redacted repr of a run's args+kwargs (code-review: positional args and
     secret-prefix values are redacted too, not just key-named kwargs)."""
-    return str({"args": tuple(_redact_value(a) for a in args), "kwargs": _redact_kwargs(kwargs)})[:2000]
+    return str({"args": tuple(_redact_value(a) for a in args), "kwargs": _redact_kwargs(kwargs)})[
+        :2000
+    ]

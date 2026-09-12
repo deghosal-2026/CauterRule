@@ -82,15 +82,24 @@ def test_cli_writes_failure_and_success_files(tmp_path: Path) -> None:
     succ_dir = tmp_path / "successes"
     module.main(
         [
-            "--harmful", str(harmful),
-            "--benign", str(benign),
-            "--output", str(out_dir),
-            "--success-output", str(succ_dir),
-            "--limit", "1",
+            "--harmful",
+            str(harmful),
+            "--benign",
+            str(benign),
+            "--output",
+            str(out_dir),
+            "--success-output",
+            str(succ_dir),
+            "--limit",
+            "1",
         ]
     )
-    failures = json.loads((out_dir / "agentharm-unsafe.jsonl").read_text(encoding="utf-8").splitlines()[0])
-    successes = json.loads((succ_dir / "agentharm-successes.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    failures = json.loads(
+        (out_dir / "agentharm-unsafe.jsonl").read_text(encoding="utf-8").splitlines()[0]
+    )
+    successes = json.loads(
+        (succ_dir / "agentharm-successes.jsonl").read_text(encoding="utf-8").splitlines()[0]
+    )
     assert failures["success"] is False
     assert successes["success"] is True
     for record in (failures, successes):

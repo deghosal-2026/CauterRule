@@ -9,9 +9,7 @@ from cauterule.models.trajectory import Trajectory
 from cauterule.store.manager import StoreManager
 
 
-def find_coverage_gaps(
-    store: StoreManager, trajectories: list[Trajectory]
-) -> list[dict[str, Any]]:
+def find_coverage_gaps(store: StoreManager, trajectories: list[Trajectory]) -> list[dict[str, Any]]:
     """Return domains that have repeated failures but no matching rule coverage.
 
     A domain is considered a gap if it appears in at least 2 failed trajectories

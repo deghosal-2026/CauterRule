@@ -11,7 +11,15 @@ def _cand(trigger: str) -> CandidateRule:
 def test_parallel_basic() -> None:
     c1 = _cand("git push")
     c2 = _cand("docker")
-    trajs = [Trajectory(id="T-1", timestamp="t", task="git push", steps=(Step(1, "bash", error="err"),), success=False)]
+    trajs = [
+        Trajectory(
+            id="T-1",
+            timestamp="t",
+            task="git push",
+            steps=(Step(1, "bash", error="err"),),
+            success=False,
+        )
+    ]
     reports = run_parallel([c1, c2], trajs, max_workers=2)
     assert len(reports) == 2
     assert reports[0] is not None
@@ -26,7 +34,15 @@ def test_parallel_cache_reuse() -> None:
     from cauterule.replay.cache import ReplayCache
 
     c1 = _cand("git push")
-    trajs = [Trajectory(id="T-1", timestamp="t", task="git push", steps=(Step(1, "bash", error="err"),), success=False)]
+    trajs = [
+        Trajectory(
+            id="T-1",
+            timestamp="t",
+            task="git push",
+            steps=(Step(1, "bash", error="err"),),
+            success=False,
+        )
+    ]
     cache = ReplayCache()
     reports = run_parallel([c1, c1], trajs, cache=cache)
     assert len(reports) == 2

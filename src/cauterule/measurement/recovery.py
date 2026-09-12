@@ -46,9 +46,7 @@ def recovery_exclusion(
     (a clean success carries no recovery signal and is not a Fix 8 case).
     """
     recovered = [
-        r
-        for r in records
-        if str(r.get("expected_outcome")) in ("should_reject", "should_silence")
+        r for r in records if str(r.get("expected_outcome")) in ("should_reject", "should_silence")
     ]
     excluded = sum(1 for r in recovered if r.get("gate_is_silence") is True)
     extracted = len(recovered) - excluded

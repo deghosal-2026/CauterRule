@@ -43,10 +43,18 @@ def test_build_prompt_no_tags() -> None:
     prompt = build_extraction_prompt(t)
     assert "none" in prompt.lower()
 
+
 def test_prompt_contains_narrowing_instruction() -> None:
     # #488: prompt directs model to name error codes, not just tool+fails.
     from cauterule.models.trajectory import Step, Trajectory
 
-    t = Trajectory(id="T-1", timestamp="t", task="git push fails", steps=(Step(1, "bash", error="err"),), success=False, failure_class="git/push")
+    t = Trajectory(
+        id="T-1",
+        timestamp="t",
+        task="git push fails",
+        steps=(Step(1, "bash", error="err"),),
+        success=False,
+        failure_class="git/push",
+    )
     prompt = build_extraction_prompt(t)
     assert "specific error code" in prompt or "error signature" in prompt

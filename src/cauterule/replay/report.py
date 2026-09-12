@@ -65,8 +65,7 @@ def build_evidence_report(
     if len(trajectories) < MIN_TRAJECTORIES:
         verdict = "inconclusive"
         verdict_reason = (
-            f"min_sample: {len(trajectories)} < {MIN_TRAJECTORIES}; "
-            f"computed={computed_verdict}"
+            f"min_sample: {len(trajectories)} < {MIN_TRAJECTORIES}; computed={computed_verdict}"
         )
 
     report = EvidenceReport(

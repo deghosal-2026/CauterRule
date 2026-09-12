@@ -1,4 +1,5 @@
 """Injection formatter — produces clean markdown block."""
+
 from __future__ import annotations
 
 from cauterule.models.rule import StandingRule
@@ -13,8 +14,7 @@ def _safe(text: str) -> str:
     """
     cleaned = text.replace("`", "'")
     lines = [
-        f"\\{line}" if line.lstrip().startswith("#") else line
-        for line in cleaned.splitlines()
+        f"\\{line}" if line.lstrip().startswith("#") else line for line in cleaned.splitlines()
     ]
     return "\n".join(lines)
 

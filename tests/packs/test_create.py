@@ -116,8 +116,17 @@ class TestCreatePack:
         runner = CliRunner()
         result = runner.invoke(
             main,
-            ["pack", "create", "pack-demo", "--store", str(store),
-             "--rule", "R-901", "--out", str(tmp_path / "pack-demo")],
+            [
+                "pack",
+                "create",
+                "pack-demo",
+                "--store",
+                str(store),
+                "--rule",
+                "R-901",
+                "--out",
+                str(tmp_path / "pack-demo"),
+            ],
         )
         assert result.exit_code == 0, result.output
         assert "Created pack pack-demo" in result.output

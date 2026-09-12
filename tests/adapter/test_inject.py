@@ -65,9 +65,7 @@ def test_ainject_async_matches() -> None:
     async def main() -> list[str]:
         r1 = _rule("git push fails")
         r2 = _rule("docker network")
-        async with ainject(
-            "git push fails with non-fast-forward", rules=[r1, r2]
-        ) as matched:
+        async with ainject("git push fails with non-fast-forward", rules=[r1, r2]) as matched:
             return [r.id for r in matched]
 
     assert asyncio.run(main()) == ["R-001"]

@@ -15,8 +15,22 @@ def generate_browser_automation_trajectories(count: int = 10) -> list[Trajectory
         ts = datetime.now(UTC).isoformat()
         task = "Fill out registration form" if success else "Scrape paginated search results"
         steps = (
-            Step(step_number=1, tool="web_fetch", input="https://example.com/register", output="Page loaded" if success else "504 Gateway Timeout", error=None if success else "HTTP 504", state={"url": "https://example.com/register"}),
-            Step(step_number=2, tool="write", input="fill name, email, submit", output="Registration successful" if success else "CAPTCHA block", error=None if success else "CaptchaError", state=None),
+            Step(
+                step_number=1,
+                tool="web_fetch",
+                input="https://example.com/register",
+                output="Page loaded" if success else "504 Gateway Timeout",
+                error=None if success else "HTTP 504",
+                state={"url": "https://example.com/register"},
+            ),
+            Step(
+                step_number=2,
+                tool="write",
+                input="fill name, email, submit",
+                output="Registration successful" if success else "CAPTCHA block",
+                error=None if success else "CaptchaError",
+                state=None,
+            ),
         )
         result.append(
             Trajectory(

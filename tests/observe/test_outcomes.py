@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -105,7 +106,7 @@ def test_apply_report_outcomes(tmp_path: Path) -> None:
             {"trajectory_id": "T-1", "outcome": "prevented"},  # dup
         )
     )
-    counts = apply_report_outcomes(store, "R-F", report)  # type: ignore[arg-type]
+    counts = apply_report_outcomes(store, "R-F", cast(Any, report))
     assert counts == {"prevented": 1, "broke": 1, "neutral": 1}
     rule = store.get_rule("R-F")
     assert rule is not None

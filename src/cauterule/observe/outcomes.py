@@ -116,7 +116,7 @@ def record_outcome(
     prevented = rule.prevented_count + (1 if outcome == "prevented" else 0)
     broke = rule.broke_count + (1 if outcome == "broke" else 0)
     neutral = rule.neutral_count + (1 if outcome == "neutral" else 0)
-    trend = list(rule.outcome_trend[- (_TREND_CAP - 1):])
+    trend = list(rule.outcome_trend[-(_TREND_CAP - 1) :])
     trend.append(_TREND_VALUE[outcome])
 
     updated = replace(

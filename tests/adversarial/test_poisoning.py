@@ -30,7 +30,12 @@ def _poisoned_trajectory(
         timestamp="2026-09-05T00:00:00Z",
         task="deploy app",
         steps=(
-            Step(step_number=1, tool="bash", input="git push", error=fake_failure or "non-fast-forward"),
+            Step(
+                step_number=1,
+                tool="bash",
+                input="git push",
+                error=fake_failure or "non-fast-forward",
+            ),
             Step(step_number=2, tool="bash", input="git pull --rebase", output="success"),
         ),
         success=fake_success_label if fake_success_label is not None else success,
@@ -122,7 +127,9 @@ def test_store_manager_rejects_poisoned_rule_via_provenance(tmp_path: Path) -> N
 def test_multiple_poisoned_trajectories_detected() -> None:
     candidate = _candidate(trigger="git push", directive="pull --rebase")
     poisoned_trajs = [
-        _poisoned_trajectory(f"T-mp-{i}", success=True, fake_failure="engine: corrupt", fake_success_label=True)
+        _poisoned_trajectory(
+            f"T-mp-{i}", success=True, fake_failure="engine: corrupt", fake_success_label=True
+        )
         for i in range(3)
     ]
     outcomes = [simulate(candidate, t) for t in poisoned_trajs]

@@ -8,9 +8,7 @@ from pathlib import Path
 
 def _bench(path: Path, means: dict[str, float]) -> None:
     payload = {
-        "benchmarks": [
-            {"name": name, "stats": {"mean": mean}} for name, mean in means.items()
-        ]
+        "benchmarks": [{"name": name, "stats": {"mean": mean}} for name, mean in means.items()]
     }
     path.write_text(json.dumps(payload), encoding="utf-8")
 

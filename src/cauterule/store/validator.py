@@ -62,30 +62,23 @@ def validate_store(base_dir: str = "rules") -> list[str]:
 
         if rule.superseded_by is not None and rule.superseded_by not in all_ids:
             warnings.append(
-                f"{fname} ({rule.id}): superseded_by {rule.superseded_by!r} "
-                f"not found in store"
+                f"{fname} ({rule.id}): superseded_by {rule.superseded_by!r} not found in store"
             )
 
         # Retired-vs-superseded invariant (#544): `superseded` rules must
         # point at their successor; `retired` rules are terminal and carry
         # no successor pointer.
         if rule.status == "superseded" and rule.superseded_by is None:
-            warnings.append(
-                f"{fname} ({rule.id}): status=superseded requires superseded_by"
-            )
+            warnings.append(f"{fname} ({rule.id}): status=superseded requires superseded_by")
         if rule.status == "retired" and rule.superseded_by is not None:
-            warnings.append(
-                f"{fname} ({rule.id}): retired rules must not carry superseded_by"
-            )
+            warnings.append(f"{fname} ({rule.id}): retired rules must not carry superseded_by")
 
         if rule.pack is not None:
             pack_path = d / f"{rule.pack}.yaml"
             if not pack_path.is_file():
                 pack_path2 = d / f"{rule.pack}.yml"
                 if not pack_path2.is_file():
-                    warnings.append(
-                        f"{fname} ({rule.id}): pack {rule.pack!r} file not found"
-                    )
+                    warnings.append(f"{fname} ({rule.id}): pack {rule.pack!r} file not found")
 
     if not yaml_files:
         warnings.append("No rule files found in store")

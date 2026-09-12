@@ -57,12 +57,30 @@ def _load() -> ModuleType:
 
 def test_classify_and_extract() -> None:
     module = _load()
-    assert module.classify("Error acquiring the state lock: ConditionalCheckFailedException") == "lifecycle/terraform/state_lock"
-    assert module.classify("BucketAlreadyExists resource already exists") == "lifecycle/terraform/already_exists"
-    assert module.classify("No valid credential sources found AccessDenied auth failure") == "lifecycle/terraform/auth"
-    assert module.classify("Cycle: aws_instance.foo dependency cycle") == "lifecycle/terraform/dependency_cycle"
-    assert module.classify("drift detected objects have changed outside") == "lifecycle/terraform/drift"
-    assert module.classify("timeout while waiting for state to become ACTIVE") == "lifecycle/terraform/timeout"
+    assert (
+        module.classify("Error acquiring the state lock: ConditionalCheckFailedException")
+        == "lifecycle/terraform/state_lock"
+    )
+    assert (
+        module.classify("BucketAlreadyExists resource already exists")
+        == "lifecycle/terraform/already_exists"
+    )
+    assert (
+        module.classify("No valid credential sources found AccessDenied auth failure")
+        == "lifecycle/terraform/auth"
+    )
+    assert (
+        module.classify("Cycle: aws_instance.foo dependency cycle")
+        == "lifecycle/terraform/dependency_cycle"
+    )
+    assert (
+        module.classify("drift detected objects have changed outside")
+        == "lifecycle/terraform/drift"
+    )
+    assert (
+        module.classify("timeout while waiting for state to become ACTIVE")
+        == "lifecycle/terraform/timeout"
+    )
     assert module.classify("nothing relevant at all") == "lifecycle/terraform/issue"
     error = module.extract_error("```\nError: state lock failed\n```")
     assert "state lock failed" in error.lower()
@@ -89,7 +107,10 @@ def test_convert_produces_schema_valid_and_balanced_records() -> None:
 
 def test_convert_respects_limit() -> None:
     module = _load()
-    assert len([r for r in module.convert_terraform_issues(_ISSUES * 5, limit=2) if not r["success"]]) == 2
+    assert (
+        len([r for r in module.convert_terraform_issues(_ISSUES * 5, limit=2) if not r["success"]])
+        == 2
+    )
 
 
 def test_cli_writes_failure_and_success_files(tmp_path: Path) -> None:
@@ -102,7 +123,9 @@ def test_cli_writes_failure_and_success_files(tmp_path: Path) -> None:
         ["--issues", str(src), "--output", str(out), "--success-output", str(succ), "--limit", "2"]
     )
     failure_rows = [
-        json.loads(line) for line in (out / "terraform-issues.jsonl").read_text(encoding="utf-8").splitlines() if line
+        json.loads(line)
+        for line in (out / "terraform-issues.jsonl").read_text(encoding="utf-8").splitlines()
+        if line
     ]
     success_rows = [
         json.loads(line)

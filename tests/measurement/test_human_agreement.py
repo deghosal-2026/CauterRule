@@ -43,8 +43,13 @@ def test_report_flags_below_gate() -> None:
 
 def test_report_at_or_above_gate() -> None:
     report = human_agreement_report(
-        [_r("a", "pass", "pass"), _r("b", "fail", "fail"), _r("c", "pass", "pass"),
-         _r("d", "fail", "fail"), _r("e", "pass", "fail")]
+        [
+            _r("a", "pass", "pass"),
+            _r("b", "fail", "fail"),
+            _r("c", "pass", "pass"),
+            _r("d", "fail", "fail"),
+            _r("e", "pass", "fail"),
+        ]
     )
     assert report.agreement == pytest.approx(0.8)
     assert report.below_gate is False

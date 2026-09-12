@@ -57,9 +57,16 @@ def test_docker_help() -> None:
 def test_docker_pip_show() -> None:
     result = subprocess.run(
         [
-            "docker", "run", "--rm",
-            "--entrypoint", "python",
-            DOCKER_TAG, "-m", "pip", "show", "cauterule",
+            "docker",
+            "run",
+            "--rm",
+            "--entrypoint",
+            "python",
+            DOCKER_TAG,
+            "-m",
+            "pip",
+            "show",
+            "cauterule",
         ],
         capture_output=True,
         text=True,
@@ -71,10 +78,14 @@ def test_docker_pip_show() -> None:
 def test_docker_import() -> None:
     result = subprocess.run(
         [
-            "docker", "run", "--rm",
-            "--entrypoint", "python",
+            "docker",
+            "run",
+            "--rm",
+            "--entrypoint",
+            "python",
             DOCKER_TAG,
-            "-c", "import cauterule; print(cauterule.__version__)",
+            "-c",
+            "import cauterule; print(cauterule.__version__)",
         ],
         capture_output=True,
         text=True,

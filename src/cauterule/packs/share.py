@@ -40,8 +40,7 @@ def _token() -> str:
     token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
     if not token:
         raise ValueError(
-            "no GitHub token: set GH_TOKEN (or run `gh auth login` to seed it) "
-            "before sharing"
+            "no GitHub token: set GH_TOKEN (or run `gh auth login` to seed it) before sharing"
         )
     return token
 
@@ -182,8 +181,7 @@ def import_gist(
         raise ValueError(f"gist {gist_id} contains no R-*.yaml rule file")
     if len(rule_files) > 1:
         raise ValueError(
-            f"gist {gist_id} contains several rule files {sorted(rule_files)}; "
-            "expected exactly one"
+            f"gist {gist_id} contains several rule files {sorted(rule_files)}; expected exactly one"
         )
     gist_name, content = next(iter(rule_files.items()))
     data = yaml.safe_load(content)

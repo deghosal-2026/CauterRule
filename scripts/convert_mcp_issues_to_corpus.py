@@ -234,9 +234,7 @@ def main(argv: list[str] | None = None) -> None:
     if args.success_output is not None:
         args.success_output.mkdir(parents=True, exist_ok=True)
         success_out = args.success_output / "mcp-successes.jsonl"
-        success_out.write_text(
-            "\n".join(json.dumps(r) for r in successes) + "\n", encoding="utf-8"
-        )
+        success_out.write_text("\n".join(json.dumps(r) for r in successes) + "\n", encoding="utf-8")
         print(f"[convert] {len(successes)} successes -> {success_out}")
 
 

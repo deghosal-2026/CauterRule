@@ -52,6 +52,7 @@ def health_report(base_dir: str = "rules") -> dict[str, Any]:
         try:
             if isinstance(r.last_match, str):
                 from datetime import datetime as dt_parse
+
                 last = dt_parse.fromisoformat(r.last_match)
                 if last.tzinfo is None:
                     last = last.replace(tzinfo=UTC)

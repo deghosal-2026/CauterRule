@@ -65,9 +65,7 @@ def test_generate_monthly_report_empty(tmp_path: Path) -> None:
 
 def test_generate_monthly_report_active_rules(tmp_path: Path) -> None:
     store = StoreManager(str(tmp_path / "rules"))
-    store.add_rule(
-        _rule("R-001", hit_count=10, confidence=0.95, tags=("git",))
-    )
+    store.add_rule(_rule("R-001", hit_count=10, confidence=0.95, tags=("git",)))
     store.add_rule(_rule("R-002", hit_count=5, confidence=0.80, tags=("git",)))
     report = generate_monthly_report(store)
     assert "2" in report  # Total Rules

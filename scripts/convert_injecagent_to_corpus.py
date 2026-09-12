@@ -132,9 +132,7 @@ def convert_injecagent(
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     return [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
+        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
     ]
 
 
@@ -164,9 +162,7 @@ def main(argv: list[str] | None = None) -> None:
     if args.success_output is not None and successes:
         args.success_output.mkdir(parents=True, exist_ok=True)
         success_out = args.success_output / "injecagent-successes.jsonl"
-        success_out.write_text(
-            "\n".join(json.dumps(r) for r in successes) + "\n", encoding="utf-8"
-        )
+        success_out.write_text("\n".join(json.dumps(r) for r in successes) + "\n", encoding="utf-8")
         print(f"[convert] {len(successes)} successes -> {success_out}")
 
 

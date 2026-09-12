@@ -74,7 +74,7 @@ def compute_scores(
         # candidate that prevents more failures than it breaks still passes;
         # the near-miss penalty and broad-trigger check guard safety.
         if precision >= 0.5:
-            verdict: Verdict = "pass"
+            verdict = "pass"
         elif precision >= 0.3:
             verdict = "inconclusive"
         else:

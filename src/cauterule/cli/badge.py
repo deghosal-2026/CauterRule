@@ -23,12 +23,16 @@ def badge(store_dir: str, as_svg: bool, as_url: bool, as_json: bool, output: str
     message = f"{count} rules learned"
     if as_json:
         color = "green" if count > 0 else "blue"
-        click.echo(json.dumps({
-            "schemaVersion": 1,
-            "label": "Cauterule",
-            "message": message,
-            "color": color,
-        }))
+        click.echo(
+            json.dumps(
+                {
+                    "schemaVersion": 1,
+                    "label": "Cauterule",
+                    "message": message,
+                    "color": color,
+                }
+            )
+        )
         return
     if as_url:
         click.echo(

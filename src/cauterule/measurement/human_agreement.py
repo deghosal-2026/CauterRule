@@ -32,9 +32,7 @@ def agreement_rate(reviews: list[dict[str, object]]) -> float:
     if not reviews:
         return 0.0
     matches = sum(
-        1
-        for review in reviews
-        if review.get("human_verdict") == review.get("replay_verdict")
+        1 for review in reviews if review.get("human_verdict") == review.get("replay_verdict")
     )
     return matches / len(reviews)
 
@@ -43,9 +41,7 @@ def human_agreement_report(reviews: list[dict[str, object]]) -> HumanAgreementRe
     """Build the agreement report + human-gate decision for *reviews*."""
     reviewed = len(reviews)
     matches = sum(
-        1
-        for review in reviews
-        if review.get("human_verdict") == review.get("replay_verdict")
+        1 for review in reviews if review.get("human_verdict") == review.get("replay_verdict")
     )
     rate = matches / reviewed if reviewed else 0.0
     by_verdict: dict[str, int] = {}

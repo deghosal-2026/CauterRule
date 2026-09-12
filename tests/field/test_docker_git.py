@@ -27,11 +27,15 @@ def test_promote_creates_commit(tmp_path: Path) -> None:
     subprocess.run(["git", "init"], capture_output=True, check=True, cwd=tmp_path)
     subprocess.run(
         ["git", "config", "user.email", "test@test.com"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "config", "user.name", "Test"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     rules_dir = tmp_path / "rules"
@@ -55,11 +59,16 @@ def test_promote_creates_commit(tmp_path: Path) -> None:
 
     subprocess.run(
         ["git", "add", str(rules_dir)],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     result = subprocess.run(
         ["git", "commit", "-m", "promote: R-100"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
     assert "promote:" in result.stdout
 
@@ -69,11 +78,15 @@ def test_yaml_has_real_hash(tmp_path: Path) -> None:
     subprocess.run(["git", "init"], capture_output=True, check=True, cwd=tmp_path)
     subprocess.run(
         ["git", "config", "user.email", "test@test.com"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "config", "user.name", "Test"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     rules_dir = tmp_path / "rules"
@@ -97,16 +110,24 @@ def test_yaml_has_real_hash(tmp_path: Path) -> None:
 
     subprocess.run(
         ["git", "add", str(rules_dir)],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "commit", "-m", "promote: R-101"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     hash_result = subprocess.run(
         ["git", "rev-parse", "HEAD"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
     commit_hash = hash_result.stdout.strip()
 
@@ -125,11 +146,15 @@ def test_hash_matches_git(tmp_path: Path) -> None:
     subprocess.run(["git", "init"], capture_output=True, check=True, cwd=tmp_path)
     subprocess.run(
         ["git", "config", "user.email", "test@test.com"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "config", "user.name", "Test"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     rules_dir = tmp_path / "rules"
@@ -153,16 +178,24 @@ def test_hash_matches_git(tmp_path: Path) -> None:
 
     subprocess.run(
         ["git", "add", str(rules_dir)],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "commit", "-m", "promote: R-102"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     head = subprocess.run(
         ["git", "rev-parse", "HEAD"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     ).stdout.strip()
 
     data = yaml.safe_load(rule_path.read_text(encoding="utf-8"))
@@ -178,11 +211,15 @@ def test_rollback(tmp_path: Path) -> None:
     subprocess.run(["git", "init"], capture_output=True, check=True, cwd=tmp_path)
     subprocess.run(
         ["git", "config", "user.email", "test@test.com"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "config", "user.name", "Test"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     rules_dir = tmp_path / "rules"
@@ -192,16 +229,24 @@ def test_rollback(tmp_path: Path) -> None:
 
     subprocess.run(
         ["git", "add", str(rules_dir)],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "commit", "-m", "promote: R-103"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     subprocess.run(
         ["git", "revert", "HEAD", "--no-edit"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
     assert not rule_path.exists()
 
@@ -211,11 +256,15 @@ def test_validate_after_rollback(tmp_path: Path) -> None:
     subprocess.run(["git", "init"], capture_output=True, check=True, cwd=tmp_path)
     subprocess.run(
         ["git", "config", "user.email", "test@test.com"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "config", "user.name", "Test"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     rules_dir = tmp_path / "rules"
@@ -240,20 +289,30 @@ def test_validate_after_rollback(tmp_path: Path) -> None:
 
     subprocess.run(
         ["git", "add", str(rules_dir)],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "commit", "-m", "promote: R-104"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "revert", "HEAD", "--no-edit"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     result = subprocess.run(
         ["cauterule", "validate"],
-        capture_output=True, text=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
     )
     assert result.returncode == 0
 
@@ -263,11 +322,15 @@ def test_retire_creates_commit(tmp_path: Path) -> None:
     subprocess.run(["git", "init"], capture_output=True, check=True, cwd=tmp_path)
     subprocess.run(
         ["git", "config", "user.email", "test@test.com"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "config", "user.name", "Test"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     rules_dir = tmp_path / "rules"
@@ -292,22 +355,32 @@ def test_retire_creates_commit(tmp_path: Path) -> None:
 
     subprocess.run(
         ["git", "add", str(rules_dir)],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "commit", "-m", "promote: R-105"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     result = subprocess.run(
         ["cauterule", "retire", "R-105"],
-        capture_output=True, text=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
     )
     assert result.returncode == 0
 
     log = subprocess.run(
         ["git", "log", "--oneline"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
     assert "R-105" in log.stdout
 
@@ -317,11 +390,15 @@ def test_history_timeline(tmp_path: Path) -> None:
     subprocess.run(["git", "init"], capture_output=True, check=True, cwd=tmp_path)
     subprocess.run(
         ["git", "config", "user.email", "test@test.com"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "config", "user.name", "Test"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     rules_dir = tmp_path / "rules"
@@ -346,16 +423,23 @@ def test_history_timeline(tmp_path: Path) -> None:
 
     subprocess.run(
         ["git", "add", str(rules_dir)],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "commit", "-m", "promote: R-106"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     result = subprocess.run(
         ["cauterule", "history", "--limit", "10"],
-        capture_output=True, text=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
     )
     assert "R-106" in result.stdout
     assert "active" in result.stdout
@@ -366,11 +450,15 @@ def test_rollback_restores(tmp_path: Path) -> None:
     subprocess.run(["git", "init"], capture_output=True, check=True, cwd=tmp_path)
     subprocess.run(
         ["git", "config", "user.email", "test@test.com"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "config", "user.name", "Test"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     rules_dir = tmp_path / "rules"
@@ -395,16 +483,24 @@ def test_rollback_restores(tmp_path: Path) -> None:
 
     subprocess.run(
         ["git", "add", str(rules_dir)],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "commit", "-m", "promote: R-107"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     subprocess.run(
         ["git", "revert", "HEAD", "--no-edit"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
     assert not rule_path.exists()
 
@@ -412,11 +508,16 @@ def test_rollback_restores(tmp_path: Path) -> None:
     rule_path.write_text(yaml.safe_dump(rule, sort_keys=False), encoding="utf-8")
     subprocess.run(
         ["git", "add", str(rule_path)],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "commit", "-m", "re-promote: R-107"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     reloaded = yaml.safe_load(rule_path.read_text(encoding="utf-8"))
@@ -429,11 +530,15 @@ def test_hash_not_uuid(tmp_path: Path) -> None:
     subprocess.run(["git", "init"], capture_output=True, check=True, cwd=tmp_path)
     subprocess.run(
         ["git", "config", "user.email", "test@test.com"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "config", "user.name", "Test"],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     rules_dir = tmp_path / "rules"
@@ -457,16 +562,24 @@ def test_hash_not_uuid(tmp_path: Path) -> None:
 
     subprocess.run(
         ["git", "add", str(rules_dir)],
-        capture_output=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
     )
     subprocess.run(
         ["git", "commit", "-m", "promote: R-108"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     )
 
     head = subprocess.run(
         ["git", "rev-parse", "HEAD"],
-        capture_output=True, text=True, check=True, cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
     ).stdout.strip()
 
     data = yaml.safe_load(rule_path.read_text(encoding="utf-8"))

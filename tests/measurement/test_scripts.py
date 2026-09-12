@@ -80,7 +80,9 @@ def test_cross_session_script(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     out = tmp_path / "cs.md"
-    rc = mod.main(["--baseline", str(baseline), "--intervention", str(intervention), "--output", str(out)])
+    rc = mod.main(
+        ["--baseline", str(baseline), "--intervention", str(intervention), "--output", str(out)]
+    )
     assert rc == 0
     assert "Cross-Session" in out.read_text(encoding="utf-8")
 
@@ -98,7 +100,14 @@ def test_human_agreement_sample_and_score(tmp_path: Path) -> None:
     )
     sample_out = tmp_path / "reviews.jsonl"
     rc = mod.main(
-        ["--results", str(tmp_path / "results"), "--sample-output", str(sample_out), "--per-bucket", "1"]
+        [
+            "--results",
+            str(tmp_path / "results"),
+            "--sample-output",
+            str(sample_out),
+            "--per-bucket",
+            "1",
+        ]
     )
     assert rc == 0
     rows = [json.loads(line) for line in sample_out.read_text().splitlines()]
@@ -127,7 +136,9 @@ def test_fix8_recovery_script(tmp_path: Path) -> None:
                 "trajectory_id": "n1",
                 "timestamp": "2026-09-11T00:00:00Z",
                 "task": "retry succeeded",
-                "steps": [{"step_number": 1, "tool": "bash", "input": "x", "output": "ok", "error": ""}],
+                "steps": [
+                    {"step_number": 1, "tool": "bash", "input": "x", "output": "ok", "error": ""}
+                ],
                 "success": True,
                 "failure_class": None,
                 "domain": "git",

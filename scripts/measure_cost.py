@@ -80,7 +80,9 @@ def collect(
         if exclude_local and "omlx" in model_name.lower():
             continue
         cost_model = _cost_model_for(model_name, model)
-        records = records_from_results(_load_results(results_file), extraction_passes=extraction_passes)
+        records = records_from_results(
+            _load_results(results_file), extraction_passes=extraction_passes
+        )
         report: CostReport = measure_cost(records, cost_model=cost_model)
         corpus = results_file.relative_to(root).parts[0]
         by_model.setdefault(model_name, []).append(

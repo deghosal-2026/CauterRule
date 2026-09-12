@@ -17,12 +17,16 @@ def test_fallback_warnings_confidence() -> None:
 
 
 def test_fallback_warnings_tautological() -> None:
-    result = check_fallback(candidate_available=True, warnings=["tautological: when and do are identical"])
+    result = check_fallback(
+        candidate_available=True, warnings=["tautological: when and do are identical"]
+    )
     assert result.needs_review
 
 
 def test_fallback_warnings_other() -> None:
-    result = check_fallback(candidate_available=True, warnings=["candidate does not reference trajectory"])
+    result = check_fallback(
+        candidate_available=True, warnings=["candidate does not reference trajectory"]
+    )
     assert not result.needs_review
     assert result.reason == "ok"
 

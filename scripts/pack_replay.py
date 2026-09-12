@@ -89,8 +89,7 @@ def render_markdown(reports: list[dict[str, object]], threshold: float) -> str:
     lines = [
         "# Pack Replay Score — CauterRule v0.3.0",
         "",
-        "**Issues:** #479/#481 · **Plan:** §5.3/§7.2 · "
-        f"**Match threshold:** {threshold:.2f}",
+        f"**Issues:** #479/#481 · **Plan:** §5.3/§7.2 · **Match threshold:** {threshold:.2f}",
         "",
         "| Pack | Rules | Replays | Prevented | Broke | Neutral | Score | Meets ≥0.5 |",
         "|------|-------|---------|-----------|-------|---------|-------|------------|",
@@ -111,8 +110,7 @@ def render_markdown(reports: list[dict[str, object]], threshold: float) -> str:
     ]
     if no_fixtures:
         lines.append(
-            f"Packs without replay fixtures (create-only, not scored): "
-            f"{', '.join(no_fixtures)}."
+            f"Packs without replay fixtures (create-only, not scored): {', '.join(no_fixtures)}."
         )
     lines.append("")
     return "\n".join(lines)

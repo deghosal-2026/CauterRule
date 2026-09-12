@@ -151,12 +151,18 @@ def load_rules_from_dir(
     rules: list[StandingRule] = []
     # Pack manifests, the dep lockfile, and store indexes are not rules and
     # must never be quarantined (#554: the loader ate pack.yaml).
-    _non_rule_files = frozenset({
-        "index.yaml", "index.yml",
-        "manifest.yaml", "manifest.yml",
-        "pack.yaml", "pack.yml",
-        "packs.lock.yaml", "packs.lock.yml",
-    })
+    _non_rule_files = frozenset(
+        {
+            "index.yaml",
+            "index.yml",
+            "manifest.yaml",
+            "manifest.yml",
+            "pack.yaml",
+            "pack.yml",
+            "packs.lock.yaml",
+            "packs.lock.yml",
+        }
+    )
     for p in files:
         if p.stem in {"index", "manifest"} or p.name in _non_rule_files:
             continue
@@ -167,7 +173,9 @@ def load_rules_from_dir(
         except Exception as exc:
             last_load_errors.append((str(p), f"{type(exc).__name__}: {exc}"))
             _logger.warning(
-                "skipping unloadable rule file %s: %s", p, exc,
+                "skipping unloadable rule file %s: %s",
+                p,
+                exc,
                 extra={"rule_file": str(p)},
             )
             if strict:

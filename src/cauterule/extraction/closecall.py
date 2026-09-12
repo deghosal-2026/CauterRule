@@ -23,7 +23,9 @@ def is_close_call(ranked: list[RankedCandidate], threshold: float = 0.05) -> boo
     return diff <= threshold
 
 
-def get_close_call_candidates(ranked: list[RankedCandidate], threshold: float = 0.05) -> list[RankedCandidate]:
+def get_close_call_candidates(
+    ranked: list[RankedCandidate], threshold: float = 0.05
+) -> list[RankedCandidate]:
     """Return candidates held for human review if close call, else top only."""
     if is_close_call(ranked, threshold=threshold):
         return ranked[:2]

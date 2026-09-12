@@ -502,8 +502,20 @@ def test_index_load_malformed_raises(tmp_path: Path) -> None:
 def test_health_near_duplicate_pairs(tmp_path: Path) -> None:
     base = str(tmp_path / "rules")
     m = StoreManager(base)
-    m.add_rule(_rule("R-ND1", trigger="permission denied pushing to remote", last_match="2026-09-01T00:00:00+00:00"))
-    m.add_rule(_rule("R-ND2", trigger="access denied pushing to remote", last_match="2026-09-01T00:00:00+00:00"))
+    m.add_rule(
+        _rule(
+            "R-ND1",
+            trigger="permission denied pushing to remote",
+            last_match="2026-09-01T00:00:00+00:00",
+        )
+    )
+    m.add_rule(
+        _rule(
+            "R-ND2",
+            trigger="access denied pushing to remote",
+            last_match="2026-09-01T00:00:00+00:00",
+        )
+    )
     report = health_report(base)
     assert report["conflict_count"] == 0
     assert len(report["near_duplicate_pairs"]) >= 1
@@ -522,6 +534,7 @@ def test_validator_two_pass_superseded(tmp_path: Path) -> None:
     base = tmp_path / "rules"
     base.mkdir(parents=True)
     import yaml
+
     aaa = _rule("AAA")
     zzz = _rule("ZZZ")
     aaa_data = aaa.to_dict()
@@ -537,6 +550,7 @@ def test_validator_dangling_superseded_warns(tmp_path: Path) -> None:
     base = tmp_path / "rules"
     base.mkdir(parents=True)
     import yaml
+
     aaa = _rule("AAA")
     aaa_data = aaa.to_dict()
     aaa_data["superseded_by"] = "MISSING"

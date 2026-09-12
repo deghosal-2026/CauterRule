@@ -103,7 +103,7 @@ def test_export_no_secrets() -> None:
 
 @pytest.mark.docker
 def test_watch_decorator_redacts(tmp_path: Path) -> None:
-    @watch(base_dir=str(tmp_path))  # type: ignore[untyped-decorator]
+    @watch(base_dir=str(tmp_path))
     def my_agent(greeting: str, api_key: str = "sk-1234567890") -> str:
         return f"{greeting} done"
 

@@ -16,7 +16,7 @@ def _discover() -> list[str]:
     """Return benchmark names (test_<name>.py stems) under benchmarks/."""
     if not BENCHMARKS_DIR.is_dir():
         return []
-    return sorted(p.stem[len("test_"):] for p in BENCHMARKS_DIR.glob("test_*.py"))
+    return sorted(p.stem[len("test_") :] for p in BENCHMARKS_DIR.glob("test_*.py"))
 
 
 @click.group("benchmark")
@@ -61,8 +61,14 @@ def benchmark_run(name: str | None, run_all: bool, baseline: str | None) -> None
         msg = "pass a benchmark NAME or use --all"
         raise click.ClickException(msg)
     cmd = [
-        sys.executable, "-m", "pytest", *targets,
-        "--benchmark-only", "-q", "-p", "no:cacheprovider",
+        sys.executable,
+        "-m",
+        "pytest",
+        *targets,
+        "--benchmark-only",
+        "-q",
+        "-p",
+        "no:cacheprovider",
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     click.echo(result.stdout, nl=False)

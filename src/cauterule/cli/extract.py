@@ -38,9 +38,7 @@ def extract(trajectory: str, dry_run: bool) -> None:
         )
 
     cfg = load_config()
-    gate_mode: GateMode = (
-        "relaxed" if cfg.extraction.gate_mode == "relaxed" else "strict"
-    )
+    gate_mode: GateMode = "relaxed" if cfg.extraction.gate_mode == "relaxed" else "strict"
     if dry_run:
         gate_result = run_gate(traj, mode=gate_mode)
         if not gate_result.should_extract:

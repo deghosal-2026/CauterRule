@@ -61,8 +61,6 @@ def check_quality(
     return warnings
 
 
-def is_valid(
-    candidate: CandidateRule, trajectory: Trajectory, threshold: float = 0.6
-) -> bool:
+def is_valid(candidate: CandidateRule, trajectory: Trajectory, threshold: float = 0.6) -> bool:
     """Return ``True`` if *candidate* passes quality checks."""
     return len(check_quality(candidate, trajectory, threshold)) == 0

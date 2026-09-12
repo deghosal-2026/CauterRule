@@ -18,25 +18,52 @@ def test_is_safety_corpus() -> None:
 
 
 def test_classify_silence_from_gate() -> None:
-    assert classify_outcome(gate_is_silence=True, has_parse_error=False, candidate_count=0) == "silence"
+    assert (
+        classify_outcome(gate_is_silence=True, has_parse_error=False, candidate_count=0)
+        == "silence"
+    )
 
 
 def test_classify_parse_failure() -> None:
-    assert classify_outcome(gate_is_silence=False, has_parse_error=True, candidate_count=0) == "parse_failure"
+    assert (
+        classify_outcome(gate_is_silence=False, has_parse_error=True, candidate_count=0)
+        == "parse_failure"
+    )
 
 
 def test_classify_silence_without_gate() -> None:
     # Model chose silence (no candidate, no parse error, gate did not block)
-    assert classify_outcome(gate_is_silence=False, has_parse_error=False, candidate_count=0) == "silence"
+    assert (
+        classify_outcome(gate_is_silence=False, has_parse_error=False, candidate_count=0)
+        == "silence"
+    )
 
 
 def test_classify_rejected() -> None:
-    assert classify_outcome(gate_is_silence=False, has_parse_error=False, candidate_count=1, replay_verdict="fail") == "rejected"
-    assert classify_outcome(gate_is_silence=False, has_parse_error=False, candidate_count=1, replay_verdict="inconclusive") == "rejected"
+    assert (
+        classify_outcome(
+            gate_is_silence=False, has_parse_error=False, candidate_count=1, replay_verdict="fail"
+        )
+        == "rejected"
+    )
+    assert (
+        classify_outcome(
+            gate_is_silence=False,
+            has_parse_error=False,
+            candidate_count=1,
+            replay_verdict="inconclusive",
+        )
+        == "rejected"
+    )
 
 
 def test_classify_accepted() -> None:
-    assert classify_outcome(gate_is_silence=False, has_parse_error=False, candidate_count=1, replay_verdict="pass") == "accepted"
+    assert (
+        classify_outcome(
+            gate_is_silence=False, has_parse_error=False, candidate_count=1, replay_verdict="pass"
+        )
+        == "accepted"
+    )
 
 
 def test_safety_corpus_silence_is_pass() -> None:

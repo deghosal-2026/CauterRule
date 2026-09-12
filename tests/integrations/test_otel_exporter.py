@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import http.server
 import threading
+from collections.abc import Iterator
+from pathlib import Path
 from typing import ClassVar
 
 import pytest
@@ -27,7 +29,7 @@ class _Collector(http.server.BaseHTTPRequestHandler):
 
 
 @pytest.fixture
-def collector():
+def collector() -> Iterator[str]:
     pytest.importorskip("opentelemetry.sdk")
     _Collector.bodies = []
     server = http.server.HTTPServer(("127.0.0.1", 0), _Collector)
@@ -83,11 +85,11 @@ class TestOtelExporter:
 
 
 class TestOtelConfig:
-    def test_defaults_disabled(self, tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_defaults_disabled(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.chdir(tmp_path)
         assert load_config().otel.enabled is False
 
-    def test_parses_section(self, tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_parses_section(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         (tmp_path / "cauterule.toml").write_text(
             '[otel]\nenabled = true\nendpoint = "http://collector:4318"\n'
             'service_name = "x"\nbatch_size = 100\n'
@@ -98,7 +100,7 @@ class TestOtelConfig:
         assert cfg.endpoint == "http://collector:4318"
         assert cfg.batch_size == 100
 
-    def test_rejects_bad_endpoint(self, tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_rejects_bad_endpoint(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         (tmp_path / "cauterule.toml").write_text('[otel]\nenabled = true\nendpoint = "ftp://x"\n')
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError, match="http"):
@@ -106,7 +108,7 @@ class TestOtelConfig:
 
 
 class TestOtelCli:
-    def test_otel_test_cli(self, tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_otel_test_cli(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         from cauterule.integrations import otel as otel_module
 
         monkeypatch.chdir(tmp_path)

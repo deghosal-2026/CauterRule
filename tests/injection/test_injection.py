@@ -1,4 +1,5 @@
 """Tests for the injection package."""
+
 from __future__ import annotations
 
 from cauterule.injection.budget import optimize_budget
@@ -159,6 +160,7 @@ def test_format_injection_escapes_adversarial_text() -> None:
 
 # ── explainer ────────────────────────────────────────────────────────
 
+
 def test_explain_rule() -> None:
     r = _rule(trigger="git push fails")
     explanation = explain_rule(r)
@@ -177,19 +179,41 @@ def test_explain_rule_with_tags() -> None:
 
 
 def test_apply_template_retry() -> None:
-    result = apply_template("retry", trigger="push fails", directive="retry push", domain="git", max_retries=3, context="git push")
+    result = apply_template(
+        "retry",
+        trigger="push fails",
+        directive="retry push",
+        domain="git",
+        max_retries=3,
+        context="git push",
+    )
     assert "Retry the operation" in result
     assert "push fails" in result
 
 
 def test_apply_template_verify_then_act() -> None:
-    result = apply_template("verify-then-act", trigger="deploy", directive="verify", context="production", action="deploy", verification_steps="health check", domain="deployment")
+    result = apply_template(
+        "verify-then-act",
+        trigger="deploy",
+        directive="verify",
+        context="production",
+        action="deploy",
+        verification_steps="health check",
+        domain="deployment",
+    )
     assert "verify" in result.lower()
     assert "deploy" in result
 
 
 def test_apply_template_check_preconditions() -> None:
-    result = apply_template("check-preconditions", trigger="migrate db", directive="check", context="database", preconditions="backup exists, schema valid", domain="migration")
+    result = apply_template(
+        "check-preconditions",
+        trigger="migrate db",
+        directive="check",
+        context="database",
+        preconditions="backup exists, schema valid",
+        domain="migration",
+    )
     assert "backup exists" in result
     assert "schema valid" in result
     assert "backup exists" in result
@@ -224,6 +248,7 @@ def test_optimize_budget_empty() -> None:
 def test_optimize_budget_preserves_metadata() -> None:
     # #522: compression must not drop hit_count/last_match/pack/template.
     import dataclasses
+
     rule = dataclasses.replace(
         _rule(trigger="long trigger " * 20, directive="long directive " * 20),
         hit_count=42,
@@ -244,6 +269,7 @@ def test_optimize_budget_preserves_metadata() -> None:
 def test_optimize_budget_value_ranking() -> None:
     # #522: a high-hit rule survives a tight budget over a verbose never-hit rule.
     import dataclasses
+
     verbose_never_hit = _rule(
         trigger="deploy fails when the container registry is unreachable from the ECS agent after retries",
         directive="check the health endpoint and restart the deployment pipeline with the rollback flag enabled",
@@ -267,7 +293,7 @@ def test_optimize_budget_custom_estimator() -> None:
         return 1
 
     rules = [_rule(trigger="a"), _rule(trigger="b")]
-    result = optimize_budget(rules, max_tokens=1, token_estimator=fake_est)  # type: ignore[arg-type]
+    result = optimize_budget(rules, max_tokens=1, token_estimator=fake_est)
     assert len(result) == 1
 
 

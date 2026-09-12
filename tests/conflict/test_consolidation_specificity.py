@@ -29,7 +29,7 @@ def _rule(
         do=RuleDo(directive=directive),
         confidence=0.9,
         provenance=provenance,
-        status="active",  # type: ignore[arg-type]
+        status="active",
         promoted_at="2025-01-01T00:00:00",
         hit_count=hit_count,
     )

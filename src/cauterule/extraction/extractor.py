@@ -48,7 +48,9 @@ def _extract_first_json_object(text: str) -> str:
     raise ValueError("No balanced JSON object found in LLM output")
 
 
-def _parse_candidate_json(text: str, extraction_pass: int = 1, template: str | None = None) -> CandidateRule:
+def _parse_candidate_json(
+    text: str, extraction_pass: int = 1, template: str | None = None
+) -> CandidateRule:
     """Parse LLM output JSON into a :class:`CandidateRule`."""
     json_str = _extract_first_json_object(text)
     data = json.loads(json_str)

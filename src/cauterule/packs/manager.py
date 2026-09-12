@@ -31,8 +31,7 @@ def list_packs(base_dir: str = "rules") -> list[str]:
     names: list[str] = sorted(
         p.name
         for p in packs_root.iterdir()
-        if p.is_dir()
-        and ((p / "pack.yaml").is_file() or (p / "manifest.yaml").is_file())
+        if p.is_dir() and ((p / "pack.yaml").is_file() or (p / "manifest.yaml").is_file())
     )
     return names
 

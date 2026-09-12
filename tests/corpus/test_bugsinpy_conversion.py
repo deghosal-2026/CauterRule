@@ -62,9 +62,14 @@ def test_classify_and_extract() -> None:
     assert m.classify("FAILED test - AssertionError: mismatch") == "python/test/assertion"
     assert m.classify("ModuleNotFoundError: No module named 'foo'") == "python/test/import_error"
     assert m.classify("ValueError: invalid") == "python/test/value_error"
-    assert m.classify("AttributeError: 'Series' object has no attribute") == "python/test/attribute_error"
+    assert (
+        m.classify("AttributeError: 'Series' object has no attribute")
+        == "python/test/attribute_error"
+    )
     assert m.classify("nothing relevant") == "python/test/failure"
-    err = m.extract_error("FAILED tests/test_foo.py::test_bar - AssertionError: 1 != 2\nE       assert 1 == 2")
+    err = m.extract_error(
+        "FAILED tests/test_foo.py::test_bar - AssertionError: 1 != 2\nE       assert 1 == 2"
+    )
     assert "AssertionError" in err
 
 
@@ -115,9 +120,19 @@ def test_cli_writes_failure_and_success_files(tmp_path: Path) -> None:
     src.write_text(json.dumps(_BUGS), encoding="utf-8")
     out = tmp_path / "bugsinpy_out"
     succ = tmp_path / "successes"
-    m.main(["--bugs", str(src), "--output", str(out), "--success-output", str(succ), "--limit", "2"])
-    failure_rows = [json.loads(line) for line in (out / "bugsinpy.jsonl").read_text(encoding="utf-8").splitlines() if line]
-    success_rows = [json.loads(line) for line in (succ / "bugsinpy-successes.jsonl").read_text(encoding="utf-8").splitlines() if line]
+    m.main(
+        ["--bugs", str(src), "--output", str(out), "--success-output", str(succ), "--limit", "2"]
+    )
+    failure_rows = [
+        json.loads(line)
+        for line in (out / "bugsinpy.jsonl").read_text(encoding="utf-8").splitlines()
+        if line
+    ]
+    success_rows = [
+        json.loads(line)
+        for line in (succ / "bugsinpy-successes.jsonl").read_text(encoding="utf-8").splitlines()
+        if line
+    ]
     assert len(failure_rows) == 2 and len(success_rows) == 2
     for r in failure_rows + success_rows:
         Trajectory.from_dict(r)
@@ -125,7 +140,11 @@ def test_cli_writes_failure_and_success_files(tmp_path: Path) -> None:
     out2 = tmp_path / "bugsinpy_out2"
     succ2 = tmp_path / "successes2"
     m.main(["--output", str(out2), "--success-output", str(succ2), "--limit", "3"])
-    synth_rows = [json.loads(line) for line in (out2 / "bugsinpy.jsonl").read_text(encoding="utf-8").splitlines() if line]
+    synth_rows = [
+        json.loads(line)
+        for line in (out2 / "bugsinpy.jsonl").read_text(encoding="utf-8").splitlines()
+        if line
+    ]
     assert len(synth_rows) == 3
     assert all(r["trajectory_id"].startswith("bugsinpy-") for r in synth_rows)
     assert all(r["failure_class"].startswith("python/test/") for r in synth_rows)

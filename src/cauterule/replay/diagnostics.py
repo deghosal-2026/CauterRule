@@ -98,9 +98,7 @@ def diagnose_corpus(
     """Summarize target vs. reference coverage for *corpus_type*."""
     target_list = list(targets)
     reference_list = list(references)
-    failure_classes = tuple(
-        sorted({t.failure_class for t in target_list if t.failure_class})
-    )
+    failure_classes = tuple(sorted({t.failure_class for t in target_list if t.failure_class}))
     domains = reference_coverage(reference_list)
     target_domains = {_first_segment(fc) for fc in failure_classes if fc}
     uncovered = tuple(sorted(d for d in target_domains if d and d not in domains))

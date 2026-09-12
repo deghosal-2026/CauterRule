@@ -64,5 +64,5 @@ def test_incremental_add_10_rules(tmp_path: Path) -> None:
         times.append(elapsed)
     max_time = max(times)
     avg_time = sum(times) / len(times)
-    assert max_time < 1.0, f"max index add {max_time*1000:.1f}ms (expected <1s)"
-    print(f"Incremental add: avg {avg_time*1000:.1f}ms, max {max_time*1000:.1f}ms")
+    assert max_time < 1.0, f"max index add {max_time * 1000:.1f}ms (expected <1s)"
+    print(f"Incremental add: avg {avg_time * 1000:.1f}ms, max {max_time * 1000:.1f}ms")

@@ -77,26 +77,30 @@ def create_trajectory_interactive() -> dict:
         inp = input(f"  Step {step_num} input: ").strip() or None
         out = input(f"  Step {step_num} output: ").strip() or None
         err = input(f"  Step {step_num} error: ").strip() or None
-        steps.append({
-            "step_number": step_num,
-            "tool": tool,
-            "input": inp,
-            "output": out,
-            "error": err,
-            "state": None,
-        })
+        steps.append(
+            {
+                "step_number": step_num,
+                "tool": tool,
+                "input": inp,
+                "output": out,
+                "error": err,
+                "state": None,
+            }
+        )
         step_num += 1
 
     if not steps:
         # Default single step
-        steps.append({
-            "step_number": 1,
-            "tool": domain,
-            "input": task,
-            "output": None,
-            "error": failure_point or None,
-            "state": None,
-        })
+        steps.append(
+            {
+                "step_number": 1,
+                "tool": domain,
+                "input": task,
+                "output": None,
+                "error": failure_point or None,
+                "state": None,
+            }
+        )
 
     trajectory = {
         "trajectory_id": traj_id,

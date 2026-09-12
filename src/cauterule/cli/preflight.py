@@ -57,8 +57,7 @@ def preflight(
         click.echo(f"Estimated cost: ${result.cost_estimate_usd:.2f}")
         if max_cost is not None and result.cost_estimate_usd > max_cost:
             msg = (
-                f"cost estimate ${result.cost_estimate_usd:.2f} exceeds "
-                f"--max-cost ${max_cost:.2f}"
+                f"cost estimate ${result.cost_estimate_usd:.2f} exceeds --max-cost ${max_cost:.2f}"
             )
             raise click.ClickException(msg)
 

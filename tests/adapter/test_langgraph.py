@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -63,7 +64,7 @@ def test_langgraph_node_decorator_failure(tmp_path: Path, monkeypatch: pytest.Mo
     monkeypatch.chdir(tmp_path)
 
     @langgraph_node(task="sync billing records", base_dir=str(tmp_path / "trajectories"))
-    def sync_node(state: dict) -> dict:
+    def sync_node(state: dict[str, Any]) -> dict[str, Any]:
         raise RuntimeError("sync failed")
 
     with pytest.raises(RuntimeError, match="sync failed"):

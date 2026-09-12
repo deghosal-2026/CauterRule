@@ -1,4 +1,4 @@
-""""Tests for quality_label canonical vocabulary agreement (#612)."""
+""" "Tests for quality_label canonical vocabulary agreement (#612)."""
 
 from __future__ import annotations
 

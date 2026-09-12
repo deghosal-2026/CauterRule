@@ -41,7 +41,7 @@ def parse_spec(spec: str) -> PackSpec:
 
     # Gist URL forms (per #547 contract).
     if raw.startswith("gist:"):
-        gist_id = raw[len("gist:"):].strip()
+        gist_id = raw[len("gist:") :].strip()
         if not gist_id:
             raise ValueError(f"invalid gist SPEC {spec!r}: missing id after 'gist:'")
         return PackSpec(kind="gist", gist_id=gist_id)

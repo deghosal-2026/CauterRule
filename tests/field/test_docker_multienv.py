@@ -15,9 +15,13 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 def _run_tests_cmd(tag: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [
-            "docker", "run", "--rm",
-            "--entrypoint", "sh",
-            "-v", f"{REPO_ROOT}:/repo",
+            "docker",
+            "run",
+            "--rm",
+            "--entrypoint",
+            "sh",
+            "-v",
+            f"{REPO_ROOT}:/repo",
             tag,
             "-c",
             "pip install -q pytest && cd /repo && python -m pytest "

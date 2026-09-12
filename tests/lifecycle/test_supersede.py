@@ -51,7 +51,10 @@ def test_linear_chain() -> None:
     v4 = _rule("R-4")
     chain_rules = chain("R-4", [v1, v2, v3, v4])
     assert [r.id for r in chain_rules] == ["R-1", "R-2", "R-3", "R-4"]
-    assert render_chain(chain_rules) == "R-1 (superseded) → R-2 (superseded) → R-3 (superseded) → R-4 (active)"
+    assert (
+        render_chain(chain_rules)
+        == "R-1 (superseded) → R-2 (superseded) → R-3 (superseded) → R-4 (active)"
+    )
 
 
 def test_chain_from_middle() -> None:
@@ -110,9 +113,7 @@ def test_validator_rejects_superseded_without_pointer(tmp_path: Path) -> None:
     data = _rule("R-BADSUP", status="superseded", superseded_by=None).to_dict()
     data["status"] = "superseded"
     data.pop("superseded_by", None)
-    (base / "R-BADSUP.yaml").write_text(
-        yaml.safe_dump(data, sort_keys=False), encoding="utf-8"
-    )
+    (base / "R-BADSUP.yaml").write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
     warnings = validate_store(str(base))
     assert any("superseded requires superseded_by" in w for w in warnings)
 
@@ -125,9 +126,7 @@ def test_validator_rejects_retired_with_pointer(tmp_path: Path) -> None:
     data = _rule("R-BADRET", status="retired", superseded_by="R-NEXT").to_dict()
     data["status"] = "retired"
     data["superseded_by"] = "R-NEXT"
-    (base / "R-BADRET.yaml").write_text(
-        yaml.safe_dump(data, sort_keys=False), encoding="utf-8"
-    )
+    (base / "R-BADRET.yaml").write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
     warnings = validate_store(str(base))
     assert any("retired rules must not carry superseded_by" in w for w in warnings)
 

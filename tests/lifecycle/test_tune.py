@@ -68,10 +68,7 @@ def test_cold_start_returns_default() -> None:
 
 def test_thin_evidence_returns_default() -> None:
     # 6 outcomes < min_evidence(30) → default.
-    rules = [
-        _rule(f"R-{i}", specificity=0.9, prevented=1, broke=0)
-        for i in range(6)
-    ]
+    rules = [_rule(f"R-{i}", specificity=0.9, prevented=1, broke=0) for i in range(6)]
     cutoffs = cutoffs_for_corpus(rules, min_evidence=MIN_EVIDENCE)
     assert cutoffs.source == "default"
 
@@ -106,10 +103,7 @@ def test_perfect_corpus_looser_than_broken() -> None:
         min_evidence=10,
     )
     broken = learn_cutoffs(
-        [
-            _rule(f"R-{i}", specificity=0.2, prevented=0, broke=20)
-            for i in range(40)
-        ],
+        [_rule(f"R-{i}", specificity=0.2, prevented=0, broke=20) for i in range(40)],
         min_evidence=10,
     )
     assert perfect.min_quality <= broken.min_quality
@@ -118,20 +112,14 @@ def test_perfect_corpus_looser_than_broken() -> None:
 
 def test_floor_holds_under_all_broke_corpus() -> None:
     # Guardrail: an all-broke corpus never drops min_quality below floor.
-    rules = [
-        _rule(f"R-{i}", specificity=0.05, prevented=0, broke=10)
-        for i in range(50)
-    ]
+    rules = [_rule(f"R-{i}", specificity=0.05, prevented=0, broke=10) for i in range(50)]
     cutoffs = learn_cutoffs(rules, min_evidence=10)
     assert cutoffs.min_quality >= FLOOR_MIN_QUALITY
     assert cutoffs.min_specificity >= 0.0
 
 
 def test_ceiling_holds_under_all_prevented_corpus() -> None:
-    rules = [
-        _rule(f"R-{i}", specificity=1.0, prevented=10, broke=0)
-        for i in range(50)
-    ]
+    rules = [_rule(f"R-{i}", specificity=1.0, prevented=10, broke=0) for i in range(50)]
     cutoffs = learn_cutoffs(rules, min_evidence=10)
     assert cutoffs.min_quality <= CEILING_MIN_QUALITY
     assert cutoffs.source.startswith("learned")
@@ -171,14 +159,10 @@ def test_auto_promote_enforces_learned_cutoff() -> None:
 
     # With a strict learned cutoff, a 0.5-confidence candidate is rejected.
     strict = PromotionCutoffs(min_quality=0.8, min_specificity=0.3, source="learned(n=40)")
-    decision: PromotionDecision = auto_promote(
-        cand, evidence, linter, cutoffs=strict
-    )
+    decision: PromotionDecision = auto_promote(cand, evidence, linter, cutoffs=strict)
     assert decision.verdict == "reject"
-    assert "below learned cutoff" in decision.evidence_summary
+    assert "below learned cutoff" in (decision.evidence_summary or "")
 
     # With --force the learned cutoff is bypassed.
-    forced: PromotionDecision = auto_promote(
-        cand, evidence, linter, cutoffs=strict, force=True
-    )
+    forced: PromotionDecision = auto_promote(cand, evidence, linter, cutoffs=strict, force=True)
     assert forced.verdict == "promote"

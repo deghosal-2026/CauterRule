@@ -303,9 +303,7 @@ class StandingRule:
             last_outcome_at=data.get("last_outcome_at"),
             outcome_trend=tuple(int(v) for v in data.get("outcome_trend", [])),
             specificity=(
-                float(data["specificity"])
-                if data.get("specificity") is not None
-                else None
+                float(data["specificity"]) if data.get("specificity") is not None else None
             ),
             specificity_inputs=dict(data.get("specificity_inputs", {})),
         )

@@ -56,8 +56,14 @@ def test_mutation_multiple_perturbations() -> None:
         confidence=0.95,
     )
     perturbations = [
-        CandidateRule(when=RuleWhen(trigger="npm install fails", context=("wrong context",)), do=RuleDo(directive="x"), confidence=0.95),
-        CandidateRule(when=RuleWhen(trigger="docker build fails"), do=RuleDo(directive="x"), confidence=0.95),
+        CandidateRule(
+            when=RuleWhen(trigger="npm install fails", context=("wrong context",)),
+            do=RuleDo(directive="x"),
+            confidence=0.95,
+        ),
+        CandidateRule(
+            when=RuleWhen(trigger="docker build fails"), do=RuleDo(directive="x"), confidence=0.95
+        ),
         CandidateRule(when=RuleWhen(trigger="npm"), do=RuleDo(directive="x"), confidence=0.95),
     ]
     trajs = [
@@ -66,5 +72,7 @@ def test_mutation_multiple_perturbations() -> None:
         _traj("S1", "npm install succeeds", True),
     ]
     orig_report = deterministic_replay(original, trajs)
-    degraded = sum(1 for p in perturbations if deterministic_replay(p, trajs).precision < orig_report.precision)
+    degraded = sum(
+        1 for p in perturbations if deterministic_replay(p, trajs).precision < orig_report.precision
+    )
     assert degraded >= 2

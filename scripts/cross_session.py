@@ -32,9 +32,7 @@ def _load(path: Path) -> list[dict[str, object]]:
     if not path.is_file():
         return []
     return [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
+        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
     ]
 
 
@@ -78,7 +76,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     late = {int(s) for s in args.late_sessions.split(",") if s.strip()}
-    report = cross_session_delta(_load(Path(args.baseline)), _load(Path(args.intervention)), late_sessions=late)
+    report = cross_session_delta(
+        _load(Path(args.baseline)), _load(Path(args.intervention)), late_sessions=late
+    )
     md = render_markdown(report, late)
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)

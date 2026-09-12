@@ -104,7 +104,7 @@ def test_invalid_redaction_patterns(tmp_path: Path, monkeypatch: pytest.MonkeyPa
 
 def test_invalid_extraction_passes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     p = tmp_path / "cauterule.toml"
-    p.write_text('[extraction]\npasses=0\n')
+    p.write_text("[extraction]\npasses=0\n")
     monkeypatch.chdir(tmp_path)
     for key in list(os.environ.keys()):
         if key.startswith("CAUTERULE_"):
@@ -146,7 +146,13 @@ def test_env_overrides_llm_fallback(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     (tmp_path / "cauterule.toml").write_text("")
     monkeypatch.setenv("CAUTERULE_LLM_MODEL", "gpt-4o-mini")
     monkeypatch.delenv("CAUTERULE_MODEL", raising=False)
-    for key in ["CAUTERULE_LLM_PROVIDER", "CAUTERULE_LLM_API_KEY", "CAUTERULE_LLM_BASE_URL", "CAUTERULE_PROMOTION_MODE", "CAUTERULE_MODE"]:
+    for key in [
+        "CAUTERULE_LLM_PROVIDER",
+        "CAUTERULE_LLM_API_KEY",
+        "CAUTERULE_LLM_BASE_URL",
+        "CAUTERULE_PROMOTION_MODE",
+        "CAUTERULE_MODE",
+    ]:
         monkeypatch.delenv(key, raising=False)
     cfg = load_config()
     assert cfg.llm.model == "gpt-4o-mini"

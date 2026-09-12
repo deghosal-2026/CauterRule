@@ -82,7 +82,7 @@ class ReviewScreen(Screen[Any]):
     def approve_current(self) -> None:
         if not self._candidates or self._current_index >= len(self._candidates):
             return
-        self.push_screen(
+        self.app.push_screen(
             AnnotationScreen(self._candidates[self._current_index]), self._on_annotation
         )
         self._advance()

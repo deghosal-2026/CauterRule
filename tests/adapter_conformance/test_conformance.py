@@ -8,6 +8,7 @@ project whose example files compile).
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -22,7 +23,7 @@ from tests.adapter_conformance.kit import run_kit
         "schema_valid",
     ],
 )
-def test_conformance_kit(adapter_driver, tmp_path: Path, check: str) -> None:
+def test_conformance_kit(adapter_driver: Any, tmp_path: Path, check: str) -> None:
     results = run_kit(adapter_driver, tmp_path)
     matched = [r for r in results if r.startswith(("PASS", "FAIL")) and check in r]
     assert matched, f"no result for {check!r}: {results}"
@@ -43,7 +44,7 @@ def test_conformance_redaction_driver(tmp_path: Path) -> None:
                     )
 
 
-def _all_drivers(tmp_path: Path) -> list:
+def _all_drivers(tmp_path: Path) -> list[Any]:
     from tests.adapter_conformance.conftest import DRIVERS
 
     return [cls(base_dir=str(tmp_path / "trajectories")) for cls in DRIVERS.values()]

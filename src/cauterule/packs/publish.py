@@ -84,9 +84,7 @@ class GitHubReleasesApi:
         """Return None: manifests download on demand; absent is fine."""
         return None
 
-    def create_release(
-        self, repo: str, tag: str, asset: Path, notes: str, prerelease: bool
-    ) -> str:
+    def create_release(self, repo: str, tag: str, asset: Path, notes: str, prerelease: bool) -> str:
         """Create a release with *asset* attached. Returns the release URL."""
         release = self._request(
             "POST",
@@ -154,7 +152,7 @@ def _default_repo(pack_dir: Path) -> str:
     url = out.stdout.strip()
     for prefix in ("git@github.com:", "https://github.com/"):
         if url.startswith(prefix):
-            url = url[len(prefix):]
+            url = url[len(prefix) :]
             break
     url = url.removesuffix(".git")
     if "/" not in url:
@@ -179,8 +177,7 @@ def _read_pack(pack_dir: Path) -> tuple[PackManifest, list[Path]]:
         semver.parse(manifest.version)
     except ValueError:
         raise ValueError(
-            f"pack version {manifest.version!r} is not strict semver "
-            "(want MAJOR.MINOR.PATCH)"
+            f"pack version {manifest.version!r} is not strict semver (want MAJOR.MINOR.PATCH)"
         ) from None
     rule_files = sorted(pack_dir.glob("R-*.yaml"))
     if not rule_files:
@@ -243,9 +240,7 @@ def publish_pack(
     )
     if not cert_report.get("passed", False):
         failing = "; ".join(
-            f"{c['name']}: {c['message']}"
-            for c in cert_report["checks"]
-            if c["status"] != "pass"
+            f"{c['name']}: {c['message']}" for c in cert_report["checks"] if c["status"] != "pass"
         )
         raise ValueError(f"certification failed for {manifest.name}: {failing} (fix the pack)")
 

@@ -10,6 +10,7 @@ import json
 import sys
 from pathlib import Path
 from types import ModuleType
+from typing import Any
 
 import pytest
 
@@ -134,13 +135,20 @@ def test_promoted_reference_corpora_are_targets(harness: ModuleType) -> None:
 
 def test_replay_test_candidate_domain_scopes_reference_pool(harness: ModuleType) -> None:
     """#708: the reference pool is scoped to the source trajectory's domain."""
-    def traj(tid: str, domain: str, fc: str) -> dict:
+
+    def traj(tid: str, domain: str, fc: str) -> dict[str, Any]:
         return {
             "trajectory_id": tid,
             "timestamp": "t",
             "task": "git push fails with non-fast-forward error",
             "steps": [
-                {"step_number": 1, "tool": "bash", "input": "git push", "output": "", "error": "non-fast-forward"}
+                {
+                    "step_number": 1,
+                    "tool": "bash",
+                    "input": "git push",
+                    "output": "",
+                    "error": "non-fast-forward",
+                }
             ],
             "success": False,
             "failure_class": fc,
@@ -152,7 +160,11 @@ def test_replay_test_candidate_domain_scopes_reference_pool(harness: ModuleType)
 
     refs = [traj(f"g{i}", "git", "git/push") for i in range(5)]
     refs += [traj(f"p{i}", "python", "python/import") for i in range(20)]
-    cand = {"when": "git push fails with non-fast-forward", "do": "pull before push", "confidence": 0.8}
+    cand = {
+        "when": "git push fails with non-fast-forward",
+        "do": "pull before push",
+        "confidence": 0.8,
+    }
 
     full = harness.replay_test_candidate(cand, refs, "golden")
     assert full["domain_scoped"] is False

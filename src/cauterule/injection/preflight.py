@@ -1,4 +1,5 @@
 """Preflight mode — predict likely failures and recommend rules before task."""
+
 from __future__ import annotations
 
 from cauterule.injection.matcher import match_rules

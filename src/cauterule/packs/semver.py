@@ -52,9 +52,7 @@ def parse(version: str) -> Version:
     """Parse a strict semver string. Raises ValueError if invalid."""
     match = _SEMVER_RE.match(version.strip())
     if not match:
-        raise ValueError(
-            f"invalid semver {version!r}: want MAJOR.MINOR.PATCH (optional -rc.N)"
-        )
+        raise ValueError(f"invalid semver {version!r}: want MAJOR.MINOR.PATCH (optional -rc.N)")
     major, minor, patch, rc = match.groups()
     return Version(int(major), int(minor), int(patch), int(rc) if rc else None)
 

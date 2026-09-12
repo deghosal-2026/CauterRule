@@ -250,7 +250,9 @@ def test_recovery_keyword_ignores_unrelated_substring_classes() -> None:
 # #693 — output presence is not a success signal
 # ------------------------------------------------------------------
 def test_step_shows_success_false_positive_on_error_text_in_output() -> None:
-    step = Step(step_number=1, tool="bash", output="Error: connection refused", error=None, state={})
+    step = Step(
+        step_number=1, tool="bash", output="Error: connection refused", error=None, state={}
+    )
     assert _step_shows_success(step) is False
 
 

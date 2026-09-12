@@ -17,11 +17,13 @@ from __future__ import annotations
 import shutil
 import subprocess
 import time
+from collections.abc import Iterator
 from pathlib import Path
 
 import anyio
 import pytest
 from mcp.client.streamable_http import streamable_http_client
+from mcp.types import TextContent
 
 from mcp import ClientSession
 
@@ -48,16 +50,31 @@ def _wait_http(host_port: str, timeout: int = 40) -> None:
     """Poll until the container's HTTP endpoint answers — TCP accept alone is
     not enough (the streamable-http session manager resets early clients)."""
     import subprocess as sp
+
     deadline = time.time() + timeout
     url = f"http://127.0.0.1:{host_port}/mcp"
     while time.time() < deadline:
         r = sp.run(
-            ["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
-             "-X", "POST", url,
-             "-H", "Content-Type: application/json",
-             "-H", "Accept: application/json, text/event-stream",
-             "-d", '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"t","version":"0"}}}'],
-            capture_output=True, text=True, timeout=10,
+            [
+                "curl",
+                "-s",
+                "-o",
+                "/dev/null",
+                "-w",
+                "%{http_code}",
+                "-X",
+                "POST",
+                url,
+                "-H",
+                "Content-Type: application/json",
+                "-H",
+                "Accept: application/json, text/event-stream",
+                "-d",
+                '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"t","version":"0"}}}',
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         if r.stdout.strip().isdigit() and int(r.stdout.strip()) > 0:
             return
@@ -66,7 +83,7 @@ def _wait_http(host_port: str, timeout: int = 40) -> None:
 
 
 @pytest.fixture
-def mcp_http_container(tmp_path: Path):
+def mcp_http_container(tmp_path: Path) -> Iterator[str]:
     """Start the MCP HTTP server in a container with a seeded store; yield base_url."""
     # Seed a rule store on the host to mount into the container.
     store = tmp_path / "rules"
@@ -75,20 +92,38 @@ def mcp_http_container(tmp_path: Path):
         shutil.copy(f, store)
 
     started = subprocess.run(
-        ["docker", "run", "--rm", "-d",
-         "--name", CONTAINER_NAME,
-         "-p", f"0:{MCP_PORT}",
-         "-v", f"{store}:/app/rules",
-         DOCKER_TAG,
-         "mcp", "--transport", "http", "--host", "0.0.0.0", "--port", MCP_PORT],
-        capture_output=True, text=True, timeout=60,
+        [
+            "docker",
+            "run",
+            "--rm",
+            "-d",
+            "--name",
+            CONTAINER_NAME,
+            "-p",
+            f"0:{MCP_PORT}",
+            "-v",
+            f"{store}:/app/rules",
+            DOCKER_TAG,
+            "mcp",
+            "--transport",
+            "http",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            MCP_PORT,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     if started.returncode != 0:
         pytest.skip(f"could not start mcp http container: {started.stderr}")
 
     port_out = subprocess.run(
         ["docker", "port", CONTAINER_NAME, MCP_PORT],
-        capture_output=True, text=True, timeout=20,
+        capture_output=True,
+        text=True,
+        timeout=20,
     )
     host_port = port_out.stdout.strip().split(":")[-1]
     try:
@@ -137,7 +172,9 @@ def test_docker_http_call_tools_valid(mcp_http_container: str) -> None:
             res = await session.call_tool("list_rules_tool", {})
             assert res.isError is False
             # The seeded store has R-001/R-002/R-003 — at least one rule listed.
-            text = res.content[0].text if res.content else ""
+            content = res.content[0] if res.content else None
+            assert isinstance(content, TextContent)
+            text = content.text
             assert "R-0" in text, text
 
     anyio.run(_main)
@@ -154,7 +191,9 @@ def test_docker_http_invalid_args_schema_error(mcp_http_container: str) -> None:
         ):
             await session.initialize()
             res = await session.call_tool("list_rules_tool", {"status": 123})
-            return res.content[0].text if res.content else ""
+            content = res.content[0] if res.content else None
+            assert isinstance(content, TextContent)
+            return content.text
 
     text = anyio.run(_main)
     # Structured pydantic validation error, no traceback leak.
@@ -173,7 +212,9 @@ def test_docker_http_unknown_tool_no_traceback(mcp_http_container: str) -> None:
         ):
             await session.initialize()
             res = await session.call_tool("nope_tool", {})
-            return res.content[0].text if res.content else ""
+            content = res.content[0] if res.content else None
+            assert isinstance(content, TextContent)
+            return content.text
 
     text = anyio.run(_main)
     assert "Unknown tool" in text

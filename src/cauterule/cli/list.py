@@ -40,9 +40,7 @@ def list_rules(
     if sort_by == "spec":
         rules = sorted(
             rules,
-            key=lambda r: (
-                r.specificity if r.specificity is not None else compute_specificity(r)[0]
-            ),
+            key=lambda r: r.specificity if r.specificity is not None else compute_specificity(r)[0],
         )
     for r in rules:
         tags = ",".join(r.tags) if r.tags else "-"

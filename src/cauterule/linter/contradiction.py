@@ -63,14 +63,14 @@ def _has_opposition(text: str) -> bool:
 def _has_antonym_span(a_tokens: set[str], b_tokens: set[str]) -> bool:
     for pair in _ANTONYM_PAIRS:
         first, second = tuple(pair)
-        if (first in a_tokens and second in b_tokens) or (
-            second in a_tokens and first in b_tokens
-        ):
+        if (first in a_tokens and second in b_tokens) or (second in a_tokens and first in b_tokens):
             return True
     return False
 
 
-def check_contradiction(candidate_trigger: str, candidate_directive: str, existing_rules: list[StandingRule]) -> list[str]:
+def check_contradiction(
+    candidate_trigger: str, candidate_directive: str, existing_rules: list[StandingRule]
+) -> list[str]:
     """Return warnings if candidate contradicts an existing rule.
 
     Same trigger + identical directive is agreement. Same trigger + a
@@ -92,5 +92,7 @@ def check_contradiction(candidate_trigger: str, candidate_directive: str, existi
         if cd_tokens >= rd_tokens or rd_tokens >= cd_tokens:
             continue
         if _has_opposition(cd) or _has_opposition(rd) or _has_antonym_span(cd_tokens, rd_tokens):
-            return [f"contradiction: conflicts with {rule.id} ('{rule.do.directive}' vs '{candidate_directive}')"]
+            return [
+                f"contradiction: conflicts with {rule.id} ('{rule.do.directive}' vs '{candidate_directive}')"
+            ]
     return []

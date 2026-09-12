@@ -40,9 +40,7 @@ def _show_cutoff_report() -> None:
 
     store = StoreManager()
     rules = store.list_rules()
-    total = sum(
-        r.prevented_count + r.broke_count for r in rules if r.status == "active"
-    )
+    total = sum(r.prevented_count + r.broke_count for r in rules if r.status == "active")
     learned = cutoffs_for_corpus(rules, mode="balanced")
     click.echo(f"Promotion cutoffs (evidence outcomes: {total}):")
     click.echo(f"  learned (effective): {learned.summarize()}")

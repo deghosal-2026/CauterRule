@@ -43,9 +43,7 @@ def wilson_ci(
     phat = successes / total
     denom = 1.0 + z * z / total
     center = (phat + z * z / (2.0 * total)) / denom
-    margin = (
-        z * math.sqrt(phat * (1.0 - phat) / total + z * z / (4.0 * total * total)) / denom
-    )
+    margin = z * math.sqrt(phat * (1.0 - phat) / total + z * z / (4.0 * total * total)) / denom
     return (max(0.0, center - margin), min(1.0, center + margin))
 
 

@@ -43,7 +43,9 @@ def _cand(trigger: str, context: tuple[str, ...] = ()) -> CandidateRule:
     )
 
 
-def _traj(task: str, error: str, *, success: bool = False, failure_class: str | None = None) -> Trajectory:
+def _traj(
+    task: str, error: str, *, success: bool = False, failure_class: str | None = None
+) -> Trajectory:
     return Trajectory(
         id="T-sem",
         timestamp="t",
@@ -63,7 +65,10 @@ def _reset_embeddings() -> Iterator[None]:
 
 def test_semantic_disabled_by_default() -> None:
     assert embeddings.is_enabled() is False
-    assert embeddings.embedding_similarity("database connection dropped", "lost postgres connection") == 0.0
+    assert (
+        embeddings.embedding_similarity("database connection dropped", "lost postgres connection")
+        == 0.0
+    )
 
 
 def test_enabled_without_dependency_logs_warning(

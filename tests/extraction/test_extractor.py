@@ -48,7 +48,9 @@ def test_extract_candidate_valid() -> None:
 
 
 def test_extract_candidate_with_extra_text() -> None:
-    payload = json.dumps({"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.8})
+    payload = json.dumps(
+        {"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.8}
+    )
     llm = FakeLLM(f"Here is the JSON: {payload} thanks")
     candidate = extract_candidate(_traj(), llm)
     assert candidate.when.trigger == "git push"
@@ -61,7 +63,9 @@ def test_extract_candidate_string_response() -> None:
         def complete(self, prompt: str, **kwargs: object) -> str:
             _ = prompt
             _ = kwargs
-            return json.dumps({"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.7})
+            return json.dumps(
+                {"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.7}
+            )
 
     candidate = extract_candidate(_traj(), StringLLM())
     assert candidate.confidence == 0.7
@@ -83,7 +87,9 @@ def test_extract_candidate_invalid_when_do() -> None:
     llm = FakeLLM(json.dumps({"when": "not dict", "do": {"directive": "pull"}, "confidence": 0.5}))
     with pytest.raises(ValueError, match="when/do must be objects"):
         extract_candidate(_traj(), llm)
-    llm2 = FakeLLM(json.dumps({"when": {"trigger": "git push"}, "do": "not dict", "confidence": 0.5}))
+    llm2 = FakeLLM(
+        json.dumps({"when": {"trigger": "git push"}, "do": "not dict", "confidence": 0.5})
+    )
     with pytest.raises(ValueError, match="when/do must be objects"):
         extract_candidate(_traj(), llm2)
 
@@ -116,7 +122,9 @@ def test_extract_candidate_not_dict() -> None:
 
 
 def test_extract_candidate_safe_success() -> None:
-    payload = json.dumps({"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.8})
+    payload = json.dumps(
+        {"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.8}
+    )
     llm = FakeLLM(payload)
     candidate, error = extract_candidate_safe(_traj(), llm)
     assert candidate is not None

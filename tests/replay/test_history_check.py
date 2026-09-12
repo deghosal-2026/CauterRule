@@ -3,7 +3,9 @@ from cauterule.replay.history_check import check_history, history_verdict
 
 
 def test_sufficient() -> None:
-    trajs = [Trajectory(id=f"T-{i}", timestamp="t", task="t", steps=(), success=True) for i in range(5)]
+    trajs = [
+        Trajectory(id=f"T-{i}", timestamp="t", task="t", steps=(), success=True) for i in range(5)
+    ]
     ok, msg = check_history(trajs, min_count=3)
     assert ok
     assert msg == "ok"
@@ -22,5 +24,16 @@ def test_empty() -> None:
 
 
 def test_history_verdict() -> None:
-    assert history_verdict([Trajectory(id="T-1", timestamp="t", task="t", steps=(), success=True)]) == "inconclusive"
-    assert history_verdict([Trajectory(id=f"T-{i}", timestamp="t", task="t", steps=(), success=True) for i in range(3)]) == "ok"
+    assert (
+        history_verdict([Trajectory(id="T-1", timestamp="t", task="t", steps=(), success=True)])
+        == "inconclusive"
+    )
+    assert (
+        history_verdict(
+            [
+                Trajectory(id=f"T-{i}", timestamp="t", task="t", steps=(), success=True)
+                for i in range(3)
+            ]
+        )
+        == "ok"
+    )

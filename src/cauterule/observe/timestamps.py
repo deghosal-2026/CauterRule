@@ -9,9 +9,7 @@ from cauterule.serialization.rule_yaml import dump_rule_to_file
 from cauterule.store.manager import StoreManager
 
 
-def update_last_match(
-    store: StoreManager, rule_id: str, timestamp: str | None = None
-) -> None:
+def update_last_match(store: StoreManager, rule_id: str, timestamp: str | None = None) -> None:
     """Update *rule_id*'s ``last_match`` field in-place.
 
     Args:

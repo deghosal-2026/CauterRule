@@ -1,4 +1,5 @@
 """Tests for the tournament module."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -15,18 +16,34 @@ def _cand(trigger: str) -> CandidateRule:
 
 
 def _traj(id: str, task: str, success: bool) -> Trajectory:
-    return Trajectory(id=id, timestamp="t", task=task, steps=(Step(1, "bash", error="err"),) if not success else (), success=success)
+    return Trajectory(
+        id=id,
+        timestamp="t",
+        task=task,
+        steps=(Step(1, "bash", error="err"),) if not success else (),
+        success=success,
+    )
 
 
 def test_tournament_basic() -> None:
     c1 = _cand("git push")
     c2 = _cand("docker")
-    trajs = [_traj("T-1", "git push fails", False), _traj("T-2", "docker fails", False), _traj("T-3", "git push ok", True)]
+    trajs = [
+        _traj("T-1", "git push fails", False),
+        _traj("T-2", "docker fails", False),
+        _traj("T-3", "git push ok", True),
+    ]
     with patch("cauterule.extraction.tournament.build_evidence_report") as mock_build:
+
         def fake_report(cand: CandidateRule, trajs: list[Trajectory]) -> EvidenceReport:
             if "git" in cand.when.trigger:
-                return EvidenceReport(failures_prevented=("T-1",), precision=1.0, recall=0.5, verdict="inconclusive")
-            return EvidenceReport(failures_prevented=("T-2",), precision=1.0, recall=0.5, verdict="inconclusive")
+                return EvidenceReport(
+                    failures_prevented=("T-1",), precision=1.0, recall=0.5, verdict="inconclusive"
+                )
+            return EvidenceReport(
+                failures_prevented=("T-2",), precision=1.0, recall=0.5, verdict="inconclusive"
+            )
+
         mock_build.side_effect = fake_report
         ranked = run_tournament([c1, c2], trajs)
     assert len(ranked) == 2
@@ -56,13 +73,17 @@ def test_tournament_verdict_threshold() -> None:
     c = _cand("test")
     trajs = [_traj("T-1", "test fails", False)]
     with patch("cauterule.extraction.tournament.build_evidence_report") as mock_build:
-        mock_build.return_value = EvidenceReport(failures_prevented=("T-1",), precision=0.5, recall=1.0, verdict="inconclusive")
+        mock_build.return_value = EvidenceReport(
+            failures_prevented=("T-1",), precision=0.5, recall=1.0, verdict="inconclusive"
+        )
         ranked = run_tournament([c], trajs)
     # Precision < 1.0, so verdict should be "fail"
     assert ranked[0].evidence.verdict == "fail"
 
     with patch("cauterule.extraction.tournament.build_evidence_report") as mock_build:
-        mock_build.return_value = EvidenceReport(failures_prevented=(), precision=1.0, recall=0.0, verdict="inconclusive")
+        mock_build.return_value = EvidenceReport(
+            failures_prevented=(), precision=1.0, recall=0.0, verdict="inconclusive"
+        )
         ranked = run_tournament([c], trajs)
     # prevented < 1, so verdict should be "fail"
     assert ranked[0].evidence.verdict == "fail"

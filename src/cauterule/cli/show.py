@@ -70,17 +70,18 @@ def show(rule_id: str, hits: bool, outcomes: bool, show_history: bool) -> None:
         click.echo(f"Specificity: {rule.specificity:.2f}")
         if rule.specificity_inputs:
             inputs = rule.specificity_inputs
-            click.echo(f"  inputs: trigger_tokens={inputs.get('trigger_tokens')} "
-                       f"matched={inputs.get('matched_count')} "
-                       f"broken={inputs.get('broken_count')} "
-                       f"breadth_penalty={inputs.get('breadth_penalty')}")
+            click.echo(
+                f"  inputs: trigger_tokens={inputs.get('trigger_tokens')} "
+                f"matched={inputs.get('matched_count')} "
+                f"broken={inputs.get('broken_count')} "
+                f"breadth_penalty={inputs.get('breadth_penalty')}"
+            )
     elif rule.status == "active":
         from cauterule.lifecycle.specificity import compute_specificity
 
         spec, inputs = compute_specificity(rule)
         click.echo(
-            f"Specificity: {spec:.2f} (computed) "
-            f"trigger_tokens={inputs.get('trigger_tokens')}"
+            f"Specificity: {spec:.2f} (computed) trigger_tokens={inputs.get('trigger_tokens')}"
         )
     click.echo(f"Tags: {', '.join(rule.tags) if rule.tags else 'none'}")
     if rule.taxonomy:

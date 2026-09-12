@@ -143,7 +143,9 @@ def watch(
     return decorator
 
 
-def _wrap_sync(inner: Callable[..., Any], base_dir: str, capture_success: bool, redact_keys: frozenset[str]) -> Callable[..., Any]:
+def _wrap_sync(
+    inner: Callable[..., Any], base_dir: str, capture_success: bool, redact_keys: frozenset[str]
+) -> Callable[..., Any]:
     @functools.wraps(inner)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         start = time.time()
@@ -176,7 +178,9 @@ def _wrap_sync(inner: Callable[..., Any], base_dir: str, capture_success: bool, 
     return wrapper
 
 
-def _wrap_async(inner: Callable[..., Any], base_dir: str, capture_success: bool, redact_keys: frozenset[str]) -> Callable[..., Any]:
+def _wrap_async(
+    inner: Callable[..., Any], base_dir: str, capture_success: bool, redact_keys: frozenset[str]
+) -> Callable[..., Any]:
     @functools.wraps(inner)
     async def wrapper(*args: Any, **kwargs: Any) -> Any:
         start = time.time()
@@ -209,11 +213,14 @@ def _wrap_async(inner: Callable[..., Any], base_dir: str, capture_success: bool,
     return wrapper
 
 
-def _wrap_gen(inner: Callable[..., Any], base_dir: str, capture_success: bool, redact_keys: frozenset[str]) -> Callable[..., Any]:
+def _wrap_gen(
+    inner: Callable[..., Any], base_dir: str, capture_success: bool, redact_keys: frozenset[str]
+) -> Callable[..., Any]:
     """Wrap a sync generator: capture the first yielded step (if capturing
     success), then record a final failure step on error — first+error for
     unbounded streams (code-review: respects capture_success; does not buffer
     the whole stream)."""
+
     @functools.wraps(inner)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         step_input = _input_repr(args, kwargs, redact_keys)
@@ -259,9 +266,12 @@ def _wrap_gen(inner: Callable[..., Any], base_dir: str, capture_success: bool, r
     return wrapper
 
 
-def _wrap_async_gen(inner: Callable[..., Any], base_dir: str, capture_success: bool, redact_keys: frozenset[str]) -> Callable[..., Any]:
+def _wrap_async_gen(
+    inner: Callable[..., Any], base_dir: str, capture_success: bool, redact_keys: frozenset[str]
+) -> Callable[..., Any]:
     """Wrap an async generator: record the first yielded item (if capturing
     success), and a final failure step on error."""
+
     @functools.wraps(inner)
     async def wrapper(*args: Any, **kwargs: Any) -> Any:
         step_input = _input_repr(args, kwargs, redact_keys)

@@ -9,22 +9,24 @@ from __future__ import annotations
 
 from typing import Any
 
-VOCABULARY = frozenset({
-    "git/push",
-    "git/pull",
-    "git/merge",
-    "python/import",
-    "python/syntax",
-    "python/pip",
-    "tool/network",
-    "tool/permission",
-    "config/env",
-    "test/flaky",
-    "docker/build",
-    "docker/network",
-    "docker/container",
-    "other",
-})
+VOCABULARY = frozenset(
+    {
+        "git/push",
+        "git/pull",
+        "git/merge",
+        "python/import",
+        "python/syntax",
+        "python/pip",
+        "tool/network",
+        "tool/permission",
+        "config/env",
+        "test/flaky",
+        "docker/build",
+        "docker/network",
+        "docker/container",
+        "other",
+    }
+)
 
 CONFIDENCE_THRESHOLD = 0.5
 

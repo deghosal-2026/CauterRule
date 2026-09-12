@@ -44,6 +44,7 @@ def test_badge_svg_empty_label_defaults_to_rules() -> None:
 def test_badge_svg_large_count_width_scales() -> None:
     small = badge_svg(1)
     large = badge_svg(12345)
+
     # extract width attribute
     def _width(s: str) -> int:
         # width="{width}" first occurrence
@@ -83,7 +84,10 @@ def test_cli_badge_svg_output(tmp_path: Path) -> None:
                 do=RuleDo(directive="d"),
                 confidence=0.9,
                 provenance=Provenance(
-                    source_trajectory="t", extracted_by="m", extract_timestamp="t", extraction_pass=1
+                    source_trajectory="t",
+                    extracted_by="m",
+                    extract_timestamp="t",
+                    extraction_pass=1,
                 ),
                 status="active",
                 promoted_at="t",
@@ -120,7 +124,9 @@ def test_cli_badge_as_svg_file(tmp_path: Path) -> None:
     (store_dir).mkdir()
     out = tmp_path / "out.svg"
     runner = CliRunner()
-    result = runner.invoke(main, ["badge", "--store", str(store_dir), "--svg", "--output", str(out)])
+    result = runner.invoke(
+        main, ["badge", "--store", str(store_dir), "--svg", "--output", str(out)]
+    )
     assert result.exit_code == 0, result.output
     assert out.is_file()
     assert "<svg" in out.read_text(encoding="utf-8")

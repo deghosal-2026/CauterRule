@@ -30,8 +30,7 @@ def webhook_test(url: str | None) -> None:
     )
     report = deliver_payload(target, payload, configured.max_attempts, configured.backoff)
     click.echo(
-        f"dry-run to {configured.provider}: "
-        f"sent={report['sent']} attempts={report['attempts']}"
+        f"dry-run to {configured.provider}: sent={report['sent']} attempts={report['attempts']}"
     )
     if not report["sent"]:
         msg = f"delivery failed (status={report.get('status')})"

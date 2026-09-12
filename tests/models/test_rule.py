@@ -57,7 +57,9 @@ def test_rule_do_validation() -> None:
 
 
 def test_replay_evidence_valid() -> None:
-    ev = ReplayEvidence(failures_prevented=("F-001",), successes_broken=(), precision=0.9, recall=0.5)
+    ev = ReplayEvidence(
+        failures_prevented=("F-001",), successes_broken=(), precision=0.9, recall=0.5
+    )
     assert ev.to_dict()["precision"] == 0.9
     assert ReplayEvidence.from_dict(ev.to_dict()) == ev
 
@@ -82,11 +84,17 @@ def test_provenance_valid() -> None:
 
 def test_provenance_validation() -> None:
     with pytest.raises(ValueError, match="source_trajectory"):
-        Provenance(source_trajectory=" ", extracted_by="m", extract_timestamp="t", extraction_pass=1)
+        Provenance(
+            source_trajectory=" ", extracted_by="m", extract_timestamp="t", extraction_pass=1
+        )
     with pytest.raises(ValueError, match="extracted_by"):
-        Provenance(source_trajectory="a", extracted_by=" ", extract_timestamp="t", extraction_pass=1)
+        Provenance(
+            source_trajectory="a", extracted_by=" ", extract_timestamp="t", extraction_pass=1
+        )
     with pytest.raises(ValueError, match="extraction_pass"):
-        Provenance(source_trajectory="a", extracted_by="m", extract_timestamp="t", extraction_pass=0)
+        Provenance(
+            source_trajectory="a", extracted_by="m", extract_timestamp="t", extraction_pass=0
+        )
 
 
 def test_standing_rule_valid() -> None:

@@ -6,9 +6,7 @@ import pytest
 
 from cauterule.measurement.pack_replay import pack_replay_score
 
-_TRIGGER = (
-    "docker build invalidates layer cache by copying source before installing dependencies"
-)
+_TRIGGER = "docker build invalidates layer cache by copying source before installing dependencies"
 
 
 def _traj(tid: str, outcome: str) -> dict[str, object]:

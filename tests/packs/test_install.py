@@ -115,13 +115,17 @@ class TestInstallPack:
         src = tmp_path / "bad"
         src.mkdir()
         (src / "pack.yaml").write_text(
-            yaml.safe_dump({"name": "", "version": "", "description": "", "author": "", "rules": []}),
+            yaml.safe_dump(
+                {"name": "", "version": "", "description": "", "author": "", "rules": []}
+            ),
             encoding="utf-8",
         )
         with pytest.raises(ValueError, match="[Mm]anifest invalid"):
             install_pack(str(src), store=str(tmp_path / "store"))
 
-    def test_checksum_mismatch_aborts(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_checksum_mismatch_aborts(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         import tarfile
 
         src = _make_source_pack(tmp_path)
@@ -137,9 +141,7 @@ class TestInstallPack:
 
     def test_offline_no_cache_errors(self, tmp_path: Path) -> None:
         with pytest.raises(ValueError, match="[Oo]ffline|unknown pack shorthand"):
-            install_pack(
-                "pack-demo@1.0.0", store=str(tmp_path / "store"), offline=True
-            )
+            install_pack("pack-demo@1.0.0", store=str(tmp_path / "store"), offline=True)
 
     def test_cli_install_and_list(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         src = _make_source_pack(tmp_path)

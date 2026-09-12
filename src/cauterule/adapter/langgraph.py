@@ -156,9 +156,7 @@ def langgraph_node(
                 state = inject_rules(state, task=task_desc)
                 return cast(dict[str, Any], inner(state))
             except Exception as exc:
-                capture_node_error(
-                    node_name, state_in, state, exc, base_dir=base_dir
-                )
+                capture_node_error(node_name, state_in, state, exc, base_dir=base_dir)
                 raise
 
         return wrapper

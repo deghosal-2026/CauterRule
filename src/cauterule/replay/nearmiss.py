@@ -9,7 +9,9 @@ from cauterule.models.trajectory import Trajectory
 from cauterule.replay.matcher import is_near_miss
 
 
-def log_near_misses(candidate: CandidateRule, trajectories: list[Trajectory]) -> list[dict[str, Any]]:
+def log_near_misses(
+    candidate: CandidateRule, trajectories: list[Trajectory]
+) -> list[dict[str, Any]]:
     """Log near-miss entries for *candidate* against *trajectories*.
 
     Near misses are trajectories where trigger matches but not all context items do.

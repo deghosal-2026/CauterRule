@@ -103,7 +103,9 @@ class OtelExporter:
                     resource = Resource.create({SERVICE_NAME: service_name})
                     self._provider = TracerProvider(resource=resource)
                     self._provider.add_span_processor(
-                        BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint, headers=headers or {}))
+                        BatchSpanProcessor(
+                            OTLPSpanExporter(endpoint=endpoint, headers=headers or {})
+                        )
                     )
                     self._tracer = self._provider.get_tracer(service_name)
                 else:
@@ -216,10 +218,16 @@ class OtelExporter:
         match_type: str = "trigger",
     ) -> None:
         """Emit a ``rule.match`` span."""
-        self._span("rule.match", {
-            "rule_id": rule_id, "agent": agent, "trigger": trigger,
-            "confidence": confidence, "match_type": match_type,
-        })
+        self._span(
+            "rule.match",
+            {
+                "rule_id": rule_id,
+                "agent": agent,
+                "trigger": trigger,
+                "confidence": confidence,
+                "match_type": match_type,
+            },
+        )
 
     def emit_rule_promote(
         self,
@@ -230,18 +238,29 @@ class OtelExporter:
         justification: str = "",
     ) -> None:
         """Emit a ``rule.promote`` span."""
-        self._span("rule.promote", {
-            "rule_id": rule_id, "from_state": from_state, "to_state": to_state,
-            "evidence_id": evidence_id, "justification": justification,
-        })
+        self._span(
+            "rule.promote",
+            {
+                "rule_id": rule_id,
+                "from_state": from_state,
+                "to_state": to_state,
+                "evidence_id": evidence_id,
+                "justification": justification,
+            },
+        )
 
     def emit_rule_retire(
         self, rule_id: str, reason: str = "stale", superseded_by: str = ""
     ) -> None:
         """Emit a ``rule.retire`` span."""
-        self._span("rule.retire", {
-            "rule_id": rule_id, "reason": reason, "superseded_by": superseded_by,
-        })
+        self._span(
+            "rule.retire",
+            {
+                "rule_id": rule_id,
+                "reason": reason,
+                "superseded_by": superseded_by,
+            },
+        )
 
     def emit_replay_verdict(
         self,
@@ -251,10 +270,15 @@ class OtelExporter:
         recall_score: float = 0.0,
     ) -> None:
         """Emit a ``replay.verdict`` span."""
-        self._span("replay.verdict", {
-            "evidence_id": evidence_id, "verdict": verdict,
-            "precision_score": precision_score, "recall_score": recall_score,
-        })
+        self._span(
+            "replay.verdict",
+            {
+                "evidence_id": evidence_id,
+                "verdict": verdict,
+                "precision_score": precision_score,
+                "recall_score": recall_score,
+            },
+        )
 
 
 def configure_otlp(

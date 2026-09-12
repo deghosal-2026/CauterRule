@@ -34,9 +34,7 @@ def test_summarize_records_counts_statuses_and_verdicts() -> None:
         {"status": "gate_dropped"},
         {"status": "no_candidates"},
     ]
-    summary = module.summarize_records(
-        records, corpus="golden", model="m", model_label="M"
-    )
+    summary = module.summarize_records(records, corpus="golden", model="m", model_label="M")
     assert summary.total == 5
     assert summary.done == 3
     assert summary.gate_dropped == 1
@@ -47,12 +45,18 @@ def test_summarize_records_counts_statuses_and_verdicts() -> None:
 def test_model_totals_sum_per_model() -> None:
     module = _load()
     runs = [
-        module.summarize_records([{"status": "done", "best": {"verdict": "pass"}}],
-                                 corpus="golden", model="m1", model_label="M1"),
-        module.summarize_records([{"status": "done"}, {"status": "done"}],
-                                 corpus="otel", model="m1", model_label="M1"),
-        module.summarize_records([{"status": "done"}], corpus="golden", model="m2",
-                                 model_label="M2"),
+        module.summarize_records(
+            [{"status": "done", "best": {"verdict": "pass"}}],
+            corpus="golden",
+            model="m1",
+            model_label="M1",
+        ),
+        module.summarize_records(
+            [{"status": "done"}, {"status": "done"}], corpus="otel", model="m1", model_label="M1"
+        ),
+        module.summarize_records(
+            [{"status": "done"}], corpus="golden", model="m2", model_label="M2"
+        ),
     ]
     assert module.model_totals(runs) == {"M1": 3, "M2": 1}
 

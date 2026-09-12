@@ -58,9 +58,7 @@ def inject(
         return
     max_rules = kwargs.pop("max_rules", None)
     max_tokens = kwargs.pop("max_tokens", None)
-    yield _filter_and_bound(
-        task, rules, kwargs, max_rules=max_rules, max_tokens=max_tokens
-    )
+    yield _filter_and_bound(task, rules, kwargs, max_rules=max_rules, max_tokens=max_tokens)
 
 
 @contextlib.asynccontextmanager
@@ -75,6 +73,4 @@ async def ainject(
         return
     max_rules = kwargs.pop("max_rules", None)
     max_tokens = kwargs.pop("max_tokens", None)
-    yield _filter_and_bound(
-        task, rules, kwargs, max_rules=max_rules, max_tokens=max_tokens
-    )
+    yield _filter_and_bound(task, rules, kwargs, max_rules=max_rules, max_tokens=max_tokens)

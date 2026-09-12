@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from click.testing import CliRunner
 
 from cauterule.cli.app import main
@@ -14,13 +16,15 @@ class TestCostModel:
         assert cost_per_1k_trajectories("qwen3-4b-instruct")["cost_per_1k"] == 0.0
 
     def test_cloud_models_priced(self) -> None:
-        assert cost_per_1k_trajectories("gpt-4o-mini")["cost_per_1k"] > 0
-        assert cost_per_1k_trajectories("gpt-4o")["cost_per_1k"] > cost_per_1k_trajectories("gpt-4o-mini")["cost_per_1k"]
+        assert float(cost_per_1k_trajectories("gpt-4o-mini")["cost_per_1k"]) > 0
+        assert float(cost_per_1k_trajectories("gpt-4o")["cost_per_1k"]) > float(
+            cost_per_1k_trajectories("gpt-4o-mini")["cost_per_1k"]
+        )
 
     def test_tier_assigned(self) -> None:
-        assert "local" in cost_per_1k_trajectories("llama-3.2-3b-instruct")["tier"]
-        assert "cloud" in cost_per_1k_trajectories("gpt-4o-mini")["tier"]
-        assert "flagship" in cost_per_1k_trajectories("gpt-4o")["tier"]
+        assert "local" in str(cost_per_1k_trajectories("llama-3.2-3b-instruct")["tier"])
+        assert "cloud" in str(cost_per_1k_trajectories("gpt-4o-mini")["tier"])
+        assert "flagship" in str(cost_per_1k_trajectories("gpt-4o")["tier"])
 
     def test_table_covers_all_models(self) -> None:
         table = cost_table()
@@ -43,17 +47,33 @@ class TestPreflightCli:
         assert "tier=" in result.output
         assert "llama-3.2-3b" in result.output
 
-    def test_max_cost_rejects(self, tmp_path) -> None:
+    def test_max_cost_rejects(self, tmp_path: Path) -> None:
         import json
 
         corpus = tmp_path / "traj.jsonl"
         for i in range(100):
             corpus.write_text(
-                json.dumps({
-                    "trajectory_id": f"T-{i}", "timestamp": "2026-01-01T00:00:00Z",
-                    "task": "x", "steps": [{"step_number": 1, "tool": "t", "input": "x", "output": "", "error": "e"}],
-                    "success": False, "domain": "git", "quality_label": "clear", "tags": [],
-                }) + "\n",
+                json.dumps(
+                    {
+                        "trajectory_id": f"T-{i}",
+                        "timestamp": "2026-01-01T00:00:00Z",
+                        "task": "x",
+                        "steps": [
+                            {
+                                "step_number": 1,
+                                "tool": "t",
+                                "input": "x",
+                                "output": "",
+                                "error": "e",
+                            }
+                        ],
+                        "success": False,
+                        "domain": "git",
+                        "quality_label": "clear",
+                        "tags": [],
+                    }
+                )
+                + "\n",
                 encoding="utf-8",
             )
         result = CliRunner().invoke(

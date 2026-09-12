@@ -19,6 +19,7 @@ import time
 from pathlib import Path
 
 import pytest
+from mcp.types import TextContent
 
 DOCKER_TAG = "cauterule:field-test"
 WORKSPACE = "/workspace"
@@ -33,18 +34,14 @@ pytestmark = pytest.mark.docker
 # ---------------------------------------------------------------------------
 def _docker_available() -> bool:
     try:
-        subprocess.run(
-            ["docker", "info"], capture_output=True, timeout=10, check=False
-        )
+        subprocess.run(["docker", "info"], capture_output=True, timeout=10, check=False)
     except (FileNotFoundError, subprocess.TimeoutExpired):
         return False
     return True
 
 
 HAS_DOCKER = _docker_available()
-skip_no_docker = pytest.mark.skipif(
-    not HAS_DOCKER, reason="docker daemon not available"
-)
+skip_no_docker = pytest.mark.skipif(not HAS_DOCKER, reason="docker daemon not available")
 
 
 def _run(
@@ -69,8 +66,12 @@ def _run(
     return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
 
 
-def _run_sh(script: str, *, workspace: Path | None = None, timeout: int = 240) -> subprocess.CompletedProcess[str]:
-    return _run(["-c", script], workspace=workspace, entrypoint="sh", cwd=WORKSPACE, timeout=timeout)
+def _run_sh(
+    script: str, *, workspace: Path | None = None, timeout: int = 240
+) -> subprocess.CompletedProcess[str]:
+    return _run(
+        ["-c", script], workspace=workspace, entrypoint="sh", cwd=WORKSPACE, timeout=timeout
+    )
 
 
 @pytest.fixture
@@ -94,12 +95,16 @@ def test_docker_build_hardening() -> None:
     """Image builds; runtime is non-root; git present; healthcheck + OCI labels."""
     build = subprocess.run(
         ["docker", "build", "-t", DOCKER_TAG, str(REPO)],
-        capture_output=True, text=True, timeout=600,
+        capture_output=True,
+        text=True,
+        timeout=600,
     )
     assert build.returncode == 0, build.stderr[-2000:]
     inspect = subprocess.run(
         ["docker", "inspect", DOCKER_TAG],
-        capture_output=True, text=True, check=True,
+        capture_output=True,
+        text=True,
+        check=True,
     )
     data = json.loads(inspect.stdout)[0]
     config = data["Config"]
@@ -126,10 +131,26 @@ def test_docker_compose_config() -> None:
     if not compose.is_file():
         pytest.skip("docker-compose.yaml not present")
     result = subprocess.run(
-        ["docker", "compose", "-f", str(compose),
-         "--profile", "demo", "--profile", "test", "--profile", "mcp", "--profile", "mcp-http",
-         "config", "--format", "json"],
-        capture_output=True, text=True, timeout=60,
+        [
+            "docker",
+            "compose",
+            "-f",
+            str(compose),
+            "--profile",
+            "demo",
+            "--profile",
+            "test",
+            "--profile",
+            "mcp",
+            "--profile",
+            "mcp-http",
+            "config",
+            "--format",
+            "json",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     assert result.returncode == 0, result.stderr
     cfg = json.loads(result.stdout)
@@ -188,16 +209,24 @@ def test_docker_benchmark_cli() -> None:
     # Image runs non-root (#524) — install to user site.
     # The runtime image ships the wheel only; mount the repo's benchmarks/ dir.
     result = subprocess.run(
-        ["docker", "run", "--rm",
-         "-v", f"{REPO / 'benchmarks'}:/app/benchmarks:ro",
-         "--entrypoint", "sh",
-         DOCKER_TAG,
-         "-c",
-         "pip install --user -q pytest-benchmark >/dev/null 2>&1; "
-         "cauterule benchmark list && "
-         "cauterule benchmark run conflict_consolidation >/dev/null 2>&1 && "
-         "echo BENCH_OK"],
-        capture_output=True, text=True, timeout=300,
+        [
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{REPO / 'benchmarks'}:/app/benchmarks:ro",
+            "--entrypoint",
+            "sh",
+            DOCKER_TAG,
+            "-c",
+            "pip install --user -q pytest-benchmark >/dev/null 2>&1; "
+            "cauterule benchmark list && "
+            "cauterule benchmark run conflict_consolidation >/dev/null 2>&1 && "
+            "echo BENCH_OK",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=300,
     )
     assert result.returncode == 0, result.stderr
     assert "conflict_consolidation" in result.stdout
@@ -238,7 +267,10 @@ def test_docker_pack_install(workspace: Path) -> None:
 @skip_no_docker
 def test_docker_pack_persistence(workspace: Path) -> None:
     # First container creates a pack.
-    _run_sh(f"cauterule pack create ft-pack --store {WORKSPACE}/rules --from-tag git", workspace=workspace)
+    _run_sh(
+        f"cauterule pack create ft-pack --store {WORKSPACE}/rules --from-tag git",
+        workspace=workspace,
+    )
     # Second container reads the store (mounted volume) and sees rules.
     result = _run_sh(
         f"test -d {WORKSPACE}/rules && echo PERSIST_OK",
@@ -253,10 +285,12 @@ def test_docker_pack_persistence(workspace: Path) -> None:
 @skip_no_docker
 def test_docker_adapter_import() -> None:
     result = _run(
-        ["-c",
-         "import cauterule.adapter.langgraph, cauterule.adapter.crewai, "
-         "cauterule.adapter.pydanticai, cauterule.adapter.decorator; "
-         "from cauterule.adapter.inject import inject; print('ADAPTERS_OK')"],
+        [
+            "-c",
+            "import cauterule.adapter.langgraph, cauterule.adapter.crewai, "
+            "cauterule.adapter.pydanticai, cauterule.adapter.decorator; "
+            "from cauterule.adapter.inject import inject; print('ADAPTERS_OK')",
+        ],
         entrypoint="python",
     )
     assert result.returncode == 0, result.stderr
@@ -287,16 +321,39 @@ def test_docker_lifecycle(workspace: Path) -> None:
 def test_docker_mcp_stdio(workspace: Path) -> None:
     """stdio transport parity — the 4 tools respond."""
     init = (
-        json.dumps({
-            "jsonrpc": "2.0", "id": 1, "method": "initialize",
-            "params": {"protocolVersion": "2024-11-05", "capabilities": {},
-                       "clientInfo": {"name": "test", "version": "0.1.0"}},
-        }) + "\n"
+        json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {},
+                    "clientInfo": {"name": "test", "version": "0.1.0"},
+                },
+            }
+        )
+        + "\n"
     )
     result = subprocess.run(
-        ["docker", "run", "--rm", "-i", "-v", f"{workspace}:{WORKSPACE}", "-w", WORKSPACE,
-         DOCKER_TAG, "mcp", "--transport", "stdio"],
-        input=init, capture_output=True, text=True, timeout=60,
+        [
+            "docker",
+            "run",
+            "--rm",
+            "-i",
+            "-v",
+            f"{workspace}:{WORKSPACE}",
+            "-w",
+            WORKSPACE,
+            DOCKER_TAG,
+            "mcp",
+            "--transport",
+            "stdio",
+        ],
+        input=init,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     assert result.returncode == 0, result.stderr
     # initialize succeeded — jsonrpc response with a result object.
@@ -320,18 +377,41 @@ def test_docker_mcp_http_auth() -> None:
 
     token = "test-token-v030"
     container = subprocess.run(
-        ["docker", "run", "--rm", "-d", "-p", "0:8025", "--name", "mcp-http-v030",
-         "-e", f"CAUTERULE_MCP_TOKEN={token}",
-         DOCKER_TAG, "mcp", "--transport", "http", "--host", "0.0.0.0", "--port", "8025",
-         "--auth-mode", "bearer"],
-        capture_output=True, text=True, timeout=60,
+        [
+            "docker",
+            "run",
+            "--rm",
+            "-d",
+            "-p",
+            "0:8025",
+            "--name",
+            "mcp-http-v030",
+            "-e",
+            f"CAUTERULE_MCP_TOKEN={token}",
+            DOCKER_TAG,
+            "mcp",
+            "--transport",
+            "http",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8025",
+            "--auth-mode",
+            "bearer",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     if container.returncode != 0:
         pytest.skip(f"could not start mcp http container: {container.stderr}")
     cid = container.stdout.strip()
     try:
         port_out = subprocess.run(
-            ["docker", "port", cid, "8025"], capture_output=True, text=True, timeout=20,
+            ["docker", "port", cid, "8025"],
+            capture_output=True,
+            text=True,
+            timeout=20,
         )
         host_port = port_out.stdout.strip().split(":")[-1]
         assert host_port, f"no port mapping: {port_out.stdout}"
@@ -340,6 +420,7 @@ def test_docker_mcp_http_auth() -> None:
 
         async def _call(headers: dict[str, str] | None) -> tuple[bool, str]:
             import httpx
+
             http_client = httpx.AsyncClient(headers=headers) if headers else None
             async with (
                 streamable_http_client(base, http_client=http_client) as (read, write, _),
@@ -347,16 +428,16 @@ def test_docker_mcp_http_auth() -> None:
             ):
                 await session.initialize()
                 res = await session.call_tool("list_rules_tool", {})
-                text = res.content[0].text if res.content else ""
+                content = res.content[0] if res.content else None
+                assert isinstance(content, TextContent)
+                text = content.text
                 return res.isError, text
 
         # Unauthenticated tool call → rejected with a structured 401 payload.
         _, text = anyio.run(_call, None)
         assert "401" in text or "unauthorized" in text.lower(), text
         # Authenticated tool call → succeeds.
-        _, text = anyio.run(
-            _call, {"Authorization": f"Bearer {token}"}
-        )
+        _, text = anyio.run(_call, {"Authorization": f"Bearer {token}"})
         assert "401" not in text and "unauthorized" not in text.lower(), text
     finally:
         subprocess.run(["docker", "rm", "-f", cid], capture_output=True, timeout=20)
@@ -372,17 +453,39 @@ def test_docker_mcp_http_schema_and_rate_limit() -> None:
 
     token = "test-token-v030-rl"
     container = subprocess.run(
-        ["docker", "run", "--rm", "-d", "-p", "0:8025", "--name", "mcp-http-v030-rl",
-          "-e", f"CAUTERULE_MCP_TOKEN={token}",
-          DOCKER_TAG, "mcp", "--transport", "http", "--host", "0.0.0.0", "--port", "8025",
-          "--auth-mode", "bearer"],
-        capture_output=True, text=True, timeout=60,
+        [
+            "docker",
+            "run",
+            "--rm",
+            "-d",
+            "-p",
+            "0:8025",
+            "--name",
+            "mcp-http-v030-rl",
+            "-e",
+            f"CAUTERULE_MCP_TOKEN={token}",
+            DOCKER_TAG,
+            "mcp",
+            "--transport",
+            "http",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8025",
+            "--auth-mode",
+            "bearer",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     if container.returncode != 0:
         pytest.skip(f"could not start mcp http container: {container.stderr}")
     cid = container.stdout.strip()
     try:
-        port_out = subprocess.run(["docker", "port", cid, "8025"], capture_output=True, text=True, timeout=20)
+        port_out = subprocess.run(
+            ["docker", "port", cid, "8025"], capture_output=True, text=True, timeout=20
+        )
         host_port = port_out.stdout.strip().split(":")[-1]
         assert host_port, f"no port mapping: {port_out.stdout}"
         _wait_http(host_port, 40)
@@ -390,6 +493,7 @@ def test_docker_mcp_http_schema_and_rate_limit() -> None:
 
         async def _bad_schema(headers: dict[str, str]) -> str:
             import httpx
+
             http_client = httpx.AsyncClient(headers=headers)
             async with (
                 streamable_http_client(base, http_client=http_client) as (read, write, _),
@@ -397,8 +501,10 @@ def test_docker_mcp_http_schema_and_rate_limit() -> None:
             ):
                 await session.initialize()
                 # Invalid args for list_rules_tool (expects no extra fields) -> schema error.
-                res = await session.call_tool("list_rules_tool", {"status": 123})  # type: ignore[arg-type]
-                return res.content[0].text if res.content else ""
+                res = await session.call_tool("list_rules_tool", {"status": 123})
+                content = res.content[0] if res.content else None
+                assert isinstance(content, TextContent)
+                return content.text
 
         text = anyio.run(_bad_schema, {"Authorization": f"Bearer {token}"})
         # Structured validation error, no traceback leak, not 401.
@@ -408,6 +514,7 @@ def test_docker_mcp_http_schema_and_rate_limit() -> None:
 
         async def _burst(headers: dict[str, str]) -> list[str]:
             import httpx
+
             results: list[str] = []
             # Fresh session per call avoids single-session buffering edge cases;
             # burst still exercises rate-limit path if server limits per token.
@@ -419,7 +526,9 @@ def test_docker_mcp_http_schema_and_rate_limit() -> None:
                 ):
                     await session.initialize()
                     res = await session.call_tool("list_rules_tool", {})
-                    t = res.content[0].text if res.content else ""
+                    content = res.content[0] if res.content else None
+                    assert isinstance(content, TextContent)
+                    t = content.text
                     if not t and getattr(res, "isError", False):
                         t = f"isError:{res.isError}"
                     results.append(t)
@@ -440,7 +549,9 @@ def test_docker_mcp_http_schema_and_rate_limit() -> None:
 def test_docker_otel_emit() -> None:
     """`cauterule otel test` runs; failure on bad endpoint is non-fatal (logs, no raise)."""
     # Disabled path: should be a clean no-op or success, never raise.
-    disabled = _run_sh("CAUTERULE_OTEL_ENABLED=false cauterule otel test 2>&1 || true; echo OTEL_OK")
+    disabled = _run_sh(
+        "CAUTERULE_OTEL_ENABLED=false cauterule otel test 2>&1 || true; echo OTEL_OK"
+    )
     assert "OTEL_OK" in disabled.stdout
     # Bad endpoint: must not crash the CLI.
     bad = _run_sh(
@@ -488,15 +599,23 @@ def test_docker_benchmark_compare() -> None:
     # needs --user for pip. Verify the 15 hot paths via list + a single run;
     # the --compare path is exercised on the host (scripts/compare_benchmarks.py).
     result = subprocess.run(
-        ["docker", "run", "--rm",
-          "-v", f"{REPO / 'benchmarks'}:/app/benchmarks:ro",
-          "--entrypoint", "sh",
-          DOCKER_TAG,
-          "-c",
-          "pip install --user -q pytest-benchmark >/dev/null 2>&1; "
-          "cauterule benchmark list | grep -q conflict_consolidation && "
-          "cauterule benchmark run conflict_consolidation 2>&1 | grep -q 'passed\\|conflict' && echo COMPARE_OK"],
-        capture_output=True, text=True, timeout=300,
+        [
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{REPO / 'benchmarks'}:/app/benchmarks:ro",
+            "--entrypoint",
+            "sh",
+            DOCKER_TAG,
+            "-c",
+            "pip install --user -q pytest-benchmark >/dev/null 2>&1; "
+            "cauterule benchmark list | grep -q conflict_consolidation && "
+            "cauterule benchmark run conflict_consolidation 2>&1 | grep -q 'passed\\|conflict' && echo COMPARE_OK",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=300,
     )
     assert result.returncode == 0, result.stderr[-2000:] + result.stdout[-2000:]
     assert "COMPARE_OK" in result.stdout, result.stdout[-2000:]
@@ -632,7 +751,9 @@ def test_docker_rules_persistence(workspace: Path) -> None:
 def test_docker_image_size() -> None:
     result = subprocess.run(
         ["docker", "images", DOCKER_TAG, "--format", "{{.Size}}"],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     assert result.returncode == 0, result.stderr
     size = result.stdout.strip()
@@ -648,7 +769,9 @@ def test_docker_multi_arch() -> None:
     if subprocess.run(["which", "docker"], capture_output=True).returncode != 0:
         pytest.skip("no docker")
     bx = subprocess.run(
-        ["docker", "buildx", "version"], capture_output=True, text=True,
+        ["docker", "buildx", "version"],
+        capture_output=True,
+        text=True,
     )
     if bx.returncode != 0:
         pytest.skip("docker buildx not available")
@@ -665,9 +788,10 @@ def test_docker_multi_arch() -> None:
 @skip_no_docker
 def test_docker_resource_limits() -> None:
     result = subprocess.run(
-        ["docker", "run", "--rm", "--memory=1g", "--cpus=2",
-         DOCKER_TAG, "--help"],
-        capture_output=True, text=True, timeout=60,
+        ["docker", "run", "--rm", "--memory=1g", "--cpus=2", DOCKER_TAG, "--help"],
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     assert result.returncode == 0, result.stderr
     assert "extract" in result.stdout
@@ -678,7 +802,9 @@ def test_docker_network_isolated() -> None:
     """Air-gapped container: core CLI works offline."""
     result = subprocess.run(
         ["docker", "run", "--rm", "--network", "none", DOCKER_TAG, "--version"],
-        capture_output=True, text=True, timeout=60,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip()
@@ -698,12 +824,26 @@ def _wait_http(host_port: str, timeout: int = 40) -> None:
     url = f"http://127.0.0.1:{host_port}/mcp"
     while time.time() < deadline:
         r = subprocess.run(
-            ["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
-             "-X", "POST", url,
-             "-H", "Content-Type: application/json",
-             "-H", "Accept: application/json, text/event-stream",
-             "-d", '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"t","version":"0"}}}'],
-            capture_output=True, text=True, timeout=10,
+            [
+                "curl",
+                "-s",
+                "-o",
+                "/dev/null",
+                "-w",
+                "%{http_code}",
+                "-X",
+                "POST",
+                url,
+                "-H",
+                "Content-Type: application/json",
+                "-H",
+                "Accept: application/json, text/event-stream",
+                "-d",
+                '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"t","version":"0"}}}',
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         if r.stdout.strip().isdigit() and int(r.stdout.strip()) > 0:
             return

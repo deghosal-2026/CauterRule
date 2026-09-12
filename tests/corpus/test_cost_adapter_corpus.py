@@ -33,7 +33,9 @@ _COST_MIX = {
 
 
 def _load(path: Path) -> list[dict[str, object]]:
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return [
+        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
+    ]
 
 
 def test_adapter_corpus_has_20_per_framework() -> None:

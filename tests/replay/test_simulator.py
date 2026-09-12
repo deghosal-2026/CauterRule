@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.rule import RuleDo, RuleWhen
 from cauterule.models.trajectory import Step, Trajectory
@@ -5,7 +7,9 @@ from cauterule.replay.simulator import simulate
 
 
 def _cand(trigger: str, context: tuple[str, ...] = ()) -> CandidateRule:
-    return CandidateRule(when=RuleWhen(trigger=trigger, context=context), do=RuleDo(directive="d"), confidence=0.9)
+    return CandidateRule(
+        when=RuleWhen(trigger=trigger, context=context), do=RuleDo(directive="d"), confidence=0.9
+    )
 
 
 def _traj(task: str, success: bool, error: str = "") -> Trajectory:
@@ -109,8 +113,8 @@ def test_recovery_non_string_input_safe() -> None:
     # Review: unvalidated JSONL may carry non-string failure_class.
     from cauterule.replay.simulator import is_recovery_class
 
-    assert is_recovery_class(123) is False  # type: ignore[arg-type]
-    assert is_recovery_class(["retry"]) is False  # type: ignore[arg-type]
+    assert is_recovery_class(cast(Any, 123)) is False
+    assert is_recovery_class(cast(Any, ["retry"])) is False
 
 
 def test_recovery_bare_nearmiss_token_not_recovery() -> None:

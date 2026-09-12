@@ -78,6 +78,7 @@ OMLX_NEARMISS_THRESHOLD = 0.70
 # Corpora that must keep the strict threshold even for OMLX (safety-critical).
 NEARMISS_CORPORA: frozenset[str] = frozenset({"nearmiss"})
 
+
 def strategy_for_corpus(corpus_name: str) -> str:
     """Return recommended matcher strategy for *corpus_name*.
 
@@ -87,10 +88,7 @@ def strategy_for_corpus(corpus_name: str) -> str:
     (#691).
     """
     segments = [s.strip() for s in corpus_name.lower().split("/") if s.strip()]
-    if any(
-        s == "sibling" or s.startswith(("sibling-", "cross-repo"))
-        for s in segments
-    ):
+    if any(s == "sibling" or s.startswith(("sibling-", "cross-repo")) for s in segments):
         return "transfer"
     if "raw" in segments:
         return "loose"
@@ -119,22 +117,111 @@ def threshold_for_corpus(corpus_name: str, omlx: bool = False) -> float:
             threshold = OMLX_THRESHOLD
     return threshold
 
+
 # Common words carry no matching signal.
 _STOPWORDS: frozenset[str] = frozenset(
     {
-        "a", "an", "the", "and", "or", "but", "if", "then", "else", "when",
-        "what", "which", "who", "whom", "this", "that", "these", "those",
-        "am", "is", "are", "was", "were", "be", "been", "being", "have",
-        "has", "had", "having", "do", "does", "did", "doing", "will",
-        "would", "shall", "should", "can", "could", "may", "might", "must",
-        "ought", "to", "of", "in", "for", "on", "by", "with", "about",
-        "into", "through", "during", "before", "after", "above", "below",
-        "up", "down", "out", "off", "over", "under", "again", "further",
-        "once", "here", "there", "all", "any", "both", "each", "few",
-        "more", "most", "other", "some", "such", "only", "own", "same",
-        "so", "than", "too", "very", "just", "also", "not", "no", "nor",
-        "as", "at", "from", "it", "its", "you", "your", "we", "they",
-
+        "a",
+        "an",
+        "the",
+        "and",
+        "or",
+        "but",
+        "if",
+        "then",
+        "else",
+        "when",
+        "what",
+        "which",
+        "who",
+        "whom",
+        "this",
+        "that",
+        "these",
+        "those",
+        "am",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "have",
+        "has",
+        "had",
+        "having",
+        "do",
+        "does",
+        "did",
+        "doing",
+        "will",
+        "would",
+        "shall",
+        "should",
+        "can",
+        "could",
+        "may",
+        "might",
+        "must",
+        "ought",
+        "to",
+        "of",
+        "in",
+        "for",
+        "on",
+        "by",
+        "with",
+        "about",
+        "into",
+        "through",
+        "during",
+        "before",
+        "after",
+        "above",
+        "below",
+        "up",
+        "down",
+        "out",
+        "off",
+        "over",
+        "under",
+        "again",
+        "further",
+        "once",
+        "here",
+        "there",
+        "all",
+        "any",
+        "both",
+        "each",
+        "few",
+        "more",
+        "most",
+        "other",
+        "some",
+        "such",
+        "only",
+        "own",
+        "same",
+        "so",
+        "than",
+        "too",
+        "very",
+        "just",
+        "also",
+        "not",
+        "no",
+        "nor",
+        "as",
+        "at",
+        "from",
+        "it",
+        "its",
+        "you",
+        "your",
+        "we",
+        "they",
     }
 )
 
@@ -145,34 +232,87 @@ _WS_RE = re.compile(r"\s+")
 # Expansion is one-directional (trigger side) and conservative.
 _DISTINCTIVE_PHRASES: frozenset[str] = frozenset(
     {
-        "non-fast-forward", "merge conflict", "permission denied",
-        "connection refused", "module not found", "modulenotfounderror",
-        "assertion error", "assertionerror", "type error", "typeerror",
-        "syntax error", "syntaxerror", "import error", "importerror",
-        "key error", "keyerror", "value error", "valueerror",
-        "index error", "indexerror", "attribute error", "attributeerror",
-        "file not found", "filenotfounderror", "out of memory", "oomkilled",
-        "rate limit", "rate limit exceeded", "deadline exceeded",
-        "state lock", "element not found", "nosuchelementexception",
-        "stale element", "staleelementreferenceexception",
-        "timeout", "timed out", "connection timeout",
-        "access denied", "not found", "notfound", "conflict",
-        "build failed", "test failed", "deploy failed",
-        "no such file", "directory not empty",
-        "unknown host", "could not resolve",
-        "unable to find", "unable to connect",
-        "no matches for kind", "cr not found",
-        "resource not found", "not authorized",
-        "exit code", "non-zero exit", "process exited",
-        "ssl certificate", "certificate verification", "ssl verification",
-        "nxdomain", "dns resolution", "name resolution",
-        "npm build", "npm install", "npm ERR",
-        "network connection", "network unreachable",
-        "cache miss", "cache not found",
-        "browser alert", "unexpected alert",
-        "no such frame", "frame not found", "switch to frame",
-        "checkout", "delete branch", "branch checked out",
-        "flaky", "intermittent", "intermittent failure",
+        "non-fast-forward",
+        "merge conflict",
+        "permission denied",
+        "connection refused",
+        "module not found",
+        "modulenotfounderror",
+        "assertion error",
+        "assertionerror",
+        "type error",
+        "typeerror",
+        "syntax error",
+        "syntaxerror",
+        "import error",
+        "importerror",
+        "key error",
+        "keyerror",
+        "value error",
+        "valueerror",
+        "index error",
+        "indexerror",
+        "attribute error",
+        "attributeerror",
+        "file not found",
+        "filenotfounderror",
+        "out of memory",
+        "oomkilled",
+        "rate limit",
+        "rate limit exceeded",
+        "deadline exceeded",
+        "state lock",
+        "element not found",
+        "nosuchelementexception",
+        "stale element",
+        "staleelementreferenceexception",
+        "timeout",
+        "timed out",
+        "connection timeout",
+        "access denied",
+        "not found",
+        "notfound",
+        "conflict",
+        "build failed",
+        "test failed",
+        "deploy failed",
+        "no such file",
+        "directory not empty",
+        "unknown host",
+        "could not resolve",
+        "unable to find",
+        "unable to connect",
+        "no matches for kind",
+        "cr not found",
+        "resource not found",
+        "not authorized",
+        "exit code",
+        "non-zero exit",
+        "process exited",
+        "ssl certificate",
+        "certificate verification",
+        "ssl verification",
+        "nxdomain",
+        "dns resolution",
+        "name resolution",
+        "npm build",
+        "npm install",
+        "npm ERR",
+        "network connection",
+        "network unreachable",
+        "cache miss",
+        "cache not found",
+        "browser alert",
+        "unexpected alert",
+        "no such frame",
+        "frame not found",
+        "switch to frame",
+        "checkout",
+        "delete branch",
+        "branch checked out",
+        "flaky",
+        "intermittent",
+        "intermittent failure",
     }
 )
 
@@ -182,22 +322,38 @@ _LONG_PHRASE_THRESHOLD = 8
 # Expansion is one-directional (trigger side) and conservative.
 _ALIASES: dict[str, frozenset[str]] = {
     "non-fast-forward": frozenset(
-        {"remote contains work", "updates were rejected", "fetch first", "pull first", "behind remote"}
+        {
+            "remote contains work",
+            "updates were rejected",
+            "fetch first",
+            "pull first",
+            "behind remote",
+        }
     ),
     "non fast forward": frozenset(
-        {"remote contains work", "updates were rejected", "fetch first", "pull first", "behind remote"}
+        {
+            "remote contains work",
+            "updates were rejected",
+            "fetch first",
+            "pull first",
+            "behind remote",
+        }
     ),
     "push rejected": frozenset({"updates were rejected", "non-fast-forward"}),
     "merge conflict": frozenset({"conflicting changes", "automatic merge failed", "merge failed"}),
     "import error": frozenset({"no module named", "modulenotfounderror"}),
     "module not found": frozenset({"no module named", "modulenotfounderror"}),
-    "connection refused": frozenset({"could not connect", "network unreachable", "connection reset"}),
+    "connection refused": frozenset(
+        {"could not connect", "network unreachable", "connection reset"}
+    ),
     "out of memory": frozenset({"oomkilled", "memory exhausted", "killed"}),
     "permission denied": frozenset({"operation not permitted", "access denied", "eacces"}),
     "file not found": frozenset({"no such file", "enoent", "does not exist"}),
     "timeout": frozenset({"timed out", "deadline exceeded", "took too long"}),
     "version conflict": frozenset({"dependency resolver conflict", "dependency conflict"}),
-    "package not found": frozenset({"unable to find ", "no package matching", "libpq-dev not found"}),
+    "package not found": frozenset(
+        {"unable to find ", "no package matching", "libpq-dev not found"}
+    ),
     "state lock": frozenset({"conditionalcheckfailedexception", "state locked", "error acquiring"}),
     "rate limit": frozenset({"429", "too many requests", "rate limit exceeded"}),
     "assertion error": frozenset({"assertionerror", "assertion failed"}),
@@ -357,9 +513,7 @@ def match_score(candidate: CandidateRule, trajectory: Trajectory) -> float:
         precision = weighted_hit / max(weighted_haystack, 1)
         recall = weighted_hit / weighted_trigger
         token_f1 = (
-            0.0
-            if (precision + recall) == 0
-            else 2 * precision * recall / (precision + recall)
+            0.0 if (precision + recall) == 0 else 2 * precision * recall / (precision + recall)
         )
 
     # Bigram recall (adjacent content-token pairs)
@@ -402,8 +556,20 @@ def match_score(candidate: CandidateRule, trajectory: Trajectory) -> float:
 
 # Recognized tool/error domains for cross-domain matching (#487).
 _KNOWN_DOMAINS: tuple[str, ...] = (
-    "git", "docker", "pip", "pytest", "kubectl", "terraform", "api",
-    "browser", "python", "ssh", "npm", "deploy", "ci", "test",
+    "git",
+    "docker",
+    "pip",
+    "pytest",
+    "kubectl",
+    "terraform",
+    "api",
+    "browser",
+    "python",
+    "ssh",
+    "npm",
+    "deploy",
+    "ci",
+    "test",
 )
 
 # Related tools map to a shared group so a "pip" trigger is not considered
@@ -411,14 +577,20 @@ _KNOWN_DOMAINS: tuple[str, ...] = (
 _DOMAIN_GROUPS: dict[str, str] = {
     "git": "vcs",
     "docker": "containers",
-    "pip": "python", "pytest": "python", "python": "python",
-    "kubectl": "kubernetes", "k8s": "kubernetes", "kubernetes": "kubernetes",
+    "pip": "python",
+    "pytest": "python",
+    "python": "python",
+    "kubectl": "kubernetes",
+    "k8s": "kubernetes",
+    "kubernetes": "kubernetes",
     "terraform": "iac",
     "api": "api",
-    "browser": "browser", "selenium": "browser",
+    "browser": "browser",
+    "selenium": "browser",
     "ssh": "ssh",
     "npm": "node",
-    "deploy": "ci", "ci": "ci",
+    "deploy": "ci",
+    "ci": "ci",
     "test": "testing",
 }
 
@@ -445,9 +617,7 @@ def _domain_group(name: str | None) -> str | None:
     return _DOMAIN_GROUPS.get(name.lower())
 
 
-def check_domain_mismatch(
-    candidate: CandidateRule, trajectory: Trajectory
-) -> bool:
+def check_domain_mismatch(candidate: CandidateRule, trajectory: Trajectory) -> bool:
     """Return True if the candidate trigger and trajectory are in different domains.
 
     A mismatch means the rule's primary tool/domain does not align with the
@@ -580,7 +750,8 @@ def rule_matches(
 
 
 def is_near_miss(
-    candidate: CandidateRule, trajectory: Trajectory,
+    candidate: CandidateRule,
+    trajectory: Trajectory,
     threshold: float = DEFAULT_THRESHOLD,
     include_input: bool = True,
 ) -> bool:

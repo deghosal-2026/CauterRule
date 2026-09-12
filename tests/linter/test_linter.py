@@ -10,9 +10,15 @@ from cauterule.models.rule import Provenance, RuleDo, RuleWhen, StandingRule
 
 def _rule(trigger: str, directive: str) -> StandingRule:
     return StandingRule(
-        id="R-001", when=RuleWhen(trigger=trigger), do=RuleDo(directive=directive),
-        confidence=0.9, provenance=Provenance(source_trajectory="a", extracted_by="m", extract_timestamp="t", extraction_pass=1),
-        status="active", promoted_at="t",
+        id="R-001",
+        when=RuleWhen(trigger=trigger),
+        do=RuleDo(directive=directive),
+        confidence=0.9,
+        provenance=Provenance(
+            source_trajectory="a", extracted_by="m", extract_timestamp="t", extraction_pass=1
+        ),
+        status="active",
+        promoted_at="t",
     )
 
 
@@ -31,7 +37,9 @@ def test_tautology() -> None:
 
 def test_duplicate() -> None:
     existing = [_rule("git push", "pull --rebase")]
-    assert check_duplicate("git push", "pull --rebase", existing) == ["duplicate: matches existing rule R-001"]
+    assert check_duplicate("git push", "pull --rebase", existing) == [
+        "duplicate: matches existing rule R-001"
+    ]
     assert check_duplicate("git push", "pull --rebase", []) == []
     assert check_duplicate("docker", "pull", existing) == []
 

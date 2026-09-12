@@ -18,8 +18,14 @@ from cauterule.serialization.trajectory_jsonl import load_trajectories
 SLOW_THRESHOLD_S = 30.0
 MIN_FREE_GB = 0.5
 REQUIRED_FIELDS = {
-    "trajectory_id", "timestamp", "task", "steps",
-    "success", "domain", "quality_label", "tags",
+    "trajectory_id",
+    "timestamp",
+    "task",
+    "steps",
+    "success",
+    "domain",
+    "quality_label",
+    "tags",
 }
 RAW_REQUIRED_FIELDS = REQUIRED_FIELDS | {"expected_outcome"}
 
@@ -189,19 +195,15 @@ def check_corpus(
 
         counts = {cid: meta.trajectory_count for cid, meta in catalog.items()}
         for w in validate_corpus_sizes(counts):
-            results.append(
-                CheckResult(name="corpus_size", passed=False, message=w)
-            )
-        # Annotations: load first batch and validate.
+            results.append(CheckResult(name="corpus_size", passed=False, message=w))
+            # Annotations: load first batch and validate.
             trajs: list[Any] = []
         for f in sorted(path.rglob("*.jsonl")) if path.is_dir() else [path]:
             if not f.is_file() or f.suffix != ".jsonl":
                 continue
             trajs.extend(list(load_trajectories(f)))
         for w in validate_annotations(trajs):
-            results.append(
-                CheckResult(name="annotation", passed=False, message=w)
-            )
+            results.append(CheckResult(name="annotation", passed=False, message=w))
 
     files: list[Path] = []
     if path.is_file() and path.suffix == ".jsonl":
@@ -419,9 +421,7 @@ def run_preflight(
             total = 0
             if path.is_file():
                 total = sum(
-                    1
-                    for line in path.read_text(encoding="utf-8").splitlines()
-                    if line.strip()
+                    1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
                 )
             elif path.is_dir():
                 total = sum(

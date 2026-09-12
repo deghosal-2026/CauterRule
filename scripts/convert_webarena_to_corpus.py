@@ -208,7 +208,7 @@ _SYNTHETIC_ISSUES: list[dict[str, Any]] = [
         "number": 7013,
         "title": "NoSuchElementException for checkout button",
         "body": "```\nNoSuchElementException: no such element: Unable to locate element: "
-        "{\"method\":\"css selector\",\"selector\":\"#checkout-btn\"} element not found\n```",
+        '{"method":"css selector","selector":"#checkout-btn"} element not found\n```',
     },
     {
         "number": 7014,
@@ -394,9 +394,7 @@ def main(argv: list[str] | None = None) -> None:
     if args.success_output is not None:
         args.success_output.mkdir(parents=True, exist_ok=True)
         success_out = args.success_output / "browser-successes.jsonl"
-        success_out.write_text(
-            "\n".join(json.dumps(r) for r in successes) + "\n", encoding="utf-8"
-        )
+        success_out.write_text("\n".join(json.dumps(r) for r in successes) + "\n", encoding="utf-8")
         print(f"[convert] {len(successes)} successes -> {success_out}")
 
 

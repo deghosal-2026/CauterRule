@@ -5,8 +5,9 @@ from __future__ import annotations
 import http.server
 import json
 import threading
+from collections.abc import Iterator
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import pytest
 from click.testing import CliRunner
@@ -109,13 +110,15 @@ class TestBadge:
         store = tmp_path / "store"
         _seed(store)
         runner = CliRunner()
-        result = runner.invoke(main, ["badge", "--store", str(store), "--svg", "--output", str(tmp_path / "b.svg")])
+        result = runner.invoke(
+            main, ["badge", "--store", str(store), "--svg", "--output", str(tmp_path / "b.svg")]
+        )
         assert result.exit_code == 0
         assert (tmp_path / "b.svg").is_file()
 
 
 class _Handler(http.server.BaseHTTPRequestHandler):
-    received: ClassVar[list[dict]] = []
+    received: ClassVar[list[dict[str, Any]]] = []
     status: ClassVar[int] = 200
 
     def do_POST(self) -> None:
@@ -130,7 +133,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
 
 
 @pytest.fixture
-def webhook_server(monkeypatch: pytest.MonkeyPatch):
+def webhook_server(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
     _Handler.received = []
     _Handler.status = 200
     server = http.server.HTTPServer(("127.0.0.1", 0), _Handler)
@@ -142,7 +145,9 @@ def webhook_server(monkeypatch: pytest.MonkeyPatch):
 
 
 class TestWebhook:
-    def test_promotion_triggers(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, webhook_server: str) -> None:
+    def test_promotion_triggers(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, webhook_server: str
+    ) -> None:
         import cauterule.integrations.webhook as wh
 
         monkeypatch.setattr(wh, "_validate_webhook_url", lambda url: None)
@@ -153,7 +158,9 @@ class TestWebhook:
         assert report["sent"] is True
         assert _Handler.received[0]["text"].startswith("Cauterule promoted R-1")
 
-    def test_retry_then_success(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, webhook_server: str) -> None:
+    def test_retry_then_success(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, webhook_server: str
+    ) -> None:
         import cauterule.integrations.webhook as wh
 
         monkeypatch.setattr(wh, "_validate_webhook_url", lambda url: None)

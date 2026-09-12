@@ -15,7 +15,9 @@ def _traj() -> Trajectory:
     )
 
 
-def _candidate(trigger: str = "git push fails", directive: str = "pull --rebase first", confidence: float = 0.9) -> CandidateRule:
+def _candidate(
+    trigger: str = "git push fails", directive: str = "pull --rebase first", confidence: float = 0.9
+) -> CandidateRule:
     return CandidateRule(
         when=RuleWhen(trigger=trigger),
         do=RuleDo(directive=directive),

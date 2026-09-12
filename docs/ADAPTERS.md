@@ -31,15 +31,16 @@ work against faithful fakes for tests.
 ```python
 from cauterule.adapter import watch
 
+
 # sync
 @watch(base_dir="trajectories", redact_keys={"api_key", "token"})
-def my_agent(prompt: str) -> str:
-    ...
+def my_agent(prompt: str) -> str: ...
+
 
 # async
 @watch(base_dir="trajectories")
-async def my_async_agent(prompt: str) -> str:
-    ...
+async def my_async_agent(prompt: str) -> str: ...
+
 
 # generators / async-generators are supported (first-step capture,
 # final failure step on error)
@@ -76,15 +77,16 @@ context kwargs: `tool`, `error`, `tags`, `taxonomy`; budget: `max_rules`,
 ```python
 from cauterule.adapter.langgraph import inject_rules, capture_node_error, langgraph_node
 
+
 # Pre-step injection
 def my_node(state: dict) -> dict:
     state = inject_rules(state, task="sync billing records")
     ...
 
+
 # Decorator with automatic capture + injection
 @langgraph_node(task="sync billing records", base_dir="trajectories")
-def my_node(state: dict) -> dict:
-    ...
+def my_node(state: dict) -> dict: ...
 ```
 
 - **Capture**: `capture_node_error(node, state_in, state_out, exc)` maps a
@@ -122,10 +124,12 @@ description = "Reconcile invoices.\n" + inject_crew_rules("reconcile invoices")
 import asyncio
 from cauterule.adapter.pydanticai import watch_run, inject_system_rules
 
+
 # Option A — decorate the driver
 @watch_run(task="answer billing question", base_dir="trajectories")
 async def run_agent(prompt: str):
     return await agent.run(prompt)
+
 
 # Option B — explicit system-prompt injection
 rules_text = inject_system_rules("answer billing question")

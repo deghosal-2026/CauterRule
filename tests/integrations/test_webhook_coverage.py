@@ -117,6 +117,7 @@ def test_build_payload_rejects_unknown_provider() -> None:
 # deliver_payload - mocked urlopen + sleep
 # ---------------------------------------------------------------------------
 
+
 def _mock_response(status: int = 200) -> MagicMock:
     m = MagicMock()
     m.status = status
@@ -140,7 +141,9 @@ def test_deliver_payload_success_first_try(monkeypatch: pytest.MonkeyPatch) -> N
     mock_sleep.assert_not_called()
 
 
-def test_deliver_payload_non_retryable_status_returns_false(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_deliver_payload_non_retryable_status_returns_false(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     url = _valid_url(monkeypatch)
     with patch("cauterule.integrations.webhook.urlopen", return_value=_mock_response(400)):
         report = deliver_payload(url, {}, max_attempts=3)
@@ -178,14 +181,18 @@ def test_deliver_payload_httperror_retryable_retries(monkeypatch: pytest.MonkeyP
 
     url = _valid_url(monkeypatch)
     err_retry = HTTPError(url, 429, "retry", None, None)  # type: ignore[arg-type]
-    with patch("cauterule.integrations.webhook.urlopen", side_effect=[err_retry, _mock_response(200)]):
+    with patch(
+        "cauterule.integrations.webhook.urlopen", side_effect=[err_retry, _mock_response(200)]
+    ):
         with patch("cauterule.integrations.webhook.time.sleep"):
             report = deliver_payload(url, {}, max_attempts=2)
     assert report["sent"] is True
     assert report["attempts"] == 2
 
 
-def test_deliver_payload_httperror_non_retryable_immediate_false(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_deliver_payload_httperror_non_retryable_immediate_false(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     from urllib.error import HTTPError
 
     url = _valid_url(monkeypatch)
@@ -197,7 +204,9 @@ def test_deliver_payload_httperror_non_retryable_immediate_false(monkeypatch: py
     assert report["attempts"] == 1
 
 
-def test_deliver_payload_generic_exception_retries_then_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_deliver_payload_generic_exception_retries_then_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     url = _valid_url(monkeypatch)
     with patch("cauterule.integrations.webhook.urlopen", side_effect=ConnectionError("down")):
         with patch("cauterule.integrations.webhook.time.sleep"):
@@ -226,7 +235,10 @@ def test_deliver_payload_resp_without_status_defaults_200(monkeypatch: pytest.Mo
 
 def test_notifier_deliver_success(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(socket, "gethostbyname", lambda h: (_ for _ in ()).throw(OSError("no dns")))
-    with patch("cauterule.integrations.webhook.deliver_payload", return_value={"sent": True, "attempts": 1, "status": 200}) as mock:
+    with patch(
+        "cauterule.integrations.webhook.deliver_payload",
+        return_value={"sent": True, "attempts": 1, "status": 200},
+    ) as mock:
         n = WebhookNotifier("https://example.com/hook")
         assert n.deliver({"x": 1}) is True
         mock.assert_called_once()
@@ -234,7 +246,10 @@ def test_notifier_deliver_success(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_notifier_notify_promotion_builds_timestamp(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(socket, "gethostbyname", lambda h: (_ for _ in ()).throw(OSError("no dns")))
-    with patch("cauterule.integrations.webhook.deliver_payload", return_value={"sent": True, "attempts": 1, "status": 200}) as mock:
+    with patch(
+        "cauterule.integrations.webhook.deliver_payload",
+        return_value={"sent": True, "attempts": 1, "status": 200},
+    ) as mock:
         n = WebhookNotifier("https://example.com/hook")
         assert n.notify_promotion("R-1", "title") is True
         payload = mock.call_args[0][1]
@@ -243,7 +258,10 @@ def test_notifier_notify_promotion_builds_timestamp(monkeypatch: pytest.MonkeyPa
         assert "timestamp" in payload["promotion"]
 
     # explicit timestamp passthrough
-    with patch("cauterule.integrations.webhook.deliver_payload", return_value={"sent": True, "attempts": 1, "status": 200}) as mock:
+    with patch(
+        "cauterule.integrations.webhook.deliver_payload",
+        return_value={"sent": True, "attempts": 1, "status": 200},
+    ) as mock:
         n.notify_promotion("R-1", "title", timestamp="2024-01-01T00:00:00Z")
         assert mock.call_args[0][1]["promotion"]["timestamp"] == "2024-01-01T00:00:00Z"
 
@@ -254,7 +272,9 @@ def test_notifier_notify_promotion_builds_timestamp(monkeypatch: pytest.MonkeyPa
 
 
 def test_notify_promotion_config_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("cauterule.config.load_config", lambda: (_ for _ in ()).throw(OSError("no toml")))
+    monkeypatch.setattr(
+        "cauterule.config.load_config", lambda: (_ for _ in ()).throw(OSError("no toml"))
+    )
     report = notify_promotion({"id": "R-1"}, store_dir="rules")
     assert report["sent"] is False
     assert report["reason"] == "config unavailable"
@@ -272,7 +292,9 @@ def test_notify_promotion_disabled(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
 
 def test_notify_promotion_enabled_no_url_raises(monkeypatch: pytest.MonkeyPatch) -> None:
     class Cfg:
-        webhook = MagicMock(enabled=True, url="", provider="slack", max_attempts=1, backoff=(1,), redact=False)
+        webhook = MagicMock(
+            enabled=True, url="", provider="slack", max_attempts=1, backoff=(1,), redact=False
+        )
 
     monkeypatch.setattr("cauterule.config.load_config", lambda: Cfg())
     with pytest.raises(ValueError, match="no url"):
@@ -291,8 +313,13 @@ def test_notify_promotion_success_and_log(tmp_path: Path, monkeypatch: pytest.Mo
     )
     monkeypatch.setattr("cauterule.config.load_config", lambda: MagicMock(webhook=wh_cfg))
 
-    with patch("cauterule.integrations.webhook.deliver_payload", return_value={"sent": True, "attempts": 1, "status": 200}) as mock_deliver:
-        with patch("cauterule.integrations.webhook.build_payload", wraps=build_payload) as mock_build:
+    with patch(
+        "cauterule.integrations.webhook.deliver_payload",
+        return_value={"sent": True, "attempts": 1, "status": 200},
+    ) as mock_deliver:
+        with patch(
+            "cauterule.integrations.webhook.build_payload", wraps=build_payload
+        ) as mock_build:
             report = notify_promotion(
                 {"id": "R-123", "title": "t", "trigger": "trig", "verdict": "promoted"},
                 store_dir=str(tmp_path),
@@ -307,7 +334,9 @@ def test_notify_promotion_success_and_log(tmp_path: Path, monkeypatch: pytest.Mo
     assert json.loads(content)["sent"] is True
 
 
-def test_notify_promotion_redaction_applied(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_notify_promotion_redaction_applied(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(socket, "gethostbyname", lambda h: (_ for _ in ()).throw(OSError("no dns")))
     wh_cfg = MagicMock(
         enabled=True,
@@ -319,9 +348,17 @@ def test_notify_promotion_redaction_applied(tmp_path: Path, monkeypatch: pytest.
     )
     monkeypatch.setattr("cauterule.config.load_config", lambda: MagicMock(webhook=wh_cfg))
     # inject secret-like title so redact_export will replace
-    with patch("cauterule.integrations.webhook.redact_export", return_value="[REDACTED]") as mock_redact:
-        with patch("cauterule.integrations.webhook.deliver_payload", return_value={"sent": True, "attempts": 1, "status": 200}):
-            notify_promotion({"id": "R-1", "title": "ghp_123456789012345678901234567890123456"}, store_dir=str(tmp_path))
+    with patch(
+        "cauterule.integrations.webhook.redact_export", return_value="[REDACTED]"
+    ) as mock_redact:
+        with patch(
+            "cauterule.integrations.webhook.deliver_payload",
+            return_value={"sent": True, "attempts": 1, "status": 200},
+        ):
+            notify_promotion(
+                {"id": "R-1", "title": "ghp_123456789012345678901234567890123456"},
+                store_dir=str(tmp_path),
+            )
     mock_redact.assert_called()
 
 
@@ -336,12 +373,19 @@ def test_notify_promotion_url_override(monkeypatch: pytest.MonkeyPatch, tmp_path
         redact=False,
     )
     monkeypatch.setattr("cauterule.config.load_config", lambda: MagicMock(webhook=wh_cfg))
-    with patch("cauterule.integrations.webhook.deliver_payload", return_value={"sent": True, "attempts": 1, "status": 200}) as mock:
-        notify_promotion({"id": "R-1"}, store_dir=str(tmp_path), url_override="https://example.com/other")
+    with patch(
+        "cauterule.integrations.webhook.deliver_payload",
+        return_value={"sent": True, "attempts": 1, "status": 200},
+    ) as mock:
+        notify_promotion(
+            {"id": "R-1"}, store_dir=str(tmp_path), url_override="https://example.com/other"
+        )
         assert mock.call_args[0][0] == "https://example.com/other"
 
 
-def test_notify_promotion_log_oserror_handled(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_notify_promotion_log_oserror_handled(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     wh_cfg = MagicMock(
         enabled=True,
         url="https://example.com/hook",
@@ -352,7 +396,10 @@ def test_notify_promotion_log_oserror_handled(tmp_path: Path, monkeypatch: pytes
     )
     monkeypatch.setattr("cauterule.config.load_config", lambda: MagicMock(webhook=wh_cfg))
     monkeypatch.setattr(socket, "gethostbyname", lambda h: (_ for _ in ()).throw(OSError("no dns")))
-    with patch("cauterule.integrations.webhook.deliver_payload", return_value={"sent": False, "attempts": 1, "status": 500}):
+    with patch(
+        "cauterule.integrations.webhook.deliver_payload",
+        return_value={"sent": False, "attempts": 1, "status": 500},
+    ):
         with patch.object(Path, "open", side_effect=OSError("disk full")):
             report = notify_promotion({"id": "R-1"}, store_dir=str(tmp_path))
     assert report["sent"] is False
@@ -365,10 +412,18 @@ def test_webhook_cli_test_success(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(socket, "gethostbyname", lambda h: (_ for _ in ()).throw(OSError("no dns")))
     wh_cfg = MagicMock(
-        enabled=True, url="https://example.com/hook", provider="slack", max_attempts=1, backoff=(1,), redact=False
+        enabled=True,
+        url="https://example.com/hook",
+        provider="slack",
+        max_attempts=1,
+        backoff=(1,),
+        redact=False,
     )
     monkeypatch.setattr("cauterule.config.load_config", lambda: MagicMock(webhook=wh_cfg))
-    with patch("cauterule.integrations.webhook.deliver_payload", return_value={"sent": True, "attempts": 1, "status": 200}):
+    with patch(
+        "cauterule.integrations.webhook.deliver_payload",
+        return_value={"sent": True, "attempts": 1, "status": 200},
+    ):
         runner = CliRunner()
         result = runner.invoke(main, ["webhook", "test"])
     assert result.exit_code == 0, result.output
@@ -382,10 +437,18 @@ def test_webhook_cli_test_failure(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(socket, "gethostbyname", lambda h: (_ for _ in ()).throw(OSError("no dns")))
     wh_cfg = MagicMock(
-        enabled=True, url="https://example.com/hook", provider="slack", max_attempts=1, backoff=(1,), redact=False
+        enabled=True,
+        url="https://example.com/hook",
+        provider="slack",
+        max_attempts=1,
+        backoff=(1,),
+        redact=False,
     )
     monkeypatch.setattr("cauterule.config.load_config", lambda: MagicMock(webhook=wh_cfg))
-    with patch("cauterule.integrations.webhook.deliver_payload", return_value={"sent": False, "attempts": 1, "status": 500}):
+    with patch(
+        "cauterule.integrations.webhook.deliver_payload",
+        return_value={"sent": False, "attempts": 1, "status": 500},
+    ):
         runner = CliRunner()
         result = runner.invoke(main, ["webhook", "test"])
     assert result.exit_code != 0
@@ -397,7 +460,9 @@ def test_webhook_cli_test_no_url_configured(monkeypatch: pytest.MonkeyPatch) -> 
 
     from cauterule.cli.app import main
 
-    wh_cfg = MagicMock(enabled=True, url="", provider="slack", max_attempts=1, backoff=(1,), redact=False)
+    wh_cfg = MagicMock(
+        enabled=True, url="", provider="slack", max_attempts=1, backoff=(1,), redact=False
+    )
     monkeypatch.setattr("cauterule.config.load_config", lambda: MagicMock(webhook=wh_cfg))
     runner = CliRunner()
     result = runner.invoke(main, ["webhook", "test"])

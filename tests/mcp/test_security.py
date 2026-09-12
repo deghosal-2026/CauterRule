@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 
 from cauterule.mcp.auth import McpAuthError, bearer_from_headers, check_bearer, resolve_tokens
 from cauterule.mcp.ratelimit import RateLimiter, TokenBucket
 from cauterule.mcp.validation import McpValidationError, validate_payload, validate_report_failure
+
+if TYPE_CHECKING:
+    from cauterule.mcp.server import CauteruleMCPServer
 
 
 def _headers(token: str | None = None) -> dict[str, str]:
@@ -88,51 +93,59 @@ class TestValidation:
 
 
 class TestServerGuard:
-    def _server(self, tmp_path, **kwargs):
+    def _server(self, tmp_path: Path, **kwargs: Any) -> CauteruleMCPServer:
         from cauterule.mcp.server import CauteruleMCPServer
         from cauterule.store.manager import StoreManager
 
         return CauteruleMCPServer(StoreManager(base_dir=str(tmp_path)), **kwargs)
 
-    def test_stdio_skips_enforcement(self, tmp_path) -> None:
+    def test_stdio_skips_enforcement(self, tmp_path: Path) -> None:
         server = self._server(tmp_path, auth_mode="bearer", auth_tokens=["s"])
         client, error = server._guard(None)
         assert (client, error) == ("stdio", None)
 
-    def test_remote_unauthenticated_rejected(self, tmp_path, monkeypatch) -> None:
+    def test_remote_unauthenticated_rejected(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         server = self._server(tmp_path, auth_mode="bearer", auth_tokens=["s"])
         monkeypatch.setattr(server, "_request_headers", staticmethod(lambda ctx: {"X-A": "b"}))
-        _, error = server._guard("ctx")
+        _, error = server._guard(cast(Any, "ctx"))
         assert error is not None and error["status"] == 401
 
-    def test_remote_authenticated_allowed(self, tmp_path, monkeypatch) -> None:
+    def test_remote_authenticated_allowed(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         server = self._server(tmp_path, auth_mode="bearer", auth_tokens=["s"])
         monkeypatch.setattr(
             server, "_request_headers", staticmethod(lambda ctx: {"Authorization": "Bearer s"})
         )
-        client, error = server._guard("ctx")
+        client, error = server._guard(cast(Any, "ctx"))
         assert error is None
         assert client.startswith("token:")
 
-    def test_remote_malformed_payload_rejected(self, tmp_path, monkeypatch) -> None:
+    def test_remote_malformed_payload_rejected(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         server = self._server(tmp_path, auth_mode="bearer", auth_tokens=["s"])
         monkeypatch.setattr(
             server, "_request_headers", staticmethod(lambda ctx: {"Authorization": "Bearer s"})
         )
-        _, error = server._guard("ctx", payload_check=json.dumps({"error": "x"}))
+        _, error = server._guard(cast(Any, "ctx"), payload_check=json.dumps({"error": "x"}))
         assert error is not None and error["status"] == 400
 
-    def test_remote_rate_limited(self, tmp_path, monkeypatch) -> None:
+    def test_remote_rate_limited(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         from cauterule.mcp.ratelimit import TokenBucket
 
         server = self._server(
-            tmp_path, auth_mode="bearer", auth_tokens=["s"],
+            tmp_path,
+            auth_mode="bearer",
+            auth_tokens=["s"],
             rate_limiter=TokenBucket(capacity=1, refill_per_min=0.0),
         )
         monkeypatch.setattr(
             server, "_request_headers", staticmethod(lambda ctx: {"Authorization": "Bearer s"})
         )
-        _, first = server._guard("ctx")
+        _, first = server._guard(cast(Any, "ctx"))
         assert first is None
-        _, second = server._guard("ctx")
+        _, second = server._guard(cast(Any, "ctx"))
         assert second is not None and second["status"] == 429

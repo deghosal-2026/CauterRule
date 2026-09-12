@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import click
 
+from cauterule.models.trajectory import Trajectory
 from cauterule.store.manager import StoreManager
 
 
@@ -20,20 +21,18 @@ def counterfactual(days: int) -> None:
         return
 
     traj_dir = Path("trajectories")
-    failures = []
+    failures: list[Trajectory] = []
     if traj_dir.is_dir():
         for f in traj_dir.glob("*.jsonl"):
             failures.extend(t for t in load_trajectories(f) if not t.success)
 
     click.echo(
-        f"Found {len(rules)} active rules and {len(failures)} historical "
-        f"failures (last {days}d)."
+        f"Found {len(rules)} active rules and {len(failures)} historical failures (last {days}d)."
     )
     click.echo("Counterfactual analysis:")
     for r in rules:
         prevented = sum(1 for t in failures if r.when.trigger.lower() in t.task.lower())
         if prevented:
             click.echo(
-                f"  Rule {r.id} could have prevented {prevented} "
-                f'failure(s): "{r.when.trigger}"'
+                f'  Rule {r.id} could have prevented {prevented} failure(s): "{r.when.trigger}"'
             )

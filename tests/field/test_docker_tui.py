@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from tempfile import TemporaryDirectory
-from typing import Any
+from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -230,7 +230,7 @@ def test_approve_promotes() -> None:
             async with CauterRuleApp().run_test() as pilot:
                 pilot.app.push_screen(screen)
                 await pilot.pause()
-                screen.push_screen = MagicMock(side_effect=_fake_push)
+                cast(Any, screen).push_screen = MagicMock(side_effect=_fake_push)
                 screen.approve_current()
                 assert mock_promo.called
 
@@ -243,7 +243,7 @@ def test_reject_advances() -> None:
         screen = ReviewScreen()
         screen._candidates = [_make_candidate("trigger-a"), _make_candidate("trigger-b")]
         screen._current_index = 0
-        screen._populate_candidates = MagicMock()
+        cast(Any, screen)._populate_candidates = MagicMock()
         async with CauterRuleApp().run_test() as pilot:
             pilot.app.push_screen(screen)
             await pilot.pause()

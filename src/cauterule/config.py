@@ -273,13 +273,19 @@ def _mcp_from_dict(data: dict[str, Any]) -> McpConfig:
         auth_mode=auth_mode,
         tokens=tokens,
         rate_capacity=int(rate.get("capacity", data.get("rate_capacity", 60))),
-        rate_refill_per_min=float(rate.get("refill_per_min", data.get("rate_refill_per_min", 30.0))),
+        rate_refill_per_min=float(
+            rate.get("refill_per_min", data.get("rate_refill_per_min", 30.0))
+        ),
     )
 
 
 def _otel_from_dict(data: dict[str, Any]) -> OtelConfig:
     headers_raw = data.get("headers", {})
-    headers = tuple((str(k), str(v)) for k, v in headers_raw.items()) if isinstance(headers_raw, dict) else ()
+    headers = (
+        tuple((str(k), str(v)) for k, v in headers_raw.items())
+        if isinstance(headers_raw, dict)
+        else ()
+    )
     batch_size = int(data.get("batch_size", 512))
     interval = int(data.get("export_interval_ms", 5000))
     retry_max = int(data.get("retry_max", 3))
@@ -376,7 +382,9 @@ def _apply_env_overrides(config: Config) -> Config:
     extraction_gate_mode = os.getenv("CAUTERULE_EXTRACTION_GATE_MODE")
     promotion_mode = os.getenv("CAUTERULE_PROMOTION_MODE") or os.getenv("CAUTERULE_MODE")
     rules_path = os.getenv("CAUTERULE_RULES_PATH") or os.getenv("CAUTERULE_RULES")
-    trajectories_path = os.getenv("CAUTERULE_TRAJECTORIES_PATH") or os.getenv("CAUTERULE_TRAJECTORIES")
+    trajectories_path = os.getenv("CAUTERULE_TRAJECTORIES_PATH") or os.getenv(
+        "CAUTERULE_TRAJECTORIES"
+    )
 
     # Rebuild only sections that have overrides, preserving frozen semantics.
     llm = config.llm
@@ -443,7 +451,9 @@ def _apply_env_overrides(config: Config) -> Config:
     promotion = config.promotion
     if promotion_mode is not None:
         if promotion_mode not in {"auto", "human-review", "hybrid"}:
-            raise ValueError(f"CAUTERULE_PROMOTION_MODE must be auto|human-review|hybrid, got {promotion_mode!r}")
+            raise ValueError(
+                f"CAUTERULE_PROMOTION_MODE must be auto|human-review|hybrid, got {promotion_mode!r}"
+            )
         promotion = PromotionConfig(mode=promotion_mode)
 
     packs = config.packs
@@ -503,7 +513,10 @@ def config_to_dict(config: Config) -> dict[str, Any]:
             "max_retries": config.llm.max_retries,
         },
         "paths": {"rules": config.paths.rules, "trajectories": config.paths.trajectories},
-        "thresholds": {"precision": config.thresholds.precision, "recall": config.thresholds.recall},
+        "thresholds": {
+            "precision": config.thresholds.precision,
+            "recall": config.thresholds.recall,
+        },
         "promotion": {"mode": config.promotion.mode},
         "redaction": {"patterns": list(config.redaction.patterns)},
         "extraction": {

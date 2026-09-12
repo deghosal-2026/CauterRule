@@ -26,7 +26,9 @@ _REFERENCE_SETS = {
 
 
 def _load(path: Path) -> list[dict[str, object]]:
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return [
+        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
+    ]
 
 
 @pytest.mark.parametrize("name,domain", _REFERENCE_SETS.items())
@@ -37,9 +39,7 @@ def test_reference_set_parses_and_balances(name: str, domain: str) -> None:
     counts = Counter(t.success for t in trajectories)
     # #707: every source must carry both failure and success trajectories.
     assert counts[True] > 0 and counts[False] > 0
-    failure_domains = {
-        (t.failure_class or "").split("/")[0] for t in trajectories if not t.success
-    }
+    failure_domains = {(t.failure_class or "").split("/")[0] for t in trajectories if not t.success}
     assert domain in failure_domains
 
 

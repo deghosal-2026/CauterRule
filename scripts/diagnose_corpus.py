@@ -93,9 +93,7 @@ def _funnel_from_results(path: Path) -> dict[str, int]:
                 continue
             candidates.append(
                 CandidateRule(
-                    when=RuleWhen(
-                        trigger=cand["when"], context=tuple(cand.get("context", []))
-                    ),
+                    when=RuleWhen(trigger=cand["when"], context=tuple(cand.get("context", []))),
                     do=RuleDo(directive=cand.get("do") or "unknown"),
                     confidence=float(cand.get("confidence", 0.5)),
                 )

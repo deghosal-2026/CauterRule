@@ -53,9 +53,11 @@ def load_gold_families(path: str) -> list[GoldRuleFamily]:
         acceptable_rules: list[StandingRule] = []
         if sidecar.is_file():
             acceptable_rules.append(load_rule_from_file(sidecar))
-        families.append(GoldRuleFamily(
-            scenario_id=scenario_id,
-            trajectories=trajectories,
-            acceptable_rules=acceptable_rules,
-        ))
+        families.append(
+            GoldRuleFamily(
+                scenario_id=scenario_id,
+                trajectories=trajectories,
+                acceptable_rules=acceptable_rules,
+            )
+        )
     return families

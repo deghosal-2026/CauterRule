@@ -92,9 +92,7 @@ def learn_cutoffs(
     Returns:
         Learned :class:`PromotionCutoffs`.
     """
-    total_outcomes = sum(
-        r.prevented_count + r.broke_count for r in rules if r.status == "active"
-    )
+    total_outcomes = sum(r.prevented_count + r.broke_count for r in rules if r.status == "active")
     if total_outcomes < min_evidence:
         return PromotionCutoffs(
             min_quality=floor_quality,
@@ -112,9 +110,11 @@ def learn_cutoffs(
         spec = rule.specificity
         if spec is None:
             spec, _ = compute_specificity(rule)
-        rate = rule.prevented_count / (rule.prevented_count + rule.broke_count) if (
-            rule.prevented_count + rule.broke_count
-        ) else 0.5
+        rate = (
+            rule.prevented_count / (rule.prevented_count + rule.broke_count)
+            if (rule.prevented_count + rule.broke_count)
+            else 0.5
+        )
         key = int(spec * 10)  # decile buckets 0..10
         bins.setdefault(key, []).append(rate)
 
@@ -133,18 +133,12 @@ def learn_cutoffs(
             break
     else:
         # No bin cleared the target → tighten toward the ceiling.
-        learned_quality = _clamp(
-            ceiling_quality - 0.1, floor_quality, ceiling_quality
-        )
-        learned_spec = _clamp(
-            ceiling_specificity, floor_specificity, ceiling_specificity
-        )
+        learned_quality = _clamp(ceiling_quality - 0.1, floor_quality, ceiling_quality)
+        learned_spec = _clamp(ceiling_specificity, floor_specificity, ceiling_specificity)
 
     return PromotionCutoffs(
         min_quality=round(_clamp(learned_quality, floor_quality, ceiling_quality), 4),
-        min_specificity=round(
-            _clamp(learned_spec, floor_specificity, ceiling_specificity), 4
-        ),
+        min_specificity=round(_clamp(learned_spec, floor_specificity, ceiling_specificity), 4),
         source=f"learned(n={total_outcomes})",
     )
 

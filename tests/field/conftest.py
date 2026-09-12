@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -26,8 +27,8 @@ def _is_docker_test(item: pytest.Item) -> bool:
 
 
 @pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item: pytest.Item, call) -> object:
-    outcome = yield
+def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[None]) -> object:
+    outcome: Any = yield
     rep: pytest.TestReport = outcome.get_result()
     if not _is_docker_test(item):
         return
@@ -51,7 +52,11 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     existing: list[dict[str, object]] = []
     if RESULTS_JSONL.exists():
         try:
-            existing = [json.loads(line) for line in RESULTS_JSONL.read_text(encoding="utf-8").splitlines() if line.strip()]
+            existing = [
+                json.loads(line)
+                for line in RESULTS_JSONL.read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            ]
         except Exception:
             existing = []
     merged = existing + _records
@@ -78,15 +83,13 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
         "|------|---------|--------------|",
     ]
     for rec in sorted(deduped, key=lambda r: str(r["nodeid"])):
-        lines.append(
-            f"| `{rec['nodeid']}` | {rec['outcome']} | {rec['duration_s']} |"
-        )
+        lines.append(f"| `{rec['nodeid']}` | {rec['outcome']} | {rec['duration_s']} |")
     RESULTS_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def pytest_terminal_summary(terminalreporter, config) -> None:
+def pytest_terminal_summary(
+    terminalreporter: pytest.TerminalReporter, config: pytest.Config
+) -> None:
     if not _records:
         return
-    terminalreporter.write_line(
-        f"docker results -> {RESULTS_JSONL} ({RESULTS_MD})"
-    )
+    terminalreporter.write_line(f"docker results -> {RESULTS_JSONL} ({RESULTS_MD})")

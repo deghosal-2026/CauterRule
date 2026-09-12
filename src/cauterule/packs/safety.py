@@ -49,7 +49,5 @@ def score_pack_safety(rules: list[dict[str, Any]]) -> dict[str, Any]:
         for r in rules
     ]
     score = round(sum(p["score"] for p in per_rule) / len(per_rule))
-    drags = [
-        f"{p['rule']}: {'; '.join(p['reasons'])}" for p in per_rule if p["reasons"]
-    ]
+    drags = [f"{p['rule']}: {'; '.join(p['reasons'])}" for p in per_rule if p["reasons"]]
     return {"score": score, "per_rule": per_rule, "drags": drags}

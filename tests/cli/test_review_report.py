@@ -168,7 +168,8 @@ class TestReview:
         )
         runner = CliRunner()
         result = runner.invoke(
-            main, ["review", "--filter", "tag=git", "--json", "--store-dir", str(tmp_path / "rules")]
+            main,
+            ["review", "--filter", "tag=git", "--json", "--store-dir", str(tmp_path / "rules")],
         )
         assert result.exit_code == 0, result.output
         payload = json.loads(result.output)
@@ -194,7 +195,8 @@ class TestReview:
         _seed_store(tmp_path / "rules", [_rule("R-001", tags=("Git",))])
         runner = CliRunner()
         result = runner.invoke(
-            main, ["review", "--filter", "tag=GIT", "--json", "--store-dir", str(tmp_path / "rules")]
+            main,
+            ["review", "--filter", "tag=GIT", "--json", "--store-dir", str(tmp_path / "rules")],
         )
         assert result.exit_code == 0
         payload = json.loads(result.output)
@@ -240,7 +242,8 @@ class TestReview:
         )
         runner = CliRunner()
         result = runner.invoke(
-            main, ["review", "--confidence", "0.7-1.0", "--json", "--store-dir", str(tmp_path / "rules")]
+            main,
+            ["review", "--confidence", "0.7-1.0", "--json", "--store-dir", str(tmp_path / "rules")],
         )
         assert result.exit_code == 0
         payload = json.loads(result.output)
@@ -248,10 +251,13 @@ class TestReview:
         assert ids == {"R-001", "R-003"}
 
     def test_confidence_single(self, tmp_path: Path) -> None:
-        _seed_store(tmp_path / "rules", [_rule("R-001", confidence=0.9), _rule("R-002", confidence=0.5)])
+        _seed_store(
+            tmp_path / "rules", [_rule("R-001", confidence=0.9), _rule("R-002", confidence=0.5)]
+        )
         runner = CliRunner()
         result = runner.invoke(
-            main, ["review", "--confidence", "0.8", "--json", "--store-dir", str(tmp_path / "rules")]
+            main,
+            ["review", "--confidence", "0.8", "--json", "--store-dir", str(tmp_path / "rules")],
         )
         assert result.exit_code == 0
         payload = json.loads(result.output)
@@ -274,10 +280,13 @@ class TestReview:
         assert "confidence must be numeric" in result.output
 
     def test_confidence_max_filter(self, tmp_path: Path) -> None:
-        _seed_store(tmp_path / "rules", [_rule("R-001", confidence=0.95), _rule("R-002", confidence=0.2)])
+        _seed_store(
+            tmp_path / "rules", [_rule("R-001", confidence=0.95), _rule("R-002", confidence=0.2)]
+        )
         runner = CliRunner()
         result = runner.invoke(
-            main, ["review", "--confidence", "0.0-0.5", "--json", "--store-dir", str(tmp_path / "rules")]
+            main,
+            ["review", "--confidence", "0.0-0.5", "--json", "--store-dir", str(tmp_path / "rules")],
         )
         assert result.exit_code == 0
         payload = json.loads(result.output)
@@ -356,9 +365,7 @@ class TestReport:
             accepted=0,
         )
         runner = CliRunner()
-        result = runner.invoke(
-            main, ["report", "--safety-adjusted", "--results-dir", str(results)]
-        )
+        result = runner.invoke(main, ["report", "--safety-adjusted", "--results-dir", str(results)])
         assert result.exit_code == 0
         assert "Safety-Adjusted Model Ranking" in result.output
         assert "openai/gpt-4" in result.output
@@ -400,7 +407,11 @@ class TestReport:
         p.write_text(
             json.dumps(
                 {
-                    "meta": {"corpus_type": "successes", "llm_provider": "openai", "llm_model": "gpt-4"},
+                    "meta": {
+                        "corpus_type": "successes",
+                        "llm_provider": "openai",
+                        "llm_model": "gpt-4",
+                    },
                     "passing": 3,
                     "safety": {"accepted": 1},
                     "inconclusive": 0,
@@ -599,7 +610,9 @@ class TestMetrics:
     def test_coverage_flag(self, tmp_path: Path) -> None:
         _seed_store(tmp_path / "rules", [_rule("R-001", status="active")])
         runner = CliRunner()
-        result = runner.invoke(main, ["metrics", "--coverage", "--store-dir", str(tmp_path / "rules")])
+        result = runner.invoke(
+            main, ["metrics", "--coverage", "--store-dir", str(tmp_path / "rules")]
+        )
         assert result.exit_code == 0
         assert "Coverage score:" in result.output
 
@@ -613,7 +626,9 @@ class TestMetrics:
             ],
         )
         runner = CliRunner()
-        result = runner.invoke(main, ["metrics", "--by-domain", "--store-dir", str(tmp_path / "rules")])
+        result = runner.invoke(
+            main, ["metrics", "--by-domain", "--store-dir", str(tmp_path / "rules")]
+        )
         assert result.exit_code == 0
         assert "git:" in result.output
         assert "docker:" in result.output
@@ -621,21 +636,27 @@ class TestMetrics:
     def test_by_domain_empty(self, tmp_path: Path) -> None:
         (tmp_path / "rules").mkdir()
         runner = CliRunner()
-        result = runner.invoke(main, ["metrics", "--by-domain", "--store-dir", str(tmp_path / "rules")])
+        result = runner.invoke(
+            main, ["metrics", "--by-domain", "--store-dir", str(tmp_path / "rules")]
+        )
         assert result.exit_code == 0
         assert "No domain coverage" in result.output
 
     def test_by_class(self, tmp_path: Path) -> None:
         _seed_store(tmp_path / "rules", [_rule("R-001")])
         runner = CliRunner()
-        result = runner.invoke(main, ["metrics", "--by-class", "--store-dir", str(tmp_path / "rules")])
+        result = runner.invoke(
+            main, ["metrics", "--by-class", "--store-dir", str(tmp_path / "rules")]
+        )
         assert result.exit_code == 0
         assert "Class coverage requires trajectories" in result.output
 
     def test_lowest_spec_empty(self, tmp_path: Path) -> None:
         (tmp_path / "rules").mkdir()
         runner = CliRunner()
-        result = runner.invoke(main, ["metrics", "--lowest-spec", "--store-dir", str(tmp_path / "rules")])
+        result = runner.invoke(
+            main, ["metrics", "--lowest-spec", "--store-dir", str(tmp_path / "rules")]
+        )
         assert result.exit_code == 0
         assert "No rules found" in result.output
 
@@ -644,11 +665,17 @@ class TestMetrics:
             tmp_path / "rules",
             [
                 _rule("R-001", trigger="fails", status="active"),
-                _rule("R-002", trigger="git push rejected non-fast-forward error-code-123", status="active"),
+                _rule(
+                    "R-002",
+                    trigger="git push rejected non-fast-forward error-code-123",
+                    status="active",
+                ),
             ],
         )
         runner = CliRunner()
-        result = runner.invoke(main, ["metrics", "--lowest-spec", "--store-dir", str(tmp_path / "rules")])
+        result = runner.invoke(
+            main, ["metrics", "--lowest-spec", "--store-dir", str(tmp_path / "rules")]
+        )
         assert result.exit_code == 0
         assert "Lowest-specificity" in result.output
         assert "R-001" in result.output
@@ -656,7 +683,9 @@ class TestMetrics:
     def test_lowest_spec_broad_marker(self, tmp_path: Path) -> None:
         _seed_store(tmp_path / "rules", [_rule("R-001", trigger="fails")])
         runner = CliRunner()
-        result = runner.invoke(main, ["metrics", "--lowest-spec", "--store-dir", str(tmp_path / "rules")])
+        result = runner.invoke(
+            main, ["metrics", "--lowest-spec", "--store-dir", str(tmp_path / "rules")]
+        )
         assert result.exit_code == 0
         assert "BROAD" in result.output
 
@@ -676,7 +705,9 @@ class TestMetrics:
             ],
         )
         runner = CliRunner()
-        result = runner.invoke(main, ["metrics", "--rule", "R-001", "--store-dir", str(tmp_path / "rules")])
+        result = runner.invoke(
+            main, ["metrics", "--rule", "R-001", "--store-dir", str(tmp_path / "rules")]
+        )
         assert result.exit_code == 0
         assert "Rule: R-001" in result.output
         assert "prevented: 2" in result.output
@@ -685,13 +716,17 @@ class TestMetrics:
     def test_rule_id_no_trend(self, tmp_path: Path) -> None:
         _seed_store(tmp_path / "rules", [_rule("R-001", prevented=1, outcome_trend=())])
         runner = CliRunner()
-        result = runner.invoke(main, ["metrics", "--rule", "R-001", "--store-dir", str(tmp_path / "rules")])
+        result = runner.invoke(
+            main, ["metrics", "--rule", "R-001", "--store-dir", str(tmp_path / "rules")]
+        )
         assert result.exit_code == 0
         assert "Rule: R-001" in result.output
 
     def test_rule_id_last_outcome_none(self, tmp_path: Path) -> None:
         _seed_store(tmp_path / "rules", [_rule("R-001")])
         runner = CliRunner()
-        result = runner.invoke(main, ["metrics", "--rule", "R-001", "--store-dir", str(tmp_path / "rules")])
+        result = runner.invoke(
+            main, ["metrics", "--rule", "R-001", "--store-dir", str(tmp_path / "rules")]
+        )
         assert result.exit_code == 0
         assert "last outcome:" in result.output

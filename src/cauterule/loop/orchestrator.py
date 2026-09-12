@@ -1,4 +1,5 @@
 """Loop orchestrator — wires capture → redact → cluster → extract → lint → replay → tournament → conflict → promote → inject."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

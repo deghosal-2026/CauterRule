@@ -27,7 +27,7 @@ LICENSE_STUBS = {
     "MIT": (
         "MIT License\n\nCopyright (c) {author}\n\n"
         "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
-        "of this software and associated documentation files (the \"Software\"), to deal\n"
+        'of this software and associated documentation files (the "Software"), to deal\n'
         "in the Software without restriction, including without limitation the rights\n"
         "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n"
         "copies of the Software, and to permit persons to whom the Software is\n"
@@ -164,8 +164,7 @@ def create_pack(
     """
     if not PACK_NAME_RE.match(name):
         raise ValueError(
-            f"invalid pack name {name!r}: use lowercase letters, digits, hyphens "
-            "(e.g. pack-docker)"
+            f"invalid pack name {name!r}: use lowercase letters, digits, hyphens (e.g. pack-docker)"
         )
     resolved_author = author or _default_author()
     resolved_out = Path(out or name)
@@ -196,9 +195,7 @@ def create_pack(
     # Flat layout (pack.yaml + R-*.yaml at root) matches pack-git and the
     # loader; manifests list the rule ids.
     for rule_obj in selected:
-        (out_dir / f"{rule_obj.id}.yaml").write_bytes(
-            _verbatim_rule_bytes(rule_obj, store_dir)
-        )
+        (out_dir / f"{rule_obj.id}.yaml").write_bytes(_verbatim_rule_bytes(rule_obj, store_dir))
 
     manifest = PackManifest(
         name=name,
@@ -214,9 +211,7 @@ def create_pack(
         "cert": {"required": True, "min_score": 0.8},
         "marketplace": {"categories": [], "keywords": []},
     }
-    (out_dir / "pack.yaml").write_text(
-        yaml.safe_dump(pack_yaml, sort_keys=False), encoding="utf-8"
-    )
+    (out_dir / "pack.yaml").write_text(yaml.safe_dump(pack_yaml, sort_keys=False), encoding="utf-8")
     # Legacy-compat copy until the loader migrates fully to pack.yaml.
     (out_dir / "manifest.yaml").write_text(
         yaml.safe_dump(manifest.to_dict(), sort_keys=False), encoding="utf-8"
@@ -244,8 +239,7 @@ def create_pack(
     )
 
     rows = "\n".join(
-        f"| {r.id} | {r.when.trigger[:60]} | {r.do.directive[:60]} | TODO |"
-        for r in selected
+        f"| {r.id} | {r.when.trigger[:60]} | {r.do.directive[:60]} | TODO |" for r in selected
     )
     (out_dir / "README.md").write_text(
         f"# {name}\n\n> {manifest.description}\n\n"

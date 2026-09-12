@@ -14,42 +14,47 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 CORPUS_ROOTS = [Path("field-test/corpus"), Path("corpus/public")]
 
-REQUIRED_FIELDS = frozenset({
-    "trajectory_id",
-    "timestamp",
-    "task",
-    "steps",
-    "success",
-    "domain",
-    "quality_label",
-    "tags",
-    "failure_point",
-    "failure_class",
-    "severity",
-    "expected_outcome",
-    "expected_outcome_rationale",
-})
+REQUIRED_FIELDS = frozenset(
+    {
+        "trajectory_id",
+        "timestamp",
+        "task",
+        "steps",
+        "success",
+        "domain",
+        "quality_label",
+        "tags",
+        "failure_point",
+        "failure_class",
+        "severity",
+        "expected_outcome",
+        "expected_outcome_rationale",
+    }
+)
 
-OPTIONAL_FIELDS = frozenset({
-    "expected_rule",
-    "human_correction",
-    "notes",
-    "redacted",
-    "source",
-    "source_repo",
-    "id",
-})
+OPTIONAL_FIELDS = frozenset(
+    {
+        "expected_rule",
+        "human_correction",
+        "notes",
+        "redacted",
+        "source",
+        "source_repo",
+        "id",
+    }
+)
 
 # Fields that can be absent when the record is a success
 _OPTIONAL_ON_SUCCESS = frozenset({"failure_point", "failure_class", "severity"})
 
 
-def _collect_missing(path: Path) -> list[dict]:
+def _collect_missing(path: Path) -> list[dict[str, Any]]:
     """Return list of {trajectory_id, missing_fields} for each missing-field record."""
-    results: list[dict] = []
+    results: list[dict[str, Any]] = []
     with path.open("r", encoding="utf-8") as f:
         for line in f:
             stripped = line.strip()
@@ -82,14 +87,11 @@ def _assert_corpus(root: Path) -> None:
                     f"{fpath.relative_to(root.parent)}: "
                     f"{entry['trajectory_id']}: missing {entry['missing_fields']}"
                 )
-        total_checked += sum(
-            1 for _ in fpath.open()
-        )
+        total_checked += sum(1 for _ in fpath.open())
 
     assert not all_issues, (
         f"\n{len(all_issues)} trajectory(s) with missing fields "
-        f"(checked {total_checked} records under {root}):\n"
-        + "\n".join(all_issues)
+        f"(checked {total_checked} records under {root}):\n" + "\n".join(all_issues)
     )
 
 

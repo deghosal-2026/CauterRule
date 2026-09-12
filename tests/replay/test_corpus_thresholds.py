@@ -16,13 +16,17 @@ def _cand(trigger: str) -> CandidateRule:
 
 
 def _traj(task: str, error: str = "") -> Trajectory:
-    return Trajectory(id="T-001", timestamp="t", task=task, steps=(Step(1, "bash", error=error),), success=False)
+    return Trajectory(
+        id="T-001", timestamp="t", task=task, steps=(Step(1, "bash", error=error),), success=False
+    )
 
 
 def test_strategy_for_curated() -> None:
     assert strategy_for_corpus("golden") == "strict"
     assert strategy_for_corpus("successes") == "strict"
-    assert strategy_for_corpus("failures/positive") == "semantic"  # not in CURATED set, defaults semantic
+    assert (
+        strategy_for_corpus("failures/positive") == "semantic"
+    )  # not in CURATED set, defaults semantic
     assert strategy_for_corpus("curated/golden") == "strict"
 
 

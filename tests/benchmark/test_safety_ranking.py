@@ -37,8 +37,8 @@ def test_safety_violation_rate() -> None:
 def test_decision_economics_wrong_rate() -> None:
     # Field-test: 80 inconclusives resolved into 46 pass + 32 fail = 41% wrong.
     econ = decision_economics(baseline_inconclusive=80, new_pass=46, new_fail=32)
-    assert econ["wrong_decision_rate"] == 0.4103 or abs(econ["wrong_decision_rate"] - 0.4) < 0.02  # type: ignore[operator]
-    assert econ["resolved"] == 78  # type: ignore[operator]
+    assert econ["wrong_decision_rate"] == 0.4103 or abs(econ["wrong_decision_rate"] - 0.4) < 0.02
+    assert econ["resolved"] == 78
 
 
 def test_safety_adjusted_zero_total() -> None:

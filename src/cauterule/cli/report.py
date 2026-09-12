@@ -62,9 +62,7 @@ def _build_safety_adjusted_ranking(results_dir: str) -> None:
         passing = data.get("passing", 0)
         safety = data.get("safety", {})
         successes_pass = (
-            safety.get("accepted", 0)
-            if corpus_type in ("successes", "failures/negative")
-            else 0
+            safety.get("accepted", 0) if corpus_type in ("successes", "failures/negative") else 0
         )
         failures_neg_pass = safety.get("accepted", 0) if corpus_type == "failures/negative" else 0
         inconclusive = data.get("inconclusive", 0)

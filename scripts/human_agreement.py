@@ -41,9 +41,7 @@ def _load_results(root: Path) -> list[dict[str, object]]:
 
 def _load_reviews(path: Path) -> list[dict[str, object]]:
     return [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
+        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
     ]
 
 

@@ -18,7 +18,7 @@ def _rule(rid: str, trigger: str, directive: str) -> StandingRule:
             extract_timestamp="2025-01-01T00:00:00",
             extraction_pass=1,
         ),
-        status="active",  # type: ignore[arg-type]
+        status="active",
         promoted_at="2025-01-01T00:00:00",
     )
 

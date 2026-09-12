@@ -41,7 +41,5 @@ def check_unsafe(directive: str) -> list[str]:
     """Return warnings if directive contains dangerous patterns."""
     lower = directive.lower()
     warnings = [f"unsafe: {reason}" for pat, reason in _DANGEROUS_PATTERNS if pat in lower]
-    warnings.extend(
-        f"unsafe: {reason}" for pat, reason in _DANGEROUS_REGEXES if pat.search(lower)
-    )
+    warnings.extend(f"unsafe: {reason}" for pat, reason in _DANGEROUS_REGEXES if pat.search(lower))
     return warnings

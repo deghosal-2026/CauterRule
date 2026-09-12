@@ -43,7 +43,9 @@ def test_filter_by_tag() -> None:
         _MockCandidate(tags=("python",), confidence=0.8, status="active"),
         _MockCandidate(tags=("deploy",), confidence=0.5, status="active"),
     ]
-    result = widget.apply_filter(candidates, _tag="python", _status="all", _min_conf=0.0, _max_conf=1.0)
+    result = widget.apply_filter(
+        candidates, _tag="python", _status="all", _min_conf=0.0, _max_conf=1.0
+    )
     assert len(result) == 1
 
 
@@ -53,7 +55,9 @@ def test_filter_by_status() -> None:
         _MockCandidate(tags=(), confidence=0.8, status="active"),
         _MockCandidate(tags=(), confidence=0.5, status="retired"),
     ]
-    result = widget.apply_filter(candidates, _tag="", _status="active", _min_conf=0.0, _max_conf=1.0)
+    result = widget.apply_filter(
+        candidates, _tag="", _status="active", _min_conf=0.0, _max_conf=1.0
+    )
     assert len(result) == 1
 
 

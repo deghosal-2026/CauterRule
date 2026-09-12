@@ -15,8 +15,22 @@ def generate_support_trajectories(count: int = 10) -> list[Trajectory]:
         ts = datetime.now(UTC).isoformat()
         task = "Triage customer login issue" if success else "Escalate unresolved billing ticket"
         steps = (
-            Step(step_number=1, tool="grep", input="search logs for user_id=1234", output="Found 5 login attempts" if success else "No matching logs", error=None, state={"ticket": "TKT-001"}),
-            Step(step_number=2, tool="edit", input="update ticket status", output="Ticket resolved" if success else "Error: permissions insufficient", error=None if success else "PermissionDenied", state=None),
+            Step(
+                step_number=1,
+                tool="grep",
+                input="search logs for user_id=1234",
+                output="Found 5 login attempts" if success else "No matching logs",
+                error=None,
+                state={"ticket": "TKT-001"},
+            ),
+            Step(
+                step_number=2,
+                tool="edit",
+                input="update ticket status",
+                output="Ticket resolved" if success else "Error: permissions insufficient",
+                error=None if success else "PermissionDenied",
+                state=None,
+            ),
         )
         result.append(
             Trajectory(

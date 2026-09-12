@@ -538,15 +538,26 @@ def _is_java_supported() -> bool:
 def main(argv: list[str] | None = None) -> None:
     """Convert BugsInPy metadata JSON and write failure + success corpus files."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--bugs", type=Path, required=False, default=None, help="BugsInPy metadata JSON array.")
-    parser.add_argument("--output", type=Path, required=True, help="Failure corpus dir (e.g. corpus/public/real-world/bugsinpy).")
-    parser.add_argument("--success-output", type=Path, default=None, help="Success counterpart dir (#707).")
+    parser.add_argument(
+        "--bugs", type=Path, required=False, default=None, help="BugsInPy metadata JSON array."
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        required=True,
+        help="Failure corpus dir (e.g. corpus/public/real-world/bugsinpy).",
+    )
+    parser.add_argument(
+        "--success-output", type=Path, default=None, help="Success counterpart dir (#707)."
+    )
     parser.add_argument("--limit", type=int, default=36, help="Max bugs (default 36).")
     args = parser.parse_args(argv)
 
     if not _is_java_supported():
         # Informational: Defects4J skip rationale (not an error).
-        print("[bugsinpy] Defects4J skipped: java domain not in matcher (_KNOWN_DOMAINS).", flush=True)
+        print(
+            "[bugsinpy] Defects4J skipped: java domain not in matcher (_KNOWN_DOMAINS).", flush=True
+        )
 
     if args.bugs is not None:
         raw = json.loads(args.bugs.read_text(encoding="utf-8"))
@@ -568,7 +579,9 @@ def main(argv: list[str] | None = None) -> None:
     # Strip extra Traceability keys that Trajectory.from_dict would otherwise store?
     # Keep them — they are extra metadata, harmless. Write as-is.
     out.write_text("\n".join(json.dumps(r) for r in failures) + "\n", encoding="utf-8")
-    print(f"[convert] {len(failures)} failures -> {out} (license: {_LICENSE}, source: {_SOURCE_REPO})")
+    print(
+        f"[convert] {len(failures)} failures -> {out} (license: {_LICENSE}, source: {_SOURCE_REPO})"
+    )
 
     if args.success_output is not None:
         args.success_output.mkdir(parents=True, exist_ok=True)

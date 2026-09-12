@@ -34,7 +34,9 @@ class TestOfficialPacks:
             assert len(rules) >= 10, pack
             cert = certify_pack({"manifest": manifest, "rules": [{"id": r.id} for r in rules]})
             assert cert["passed"], (pack, cert)
-            signals = [_rule_signal(p) for p in sorted(Path(f"rules/packs/{pack}").glob("R-*.yaml"))]
+            signals = [
+                _rule_signal(p) for p in sorted(Path(f"rules/packs/{pack}").glob("R-*.yaml"))
+            ]
             safety = score_pack_safety(signals)
             assert safety["score"] >= 70, (pack, safety)
 
@@ -82,7 +84,9 @@ class TestOfficialPacks:
         target = next(r for r in rules if r.id == "R-PY-001")
         cand = CandidateRule(when=target.when, do=target.do, confidence=target.confidence)
         trajs = list(
-            load_trajectories(store / "packs" / "pack-python" / "tests" / "replay_pack-python.jsonl")
+            load_trajectories(
+                store / "packs" / "pack-python" / "tests" / "replay_pack-python.jsonl"
+            )
         )
         held_out = [t for t in trajs if "wrong interpreter" in (t.task + (t.steps[0].error or ""))]
         assert held_out, "held-out ModuleNotFoundError trajectory missing"

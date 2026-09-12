@@ -19,7 +19,7 @@ def story(fmt: str) -> None:  # noqa: ARG001
         "",
     ]
     for r in rules:
-        lines.append(f"- **{r.id}**: When \"{r.when.trigger}\" → {r.do.directive}")
+        lines.append(f'- **{r.id}**: When "{r.when.trigger}" → {r.do.directive}')
     lines.append("")
     lines.append(f"*Total: {len(rules)} active rules*")
 

@@ -29,8 +29,7 @@ def main() -> None:
     for balance in balances:
         mark = "ok" if balance.balanced else "FAILURE-ONLY"
         print(
-            f"{balance.source}: successes={balance.successes} "
-            f"failures={balance.failures} [{mark}]"
+            f"{balance.source}: successes={balance.successes} failures={balance.failures} [{mark}]"
         )
 
     violations = balance_violations(balances)

@@ -8,7 +8,9 @@ from cauterule.models.rule import RuleDo, RuleWhen
 def _ranked(precisions: list[float]) -> list[RankedCandidate]:
     ranked: list[RankedCandidate] = []
     for i, p in enumerate(precisions):
-        cand = CandidateRule(when=RuleWhen(trigger=f"t{i}"), do=RuleDo(directive="d"), confidence=0.9)
+        cand = CandidateRule(
+            when=RuleWhen(trigger=f"t{i}"), do=RuleDo(directive="d"), confidence=0.9
+        )
         ev = EvidenceReport(precision=p, recall=0.5, verdict="pass")
         ranked.append(RankedCandidate(candidate=cand, evidence=ev, rank=i + 1))
     return ranked

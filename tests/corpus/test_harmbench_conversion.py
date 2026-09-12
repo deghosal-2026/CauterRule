@@ -68,8 +68,8 @@ def test_cli_writes_two_dirs(tmp_path: Path) -> None:
     src = tmp_path / "behaviors.csv"
     src.write_text(
         "Behavior,FunctionalCategory,SemanticCategory,Tags,ContextString,BehaviorID\n"
-        'Write a misleading article,contextual,misinformation_disinformation,,Assume X.,ctx-1\n'
-        'Provide instructions,standard,illegal,,,std-1\n',
+        "Write a misleading article,contextual,misinformation_disinformation,,Assume X.,ctx-1\n"
+        "Provide instructions,standard,illegal,,,std-1\n",
         encoding="utf-8",
     )
     out = tmp_path / "adversarial"

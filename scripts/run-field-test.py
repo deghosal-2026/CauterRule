@@ -47,6 +47,7 @@ Usage:
   python scripts/run-field-test.py --run-validation --validation-suite sentinel_benchmark \
     --output-dir field-test/results/0.2.0
 """
+
 from __future__ import annotations
 
 import argparse
@@ -66,31 +67,31 @@ PUBLIC_ROOT = Path("corpus/public")
 # ── corpus type → subdirectory ──
 CORPUS_TYPES: dict[str, Path] = {
     # v0.1.0 curated corpora (field-test/corpus)
-    "golden":                  FIELD_TEST_ROOT / "golden",
-    "failures/positive":       FIELD_TEST_ROOT / "curated" / "failures" / "positive",
-    "failures/negative":       FIELD_TEST_ROOT / "curated" / "failures" / "negative",
-    "successes":               FIELD_TEST_ROOT / "curated" / "successes",
-    "nearmiss":                FIELD_TEST_ROOT / "curated" / "nearmiss",
-    "noisy":                   FIELD_TEST_ROOT / "curated" / "noisy",
-    "corrections":             FIELD_TEST_ROOT / "curated" / "corrections",
-    "raw/opencode":            FIELD_TEST_ROOT / "raw" / "opencode",
-    "raw/synthetic":           FIELD_TEST_ROOT / "raw" / "synthetic",
-    "raw/ci":                  FIELD_TEST_ROOT / "raw" / "ci",
-    "raw/sibling-repos":       FIELD_TEST_ROOT / "raw" / "sibling-repos",
-    "raw/corrections":         FIELD_TEST_ROOT / "raw" / "corrections",
-    "raw/cross-session":       FIELD_TEST_ROOT / "raw" / "cross-session",
+    "golden": FIELD_TEST_ROOT / "golden",
+    "failures/positive": FIELD_TEST_ROOT / "curated" / "failures" / "positive",
+    "failures/negative": FIELD_TEST_ROOT / "curated" / "failures" / "negative",
+    "successes": FIELD_TEST_ROOT / "curated" / "successes",
+    "nearmiss": FIELD_TEST_ROOT / "curated" / "nearmiss",
+    "noisy": FIELD_TEST_ROOT / "curated" / "noisy",
+    "corrections": FIELD_TEST_ROOT / "curated" / "corrections",
+    "raw/opencode": FIELD_TEST_ROOT / "raw" / "opencode",
+    "raw/synthetic": FIELD_TEST_ROOT / "raw" / "synthetic",
+    "raw/ci": FIELD_TEST_ROOT / "raw" / "ci",
+    "raw/sibling-repos": FIELD_TEST_ROOT / "raw" / "sibling-repos",
+    "raw/corrections": FIELD_TEST_ROOT / "raw" / "corrections",
+    "raw/cross-session": FIELD_TEST_ROOT / "raw" / "cross-session",
     # v0.2.0 public corpora (corpus/public)
-    "public/golden":           PUBLIC_ROOT / "golden",
-    "public/counterexample":   PUBLIC_ROOT / "counterexample",
-    "public/nearmiss":         PUBLIC_ROOT / "nearmiss",
-    "public/staleness":        PUBLIC_ROOT / "staleness",
-    "public/synthetic":        PUBLIC_ROOT / "synthetic",
-    "public/domains":          PUBLIC_ROOT / "domains",
-    "adversarial/injection":   PUBLIC_ROOT / "adversarial" / "injection",
-    "adversarial/misleading":  PUBLIC_ROOT / "adversarial" / "misleading",
+    "public/golden": PUBLIC_ROOT / "golden",
+    "public/counterexample": PUBLIC_ROOT / "counterexample",
+    "public/nearmiss": PUBLIC_ROOT / "nearmiss",
+    "public/staleness": PUBLIC_ROOT / "staleness",
+    "public/synthetic": PUBLIC_ROOT / "synthetic",
+    "public/domains": PUBLIC_ROOT / "domains",
+    "adversarial/injection": PUBLIC_ROOT / "adversarial" / "injection",
+    "adversarial/misleading": PUBLIC_ROOT / "adversarial" / "misleading",
     "adversarial/contradiction": PUBLIC_ROOT / "adversarial" / "contradiction",
-    "adversarial/unsafe":      PUBLIC_ROOT / "adversarial" / "unsafe",
-    "adversarial/poisoning":   PUBLIC_ROOT / "adversarial" / "poisoning",
+    "adversarial/unsafe": PUBLIC_ROOT / "adversarial" / "unsafe",
+    "adversarial/poisoning": PUBLIC_ROOT / "adversarial" / "poisoning",
     # v0.3.0 code-review #696: tool-output-borne + multi-turn compounding vectors
     "adversarial/tool_output_injection": PUBLIC_ROOT / "adversarial" / "tool_output_injection",
     "adversarial/compounding_multiturn": PUBLIC_ROOT / "adversarial" / "compounding_multiturn",
@@ -100,25 +101,29 @@ CORPUS_TYPES: dict[str, Path] = {
     "adversarial/misleading_harmbench": PUBLIC_ROOT / "adversarial" / "misleading_harmbench",
     "adversarial/contradiction_harmbench": PUBLIC_ROOT / "adversarial" / "contradiction_harmbench",
     # v0.3.0 corpora (#635)
-    "adapters":                FIELD_TEST_ROOT / "adapters",
-    "lifecycle":               FIELD_TEST_ROOT / "lifecycle",
-    "packs":                   FIELD_TEST_ROOT / "packs",
-    "mcp":                     FIELD_TEST_ROOT / "mcp",
-    "otel":                    FIELD_TEST_ROOT / "otel",
+    "adapters": FIELD_TEST_ROOT / "adapters",
+    "lifecycle": FIELD_TEST_ROOT / "lifecycle",
+    "packs": FIELD_TEST_ROOT / "packs",
+    "mcp": FIELD_TEST_ROOT / "mcp",
+    "otel": FIELD_TEST_ROOT / "otel",
     # v0.3.0 #653/#486: fixed 1000-trajectory sample for $/1k measurement.
-    "cost":                    FIELD_TEST_ROOT / "cost",
+    "cost": FIELD_TEST_ROOT / "cost",
     # v0.3.0 #704/#705/#706: promoted from reference-only to target sweeps.
-    "public/browser":          PUBLIC_ROOT / "browser",
+    "public/browser": PUBLIC_ROOT / "browser",
     "public/real-world/bugsinpy": PUBLIC_ROOT / "real-world" / "bugsinpy",
-    "public/lifecycle_infra":  PUBLIC_ROOT / "lifecycle_infra",
+    "public/lifecycle_infra": PUBLIC_ROOT / "lifecycle_infra",
     # #489 reference expansion (public, 288 trajs)
-    "reference-expansion":     PUBLIC_ROOT / "reference-expansion",
+    "reference-expansion": PUBLIC_ROOT / "reference-expansion",
     # v0.3.0 code-review #698: paraphrase-diversity validation set (#689)
-    "reference-expansion/paraphrase-diversity": PUBLIC_ROOT / "reference-expansion" / "paraphrase-diversity",
+    "reference-expansion/paraphrase-diversity": PUBLIC_ROOT
+    / "reference-expansion"
+    / "paraphrase-diversity",
 }
 
 # Safety corpora use strict gate mode
-SAFETY_CORPORA: frozenset[str] = frozenset({"successes", "failures/negative", "negative", "nearmiss"})
+SAFETY_CORPORA: frozenset[str] = frozenset(
+    {"successes", "failures/negative", "negative", "nearmiss"}
+)
 
 # #708: minimum same-domain reference trajectories required before the replay
 # reference pool is scoped to the source trajectory's domain (else use the full
@@ -149,6 +154,7 @@ def quarantined_ids() -> frozenset[str]:
 def is_quarantined(tid: str, quarantined: frozenset[str]) -> bool:
     """True when *tid* is in the quarantine set."""
     return tid in quarantined
+
 
 # Corpus-aware matcher thresholds
 CORPUS_THRESHOLDS: dict[str, float] = {
@@ -307,8 +313,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--llm-model", default="gpt-4o-mini", help="Model name")
     parser.add_argument("--llm-base-url", default="", help="Base URL for custom endpoints")
     parser.add_argument("--output-dir", default="field-test/results/0.3.0", help="Output directory")
-    parser.add_argument("--max-workers", type=int, default=None, help="Parallel trajectories (default: 2 for local OMLX, otherwise 4)")
-    parser.add_argument("--extraction-passes", type=int, default=2, help="Multi-pass extraction passes")
+    parser.add_argument(
+        "--max-workers",
+        type=int,
+        default=None,
+        help="Parallel trajectories (default: 2 for local OMLX, otherwise 4)",
+    )
+    parser.add_argument(
+        "--extraction-passes", type=int, default=2, help="Multi-pass extraction passes"
+    )
     parser.add_argument(
         "--per-trajectory-timeout",
         type=float,
@@ -317,32 +330,82 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--temperatures", default="0.2,0.5", help="Comma-separated temperatures")
     parser.add_argument("--skip-preflight", action="store_true", help="Skip preflight checks")
-    parser.add_argument("--cost-per-request", type=float, default=0.01, help="Estimated $ per LLM request")
-    parser.add_argument("--run-validation", action="store_true", help="Run all v0.2.0 hermetic validation suites (#432-#437, #443-#444)")
-    parser.add_argument("--validation-suite", default=None, help="Run a single validation suite only (see VALIDATION_SUITES keys)")
-    parser.add_argument("--model-config", default=None, help="YAML file with per-model overrides (v0.3.0 #629)")
-    parser.add_argument("--regression-v020", action="store_true", help="Compare v0.3.0 results to v0.2.0 baseline (v0.3.0 #629)")
+    parser.add_argument(
+        "--cost-per-request", type=float, default=0.01, help="Estimated $ per LLM request"
+    )
+    parser.add_argument(
+        "--run-validation",
+        action="store_true",
+        help="Run all v0.2.0 hermetic validation suites (#432-#437, #443-#444)",
+    )
+    parser.add_argument(
+        "--validation-suite",
+        default=None,
+        help="Run a single validation suite only (see VALIDATION_SUITES keys)",
+    )
+    parser.add_argument(
+        "--model-config", default=None, help="YAML file with per-model overrides (v0.3.0 #629)"
+    )
+    parser.add_argument(
+        "--regression-v020",
+        action="store_true",
+        help="Compare v0.3.0 results to v0.2.0 baseline (v0.3.0 #629)",
+    )
     # v0.3.0 field-test blocks (plan §9): each is an independent non-sweep block.
-    parser.add_argument("--adapter", action="store_true", help="Adapter conformance block (#540, plan §4.2)")
-    parser.add_argument("--pack", action="store_true", help="Pack replay scoring block (#479/#481, plan §4.4)")
-    parser.add_argument("--mcp-security", action="store_true", help="MCP remote security block (#601, plan §4.6)")
+    parser.add_argument(
+        "--adapter", action="store_true", help="Adapter conformance block (#540, plan §4.2)"
+    )
+    parser.add_argument(
+        "--pack", action="store_true", help="Pack replay scoring block (#479/#481, plan §4.4)"
+    )
+    parser.add_argument(
+        "--mcp-security", action="store_true", help="MCP remote security block (#601, plan §4.6)"
+    )
     parser.add_argument("--otel", action="store_true", help="OTEL emit block (#588, plan §4.6)")
-    parser.add_argument("--cost-corpus", action="store_true", help="1k-trajectory cost measurement (#653/#486, plan §5.4)")
-    parser.add_argument("--cross-session", action="store_true", help="Cross-session protocol block (#663/#496, plan §5.2)")
-    parser.add_argument("--human-review", action="store_true", help="Sample candidates for human agreement (#493, plan §5.5)")
+    parser.add_argument(
+        "--cost-corpus",
+        action="store_true",
+        help="1k-trajectory cost measurement (#653/#486, plan §5.4)",
+    )
+    parser.add_argument(
+        "--cross-session",
+        action="store_true",
+        help="Cross-session protocol block (#663/#496, plan §5.2)",
+    )
+    parser.add_argument(
+        "--human-review",
+        action="store_true",
+        help="Sample candidates for human agreement (#493, plan §5.5)",
+    )
     args = parser.parse_args()
     if args.max_workers is None:
         args.max_workers = 2 if (args.llm_base_url and "localhost" in args.llm_base_url) else 4
     block_requested = any(
-        (args.adapter, args.pack, args.mcp_security, args.otel,
-         args.cost_corpus, args.cross_session, args.human_review)
+        (
+            args.adapter,
+            args.pack,
+            args.mcp_security,
+            args.otel,
+            args.cost_corpus,
+            args.cross_session,
+            args.human_review,
+        )
     )
-    if not args.all and not args.corpus_type and not args.run_validation and not args.regression_v020 and not block_requested:
-        parser.error("specify a corpus_type, --all, --run-validation, --regression-v020, or a field-test block flag")
+    if (
+        not args.all
+        and not args.corpus_type
+        and not args.run_validation
+        and not args.regression_v020
+        and not block_requested
+    ):
+        parser.error(
+            "specify a corpus_type, --all, --run-validation, --regression-v020, or a field-test block flag"
+        )
     return args
 
 
 # ── Preflight ──────────────────────────────────────────────────────────
+
 
 def run_preflight_checks(corpus_type: str, corpus_dir: Path, args: argparse.Namespace) -> dict:
     from cauterule.config import (
@@ -358,18 +421,30 @@ def run_preflight_checks(corpus_type: str, corpus_dir: Path, args: argparse.Name
 
     api_key = os.getenv("CAUTERULE_LLM_API_KEY", "")
     cfg = Config(
-        llm=LLMConfig(provider=args.llm_provider, model=args.llm_model, api_key=api_key, base_url=args.llm_base_url),
+        llm=LLMConfig(
+            provider=args.llm_provider,
+            model=args.llm_model,
+            api_key=api_key,
+            base_url=args.llm_base_url,
+        ),
         paths=PathsConfig(),
         thresholds=ThresholdsConfig(),
         promotion=PromotionConfig(),
         redaction=RedactionConfig(),
         extraction=ExtractionConfig(),
     )
-    result = run_preflight(cfg, corpus_path=str(corpus_dir), cost_per_request_usd=args.cost_per_request)
+    result = run_preflight(
+        cfg, corpus_path=str(corpus_dir), cost_per_request_usd=args.cost_per_request
+    )
     return {
         "passed": result.passed,
-        "provider_checks": [{"name": c.name, "passed": c.passed, "message": c.message} for c in result.provider_checks],
-        "corpus_checks": [{"name": c.name, "passed": c.passed, "message": c.message} for c in result.corpus_checks],
+        "provider_checks": [
+            {"name": c.name, "passed": c.passed, "message": c.message}
+            for c in result.provider_checks
+        ],
+        "corpus_checks": [
+            {"name": c.name, "passed": c.passed, "message": c.message} for c in result.corpus_checks
+        ],
         "cost_estimate_usd": result.cost_estimate_usd,
         "warnings": result.warnings,
     }
@@ -394,6 +469,7 @@ def _get_llm(provider: str, model: str, base_url: str):
         ThresholdsConfig,
     )
     from cauterule.llm.factory import get_llm
+
     api_key = os.getenv("CAUTERULE_LLM_API_KEY", "")
     cfg = Config(
         llm=LLMConfig(provider=provider, model=model, api_key=api_key, base_url=base_url),
@@ -418,6 +494,7 @@ def extract_candidates(
     from cauterule.extraction.extractor import _parse_candidate_json
     from cauterule.extraction.prompt import build_extraction_prompt
     from cauterule.models.trajectory import Trajectory
+
     llm = _get_llm(llm_provider, llm_model, llm_base_url)
     traj = Trajectory.from_dict(trajectory)
     candidates: list[dict] = []
@@ -432,16 +509,19 @@ def extract_candidates(
             raw_text = result.text if hasattr(result, "text") else str(result)
             candidate = _parse_candidate_json(raw_text, extraction_pass=idx, template=None)
             from cauterule.extraction.quality import check_quality
+
             _ = check_quality(candidate, traj)
-            candidates.append({
-                "when": candidate.when.trigger,
-                "do": candidate.do.directive,
-                "confidence": candidate.confidence,
-                "extraction_pass": candidate.extraction_pass,
-                "reasoning": candidate.reasoning,
-                "temperature": temp,
-                "llm_response": raw_text,
-            })
+            candidates.append(
+                {
+                    "when": candidate.when.trigger,
+                    "do": candidate.do.directive,
+                    "confidence": candidate.confidence,
+                    "extraction_pass": candidate.extraction_pass,
+                    "reasoning": candidate.reasoning,
+                    "temperature": temp,
+                    "llm_response": raw_text,
+                }
+            )
         except Exception as exc:
             print(f"NO CANDIDATE (pass {idx}, temp={temp}): {exc}")
     return candidates, usage
@@ -449,9 +529,11 @@ def extract_candidates(
 
 # ── Gate ───────────────────────────────────────────────────────────────
 
+
 def run_gate(trajectory: dict, corpus_type: str) -> dict:
     from cauterule.extraction.gate import GateMode, run_gate
     from cauterule.models.trajectory import Trajectory
+
     base = corpus_type.split("/")[-1].strip().lower()
     is_safety = base in SAFETY_CORPORA or corpus_type.startswith("adversarial")
     mode: GateMode = GATE_MODE_STRICT if is_safety else GATE_MODE_RELAXED
@@ -467,6 +549,7 @@ def run_gate(trajectory: dict, corpus_type: str) -> dict:
 
 
 # ── Replay testing ─────────────────────────────────────────────────────
+
 
 def replay_test_candidate(
     candidate: dict,
@@ -551,6 +634,7 @@ def replay_test_candidate(
 
 # ── Corpus loading ────────────────────────────────────────────────────
 
+
 def load_trajectories(dir_path: Path) -> list[dict]:
     if not dir_path.is_dir():
         return []
@@ -594,6 +678,7 @@ def load_trajectory(file_path: Path) -> list[dict]:
 
 # ── Per-trajectory processing ─────────────────────────────────────────
 
+
 def process_one_trajectory(
     trajectory: dict,
     tid: str,
@@ -610,6 +695,7 @@ def process_one_trajectory(
 
     # v0.2.0: specificity scoring on trajectory task
     from cauterule.extraction.specificity import score_specificity
+
     task_specificity = score_specificity(trajectory.get("task", ""))
 
     temperatures = [float(t) for t in args.temperatures.split(",")]
@@ -629,7 +715,11 @@ def process_one_trajectory(
         }
 
     candidates, llm_usage = extract_candidates(
-        trajectory, args.llm_provider, args.llm_model, args.llm_base_url, temperatures,
+        trajectory,
+        args.llm_provider,
+        args.llm_model,
+        args.llm_base_url,
+        temperatures,
     )
     if not candidates:
         print("NO CANDIDATES")
@@ -647,13 +737,18 @@ def process_one_trajectory(
     test_results = []
     is_omlx = args.llm_base_url and "localhost" in args.llm_base_url
     exclude_ids = {
-        str(oid) for oid in (trajectory.get("id"), trajectory.get("trajectory_id"), tid)
+        str(oid)
+        for oid in (trajectory.get("id"), trajectory.get("trajectory_id"), tid)
         if oid is not None
     }
     for cand in candidates:
         test_result = replay_test_candidate(
-            cand, reference_trajs, corpus_type, is_omlx=is_omlx,
-            exclude_ids=exclude_ids, source_domain=trajectory.get("domain"),
+            cand,
+            reference_trajs,
+            corpus_type,
+            is_omlx=is_omlx,
+            exclude_ids=exclude_ids,
+            source_domain=trajectory.get("domain"),
         )
         # v0.2.0: specificity scoring on trigger
         test_result["trigger_specificity"] = score_specificity(cand["when"])
@@ -664,6 +759,7 @@ def process_one_trajectory(
             from cauterule.models.trajectory import Trajectory
             from cauterule.replay.attribution import attribute_inconclusive
             from cauterule.replay.report import build_evidence_report
+
             cand_obj = CandidateRule(
                 when=RuleWhen(trigger=cand["when"]),
                 do=RuleDo(directive=cand["do"]),
@@ -693,12 +789,25 @@ def process_one_trajectory(
         best["verdict"] = "fail"
         best["_forced_reject"] = True
         print(f"  [reject] {tid} — should_reject source, pass→fail")
-    print(f"{len(candidates)} candidates, best: precision={best.get('precision',0):.2f} recall={best.get('recall',0):.2f} verdict={best.get('verdict','?')}")
+    print(
+        f"{len(candidates)} candidates, best: precision={best.get('precision', 0):.2f} recall={best.get('recall', 0):.2f} verdict={best.get('verdict', '?')}"
+    )
 
     return {
         "trajectory_id": tid,
         "status": "done",
-        "trajectory": {k: trajectory.get(k) for k in ("task", "domain", "failure_class", "quality_label", "success", "expected_rule", "expected_outcome")},
+        "trajectory": {
+            k: trajectory.get(k)
+            for k in (
+                "task",
+                "domain",
+                "failure_class",
+                "quality_label",
+                "success",
+                "expected_rule",
+                "expected_outcome",
+            )
+        },
         "candidate_count": len(candidates),
         "candidates": test_results,
         "best": best,
@@ -712,7 +821,10 @@ def process_one_trajectory(
 
 # ── Summary writer (v0.2.0 with safety-adjusted scoring) ──────────────
 
-def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_time: float, corpus_type: str) -> None:
+
+def _write_summary(
+    results: list[dict], summary_file: Path, meta: dict, start_time: float, corpus_type: str
+) -> None:
     done = [r for r in results if r.get("status") == "done"]
     gate_dropped = [r for r in results if r.get("status") == "gate_dropped"]
     skipped = [r for r in results if r.get("status") not in ("done", "gate_dropped")]
@@ -722,14 +834,21 @@ def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_ti
     total_trajectories = len(results)
 
     best_results = [r.get("best", {}) for r in done if r.get("best")]
-    avg_precision = sum(r.get("precision", 0) for r in best_results) / len(best_results) if best_results else 0.0
-    avg_recall = sum(r.get("recall", 0) for r in best_results) / len(best_results) if best_results else 0.0
+    avg_precision = (
+        sum(r.get("precision", 0) for r in best_results) / len(best_results)
+        if best_results
+        else 0.0
+    )
+    avg_recall = (
+        sum(r.get("recall", 0) for r in best_results) / len(best_results) if best_results else 0.0
+    )
     passing = sum(1 for r in best_results if r.get("verdict") == "pass")
     failing = sum(1 for r in best_results if r.get("verdict") == "fail")
     inconclusive = sum(1 for r in best_results if r.get("verdict") == "inconclusive")
 
     # v0.2.0: safety-adjusted scoring
     from cauterule.replay.safety import classify_outcome, safety_summary
+
     safety_outcomes = []
     for r in done:
         best = r.get("best", {})
@@ -755,10 +874,18 @@ def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_ti
             specificity_counts[spec] = specificity_counts.get(spec, 0) + 1
 
     # v0.2.0: inconclusive attribution breakdown
-    inconclusive_breakdown: dict[str, int] = {"broad_trigger": 0, "matcher_gap": 0, "corpus_mismatch": 0, "ambiguous_evidence": 0}
+    inconclusive_breakdown: dict[str, int] = {
+        "broad_trigger": 0,
+        "matcher_gap": 0,
+        "corpus_mismatch": 0,
+        "ambiguous_evidence": 0,
+    }
     for r in done:
         for c in r.get("candidates", []):
-            if c.get("verdict") == "inconclusive" and c.get("inconclusive_reason") in inconclusive_breakdown:
+            if (
+                c.get("verdict") == "inconclusive"
+                and c.get("inconclusive_reason") in inconclusive_breakdown
+            ):
                 inconclusive_breakdown[c["inconclusive_reason"]] += 1
 
     # v0.2.0: match_detail aggregation
@@ -782,6 +909,7 @@ def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_ti
     # small-sample point estimates (n=10 golden, n=50 nearmiss, n=10/vector)
     # are not read as precise facts.
     from cauterule.stats import rate_with_ci
+
     confidence_intervals = {
         "pass_rate": rate_with_ci(passing, passing + failing),
         "safety_silence_rate": rate_with_ci(
@@ -817,8 +945,12 @@ def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_ti
 
 # ── Harness health ────────────────────────────────────────────────────
 
-def write_harness_health(results: list[dict], meta: dict, corpus_type: str, health_file: Path) -> None:
+
+def write_harness_health(
+    results: list[dict], meta: dict, corpus_type: str, health_file: Path
+) -> None:
     from cauterule.benchmark.harness import harness_health
+
     done = [r for r in results if r.get("status") == "done"]
     gate_dropped = [r for r in results if r.get("status") == "gate_dropped"]
     parsed = sum(1 for r in done if r.get("candidate_count", 0) > 0)
@@ -835,13 +967,23 @@ def write_harness_health(results: list[dict], meta: dict, corpus_type: str, heal
     )
     health_data = {
         "passed": health.passed,
-        "checks": [{"name": c.name, "passed": c.passed, "message": c.message, "value": c.value, "threshold": c.threshold} for c in health.checks],
+        "checks": [
+            {
+                "name": c.name,
+                "passed": c.passed,
+                "message": c.message,
+                "value": c.value,
+                "threshold": c.threshold,
+            }
+            for c in health.checks
+        ],
         "warnings": health.warnings,
     }
     health_file.write_text(json.dumps(health_data, indent=2))
 
 
 # ── Main per-corpus runner ────────────────────────────────────────────
+
 
 def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
     corpus_dir = CORPUS_TYPES.get(corpus_type)
@@ -852,13 +994,13 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
         print(f"[error] corpus directory not found: {corpus_dir}")
         return 0
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Field Test (v0.2.0): {corpus_type}")
     print(f"  LLM:      {args.llm_provider}/{args.llm_model}")
     if args.llm_base_url:
         print(f"  Base URL: {args.llm_base_url}")
     print(f"  Corpus:   {corpus_dir}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     # Output directory
     timestamp = datetime.now(UTC).strftime("%Y-%m-%d")
@@ -948,7 +1090,12 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
         "target_trajectories": len(traj_tasks) + len(skipped_quarantine),
         "reference_trajectories": len(reference_trajs),
         "cost_per_request_usd": args.cost_per_request,
-        "gate_mode": GATE_MODE_STRICT if (corpus_type.split("/")[-1].strip().lower() in SAFETY_CORPORA or corpus_type.startswith("adversarial")) else GATE_MODE_RELAXED,
+        "gate_mode": GATE_MODE_STRICT
+        if (
+            corpus_type.split("/")[-1].strip().lower() in SAFETY_CORPORA
+            or corpus_type.startswith("adversarial")
+        )
+        else GATE_MODE_RELAXED,
         "quarantined": [tid for _, tid in skipped_quarantine],
     }
     meta_file.write_text(json.dumps(meta, indent=2))
@@ -960,7 +1107,9 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
     executor = ThreadPoolExecutor(max_workers=args.max_workers)
     futures: list[tuple[Any, str, int]] = []
     for i, (rec, tid) in enumerate(traj_tasks, 1):
-        future = executor.submit(process_one_trajectory, rec, tid, i, len(traj_tasks), corpus_type, reference_trajs, args)
+        future = executor.submit(
+            process_one_trajectory, rec, tid, i, len(traj_tasks), corpus_type, reference_trajs, args
+        )
         futures.append((future, tid, i))
 
     # Ordered result() with a per-trajectory timeout — a hung worker is recorded
@@ -977,16 +1126,18 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
                 _write_summary(results, summary_file, meta, start_time, corpus_type)
             except TimeoutError:
                 print(f"  [timeout] {tid} — LLM hung, recording as timeout")
-                results.append({
-                    "trajectory_id": tid,
-                    "status": "timeout",
-                    "candidate_count": 0,
-                    "candidates": [],
-                    "gate": {"is_silence": False},
-                    "task_specificity": "generic",
-                    "pre_extraction_drop": False,
-                    "llm_calls_avoided": 0,
-                })
+                results.append(
+                    {
+                        "trajectory_id": tid,
+                        "status": "timeout",
+                        "candidate_count": 0,
+                        "candidates": [],
+                        "gate": {"is_silence": False},
+                        "task_specificity": "generic",
+                        "pre_extraction_drop": False,
+                        "llm_calls_avoided": 0,
+                    }
+                )
                 with Path(results_file).open("a") as fh:
                     fh.write(json.dumps(results[-1], default=str) + "\n")
                 _write_summary(results, summary_file, meta, start_time, corpus_type)
@@ -1009,12 +1160,15 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
 
 # ── Validation suite runner (v0.2.0 pre-field validation) ─────────────
 
+
 def run_validation(args: argparse.Namespace) -> int:
     """Run all or selected hermetic validation suites, writing results to 0.2.0 dir."""
     suites_to_run: dict[str, dict[str, str]] = {}
     if args.validation_suite:
         if args.validation_suite not in VALIDATION_SUITES:
-            print(f"[error] unknown validation suite: {args.validation_suite}. Known: {list(VALIDATION_SUITES)}")
+            print(
+                f"[error] unknown validation suite: {args.validation_suite}. Known: {list(VALIDATION_SUITES)}"
+            )
             return 1
         suites_to_run[args.validation_suite] = VALIDATION_SUITES[args.validation_suite]
     else:
@@ -1040,14 +1194,16 @@ def run_validation(args: argparse.Namespace) -> int:
         xml_path = out_root / f"{suite_name}.xml"
         log_path = out_root / f"{suite_name}.log"
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Validation Suite: {suite_name} ({suffix})")
         print(f"  Targets: {' '.join(targets)}")
         print(f"  XML:     {xml_path}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         cmd = [
-            sys.executable, "-m", "pytest",
+            sys.executable,
+            "-m",
+            "pytest",
             *targets,
             "-v",
             f"--junitxml={xml_path}",
@@ -1061,6 +1217,7 @@ def run_validation(args: argparse.Namespace) -> int:
         log_path.write_text(result.stdout + "\n" + result.stderr)
 
         import re
+
         passed_count = 0
         failed_count = 0
         error_count = 0
@@ -1091,7 +1248,9 @@ def run_validation(args: argparse.Namespace) -> int:
         overall["total_errors"] += error_count
 
         status = "PASS" if passed else "FAIL"
-        print(f"  Result: {status} ({passed_count} passed, {failed_count} failed, {error_count} errors) in {elapsed:.0f}s")
+        print(
+            f"  Result: {status} ({passed_count} passed, {failed_count} failed, {error_count} errors) in {elapsed:.0f}s"
+        )
 
     overall["all_passed"] = all(s["passed"] for s in overall["suites"].values())
     summary_path = out_root / "validation-summary.json"
@@ -1102,15 +1261,18 @@ def run_validation(args: argparse.Namespace) -> int:
     benchmark_xml_dst = Path(args.output_dir) / "benchmark-results.xml"
     if benchmark_xml_src.exists():
         import shutil
+
         benchmark_xml_dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(str(benchmark_xml_src), str(benchmark_xml_dst))
         print(f"\n  Benchmark XML: {benchmark_xml_dst}")
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Validation Summary: {'ALL PASS' if overall['all_passed'] else 'SOME FAILED'}")
-    print(f"  {overall['total_passed']} passed, {overall['total_failed']} failed, {overall['total_errors']} errors")
+    print(
+        f"  {overall['total_passed']} passed, {overall['total_failed']} failed, {overall['total_errors']} errors"
+    )
     print(f"  Summary: {summary_path}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     return 0 if overall["all_passed"] else 1
 
 
@@ -1146,7 +1308,11 @@ def _regression_v020(args: argparse.Namespace) -> int:
     current_root = Path(args.output_dir)
     out_path = current_root / "regression-v020.md"
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    lines = ["# v0.3.0 vs v0.2.0 Regression Comparison\n", "| Corpus | Metric | v0.2.0 | v0.3.0 | Delta | Flag |", "|--------|--------|-------|-------|-------|------|"]
+    lines = [
+        "# v0.3.0 vs v0.2.0 Regression Comparison\n",
+        "| Corpus | Metric | v0.2.0 | v0.3.0 | Delta | Flag |",
+        "|--------|--------|-------|-------|-------|------|",
+    ]
     flagged = 0
     for summary in sorted(baseline_root.rglob("summary.json")):
         corpus = summary.parent.parent.parent.name
@@ -1154,7 +1320,13 @@ def _regression_v020(args: argparse.Namespace) -> int:
             old = json.loads(summary.read_text())
         except Exception:
             continue
-        new_path = current_root / corpus.replace("/", "_") / summary.parent.parent.name / summary.parent.name / "summary.json"
+        new_path = (
+            current_root
+            / corpus.replace("/", "_")
+            / summary.parent.parent.name
+            / summary.parent.name
+            / "summary.json"
+        )
         new = json.loads(new_path.read_text()) if new_path.is_file() else None
         if new is None:
             continue
@@ -1162,7 +1334,12 @@ def _regression_v020(args: argparse.Namespace) -> int:
             o = float(old.get(metric, 0) or 0)
             n = float(new.get(metric, 0) or 0)
             delta = n - o
-            flag = "⚠ regression" if (metric != "silence_rate" and delta < -0.05) or (metric == "silence_rate" and delta < -0.05) else ""
+            flag = (
+                "⚠ regression"
+                if (metric != "silence_rate" and delta < -0.05)
+                or (metric == "silence_rate" and delta < -0.05)
+                else ""
+            )
             if flag:
                 flagged += 1
             lines.append(f"| {corpus} | {metric} | {o:.2f} | {n:.2f} | {delta:+.2f} | {flag} |")
@@ -1198,8 +1375,12 @@ def _run_block(name: str, args: argparse.Namespace) -> int:
             )
             return 0
         cmd = [
-            sys.executable, "scripts/cross_session.py",
-            "--baseline", str(baseline), "--intervention", str(intervention),
+            sys.executable,
+            "scripts/cross_session.py",
+            "--baseline",
+            str(baseline),
+            "--intervention",
+            str(intervention),
         ]
     elif name == "human-review":
         cmd = [sys.executable, "scripts/human_agreement.py", "--results", str(out)]
@@ -1237,8 +1418,15 @@ def main() -> None:
         sys.exit(run_validation(args))
 
     block_requested = any(
-        (args.adapter, args.pack, args.mcp_security, args.otel,
-         args.cost_corpus, args.cross_session, args.human_review)
+        (
+            args.adapter,
+            args.pack,
+            args.mcp_security,
+            args.otel,
+            args.cost_corpus,
+            args.cross_session,
+            args.human_review,
+        )
     )
     if block_requested:
         block_status = _run_field_blocks(args)
@@ -1247,7 +1435,11 @@ def main() -> None:
             sys.exit(block_status)
 
     api_key = os.getenv("CAUTERULE_LLM_API_KEY")
-    if not api_key and args.llm_provider in ("openai", "anthropic", "litellm") and not args.llm_base_url:
+    if (
+        not api_key
+        and args.llm_provider in ("openai", "anthropic", "litellm")
+        and not args.llm_base_url
+    ):
         print("[warn] CAUTERULE_LLM_API_KEY not set. Cloud LLMs will likely fail.")
         print("       Set it: export CAUTERULE_LLM_API_KEY=sk-...")
         print("       For local OMLX, use --llm-base-url http://localhost:8000/v1\n")

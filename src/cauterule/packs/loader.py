@@ -68,8 +68,6 @@ def load_pack(
         rules.append(load_rule_from_file(rule_path))
 
     if missing:
-        raise ValueError(
-            f"Pack {name!r} is missing rule files: {', '.join(missing)}"
-        )
+        raise ValueError(f"Pack {name!r} is missing rule files: {', '.join(missing)}")
 
     return manifest, rules

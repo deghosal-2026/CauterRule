@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from cauterule.promotion.thresholds import get_thresholds, set_thresholds
 
@@ -21,7 +21,7 @@ def _history_path() -> Path:
 
 def _load_history() -> dict[str, float]:
     try:
-        return json.loads(_history_path().read_text(encoding="utf-8"))
+        return cast(dict[str, float], json.loads(_history_path().read_text(encoding="utf-8")))
     except (FileNotFoundError, json.JSONDecodeError, OSError):
         return {}
 
@@ -68,13 +68,9 @@ def feed_calibration_data(thresholds: dict[str, Any]) -> dict[str, Any]:
         current = get_thresholds(mode)
         adjusted_thresholds = dict(current)
         if "min_confidence" in current and adjustment > 0:
-            adjusted_thresholds["min_confidence"] = min(
-                1.0, current["min_confidence"] + adjustment
-            )
+            adjusted_thresholds["min_confidence"] = min(1.0, current["min_confidence"] + adjustment)
         if "min_precision" in current and adjustment > 0:
-            adjusted_thresholds["min_precision"] = min(
-                1.0, current["min_precision"] + adjustment
-            )
+            adjusted_thresholds["min_precision"] = min(1.0, current["min_precision"] + adjustment)
         # Apply the adjusted thresholds.
         set_thresholds(mode, adjusted_thresholds)
         adjusted[mode] = adjusted_thresholds
@@ -84,8 +80,11 @@ def feed_calibration_data(thresholds: dict[str, Any]) -> dict[str, Any]:
 
 def _validate_thresholds(thresholds: dict[str, Any]) -> None:
     required_keys = {
-        "min_confidence", "min_precision", "min_recall",
-        "linter_warning_limit", "conflict_tolerance",
+        "min_confidence",
+        "min_precision",
+        "min_recall",
+        "linter_warning_limit",
+        "conflict_tolerance",
     }
     missing = required_keys - set(thresholds.keys())
     if missing:

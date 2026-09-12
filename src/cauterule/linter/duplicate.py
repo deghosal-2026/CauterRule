@@ -22,7 +22,9 @@ def _overlap(a: set[str], b: set[str]) -> float:
     return len(a & b) / min(len(a), len(b))
 
 
-def check_duplicate(candidate_trigger: str, candidate_directive: str, existing_rules: list[StandingRule]) -> list[str]:
+def check_duplicate(
+    candidate_trigger: str, candidate_directive: str, existing_rules: list[StandingRule]
+) -> list[str]:
     """Return warnings if a rule with same trigger+directive exists.
 
     Exact normalized matches warn as duplicates; paraphrases with high
@@ -35,8 +37,9 @@ def check_duplicate(candidate_trigger: str, candidate_directive: str, existing_r
     for rule in existing_rules:
         if _normalize(rule.when.trigger) == ct and _normalize(rule.do.directive) == cd:
             return [f"duplicate: matches existing rule {rule.id}"]
-        if _overlap(ct_tokens, _tokens(rule.when.trigger)) >= _NEAR_DUPLICATE_THRESHOLD and _overlap(
-            cd_tokens, _tokens(rule.do.directive)
-        ) >= _NEAR_DUPLICATE_THRESHOLD:
+        if (
+            _overlap(ct_tokens, _tokens(rule.when.trigger)) >= _NEAR_DUPLICATE_THRESHOLD
+            and _overlap(cd_tokens, _tokens(rule.do.directive)) >= _NEAR_DUPLICATE_THRESHOLD
+        ):
             return [f"near-duplicate: paraphrases existing rule {rule.id}"]
     return []

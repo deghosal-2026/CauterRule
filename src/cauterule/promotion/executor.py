@@ -24,13 +24,13 @@ def _next_rule_id(rules_dir: Path) -> str:
         for p in rules_dir.glob("*.yaml"):
             if p.stem.startswith(f"{_RULE_ID_PREFIX}-"):
                 try:
-                    existing.append(int(p.stem[len(_RULE_ID_PREFIX) + 1:]))
+                    existing.append(int(p.stem[len(_RULE_ID_PREFIX) + 1 :]))
                 except ValueError:
                     continue
         for p in rules_dir.glob("*.yml"):
             if p.stem.startswith(f"{_RULE_ID_PREFIX}-"):
                 try:
-                    existing.append(int(p.stem[len(_RULE_ID_PREFIX) + 1:]))
+                    existing.append(int(p.stem[len(_RULE_ID_PREFIX) + 1 :]))
                 except ValueError:
                     continue
     seq = max(existing) + 1 if existing else 1

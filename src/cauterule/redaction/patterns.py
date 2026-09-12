@@ -16,11 +16,17 @@ _BUILTIN_PATTERN_STRS: list[tuple[str, str]] = [
     ("password", r"(?i)(password|passwd|pwd)\s*[:=]\s*[^\s\"']+"),
     ("secret_generic", r"(?i)secret\s*[:=]\s*[^\s\"']+"),
     ("bearer_token", r"Bearer\s+[A-Za-z0-9_\-\.]+"),
-    ("private_key_block", r"(?s)-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----"),
+    (
+        "private_key_block",
+        r"(?s)-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----",
+    ),
     ("private_key", r"-----BEGIN (?:RSA )?PRIVATE KEY-----"),
     ("slack_token", r"xox[baprs]-[A-Za-z0-9-]{10,}"),
     ("stripe_key", r"(?i)(?:sk|rk|pk)_(?:live|test)_[A-Za-z0-9]{10,}"),
-    ("high_entropy_assignment", r"(?i)(?:token|secret|key|password)\s*[:=]\s*['\"]?[A-Za-z0-9/+=_-]{20,}['\"]?"),
+    (
+        "high_entropy_assignment",
+        r"(?i)(?:token|secret|key|password)\s*[:=]\s*['\"]?[A-Za-z0-9/+=_-]{20,}['\"]?",
+    ),
 ]
 
 

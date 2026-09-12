@@ -118,7 +118,10 @@ def build_payload(provider: str, fields: dict[str, Any]) -> dict[str, Any]:
         f"(verdict={fields.get('verdict', 'promoted')})"
     )
     if provider == "slack":
-        return {"text": summary, "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": summary}}]}
+        return {
+            "text": summary,
+            "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": summary}}],
+        }
     if provider == "discord":
         return {"content": summary}
     if provider == "github":
@@ -198,7 +201,9 @@ def notify_promotion(
         "promoted_by": rule.get("promoted_by", ""),
     }
     if webhook.redact:
-        fields = {k: (redact_export(str(v)) if isinstance(v, str) else v) for k, v in fields.items()}
+        fields = {
+            k: (redact_export(str(v)) if isinstance(v, str) else v) for k, v in fields.items()
+        }
     payload = build_payload(webhook.provider, fields)
     report = deliver_payload(url, payload, webhook.max_attempts, webhook.backoff)
     try:

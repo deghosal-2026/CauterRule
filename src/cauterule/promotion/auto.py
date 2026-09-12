@@ -64,7 +64,9 @@ def auto_promote(
         min_qual = float(getattr(cutoffs, "min_quality", 0.0))
         if candidate.confidence < min_qual and not force:
             cutoff_ok = False
-            cutoff_note = f", confidence {candidate.confidence:.2f} below learned cutoff {min_qual:.2f}"
+            cutoff_note = (
+                f", confidence {candidate.confidence:.2f} below learned cutoff {min_qual:.2f}"
+            )
 
     if linter_result.passed and not conflicts and evidence_ok and safety_ok and cutoff_ok:
         summary = f"Auto-promote: linter clean, no conflicts, evidence={evidence.verdict}; candidate confidence={candidate.confidence}"

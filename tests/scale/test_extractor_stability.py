@@ -42,7 +42,9 @@ def test_stability_identical_results() -> None:
         }
     )
     llm = DeterministicLLM(payload)
-    results = [extract_candidate(_traj(), llm, template="retry", extraction_pass=1) for _ in range(5)]
+    results = [
+        extract_candidate(_traj(), llm, template="retry", extraction_pass=1) for _ in range(5)
+    ]
     triggers = [r.when.trigger for r in results]
     directives = [r.do.directive for r in results]
     confidences = [r.confidence for r in results]
@@ -59,7 +61,11 @@ def test_stability_with_varying_confidence() -> None:
     """Verify that confidence values from mock extraction stay within bounds."""
     payloads = [
         json.dumps(
-            {"when": {"trigger": "git push fails"}, "do": {"directive": f"fix with method {i}"}, "confidence": 0.8 + i * 0.05}
+            {
+                "when": {"trigger": "git push fails"},
+                "do": {"directive": f"fix with method {i}"},
+                "confidence": 0.8 + i * 0.05,
+            }
         )
         for i in range(3)
     ]

@@ -18,6 +18,7 @@ from cauterule.serialization.trajectory_jsonl import load_trajectories
 def test(rule: str | None, pack_name: str | None, store_dir: str, ci: bool) -> None:
     """Replay-test a candidate rule against historical failures."""
     from cauterule.store.manager import StoreManager
+
     if pack_name:
         _test_pack(pack_name, store_dir, ci)
         return
@@ -54,6 +55,7 @@ def test(rule: str | None, pack_name: str | None, store_dir: str, ci: bool) -> N
     # are accumulated into its outcome counters/trend via the idempotent log.
     try:
         from cauterule.observe.outcomes import apply_report_outcomes
+
         apply_report_outcomes(store, rule, report_)
     except Exception:
         pass
@@ -100,9 +102,7 @@ def _test_pack(pack_name: str, store_dir: str, ci: bool) -> None:
         own = [t for t, rid in zip(trajectories, rule_ids, strict=False) if rid in ("", rule.id)]
         if not own:
             own = list(trajectories)
-        cand = CandidateRule(
-            when=rule.when, do=rule.do, confidence=rule.confidence, reasoning=None
-        )
+        cand = CandidateRule(when=rule.when, do=rule.do, confidence=rule.confidence, reasoning=None)
         hits = sum(1 for t in own if match_score(cand, t) >= 0.5)
         status = "PASS" if hits >= 1 else "FAIL"
         if hits < 1:

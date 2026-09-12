@@ -8,9 +8,7 @@ from cauterule.models.trajectory import Trajectory
 from cauterule.store.manager import StoreManager
 
 
-def suggest_next_frontier(
-    store: StoreManager, trajectories: list[Trajectory]
-) -> str:
+def suggest_next_frontier(store: StoreManager, trajectories: list[Trajectory]) -> str:
     """Return a human-readable suggestion for the next domain to target.
 
     Identifies the domain with the most repeated uncovered failures.
@@ -25,9 +23,7 @@ def suggest_next_frontier(
         if not t.success and t.domain:
             domain_failures[t.domain] += 1
 
-    uncovered = [
-        (d, c) for d, c in domain_failures.most_common() if d not in rule_tags
-    ]
+    uncovered = [(d, c) for d, c in domain_failures.most_common() if d not in rule_tags]
 
     if not uncovered:
         return "All domains are covered. Consider deepening existing coverage."

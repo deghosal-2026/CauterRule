@@ -7,7 +7,9 @@ from cauterule.models.rule import RuleDo, RuleWhen
 
 
 def _cand(trigger: str, confidence: float) -> CandidateRule:
-    return CandidateRule(when=RuleWhen(trigger=trigger), do=RuleDo(directive="d"), confidence=confidence)
+    return CandidateRule(
+        when=RuleWhen(trigger=trigger), do=RuleDo(directive="d"), confidence=confidence
+    )
 
 
 def _ev(prec: float, rec: float) -> EvidenceReport:
@@ -48,7 +50,9 @@ def test_rank_invalid_length() -> None:
 
 
 def test_rank_specificity() -> None:
-    c1 = CandidateRule(when=RuleWhen(trigger="a", context=("extra",)), do=RuleDo(directive="d"), confidence=0.9)
+    c1 = CandidateRule(
+        when=RuleWhen(trigger="a", context=("extra",)), do=RuleDo(directive="d"), confidence=0.9
+    )
     c2 = _cand("a", 0.9)
     ev = _ev(0.9, 0.9)
     ranked = rank_candidates([c2, c1], [ev, ev])

@@ -10,7 +10,15 @@ def _cand(trigger: str) -> CandidateRule:
 
 def test_cache_hit() -> None:
     cand = _cand("git push")
-    trajs = [Trajectory(id="T-1", timestamp="t", task="git push", steps=(Step(1, "bash", error="err"),), success=False)]
+    trajs = [
+        Trajectory(
+            id="T-1",
+            timestamp="t",
+            task="git push",
+            steps=(Step(1, "bash", error="err"),),
+            success=False,
+        )
+    ]
     cache = ReplayCache()
     r1 = cache.get(cand, trajs)
     r2 = cache.get(cand, trajs)
@@ -21,7 +29,15 @@ def test_cache_hit() -> None:
 def test_cache_miss() -> None:
     cand1 = _cand("git push")
     cand2 = _cand("docker")
-    trajs = [Trajectory(id="T-1", timestamp="t", task="git push", steps=(Step(1, "bash", error="err"),), success=False)]
+    trajs = [
+        Trajectory(
+            id="T-1",
+            timestamp="t",
+            task="git push",
+            steps=(Step(1, "bash", error="err"),),
+            success=False,
+        )
+    ]
     cache = ReplayCache()
     cache.get(cand1, trajs)
     cache.get(cand2, trajs)
@@ -30,7 +46,15 @@ def test_cache_miss() -> None:
 
 def test_cache_clear() -> None:
     cand = _cand("git push")
-    trajs = [Trajectory(id="T-1", timestamp="t", task="task", steps=(Step(1, "bash", error="err"),), success=False)]
+    trajs = [
+        Trajectory(
+            id="T-1",
+            timestamp="t",
+            task="task",
+            steps=(Step(1, "bash", error="err"),),
+            success=False,
+        )
+    ]
     cache = ReplayCache()
     cache.get(cand, trajs)
     assert len(cache) == 1

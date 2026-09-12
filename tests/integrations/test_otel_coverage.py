@@ -14,9 +14,7 @@ def _otel_sdk_available() -> bool:
     try:
         return (
             importlib.util.find_spec("opentelemetry.sdk.trace") is not None
-            and importlib.util.find_spec(
-                "opentelemetry.exporter.otlp.proto.http.trace_exporter"
-            )
+            and importlib.util.find_spec("opentelemetry.exporter.otlp.proto.http.trace_exporter")
             is not None
         )
     except (ImportError, ModuleNotFoundError):
@@ -74,7 +72,9 @@ def test_ensure_configured_calls_configure_when_enabled(monkeypatch: pytest.Monk
     import cauterule.integrations.otel as otel_module
 
     otel_module._CONFIGURED = False
-    fake_cfg = MagicMock(enabled=True, endpoint="http://collector:4318", service_name="svc", headers=())
+    fake_cfg = MagicMock(
+        enabled=True, endpoint="http://collector:4318", service_name="svc", headers=()
+    )
     # need object with .otel attr
     monkeypatch.setattr("cauterule.config.load_config", lambda: MagicMock(otel=fake_cfg))
     with patch("cauterule.integrations.otel.configure_otlp") as mock_configure:
@@ -102,7 +102,9 @@ def test_ensure_configured_load_error_suppressed(monkeypatch: pytest.MonkeyPatch
     import cauterule.integrations.otel as otel_module
 
     otel_module._CONFIGURED = False
-    monkeypatch.setattr("cauterule.config.load_config", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    monkeypatch.setattr(
+        "cauterule.config.load_config", lambda: (_ for _ in ()).throw(RuntimeError("boom"))
+    )
     # should not raise
     otel_module._ensure_configured()
     assert otel_module._CONFIGURED is True
@@ -145,7 +147,10 @@ def test_exporter_init_handles_exception(monkeypatch: pytest.MonkeyPatch) -> Non
     import cauterule.integrations.otel as otel_module
 
     # force TracerProvider to raise
-    monkeypatch.setattr("opentelemetry.sdk.trace.TracerProvider", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")))
+    monkeypatch.setattr(
+        "opentelemetry.sdk.trace.TracerProvider",
+        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")),
+    )
     exporter = otel_module.OtelExporter(service_name="svc", endpoint="http://example.com")
     assert exporter._tracer is None
 
@@ -340,7 +345,9 @@ def test_span_unavailable_noop(monkeypatch: pytest.MonkeyPatch) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_configure_otlp_exception_returns_metadata_exporter(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_configure_otlp_exception_returns_metadata_exporter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     import cauterule.integrations.otel as otel_module
 
     real_cls = otel_module.OtelExporter
@@ -352,7 +359,7 @@ def test_configure_otlp_exception_returns_metadata_exporter(monkeypatch: pytest.
             raise RuntimeError("boom")
         # second call - delegate to real class but without endpoint to avoid network
         # patch TracerProvider inside to be safe
-        return real_cls(service_name=k.get("service_name", "svc"))
+        return real_cls(service_name=str(k.get("service_name", "svc")))
 
     monkeypatch.setattr(otel_module, "OtelExporter", fake_exporter)
     with patch("opentelemetry.trace.get_tracer", return_value=MagicMock()):
@@ -381,7 +388,9 @@ def test_get_exporter_caching_and_branches(monkeypatch: pytest.MonkeyPatch) -> N
     otel_module._exporter = None
 
     # case: load_config raises -> defaults to cauterule service name
-    monkeypatch.setattr("cauterule.config.load_config", lambda: (_ for _ in ()).throw(OSError("no config")))
+    monkeypatch.setattr(
+        "cauterule.config.load_config", lambda: (_ for _ in ()).throw(OSError("no config"))
+    )
     with patch.object(otel_module, "OtelExporter") as mock_cls:
         mock_cls.return_value = MagicMock(service_name="cauterule")
         exp = otel_module.get_exporter()
@@ -393,7 +402,9 @@ def test_get_exporter_caching_and_branches(monkeypatch: pytest.MonkeyPatch) -> N
     otel_module._exporter = None
 
     # case: disabled config -> still creates exporter with service name
-    fake_otel_cfg = MagicMock(enabled=False, endpoint="http://x", service_name="svc-disabled", headers=())
+    fake_otel_cfg = MagicMock(
+        enabled=False, endpoint="http://x", service_name="svc-disabled", headers=()
+    )
     monkeypatch.setattr("cauterule.config.load_config", lambda: MagicMock(otel=fake_otel_cfg))
     with patch.object(otel_module, "OtelExporter") as mock_cls:
         mock_cls.return_value = MagicMock()
@@ -405,7 +416,9 @@ def test_get_exporter_caching_and_branches(monkeypatch: pytest.MonkeyPatch) -> N
     otel_module._exporter = None
 
     # case: enabled + endpoint -> wired provider
-    fake_otel_cfg2 = MagicMock(enabled=True, endpoint="http://collector:4318", service_name="svc-on", headers=(("k", "v"),))
+    fake_otel_cfg2 = MagicMock(
+        enabled=True, endpoint="http://collector:4318", service_name="svc-on", headers=(("k", "v"),)
+    )
     monkeypatch.setattr("cauterule.config.load_config", lambda: MagicMock(otel=fake_otel_cfg2))
     with patch.object(otel_module, "OtelExporter") as mock_cls:
         mock_cls.return_value = MagicMock()
@@ -419,7 +432,9 @@ def test_get_exporter_caching_and_branches(monkeypatch: pytest.MonkeyPatch) -> N
     # case: cfg is None fallback (simulate load_config returns None otel? already handled)
 
 
-def test_get_exporter_handles_exception_in_otel_exporter_construction(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_get_exporter_handles_exception_in_otel_exporter_construction(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     import cauterule.integrations.otel as otel_module
 
     otel_module._exporter = None

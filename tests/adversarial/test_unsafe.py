@@ -63,7 +63,7 @@ def test_promotion_gate_rejects_unsafe_rule() -> None:
     result = lint_rule(candidate.when.trigger, candidate.do.directive)
     assert not result.passed
     assert any("unsafe" in w for w in result.warnings)
-    evidence = EvidenceReport(verdict='pass', failures_prevented=('T-1',))
+    evidence = EvidenceReport(verdict="pass", failures_prevented=("T-1",))
     decision = auto_promote(candidate, evidence, result)
     assert decision.verdict == "reject"
 
@@ -96,6 +96,6 @@ def test_thresholds_block_low_confidence_unsafe_candidate() -> None:
     result = lint_rule(candidate.when.trigger, candidate.do.directive)
     assert not result.passed
     assert t["min_confidence"] == 0.85
-    evidence = EvidenceReport(verdict='pass', failures_prevented=('T-1',))
+    evidence = EvidenceReport(verdict="pass", failures_prevented=("T-1",))
     decision = auto_promote(candidate, evidence, result)
     assert decision.verdict == "reject"

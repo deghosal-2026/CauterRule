@@ -1,4 +1,5 @@
 """Specificity ordering — more specific rules first."""
+
 from __future__ import annotations
 
 from cauterule.models.rule import StandingRule

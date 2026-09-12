@@ -6,11 +6,11 @@ import shutil
 import time
 from pathlib import Path
 
-from cauterule.models.rule import Provenance, RuleDo, RuleWhen, StandingRule
+from cauterule.models.rule import Provenance, RuleDo, RuleWhen, StandingRule, Status
 from cauterule.store.manager import StoreManager
 
 
-def _rule(tid: str, status: str = "active") -> StandingRule:
+def _rule(tid: str, status: Status = "active") -> StandingRule:
     return StandingRule(
         id=tid,
         when=RuleWhen(trigger="git push fails"),

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -25,7 +26,7 @@ def _is_docker_test(item: pytest.Item) -> bool:
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item: pytest.Item, call) -> object:  # type: ignore[no-untyped-def]
-    outcome = yield
+    outcome: Any = yield
     rep: pytest.TestReport = outcome.get_result()
     if not _is_docker_test(item):
         return
@@ -40,7 +41,7 @@ def pytest_runtest_makereport(item: pytest.Item, call) -> object:  # type: ignor
         )
 
 
-def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:  # type: ignore[no-untyped-def]
+def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     if not _records:
         return
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -49,7 +50,11 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:  # t
     existing: list[dict[str, object]] = []
     if RESULTS_JSONL.exists():
         try:
-            existing = [json.loads(line) for line in RESULTS_JSONL.read_text(encoding="utf-8").splitlines() if line.strip()]
+            existing = [
+                json.loads(line)
+                for line in RESULTS_JSONL.read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            ]
         except Exception:
             existing = []
     merged = existing + _records

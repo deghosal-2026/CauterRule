@@ -4,8 +4,12 @@ from cauterule.redaction.engine import contains_secret, redact_text, redact_traj
 
 def test_redact_text_builtin() -> None:
     assert redact_text("AKIAIOSFODNN7EXAMPLE") == "[REDACTED]"
-    assert redact_text("token ghp_123456789012345678901234567890123456 end") == "token [REDACTED] end"
-    assert redact_text("Bearer abc.def.ghi token") == "[REDACTED] token" or "[REDACTED]" in redact_text("Bearer abc.def.ghi token")
+    assert (
+        redact_text("token ghp_123456789012345678901234567890123456 end") == "token [REDACTED] end"
+    )
+    assert redact_text(
+        "Bearer abc.def.ghi token"
+    ) == "[REDACTED] token" or "[REDACTED]" in redact_text("Bearer abc.def.ghi token")
     assert redact_text("password: s3cr3t") == "[REDACTED]"
     assert redact_text("api_key: 12345678901234567890") == "[REDACTED]"
     assert redact_text("sk-12345678901234567890abc") == "[REDACTED]"
@@ -14,7 +18,10 @@ def test_redact_text_builtin() -> None:
 
 
 def test_redact_text_custom() -> None:
-    assert redact_text("my_custom_secret_123", extra_patterns=["my_custom_secret_\\d+"]) == "[REDACTED]"
+    assert (
+        redact_text("my_custom_secret_123", extra_patterns=["my_custom_secret_\\d+"])
+        == "[REDACTED]"
+    )
     # invalid regex treated as literal
     assert redact_text("hello [invalid", extra_patterns=["[invalid"]) == "hello [REDACTED]"
     # tuple also works
@@ -35,8 +42,21 @@ def test_redact_trajectory() -> None:
         timestamp="2026-09-03T18:25:00Z",
         task="deploy with password: s3cr3t",
         steps=(
-            Step(step_number=1, tool="bash", input="ghp_123456789012345678901234567890123456", output="ok"),
-            Step(step_number=2, tool="bash", error="AKIAIOSFODNN7EXAMPLE", state={"key": "sk-12345678901234567890abc", "nested": {"secret": "password: hidden"}}),
+            Step(
+                step_number=1,
+                tool="bash",
+                input="ghp_123456789012345678901234567890123456",
+                output="ok",
+            ),
+            Step(
+                step_number=2,
+                tool="bash",
+                error="AKIAIOSFODNN7EXAMPLE",
+                state={
+                    "key": "sk-12345678901234567890abc",
+                    "nested": {"secret": "password: hidden"},
+                },
+            ),
         ),
         success=False,
         failure_class="git/push",
@@ -44,9 +64,9 @@ def test_redact_trajectory() -> None:
     redacted = redact_trajectory(t)
     assert redacted.redacted is True
     assert "[REDACTED]" in redacted.task
-    assert "[REDACTED]" in redacted.steps[0].input  # type: ignore
+    assert "[REDACTED]" in (redacted.steps[0].input or "")
     assert redacted.steps[0].output == "ok"
-    assert "[REDACTED]" in redacted.steps[1].error  # type: ignore
+    assert "[REDACTED]" in (redacted.steps[1].error or "")
     assert "[REDACTED]" in str(redacted.steps[1].state)
     assert redacted.failure_class is not None
     # original not mutated
@@ -87,7 +107,10 @@ def test_redact_value_list_tuple() -> None:
             Step(
                 step_number=1,
                 tool="bash",
-                state={"items": ["AKIAIOSFODNN7EXAMPLE", "ok"], "pair": ("sk-12345678901234567890abc", "safe")},
+                state={
+                    "items": ["AKIAIOSFODNN7EXAMPLE", "ok"],
+                    "pair": ("sk-12345678901234567890abc", "safe"),
+                },
             ),
         ),
         success=False,

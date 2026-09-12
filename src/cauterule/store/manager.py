@@ -179,10 +179,12 @@ class StoreManager:
 # Helpers — best-effort index + git sync (failure is logged, not raised)
 # ------------------------------------------------------------------
 def _index_sync_safe(
-    rule: StandingRule, base_dir: Path,
+    rule: StandingRule,
+    base_dir: Path,
 ) -> None:
     try:
         from cauterule.store.index import IndexManager
+
         IndexManager(str(base_dir)).update_entry(rule)
     except Exception:
         pass
@@ -191,6 +193,7 @@ def _index_sync_safe(
 def _commit_safe(message: str, base_dir: str) -> None:
     try:
         from cauterule.store.git import git_commit
+
         git_commit(message, base_dir)
     except Exception:
         pass

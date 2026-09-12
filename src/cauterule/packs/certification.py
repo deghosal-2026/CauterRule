@@ -42,46 +42,58 @@ def certify_pack(pack: dict[str, Any]) -> dict[str, Any]:
         else ["Invalid manifest type"]
     )
     if safety_errors:
-        checks.append({
-            "name": "safety",
-            "status": "fail",
-            "message": "; ".join(safety_errors),
-        })
+        checks.append(
+            {
+                "name": "safety",
+                "status": "fail",
+                "message": "; ".join(safety_errors),
+            }
+        )
     else:
-        checks.append({
-            "name": "safety",
-            "status": "pass",
-            "message": "Manifest fields are valid.",
-        })
+        checks.append(
+            {
+                "name": "safety",
+                "status": "pass",
+                "message": "Manifest fields are valid.",
+            }
+        )
 
     # --- Replay check ---
     if len(rules) == 0:
-        checks.append({
-            "name": "replay",
-            "status": "fail",
-            "message": "Pack contains no rules.",
-        })
+        checks.append(
+            {
+                "name": "replay",
+                "status": "fail",
+                "message": "Pack contains no rules.",
+            }
+        )
     else:
-        checks.append({
-            "name": "replay",
-            "status": "pass",
-            "message": f"Pack contains {len(rules)} rule(s).",
-        })
+        checks.append(
+            {
+                "name": "replay",
+                "status": "pass",
+                "message": f"Pack contains {len(rules)} rule(s).",
+            }
+        )
 
     # --- Provenance check ---
     missing_ids = [i for i, r in enumerate(rules) if not r.get("id")]
     if missing_ids:
-        checks.append({
-            "name": "provenance",
-            "status": "fail",
-            "message": f"Rules at indices {missing_ids} are missing an 'id' field.",
-        })
+        checks.append(
+            {
+                "name": "provenance",
+                "status": "fail",
+                "message": f"Rules at indices {missing_ids} are missing an 'id' field.",
+            }
+        )
     else:
-        checks.append({
-            "name": "provenance",
-            "status": "pass",
-            "message": "All rules have an 'id' field.",
-        })
+        checks.append(
+            {
+                "name": "provenance",
+                "status": "pass",
+                "message": "All rules have an 'id' field.",
+            }
+        )
 
     passed = all(c["status"] == "pass" for c in checks)
     return {"passed": passed, "checks": checks}

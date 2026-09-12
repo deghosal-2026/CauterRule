@@ -106,18 +106,14 @@ def load_calibration_pairs(public_root: str | Path | None = None) -> list[Calibr
         scenario_id = rule_id.rsplit("-", 1)[0]
         own = scenarios.get(scenario_id)
         if own is not None:
-            pairs.append(
-                CalibrationPair(rule_id, own.id, candidate, own, expected_match=True)
-            )
+            pairs.append(CalibrationPair(rule_id, own.id, candidate, own, expected_match=True))
         for other_id, traj in scenarios.items():
             if other_id != scenario_id:
                 pairs.append(
                     CalibrationPair(rule_id, traj.id, candidate, traj, expected_match=False)
                 )
         for traj in nearmiss:
-            pairs.append(
-                CalibrationPair(rule_id, traj.id, candidate, traj, expected_match=False)
-            )
+            pairs.append(CalibrationPair(rule_id, traj.id, candidate, traj, expected_match=False))
     return pairs
 
 

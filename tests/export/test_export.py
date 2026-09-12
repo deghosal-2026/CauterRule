@@ -1,4 +1,5 @@
 """Tests for the export module."""
+
 from __future__ import annotations
 
 import json
@@ -159,6 +160,7 @@ def test_export_rules_dispatch() -> None:
 
 def test_export_rules_unknown_format() -> None:
     import pytest
+
     with pytest.raises(ValueError, match="Unknown export format"):
         export_rules([_make_rule()], "bogus")
 

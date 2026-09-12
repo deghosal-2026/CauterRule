@@ -78,7 +78,10 @@ def test_cli_harness_health_fail() -> None:
 
 @pytest.mark.docker
 def test_cli_review_batch_json(rules_workspace: Path) -> None:
-    result = _run(["review", "--batch", "--json", "--store-dir", str(rules_workspace / "rules")], cwd=rules_workspace)
+    result = _run(
+        ["review", "--batch", "--json", "--store-dir", str(rules_workspace / "rules")],
+        cwd=rules_workspace,
+    )
     assert result.returncode == 0, result.stderr
     assert "queue_size" in result.stdout
     payload = json.loads(result.stdout)
@@ -101,14 +104,20 @@ def test_cli_review_filter_json(rules_workspace: Path) -> None:
 
 @pytest.mark.docker
 def test_cli_metrics_coverage(rules_workspace: Path) -> None:
-    result = _run(["metrics", "--coverage", "--store-dir", str(rules_workspace / "rules")], cwd=rules_workspace)
+    result = _run(
+        ["metrics", "--coverage", "--store-dir", str(rules_workspace / "rules")],
+        cwd=rules_workspace,
+    )
     assert result.returncode == 0, result.stderr
     assert "Coverage score" in result.stdout
 
 
 @pytest.mark.docker
 def test_cli_metrics_by_domain(rules_workspace: Path) -> None:
-    result = _run(["metrics", "--by-domain", "--store-dir", str(rules_workspace / "rules")], cwd=rules_workspace)
+    result = _run(
+        ["metrics", "--by-domain", "--store-dir", str(rules_workspace / "rules")],
+        cwd=rules_workspace,
+    )
     assert result.returncode == 0, result.stderr
     assert "git" in result.stdout or "No domain coverage" in result.stdout
 
@@ -122,7 +131,9 @@ def test_cli_gaps(rules_workspace: Path) -> None:
 
 @pytest.mark.docker
 def test_cli_leaderboard(rules_workspace: Path) -> None:
-    result = _run(["leaderboard", "--store-dir", str(rules_workspace / "rules")], cwd=rules_workspace)
+    result = _run(
+        ["leaderboard", "--store-dir", str(rules_workspace / "rules")], cwd=rules_workspace
+    )
     assert result.returncode == 0, result.stderr
     assert "Most prevented" in result.stdout or "Most broken" in result.stdout
 

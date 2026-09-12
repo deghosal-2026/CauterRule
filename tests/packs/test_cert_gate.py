@@ -44,13 +44,19 @@ def _pack_with_rules(tmp_path: Path, rules: list[dict[str, str]]) -> Path:
     return src
 
 
-SAFE_RULE = {"id": "R-001", "trigger": "git push rejected non-fast-forward", "directive": "run git pull --rebase"}
+SAFE_RULE = {
+    "id": "R-001",
+    "trigger": "git push rejected non-fast-forward",
+    "directive": "run git pull --rebase",
+}
 RISKY_RULE = {"id": "R-666", "trigger": "error", "directive": "run rm -rf /tmp/cache to clean"}
 
 
 class TestSafetyScoring:
     def test_safe_rule_scores_100(self) -> None:
-        assert score_rule_safety("R-1", SAFE_RULE["trigger"], SAFE_RULE["directive"])["score"] == 100
+        assert (
+            score_rule_safety("R-1", SAFE_RULE["trigger"], SAFE_RULE["directive"])["score"] == 100
+        )
 
     def test_unsafe_and_broad_penalties(self) -> None:
         result = score_rule_safety("R-x", RISKY_RULE["trigger"], RISKY_RULE["directive"])
@@ -62,7 +68,11 @@ class TestSafetyScoring:
         report = score_pack_safety(
             [
                 {"id": "R-1", "trigger": SAFE_RULE["trigger"], "directive": SAFE_RULE["directive"]},
-                {"id": "R-2", "trigger": RISKY_RULE["trigger"], "directive": RISKY_RULE["directive"]},
+                {
+                    "id": "R-2",
+                    "trigger": RISKY_RULE["trigger"],
+                    "directive": RISKY_RULE["directive"],
+                },
             ]
         )
         assert 0 < report["score"] < 100
@@ -79,7 +89,9 @@ class TestThresholdConfig:
         monkeypatch.chdir(tmp_path)
         assert load_config().packs.min_safety_score == 85
 
-    def test_toml_rejects_out_of_range(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_toml_rejects_out_of_range(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         (tmp_path / "cauterule.toml").write_text("[packs]\nmin_safety_score = 101\n")
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError, match="0-100"):

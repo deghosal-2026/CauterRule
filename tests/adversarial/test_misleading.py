@@ -78,7 +78,13 @@ def test_extractor_rejects_superficial_lesson(
         timestamp="2026-09-05T00:00:00Z",
         task=f"debug build; superficial cause: {superficial_lesson}; real cause: {real_cause}",
         steps=(
-            Step(step_number=1, tool="bash", input="build --target prod", output="", error="error: module not found"),
+            Step(
+                step_number=1,
+                tool="bash",
+                input="build --target prod",
+                output="",
+                error="error: module not found",
+            ),
             Step(step_number=2, tool="bash", input="npm install", output="installed", error=None),
         ),
         success=False,
@@ -87,12 +93,14 @@ def test_extractor_rejects_superficial_lesson(
         quality_label="misleading",
     )
     llm = _FakeLLM(
-        json.dumps({
-            "when": {"trigger": expected_real_trigger, "context": []},
-            "do": {"directive": expected_real_directive},
-            "confidence": 0.85,
-            "reasoning": f"real root cause is {real_cause}",
-        })
+        json.dumps(
+            {
+                "when": {"trigger": expected_real_trigger, "context": []},
+                "do": {"directive": expected_real_directive},
+                "confidence": 0.85,
+                "reasoning": f"real root cause is {real_cause}",
+            }
+        )
     )
     candidate, error = extract_candidate_safe(traj, llm)
     assert error is None
@@ -107,7 +115,9 @@ def test_superficial_diagnostic_not_confused_with_real() -> None:
         timestamp="2026-09-05T00:00:00Z",
         task="fix permissions; superficial: chmod 777 seemed to work but real was sudo",
         steps=(
-            Step(step_number=1, tool="bash", input="chmod 777 /var/log", output="permission denied"),
+            Step(
+                step_number=1, tool="bash", input="chmod 777 /var/log", output="permission denied"
+            ),
             Step(step_number=2, tool="bash", input="sudo chmod 755 /var/log", output="ok"),
         ),
         success=False,
@@ -115,20 +125,24 @@ def test_superficial_diagnostic_not_confused_with_real() -> None:
         failure_class="permissions",
     )
     llm_superficial = _FakeLLM(
-        json.dumps({
-            "when": {"trigger": "permission denied"},
-            "do": {"directive": "use chmod 777"},
-            "confidence": 0.7,
-            "reasoning": "chmod 777 fixed it superficially",
-        })
+        json.dumps(
+            {
+                "when": {"trigger": "permission denied"},
+                "do": {"directive": "use chmod 777"},
+                "confidence": 0.7,
+                "reasoning": "chmod 777 fixed it superficially",
+            }
+        )
     )
     llm_real = _FakeLLM(
-        json.dumps({
-            "when": {"trigger": "permission denied"},
-            "do": {"directive": "use sudo for system files"},
-            "confidence": 0.9,
-            "reasoning": "real cause was missing sudo",
-        })
+        json.dumps(
+            {
+                "when": {"trigger": "permission denied"},
+                "do": {"directive": "use sudo for system files"},
+                "confidence": 0.9,
+                "reasoning": "real cause was missing sudo",
+            }
+        )
     )
     sup, _ = extract_candidate_safe(traj, llm_superficial)
     real, _ = extract_candidate_safe(traj, llm_real)

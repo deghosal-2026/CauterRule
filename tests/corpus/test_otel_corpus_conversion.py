@@ -59,7 +59,9 @@ def test_convert_produces_schema_valid_and_balanced_records() -> None:
 
 def test_convert_respects_limit() -> None:
     module = _load()
-    assert len([r for r in module.convert_otel_issues(_ISSUES * 5, limit=2) if not r["success"]]) == 2
+    assert (
+        len([r for r in module.convert_otel_issues(_ISSUES * 5, limit=2) if not r["success"]]) == 2
+    )
 
 
 def test_cli_writes_failure_and_success_files(tmp_path: Path) -> None:
@@ -72,7 +74,9 @@ def test_cli_writes_failure_and_success_files(tmp_path: Path) -> None:
         ["--issues", str(src), "--output", str(out), "--success-output", str(succ), "--limit", "2"]
     )
     failure_rows = [
-        json.loads(line) for line in (out / "otel-issues.jsonl").read_text(encoding="utf-8").splitlines() if line
+        json.loads(line)
+        for line in (out / "otel-issues.jsonl").read_text(encoding="utf-8").splitlines()
+        if line
     ]
     success_rows = [
         json.loads(line)

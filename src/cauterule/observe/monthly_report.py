@@ -22,9 +22,7 @@ def generate_monthly_report(store: StoreManager) -> str:
     superseded = sum(1 for r in rules if r.status == "superseded")
 
     total_hits = sum(r.hit_count for r in active)
-    avg_conf = (
-        sum(r.confidence for r in active) / active_count if active_count > 0 else 0.0
-    )
+    avg_conf = sum(r.confidence for r in active) / active_count if active_count > 0 else 0.0
     score = compute_coverage_score(store)
     d_cov = domain_coverage(store)
     lb = get_leaderboard(store)

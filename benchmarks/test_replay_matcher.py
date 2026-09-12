@@ -11,9 +11,7 @@ from cauterule.replay.matcher import match_score
 
 def test_matcher_vs_store_size(benchmark, rule_store, trajectories) -> None:
     """Match latency as the rule store grows (10/100/300)."""
-    cands = [
-        CandidateRule(when=r.when, do=r.do, confidence=r.confidence) for r in rule_store
-    ]
+    cands = [CandidateRule(when=r.when, do=r.do, confidence=r.confidence) for r in rule_store]
     trajs = trajectories[:5]
 
     def _run() -> None:

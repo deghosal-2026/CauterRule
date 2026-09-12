@@ -22,14 +22,9 @@ def _corpus_hash(trajectories: list[Trajectory]) -> str:
     """
     parts: list[str] = []
     for t in sorted(trajectories, key=lambda t: t.id):
-        steps = [
-            f"{s.tool}|{s.input}|{s.error}|{s.output}"
-            for s in t.steps
-        ]
+        steps = [f"{s.tool}|{s.input}|{s.error}|{s.output}" for s in t.steps]
         meta = f"{t.id}|{t.task}|{t.failure_class}|{t.success}|{t.failure_point}"
-        parts.append(
-            f"{meta}|{'|'.join(steps)}"
-        )
+        parts.append(f"{meta}|{'|'.join(steps)}")
     return hashlib.sha256(json.dumps(parts, sort_keys=True).encode()).hexdigest()[:8]
 
 
@@ -49,4 +44,5 @@ def deterministic_replay(
     corpus_hash = _corpus_hash(sorted_trajs)
     report = build_evidence_report(candidate, sorted_trajs, threshold)
     from dataclasses import replace
+
     return replace(report, corpus_hash=corpus_hash)

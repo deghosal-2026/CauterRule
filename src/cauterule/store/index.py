@@ -51,10 +51,7 @@ class IndexManager:
             data = yaml.safe_load(fh)
         if isinstance(data, dict) and "rules" in data and isinstance(data["rules"], list):
             return data
-        msg = (
-            f"index.yaml must be a mapping with a 'rules' list, "
-            f"got {type(data).__name__}"
-        )
+        msg = f"index.yaml must be a mapping with a 'rules' list, got {type(data).__name__}"
         raise ValueError(msg)
 
     def save_index(self, entries: dict[str, Any]) -> None:

@@ -50,6 +50,7 @@ def compare_versions(a: str, b: str) -> int:
     Handles leading ``v`` and numeric dot-separated parts; falls back to
     string comparison for non-numeric segments.
     """
+
     def parts(v: str) -> list[Any]:
         v = v.strip().lstrip("vV")
         out: list[Any] = []
@@ -393,9 +394,7 @@ def install_pack(
             "safety": safety,
             "legacy_manifest": legacy,
         }
-        (tmp_dest / INSTALL_JSON).write_text(
-            json.dumps(install_record, indent=2), encoding="utf-8"
-        )
+        (tmp_dest / INSTALL_JSON).write_text(json.dumps(install_record, indent=2), encoding="utf-8")
         if dest.is_dir():
             shutil.rmtree(dest)
         tmp_dest.replace(dest)

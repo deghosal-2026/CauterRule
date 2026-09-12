@@ -55,14 +55,10 @@ class Leaderboard:
         for entry in self._entries:
             rows.append([str(entry.get(h, "")) for h in headers])
 
-        col_widths = [
-            max(len(row[i]) for row in rows) for i in range(len(headers))
-        ]
+        col_widths = [max(len(row[i]) for row in rows) for i in range(len(headers))]
 
         lines: list[str] = [f"# {self.title}\n"]
         for row in rows:
-            cells = [
-                cell.ljust(col_widths[i]) for i, cell in enumerate(row)
-            ]
+            cells = [cell.ljust(col_widths[i]) for i, cell in enumerate(row)]
             lines.append("| " + " | ".join(cells) + " |")
         return "\n".join(lines) + "\n"

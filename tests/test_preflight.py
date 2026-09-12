@@ -59,9 +59,7 @@ def test_corpus_missing_success_flagged() -> None:
             encoding="utf-8",
         )
         results = check_corpus(p)
-        assert any(
-            not r.passed and "success" in r.message.lower() for r in results
-        )
+        assert any(not r.passed and "success" in r.message.lower() for r in results)
 
 
 def test_corpus_empty_file() -> None:
@@ -75,7 +73,13 @@ def test_corpus_empty_file() -> None:
 def test_corpus_duplicate_ids() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         p = Path(tmp) / "dup.jsonl"
-        traj = {"trajectory_id": "T-001", "timestamp": "t", "task": "do thing", "steps": [], "success": True}
+        traj = {
+            "trajectory_id": "T-001",
+            "timestamp": "t",
+            "task": "do thing",
+            "steps": [],
+            "success": True,
+        }
         p.write_text(json.dumps(traj) + "\n" + json.dumps(traj) + "\n", encoding="utf-8")
         results = check_corpus(p)
         assert any(not r.passed and "duplicate" in r.message.lower() for r in results)

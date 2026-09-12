@@ -6,6 +6,7 @@ import json
 import subprocess
 import time
 from subprocess import CompletedProcess
+from typing import Any
 
 import pytest
 
@@ -14,10 +15,14 @@ PROJECT_NAME = "cauterule-field-test"
 
 # v0.3.0 (#607): every service is profiled — activate all profiles explicitly.
 ALL_PROFILES = [
-    "--profile", "demo",
-    "--profile", "test",
-    "--profile", "mcp",
-    "--profile", "mcp-http",
+    "--profile",
+    "demo",
+    "--profile",
+    "test",
+    "--profile",
+    "mcp",
+    "--profile",
+    "mcp-http",
 ]
 
 BASE_CMD: list[str] = ["docker", "compose", "-f", COMPOSE_FILE, "-p", PROJECT_NAME, *ALL_PROFILES]
@@ -36,7 +41,7 @@ def _wait_for_service(service: str, running: bool = True, timeout: int = 180) ->
     deadline = time.time() + timeout
     while time.time() < deadline:
         ps = _compose("ps", "--format", "json")
-        services: list[dict] = []
+        services: list[dict[str, Any]] = []
         try:
             parsed = json.loads(ps.stdout)
             if isinstance(parsed, list):

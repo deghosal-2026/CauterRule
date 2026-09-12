@@ -21,11 +21,20 @@ class FakeLLM:
 
 
 def _traj() -> Trajectory:
-    return Trajectory(id="T-001", timestamp="t", task="git push", steps=(Step(1, "bash", error="fail"),), success=False, failure_class="git/push")
+    return Trajectory(
+        id="T-001",
+        timestamp="t",
+        task="git push",
+        steps=(Step(1, "bash", error="fail"),),
+        success=False,
+        failure_class="git/push",
+    )
 
 
 def test_multipass_three() -> None:
-    payload = json.dumps({"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.8})
+    payload = json.dumps(
+        {"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.8}
+    )
     llm = FakeLLM([payload, payload, payload])
     cands = multipass_extract(_traj(), llm)
     assert len(cands) == 3
@@ -33,14 +42,18 @@ def test_multipass_three() -> None:
 
 
 def test_multipass_partial_failure() -> None:
-    payload = json.dumps({"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.8})
+    payload = json.dumps(
+        {"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.8}
+    )
     llm = FakeLLM([payload, "bad json", payload])
     cands = multipass_extract(_traj(), llm)
     assert len(cands) == 2
 
 
 def test_multipass_custom_temps() -> None:
-    payload = json.dumps({"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.8})
+    payload = json.dumps(
+        {"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.8}
+    )
     llm = FakeLLM([payload])
     cands = multipass_extract(_traj(), llm, temperatures=(0.1, 0.9))
     assert len(cands) == 2
@@ -48,7 +61,9 @@ def test_multipass_custom_temps() -> None:
 
 
 def test_multipass_default_temps() -> None:
-    payload = json.dumps({"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.8})
+    payload = json.dumps(
+        {"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.8}
+    )
     llm = FakeLLM([payload, payload, payload])
     cands = multipass_extract(_traj(), llm)
     assert len(cands) == 3
@@ -58,8 +73,12 @@ def test_multipass_default_temps() -> None:
 
 def test_multipass_confidence_threshold_passthrough() -> None:
     # Review: non-default confidence_threshold reaches extract_candidate_safe.
-    payload_high = json.dumps({"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.95})
-    payload_low = json.dumps({"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.65})
+    payload_high = json.dumps(
+        {"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.95}
+    )
+    payload_low = json.dumps(
+        {"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.65}
+    )
     good = FakeLLM([payload_high, payload_high, payload_high])
     bad = FakeLLM([payload_low, payload_low, payload_low])
     cands = multipass_extract(_traj(), good, confidence_threshold=0.7)
@@ -79,7 +98,9 @@ def _clean_success_traj() -> Trajectory:
 
 
 def test_multipass_gate_drops_clean_success() -> None:
-    payload = json.dumps({"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.8})
+    payload = json.dumps(
+        {"when": {"trigger": "git push"}, "do": {"directive": "pull"}, "confidence": 0.8}
+    )
     llm = FakeLLM([payload, payload, payload])
     cands = multipass_extract(_clean_success_traj(), llm, gate_mode="strict")
     assert cands == []
@@ -89,7 +110,9 @@ def test_multipass_gate_drops_clean_success() -> None:
 def test_multipass_gate_relaxed_proceeds() -> None:
     # #709: relaxed mode silences *clean successes*, but still proceeds for
     # failures without signals (the raw-corpus case relaxed mode exists for).
-    payload = json.dumps({"when": {"trigger": "run tests"}, "do": {"directive": "rerun tests"}, "confidence": 0.8})
+    payload = json.dumps(
+        {"when": {"trigger": "run tests"}, "do": {"directive": "rerun tests"}, "confidence": 0.8}
+    )
     llm = FakeLLM([payload, payload, payload])
     traj = Trajectory(
         id="T-nosig-relaxed",
@@ -104,7 +127,9 @@ def test_multipass_gate_relaxed_proceeds() -> None:
 
 
 def test_multipass_gate_relaxed_silences_clean_success() -> None:
-    payload = json.dumps({"when": {"trigger": "run tests"}, "do": {"directive": "rerun tests"}, "confidence": 0.8})
+    payload = json.dumps(
+        {"when": {"trigger": "run tests"}, "do": {"directive": "rerun tests"}, "confidence": 0.8}
+    )
     llm = FakeLLM([payload, payload, payload])
     cands = multipass_extract(_clean_success_traj(), llm, gate_mode="relaxed")
     assert cands == []

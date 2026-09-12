@@ -9,8 +9,10 @@ redaction plumbing.  The kit (:mod:`kit`) is parametrized over these.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -80,7 +82,13 @@ class LangGraphDriver:
         from cauterule.adapter.langgraph import capture_node_error
 
         if "connection timeout" in task:
-            traj = capture_node_error("node", {"task": task}, {}, RuntimeError("connection timeout"), base_dir=self.base_dir)
+            traj = capture_node_error(
+                "node",
+                {"task": task},
+                {},
+                RuntimeError("connection timeout"),
+                base_dir=self.base_dir,
+            )
             self._last = traj
             return "failed"
         return "ok"
@@ -158,7 +166,7 @@ DRIVERS = {
 
 
 @pytest.fixture(params=list(DRIVERS), ids=list(DRIVERS))
-def adapter_driver(request, tmp_path: Path):
+def adapter_driver(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[Any]:
     """Parametrized fixture yielding each adapter's conformance driver."""
     cls = DRIVERS[request.param]
     driver = cls(base_dir=str(tmp_path / "trajectories"))

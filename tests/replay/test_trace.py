@@ -10,7 +10,13 @@ def _cand(trigger: str) -> CandidateRule:
 
 def test_trace_prevented() -> None:
     cand = _cand("git push")
-    traj = Trajectory(id="T-1", timestamp="t", task="git push fails", steps=(Step(1, "bash", error="err"),), success=False)
+    traj = Trajectory(
+        id="T-1",
+        timestamp="t",
+        task="git push fails",
+        steps=(Step(1, "bash", error="err"),),
+        success=False,
+    )
     t = build_trace(cand, traj)
     assert t["outcome"] == "prevented"
     assert t["trajectory_id"] == "T-1"
@@ -18,6 +24,12 @@ def test_trace_prevented() -> None:
 
 def test_trace_no_effect() -> None:
     cand = _cand("docker")
-    traj = Trajectory(id="T-1", timestamp="t", task="git push", steps=(Step(1, "bash", error="err"),), success=False)
+    traj = Trajectory(
+        id="T-1",
+        timestamp="t",
+        task="git push",
+        steps=(Step(1, "bash", error="err"),),
+        success=False,
+    )
     t = build_trace(cand, traj)
     assert t["outcome"] == "no_effect"

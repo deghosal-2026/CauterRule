@@ -15,10 +15,12 @@ import threading
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
+from pathlib import Path
 
 import anyio
 import pytest
 from mcp.client.streamable_http import streamable_http_client
+from mcp.types import TextContent
 
 from cauterule.mcp.server import CauteruleMCPServer
 from cauterule.models.rule import Provenance, RuleDo, RuleWhen, StandingRule
@@ -49,7 +51,7 @@ def _make_rule(rule_id: str = "rule-001") -> StandingRule:
 
 
 @contextmanager
-def _running_server(tmp_path) -> Iterator[tuple[str, CauteruleMCPServer]]:
+def _running_server(tmp_path: Path) -> Iterator[tuple[str, CauteruleMCPServer]]:
     """Start the MCP server on an ephemeral port; yield (base_url, server)."""
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
@@ -83,7 +85,7 @@ def _running_server(tmp_path) -> Iterator[tuple[str, CauteruleMCPServer]]:
 # ===========================================================================
 # Tests
 # ===========================================================================
-def test_http_tools_listed(tmp_path) -> None:
+def test_http_tools_listed(tmp_path: Path) -> None:
     with _running_server(tmp_path) as (base_url, _server):
 
         async def _main() -> list[str]:
@@ -104,7 +106,7 @@ def test_http_tools_listed(tmp_path) -> None:
         } <= set(names)
 
 
-def test_http_call_tools_valid(tmp_path) -> None:
+def test_http_call_tools_valid(tmp_path: Path) -> None:
     with _running_server(tmp_path) as (base_url, _server):
 
         async def _main() -> None:
@@ -116,14 +118,14 @@ def test_http_call_tools_valid(tmp_path) -> None:
 
                 res = await session.call_tool("list_rules_tool", {})
                 assert res.isError is False
-                assert "rule-001" in (res.content[0].text if res.content else "")
+                content = res.content[0] if res.content else None
+                assert isinstance(content, TextContent)
+                assert "rule-001" in content.text
 
                 res = await session.call_tool("get_rule_tool", {"rule_id": "rule-001"})
                 assert res.isError is False
 
-                res = await session.call_tool(
-                    "get_matching_rules_tool", {"task": "empty response"}
-                )
+                res = await session.call_tool("get_matching_rules_tool", {"task": "empty response"})
                 assert res.isError is False
 
                 res = await session.call_tool(
@@ -135,7 +137,7 @@ def test_http_call_tools_valid(tmp_path) -> None:
         anyio.run(_main)
 
 
-def test_http_invalid_args_schema_error(tmp_path) -> None:
+def test_http_invalid_args_schema_error(tmp_path: Path) -> None:
     with _running_server(tmp_path) as (base_url, _server):
 
         async def _main() -> str:
@@ -145,7 +147,9 @@ def test_http_invalid_args_schema_error(tmp_path) -> None:
             ):
                 await session.initialize()
                 res = await session.call_tool("list_rules_tool", {"status": 123})
-                return res.content[0].text if res.content else ""
+                content = res.content[0] if res.content else None
+                assert isinstance(content, TextContent)
+                return content.text
 
         text = anyio.run(_main)
         # Structured pydantic validation error, no traceback leak.
@@ -153,7 +157,7 @@ def test_http_invalid_args_schema_error(tmp_path) -> None:
         assert "Traceback" not in text
 
 
-def test_http_unknown_tool_no_traceback(tmp_path) -> None:
+def test_http_unknown_tool_no_traceback(tmp_path: Path) -> None:
     with _running_server(tmp_path) as (base_url, _server):
 
         async def _main() -> str:
@@ -163,14 +167,16 @@ def test_http_unknown_tool_no_traceback(tmp_path) -> None:
             ):
                 await session.initialize()
                 res = await session.call_tool("nope_tool", {})
-                return res.content[0].text if res.content else ""
+                content = res.content[0] if res.content else None
+                assert isinstance(content, TextContent)
+                return content.text
 
         text = anyio.run(_main)
         assert "Unknown tool" in text
         assert "Traceback" not in text
 
 
-def test_http_unauthenticated_binding_posture(tmp_path) -> None:
+def test_http_unauthenticated_binding_posture(tmp_path: Path) -> None:
     """Documented R6 posture: localhost bind, no server-side token auth.
 
     Unauthenticated HTTP requests are processed (the listener is bound to

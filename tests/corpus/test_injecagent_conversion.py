@@ -78,21 +78,30 @@ def test_cli_writes_failure_and_success_files(tmp_path: Path) -> None:
     attacker_cases.write_text("\n".join(json.dumps(r) for r in _ATTACK), encoding="utf-8")
     module.main(
         [
-            "--user-cases", str(user_cases),
-            "--attacker-cases", str(attacker_cases),
-            "--output", str(out_dir),
-            "--success-output", str(succ_dir),
-            "--limit", "1",
+            "--user-cases",
+            str(user_cases),
+            "--attacker-cases",
+            str(attacker_cases),
+            "--output",
+            str(out_dir),
+            "--success-output",
+            str(succ_dir),
+            "--limit",
+            "1",
         ]
     )
     failures = [
         json.loads(line)
-        for line in (out_dir / "injecagent-tool-output.jsonl").read_text(encoding="utf-8").splitlines()
+        for line in (out_dir / "injecagent-tool-output.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
         if line
     ]
     successes = [
         json.loads(line)
-        for line in (succ_dir / "injecagent-successes.jsonl").read_text(encoding="utf-8").splitlines()
+        for line in (succ_dir / "injecagent-successes.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
         if line
     ]
     assert len(failures) == 1 and failures[0]["success"] is False

@@ -83,7 +83,9 @@ def redact_trajectory(
                 step_number=step.step_number,
                 tool=step.tool,  # tool name not redacted (not a secret)
                 input=redact_text(step.input, extra_patterns) if step.input is not None else None,
-                output=redact_text(step.output, extra_patterns) if step.output is not None else None,
+                output=redact_text(step.output, extra_patterns)
+                if step.output is not None
+                else None,
                 error=redact_text(step.error, extra_patterns) if step.error is not None else None,
                 state=redacted_state,
             )

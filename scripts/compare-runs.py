@@ -15,6 +15,7 @@ Metrics compared:
     - Harness health (parse rate, completion ratio)
     - Candidate count and extraction rate
 """
+
 from __future__ import annotations
 
 import json
@@ -94,7 +95,9 @@ def collect_metrics(run_dir: Path, label: str) -> dict:
         for k in ("specific", "moderate", "generic"):
             metrics["totals"]["specificity"][k] += spec.get(k, 0)
         for k, v in ib.items():
-            metrics["totals"]["inconclusive_breakdown"][k] = metrics["totals"]["inconclusive_breakdown"].get(k, 0) + v
+            metrics["totals"]["inconclusive_breakdown"][k] = (
+                metrics["totals"]["inconclusive_breakdown"].get(k, 0) + v
+            )
 
     return metrics
 
@@ -103,7 +106,9 @@ def _pct_str(num: int, total: int) -> str:
     return f"{num} ({num / total * 100:.1f}%)" if total else str(num)
 
 
-def print_delta(label1: str, v1: int | float | None, label2: str, v2: int | float | None, unit: str = "") -> str:
+def print_delta(
+    label1: str, v1: int | float | None, label2: str, v2: int | float | None, unit: str = ""
+) -> str:
     if v1 is None and v2 is None:
         return "—"
     v1s = f"{v1}{unit}" if v1 is not None else "—"
@@ -152,11 +157,15 @@ def compare(metrics1: dict, metrics2: dict) -> str:
     lines.append("| Reason | Baseline | New | Delta |")
     lines.append("|--------|----------|-----|-------|")
 
-    all_reasons = sorted(set(t1.get("inconclusive_breakdown", {})) | set(t2.get("inconclusive_breakdown", {})))
+    all_reasons = sorted(
+        set(t1.get("inconclusive_breakdown", {})) | set(t2.get("inconclusive_breakdown", {}))
+    )
     for reason in all_reasons:
         v1 = t1.get("inconclusive_breakdown", {}).get(reason, 0)
         v2 = t2.get("inconclusive_breakdown", {}).get(reason, 0)
-        lines.append(f"| {reason} | {_pct_str(v1, t1.get('inconclusive', 1))} | {_pct_str(v2, t2.get('inconclusive', 1))} | {v2 - v1:+d} |")
+        lines.append(
+            f"| {reason} | {_pct_str(v1, t1.get('inconclusive', 1))} | {_pct_str(v2, t2.get('inconclusive', 1))} | {v2 - v1:+d} |"
+        )
 
     lines.append("")
     lines.append("## Specificity Distribution")
@@ -204,7 +213,9 @@ def compare(metrics1: dict, metrics2: dict) -> str:
         inc2 = m2.get("inconclusive", 0)
         tot1 = m1.get("trajectories", 0) or 1
         tot2 = m2.get("trajectories", 0) or 1
-        lines.append(f"| Inconclusive rate | {inc1/tot1*100:.1f}% | {inc2/tot2*100:.1f}% | {inc2/tot2*100 - inc1/tot1*100:+.1f}% |")
+        lines.append(
+            f"| Inconclusive rate | {inc1 / tot1 * 100:.1f}% | {inc2 / tot2 * 100:.1f}% | {inc2 / tot2 * 100 - inc1 / tot1 * 100:+.1f}% |"
+        )
         lines.append("")
 
     return "\n".join(lines)
@@ -216,7 +227,9 @@ def main() -> None:
         print()
         print("Each directory should contain summary.json files under corpus subdirectories.")
         print("Example:")
-        print("  python scripts/compare-runs.py field-test/results/0.2.0/validation/2026-09-08 field-test/results/0.2.0/validation/2026-09-09")
+        print(
+            "  python scripts/compare-runs.py field-test/results/0.2.0/validation/2026-09-08 field-test/results/0.2.0/validation/2026-09-09"
+        )
         sys.exit(1)
 
     dir1 = Path(sys.argv[1])

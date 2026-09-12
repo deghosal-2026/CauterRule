@@ -11,7 +11,11 @@ from cauterule.llm.provider import (
 
 
 def test_get_llm_openai() -> None:
-    cfg = Config(llm=LLMConfig(provider="openai", model="gpt-4o", api_key="sk", base_url="https://api.openai.com"))
+    cfg = Config(
+        llm=LLMConfig(
+            provider="openai", model="gpt-4o", api_key="sk", base_url="https://api.openai.com"
+        )
+    )
     llm = get_llm(cfg)
     assert isinstance(llm, OpenAIProvider)
     assert llm.name == "openai"
@@ -24,7 +28,9 @@ def test_get_llm_anthropic() -> None:
 
 
 def test_get_llm_ollama() -> None:
-    cfg = Config(llm=LLMConfig(provider="ollama", model="llama3", base_url="http://localhost:11434"))
+    cfg = Config(
+        llm=LLMConfig(provider="ollama", model="llama3", base_url="http://localhost:11434")
+    )
     llm = get_llm(cfg)
     assert isinstance(llm, OllamaProvider)
 

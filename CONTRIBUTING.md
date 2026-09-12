@@ -98,6 +98,7 @@ Wrap any agent function to auto-capture trajectories on failure:
 ```python
 from cauterule.adapter import watch
 
+
 @watch(domain="coding", severity="medium")
 def my_agent(task: str) -> str:
     # your agent logic

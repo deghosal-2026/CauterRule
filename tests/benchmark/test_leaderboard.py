@@ -21,11 +21,13 @@ class TestLeaderboard:
 
     def test_multiple_entries(self) -> None:
         lb = Leaderboard("Test")
-        lb.add_entries([
-            {"name": "m1", "score": 0.9},
-            {"name": "m2", "score": 0.95},
-            {"name": "m3", "score": 0.85},
-        ])
+        lb.add_entries(
+            [
+                {"name": "m1", "score": 0.9},
+                {"name": "m2", "score": 0.95},
+                {"name": "m3", "score": 0.85},
+            ]
+        )
         lb.sort()
         rendered = lb.render()
         lines = [ln for ln in rendered.splitlines() if ln.startswith("|")]
@@ -36,11 +38,13 @@ class TestLeaderboard:
 
     def test_sort_by_custom_key(self) -> None:
         lb = Leaderboard("Test")
-        lb.add_entries([
-            {"name": "a", "score": 10, "rank": 3},
-            {"name": "b", "score": 20, "rank": 1},
-            {"name": "c", "score": 15, "rank": 2},
-        ])
+        lb.add_entries(
+            [
+                {"name": "a", "score": 10, "rank": 3},
+                {"name": "b", "score": 20, "rank": 1},
+                {"name": "c", "score": 15, "rank": 2},
+            ]
+        )
         lb.sort(key="rank", reverse=False)
         rendered = lb.render()
         lines = [ln for ln in rendered.splitlines() if ln.startswith("|")]

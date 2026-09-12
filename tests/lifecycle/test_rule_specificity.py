@@ -79,7 +79,9 @@ def test_trigger_score_broad_vs_narrow() -> None:
 def test_golden_gate_6_of_10_broad() -> None:
     scores = {t: trigger_score(t) for t in _BROAD_TRIGGERS}
     broad_count = sum(1 for s in scores.values() if s < BROAD_SPECIFICITY_THRESHOLD)
-    assert broad_count >= 6, f"only {broad_count}/10 broad triggers below {BROAD_SPECIFICITY_THRESHOLD}: {scores}"
+    assert broad_count >= 6, (
+        f"only {broad_count}/10 broad triggers below {BROAD_SPECIFICITY_THRESHOLD}: {scores}"
+    )
 
 
 def test_narrow_triggers_score_high() -> None:

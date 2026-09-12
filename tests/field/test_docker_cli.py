@@ -182,7 +182,9 @@ def test_cli_report(rules_workspace: Path) -> None:
 @pytest.mark.docker
 def test_cli_pack_list(rules_workspace: Path) -> None:
     store = str(rules_workspace / "rules")
-    created = _run(["pack", "create", "p1", "--store", store, "--from-tag", "git"], cwd=rules_workspace)
+    created = _run(
+        ["pack", "create", "p1", "--store", store, "--from-tag", "git"], cwd=rules_workspace
+    )
     assert created.returncode == 0, created.stderr
     installed = _run(["pack", "install", "./p1", "--store", store], cwd=rules_workspace)
     assert installed.returncode == 0, installed.stderr
@@ -194,7 +196,9 @@ def test_cli_pack_list(rules_workspace: Path) -> None:
 @pytest.mark.docker
 def test_cli_pack_info(rules_workspace: Path) -> None:
     store = str(rules_workspace / "rules")
-    created = _run(["pack", "create", "p1", "--store", store, "--from-tag", "git"], cwd=rules_workspace)
+    created = _run(
+        ["pack", "create", "p1", "--store", store, "--from-tag", "git"], cwd=rules_workspace
+    )
     assert created.returncode == 0, created.stderr
     installed = _run(["pack", "install", "./p1", "--store", store], cwd=rules_workspace)
     assert installed.returncode == 0, installed.stderr

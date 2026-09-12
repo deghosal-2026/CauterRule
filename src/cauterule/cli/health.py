@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import click
 
+from cauterule.models.rule import StandingRule
 from cauterule.store.health import health_report
 
 
@@ -15,13 +16,13 @@ def health(by_taxonomy: bool) -> None:
     click.echo(f"Avg confidence: {report['avg_confidence']}")
     click.echo(f"Avg effectiveness: {report['avg_effectiveness']}")
     click.echo(f"Conflict count: {report['conflict_count']}")
-    if report['stale_rules']:
+    if report["stale_rules"]:
         click.echo(f"Stale rules: {', '.join(report['stale_rules'])}")
     if by_taxonomy:
         from cauterule.store.manager import StoreManager
 
         store = StoreManager()
-        groups: dict[str, list] = {}
+        groups: dict[str, list[StandingRule]] = {}
         for rule in store.list_rules():
             groups.setdefault(rule.taxonomy or "unlabeled", []).append(rule)
         click.echo("By taxonomy:")

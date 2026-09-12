@@ -222,6 +222,8 @@ def pack_outdated(store_dir: str) -> None:
             continue
         installed = locked.get(name, info.get("version", "?"))
         click.echo(f"{name} {installed} (latest check needs network: pack tree {name})")
+
+
 @pack.command("install")
 @click.argument("spec")
 @click.option("--store", "store_dir", default="rules", help="Target rule store")

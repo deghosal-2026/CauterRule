@@ -66,11 +66,13 @@ def archive_rule(rule_id: str, base_dir: str = "rules") -> Path:
 
     try:
         from cauterule.store.index import IndexManager
+
         IndexManager(base_dir).remove_entry(rule_id)
     except Exception:
         pass
     try:
         from cauterule.store.git import git_commit
+
         git_commit(f"archive rule {rule_id}", base_dir)
     except Exception:
         pass

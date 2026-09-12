@@ -18,4 +18,4 @@ def search(query: str) -> None:
         return
     click.echo(f"Found {len(matched)} matching rule(s):")
     for r in matched:
-        click.echo(f"  {r.id}: \"{r.when.trigger}\" → {r.do.directive}")
+        click.echo(f'  {r.id}: "{r.when.trigger}" → {r.do.directive}')

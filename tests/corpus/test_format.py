@@ -12,7 +12,13 @@ def test_schema_constants() -> None:
 
 
 def test_corpus_metadata_valid() -> None:
-    meta = CorpusMetadata(id="test-corpus", tier="tiny", domain="coding", trajectory_count=25, gold_rule_ids=("GR-1", "GR-2"))
+    meta = CorpusMetadata(
+        id="test-corpus",
+        tier="tiny",
+        domain="coding",
+        trajectory_count=25,
+        gold_rule_ids=("GR-1", "GR-2"),
+    )
     assert meta.id == "test-corpus"
     assert meta.tier == "tiny"
     assert meta.domain == "coding"
@@ -51,7 +57,9 @@ def test_corpus_metadata_all_tiers() -> None:
 
 
 def test_corpus_metadata_roundtrip() -> None:
-    meta = CorpusMetadata(id="rt", tier="medium", domain="devops", trajectory_count=100, gold_rule_ids=("GR-3",))
+    meta = CorpusMetadata(
+        id="rt", tier="medium", domain="devops", trajectory_count=100, gold_rule_ids=("GR-3",)
+    )
     d = meta.to_dict()
     assert d["id"] == "rt"
     assert d["tier"] == "medium"

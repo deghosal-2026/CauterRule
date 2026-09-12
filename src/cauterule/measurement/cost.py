@@ -149,9 +149,7 @@ def records_from_results(
                 "llm_requests": requests,
                 "candidates_produced": candidates,
                 "promoted": promoted,
-                "prompt_tokens": _as_int(
-                    result.get("prompt_tokens") or usage.get("prompt_tokens")
-                ),
+                "prompt_tokens": _as_int(result.get("prompt_tokens") or usage.get("prompt_tokens")),
                 "completion_tokens": _as_int(
                     result.get("completion_tokens") or usage.get("completion_tokens")
                 ),

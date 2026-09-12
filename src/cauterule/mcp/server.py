@@ -56,9 +56,7 @@ class CauteruleMCPServer:
         if auth_mode == "none" and host not in ("127.0.0.1", "localhost"):
             from cauterule.log import get_logger
 
-            get_logger(__name__).warning(
-                "MCP auth disabled on non-loopback host — local dev only"
-            )
+            get_logger(__name__).warning("MCP auth disabled on non-loopback host — local dev only")
         self._mcp = FastMCP(
             name=_SERVER_NAME,
             instructions=_SERVER_INSTRUCTIONS,
@@ -68,7 +66,7 @@ class CauteruleMCPServer:
         self._register_tools()
 
     @staticmethod
-    def _request_headers(ctx: Context | None) -> dict[str, str]:
+    def _request_headers(ctx: Context[Any, Any, Any] | None) -> dict[str, str]:
         """HTTP headers from the official MCP SDK request context ({} on stdio).
 
         Uses ``ctx.request_context.request`` (a starlette Request when served
@@ -90,7 +88,7 @@ class CauteruleMCPServer:
 
     def _guard(
         self,
-        ctx: Context | None = None,
+        ctx: Context[Any, Any, Any] | None = None,
         payload_check: str | None = None,
     ) -> tuple[str, dict[str, Any] | None]:
         """Enforce auth + rate limit (+ optional payload validation).
@@ -129,7 +127,7 @@ class CauteruleMCPServer:
 
         @self._mcp.tool(annotations=_TOOL_ANNOTATIONS["get_matching_rules"])
         def get_matching_rules_tool(
-            task: str, ctx: Context
+            task: str, ctx: Context[Any, Any, Any]
         ) -> list[dict[str, Any]] | dict[str, Any]:
             _, error = self._guard(ctx)
             if error is not None:
@@ -138,7 +136,7 @@ class CauteruleMCPServer:
             return [r.to_dict() for r in rules]
 
         @self._mcp.tool(annotations=_TOOL_ANNOTATIONS["get_rule"])
-        def get_rule_tool(rule_id: str, ctx: Context) -> dict[str, Any] | None:
+        def get_rule_tool(rule_id: str, ctx: Context[Any, Any, Any]) -> dict[str, Any] | None:
             _, error = self._guard(ctx)
             if error is not None:
                 return error
@@ -149,7 +147,7 @@ class CauteruleMCPServer:
         def list_rules_tool(
             status: str | None = None,
             tag: str | None = None,
-            ctx: Context = None,  # injected by FastMCP; None on direct call
+            ctx: Context[Any, Any, Any] | None = None,  # injected by FastMCP; None on direct call
         ) -> list[dict[str, Any]] | dict[str, Any]:
             _, error = self._guard(ctx)
             if error is not None:
@@ -158,7 +156,9 @@ class CauteruleMCPServer:
             return [r.to_dict() for r in rules]
 
         @self._mcp.tool(annotations=_TOOL_ANNOTATIONS["report_failure"])
-        def report_failure_tool(trajectory_json: str, ctx: Context) -> dict[str, Any]:
+        def report_failure_tool(
+            trajectory_json: str, ctx: Context[Any, Any, Any]
+        ) -> dict[str, Any]:
             _, error = self._guard(ctx, payload_check=trajectory_json)
             if error is not None:
                 return error
