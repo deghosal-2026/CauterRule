@@ -12,21 +12,21 @@
     "cost_per_request_usd": 0.01,
     "gate_mode": "relaxed"
   },
-  "elapsed_seconds": 85.3,
+  "elapsed_seconds": 77.4,
   "total": 40,
   "done": 39,
   "gate_dropped": 0,
   "gate_dropped_by_reason": {},
   "skipped": 1,
-  "total_candidates": 71,
+  "total_candidates": 77,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.182,
-  "avg_recall": 0.052,
-  "avg_match_score": 0.425,
-  "match_detail_count": 71,
+  "avg_precision": 0.103,
+  "avg_recall": 0.103,
+  "avg_match_score": 0.09,
+  "match_detail_count": 77,
   "passing": 0,
-  "failing": 24,
-  "inconclusive": 15,
+  "failing": 17,
+  "inconclusive": 22,
   "safety": {
     "total": 39,
     "silence": 0,
@@ -39,9 +39,9 @@
   "confidence_intervals": {
     "pass_rate": {
       "rate": 0.0,
-      "n": 24,
+      "n": 17,
       "ci_low": 0.0,
-      "ci_high": 0.138
+      "ci_high": 0.1843
     },
     "safety_silence_rate": {
       "rate": 0.0,
@@ -51,15 +51,15 @@
     }
   },
   "specificity_distribution": {
-    "specific": 83,
-    "moderate": 28,
+    "specific": 90,
+    "moderate": 27,
     "generic": 0
   },
   "inconclusive_breakdown": {
     "broad_trigger": 0,
     "matcher_gap": 28,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 0
+    "ambiguous_evidence": 9
   },
-  "updated_at": "2026-09-12T02:59:07Z"
+  "updated_at": "2026-09-12T03:52:18Z"
 }

@@ -12,26 +12,26 @@
     "cost_per_request_usd": 0.01,
     "gate_mode": "relaxed"
   },
-  "elapsed_seconds": 448.9,
-  "total": 110,
-  "done": 107,
+  "elapsed_seconds": 94.5,
+  "total": 47,
+  "done": 47,
   "gate_dropped": 0,
   "gate_dropped_by_reason": {},
-  "skipped": 3,
-  "total_candidates": 204,
+  "skipped": 0,
+  "total_candidates": 90,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.099,
-  "avg_recall": 0.002,
-  "avg_match_score": 0.017,
-  "match_detail_count": 204,
+  "avg_precision": 0.0,
+  "avg_recall": 0.0,
+  "avg_match_score": 0.086,
+  "match_detail_count": 90,
   "passing": 0,
-  "failing": 34,
-  "inconclusive": 73,
+  "failing": 1,
+  "inconclusive": 46,
   "safety": {
-    "total": 107,
+    "total": 47,
     "silence": 0,
     "parse_failure": 0,
-    "rejected": 107,
+    "rejected": 47,
     "accepted": 0,
     "silence_rate": 0.0,
     "verdict": "fail"
@@ -39,27 +39,27 @@
   "confidence_intervals": {
     "pass_rate": {
       "rate": 0.0,
-      "n": 34,
+      "n": 1,
       "ci_low": 0.0,
-      "ci_high": 0.1015
+      "ci_high": 0.7935
     },
     "safety_silence_rate": {
       "rate": 0.0,
-      "n": 107,
+      "n": 47,
       "ci_low": 0.0,
-      "ci_high": 0.0347
+      "ci_high": 0.0756
     }
   },
   "specificity_distribution": {
-    "specific": 137,
-    "moderate": 44,
-    "generic": 133
+    "specific": 51,
+    "moderate": 27,
+    "generic": 59
   },
   "inconclusive_breakdown": {
-    "broad_trigger": 85,
-    "matcher_gap": 71,
+    "broad_trigger": 55,
+    "matcher_gap": 32,
     "corpus_mismatch": 0,
     "ambiguous_evidence": 0
   },
-  "updated_at": "2026-09-12T02:42:33Z"
+  "updated_at": "2026-09-12T04:03:38Z"
 }
