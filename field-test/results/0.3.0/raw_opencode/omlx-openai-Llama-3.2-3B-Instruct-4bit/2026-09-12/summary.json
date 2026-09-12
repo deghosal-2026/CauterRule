@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "corpus_type": "raw/opencode",
+    "timestamp": "2026-09-12",
+    "llm_provider": "openai",
+    "llm_model": "Llama-3.2-3B-Instruct-4bit",
+    "llm_base_url": "http://localhost:8000/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2,0.5",
+    "target_trajectories": 25,
+    "reference_trajectories": 444,
+    "cost_per_request_usd": 0.01,
+    "gate_mode": "relaxed"
+  },
+  "elapsed_seconds": 39.5,
+  "total": 25,
+  "done": 25,
+  "gate_dropped": 0,
+  "gate_dropped_by_reason": {},
+  "skipped": 0,
+  "total_candidates": 47,
+  "total_llm_calls_avoided": 0,
+  "avg_precision": 0.626,
+  "avg_recall": 0.064,
+  "avg_match_score": 0.122,
+  "match_detail_count": 47,
+  "passing": 7,
+  "failing": 7,
+  "inconclusive": 11,
+  "safety": {
+    "total": 25,
+    "silence": 0,
+    "parse_failure": 0,
+    "rejected": 18,
+    "accepted": 7,
+    "silence_rate": 0.0,
+    "verdict": "pass"
+  },
+  "confidence_intervals": {
+    "pass_rate": {
+      "rate": 0.5,
+      "n": 14,
+      "ci_low": 0.268,
+      "ci_high": 0.732
+    },
+    "safety_silence_rate": {
+      "rate": 0.0,
+      "n": 25,
+      "ci_low": 0.0,
+      "ci_high": 0.1332
+    }
+  },
+  "specificity_distribution": {
+    "specific": 65,
+    "moderate": 7,
+    "generic": 0
+  },
+  "inconclusive_breakdown": {
+    "broad_trigger": 0,
+    "matcher_gap": 2,
+    "corpus_mismatch": 0,
+    "ambiguous_evidence": 18
+  },
+  "updated_at": "2026-09-12T02:15:21Z"
+}
