@@ -13,7 +13,7 @@
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 31.2,
+  "elapsed_seconds": 21.8,
   "total": 10,
   "done": 10,
   "gate_dropped": 0,
@@ -23,7 +23,7 @@
   "total_llm_calls_avoided": 0,
   "avg_precision": 0.575,
   "avg_recall": 0.228,
-  "avg_match_score": 0.451,
+  "avg_match_score": 0.469,
   "match_detail_count": 20,
   "passing": 4,
   "failing": 0,
@@ -62,5 +62,5 @@
     "corpus_mismatch": 0,
     "ambiguous_evidence": 9
   },
-  "updated_at": "2026-09-12T05:02:41Z"
+  "updated_at": "2026-09-12T06:30:14Z"
 }

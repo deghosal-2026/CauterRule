@@ -9,6 +9,6 @@
   "target_trajectories": 10,
   "reference_trajectories": 444,
   "cost_per_request_usd": 0.01,
-  "gate_mode": "relaxed",
+  "gate_mode": "strict",
   "quarantined": []
 }

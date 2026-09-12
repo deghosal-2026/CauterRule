@@ -13,7 +13,7 @@
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 54.2,
+  "elapsed_seconds": 41.0,
   "total": 50,
   "done": 50,
   "gate_dropped": 0,
@@ -21,9 +21,9 @@
   "skipped": 0,
   "total_candidates": 100,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.304,
-  "avg_recall": 0.195,
-  "avg_match_score": 0.233,
+  "avg_precision": 0.291,
+  "avg_recall": 0.182,
+  "avg_match_score": 0.26,
   "match_detail_count": 100,
   "passing": 4,
   "failing": 6,
@@ -58,9 +58,9 @@
   },
   "inconclusive_breakdown": {
     "broad_trigger": 0,
-    "matcher_gap": 22,
+    "matcher_gap": 18,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 58
+    "ambiguous_evidence": 62
   },
-  "updated_at": "2026-09-12T04:35:59Z"
+  "updated_at": "2026-09-12T06:25:20Z"
 }

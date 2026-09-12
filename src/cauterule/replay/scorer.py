@@ -57,10 +57,15 @@ def compute_scores(
         # trigger.  Downgrade from pass to inconclusive (v0.3.0 field-test).
         verdict = "inconclusive"
     else:
-        # No successes broken, no near-misses — clean pass
-        if precision >= 0.8:
-            verdict = "pass"
-        elif precision >= 0.5:
+        # No successes broken, no near-misses — clean pass.
+        # v0.3.0: lowered from 0.8 to 0.5. The domain-scoped reference pool
+        # (#708) made precision more honest but rarely reaches 0.8 because
+        # candidates match 1–3 relevant references out of 10–30. At 0.5 a
+        # candidate that prevents more failures than it breaks still passes;
+        # the near-miss penalty and broad-trigger check guard safety.
+        if precision >= 0.5:
+            verdict: Verdict = "pass"
+        elif precision >= 0.3:
             verdict = "inconclusive"
         else:
             verdict = "fail"

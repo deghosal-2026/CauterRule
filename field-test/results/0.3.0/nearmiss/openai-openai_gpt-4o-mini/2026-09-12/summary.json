@@ -13,7 +13,7 @@
     "gate_mode": "strict",
     "quarantined": []
   },
-  "elapsed_seconds": 26.2,
+  "elapsed_seconds": 21.6,
   "total": 50,
   "done": 23,
   "gate_dropped": 27,
@@ -25,11 +25,11 @@
   "total_llm_calls_avoided": 54,
   "avg_precision": 0.092,
   "avg_recall": 0.035,
-  "avg_match_score": 0.132,
+  "avg_match_score": 0.161,
   "match_detail_count": 46,
   "passing": 1,
-  "failing": 3,
-  "inconclusive": 19,
+  "failing": 2,
+  "inconclusive": 20,
   "safety": {
     "total": 50,
     "silence": 27,
@@ -41,10 +41,10 @@
   },
   "confidence_intervals": {
     "pass_rate": {
-      "rate": 0.25,
-      "n": 4,
-      "ci_low": 0.0456,
-      "ci_high": 0.6994
+      "rate": 0.3333,
+      "n": 3,
+      "ci_low": 0.0615,
+      "ci_high": 0.7923
     },
     "safety_silence_rate": {
       "rate": 0.54,
@@ -54,15 +54,15 @@
     }
   },
   "specificity_distribution": {
-    "specific": 92,
-    "moderate": 3,
-    "generic": 1
+    "specific": 91,
+    "moderate": 5,
+    "generic": 0
   },
   "inconclusive_breakdown": {
-    "broad_trigger": 1,
-    "matcher_gap": 19,
+    "broad_trigger": 0,
+    "matcher_gap": 16,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 18
+    "ambiguous_evidence": 24
   },
-  "updated_at": "2026-09-12T04:36:25Z"
+  "updated_at": "2026-09-12T06:27:01Z"
 }

@@ -436,7 +436,8 @@ def run_gate(trajectory: dict, corpus_type: str) -> dict:
     from cauterule.extraction.gate import run_gate, GateMode
     from cauterule.models.trajectory import Trajectory
     base = corpus_type.split("/")[-1].strip().lower()
-    mode: GateMode = GATE_MODE_STRICT if base in SAFETY_CORPORA else GATE_MODE_RELAXED
+    is_safety = base in SAFETY_CORPORA or corpus_type.startswith("adversarial")
+    mode: GateMode = GATE_MODE_STRICT if is_safety else GATE_MODE_RELAXED
     traj = Trajectory.from_dict(trajectory)
     result = run_gate(traj, mode=mode)
     return {
@@ -667,6 +668,18 @@ def process_one_trajectory(
         test_results.append(test_result)
 
     best = max(test_results, key=lambda r: r["precision"] * r["recall"]) if test_results else {}
+
+    # Adversarial / should_reject: force fail regardless of precision.
+    # The LLM can extract a legitimate-looking rule from an adversarial
+    # trajectory — the rule matches real references — but the source
+    # trajectory's expected_outcome is "should_reject", so the promotion
+    # must be blocked (#714 adversarial promotion regression).
+    expected = trajectory.get("expected_outcome", "")
+    if expected == "should_reject" and best.get("verdict") == "pass":
+        best = dict(best)
+        best["verdict"] = "fail"
+        best["_forced_reject"] = True
+        print(f"  [reject] {tid} — should_reject source, pass→fail")
     print(f"{len(candidates)} candidates, best: precision={best.get('precision',0):.2f} recall={best.get('recall',0):.2f} verdict={best.get('verdict','?')}")
 
     return {
@@ -799,7 +812,7 @@ def write_harness_health(results: list[dict], meta: dict, corpus_type: str, heal
     total = len(done) + len(gate_dropped)
     candidates = sum(r.get("candidate_count", 0) for r in done)
     base = corpus_type.split("/")[-1].strip().lower()
-    is_safety = base in SAFETY_CORPORA
+    is_safety = base in SAFETY_CORPORA or corpus_type.startswith("adversarial")
     health = harness_health(
         parsed=parsed,
         total=total,
@@ -922,7 +935,7 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
         "target_trajectories": len(traj_tasks) + len(skipped_quarantine),
         "reference_trajectories": len(reference_trajs),
         "cost_per_request_usd": args.cost_per_request,
-        "gate_mode": GATE_MODE_STRICT if corpus_type.split("/")[-1].strip().lower() in SAFETY_CORPORA else GATE_MODE_RELAXED,
+        "gate_mode": GATE_MODE_STRICT if (corpus_type.split("/")[-1].strip().lower() in SAFETY_CORPORA or corpus_type.startswith("adversarial")) else GATE_MODE_RELAXED,
         "quarantined": [tid for _, tid in skipped_quarantine],
     }
     meta_file.write_text(json.dumps(meta, indent=2))

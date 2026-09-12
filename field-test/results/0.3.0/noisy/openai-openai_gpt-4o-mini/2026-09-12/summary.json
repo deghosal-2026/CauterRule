@@ -13,7 +13,7 @@
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 8.1,
+  "elapsed_seconds": 8.7,
   "total": 5,
   "done": 5,
   "gate_dropped": 0,
@@ -58,9 +58,9 @@
   },
   "inconclusive_breakdown": {
     "broad_trigger": 0,
-    "matcher_gap": 4,
+    "matcher_gap": 6,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 2
+    "ambiguous_evidence": 0
   },
-  "updated_at": "2026-09-12T04:36:33Z"
+  "updated_at": "2026-09-12T06:26:00Z"
 }
