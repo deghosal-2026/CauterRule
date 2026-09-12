@@ -32,6 +32,7 @@ from cauterule.cli.otel import otel
 from cauterule.cli.pack import pack
 from cauterule.cli.preflight import preflight
 from cauterule.cli.promote import promote
+from cauterule.cli.release import release
 from cauterule.cli.report import report
 from cauterule.cli.retire import retire
 from cauterule.cli.review import review
@@ -88,6 +89,7 @@ main.add_command(harness_health_cli)
 main.add_command(pack)
 main.add_command(preflight)
 main.add_command(promote)
+main.add_command(release)
 main.add_command(report)
 main.add_command(retire)
 main.add_command(review)

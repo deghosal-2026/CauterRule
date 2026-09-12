@@ -167,7 +167,7 @@ See [Adapters & Rule Lifecycle](docs/ADAPTERS.md) for CrewAI and PydanticAI.
 - Diagnostics: `health` | `validate` | `preflight` | `harness-health` | `gaps` | `frontier`
 - Analysis: `counterfactual` | `story` | `explain` | `metrics` | `report` | `taxonomy`
 - Ecosystem: `pack` (`list`/`info`/`install`/`create`/`publish`) | `share` | `observe`
-- Infra: `corpus` | `benchmark` | `leaderboard` | `otel`
+- Infra: `corpus` | `benchmark` | `leaderboard` | `otel` | `release`
 - Integrations: `export` (`--format agents`) | `import` | `config` | `mcp` | `webhook` | `badge` | `rewind`
 
 ### Pack Ecosystem (New in v0.3.0)
@@ -213,6 +213,7 @@ See [Adapters & Rule Lifecycle](docs/ADAPTERS.md) for CrewAI and PydanticAI.
 - `cauterule benchmark` + `cauterule leaderboard` — determinism, acceptance, rejection, bake-off, mutation, calibration, ablation suites
 - 40 corpora / 2,384 trajectories per model; 444 domain-scoped reference trajectories
 - pytest-benchmark perf-regression CI for hot paths
+- `cauterule release check` — version consistency + publish guidance; tag-triggered `Release` workflow (build, `twine check`, TestPyPI/PyPI)
 - OpenTelemetry standalone exporter (`cauterule otel`); cost/latency tiering guidance
 
 ### Observability
