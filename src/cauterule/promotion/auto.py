@@ -18,6 +18,7 @@ def auto_promote(
     corpus_name: str | None = None,
     force: bool = False,
     cutoffs: object | None = None,
+    source_tainted: bool = False,
 ) -> PromotionDecision:
     """Decide promotion for *candidate* in auto mode.
 
@@ -52,6 +53,21 @@ def auto_promote(
 
     for c in conflicts:
         conflict_warnings.append(f"{c.type}: rules {list(c.rules)}")
+
+    # #727: a candidate mined from a prompt-injection-bearing source must never
+    # auto-promote. Content, linter, and replay cannot distinguish such a rule
+    # from a real-failure rule, so this is a hard source-trust gate that even
+    # ``force`` does not override.
+    if source_tainted:
+        return PromotionDecision(
+            verdict="reject",
+            evidence_summary=(
+                "Auto-reject: source_trust — candidate mined from a trajectory "
+                "carrying a prompt-injection signal; auto-promotion blocked "
+                "(human review required)"
+            ),
+            approver="auto",
+        )
 
     evidence_ok = evidence.verdict == "pass" and len(evidence.failures_prevented) >= 1
 

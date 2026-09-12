@@ -159,6 +159,7 @@ class Trajectory:
     agent_config: AgentConfig | None = None
     environment: Environment | None = None
     redacted: bool = False
+    injection_signal: bool = False
     expected_outcome: ExpectedOutcome | None = None
     expected_outcome_rationale: str | None = None
     expected_outcome_confidence: ExpectedOutcomeConfidence = None
@@ -205,6 +206,8 @@ class Trajectory:
             d["agent_config"] = self.agent_config.to_dict()
         if self.environment is not None:
             d["environment"] = self.environment.to_dict()
+        if self.injection_signal:
+            d["injection_signal"] = True
         if self.expected_outcome is not None:
             d["expected_outcome"] = self.expected_outcome
         if self.expected_outcome_rationale is not None:
@@ -248,6 +251,7 @@ class Trajectory:
             agent_config=AgentConfig.from_dict(ac_raw) if isinstance(ac_raw, dict) else None,
             environment=Environment.from_dict(env_raw) if isinstance(env_raw, dict) else None,
             redacted=bool(data.get("redacted", False)),
+            injection_signal=bool(data.get("injection_signal", False)),
             expected_outcome=data.get("expected_outcome"),
             expected_outcome_rationale=data.get("expected_outcome_rationale"),
             expected_outcome_confidence=data.get("expected_outcome_confidence"),

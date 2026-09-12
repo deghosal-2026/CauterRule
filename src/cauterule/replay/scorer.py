@@ -5,6 +5,49 @@ from __future__ import annotations
 from cauterule.models.evidence import Verdict
 
 
+def compute_scores_detailed(
+    prevented: int,
+    broken: int,
+    total_failures: int,
+    total_successes: int,
+    near_misses: int = 0,
+) -> tuple[float, float, Verdict, str]:
+    """Compute precision, recall, verdict, and a machine-readable reason.
+
+    Ordering (#724):
+    1. No signal (nothing matched) -> inconclusive.
+    2. Dangerously broad (``broken > prevented``) -> fail. This is the only
+       hard-fail guard: a rule that breaks more successes than it prevents.
+    3. Over-broad near-miss (``near_misses > 2``) -> inconclusive.
+    4. Otherwise -> pass. Because ``broken <= prevented`` mathematically implies
+       ``precision >= 0.5``, a net-positive rule passes even when it touches a
+       few successes (the old ``broken > 0 -> inconclusive`` guard was removed).
+
+    Args:
+        prevented: Failures prevented.
+        broken: Successes broken.
+        total_failures: Total failures in corpus.
+        total_successes: Total successes in corpus.
+        near_misses: Near-miss references matched (over-broad trigger).
+
+    Returns:
+        ``(precision, recall, verdict, reason)`` where reason is one of
+        ``pass``, ``no_signal``, ``blocked_by_broken``, ``blocked_by_near_miss``.
+    """
+    denom = prevented + broken
+    precision = (prevented / denom) if denom else 0.0
+    recall = (prevented / total_failures) if total_failures > 0 else 0.0
+
+    if prevented == 0 and broken == 0:
+        return precision, recall, "inconclusive", "no_signal"
+    if broken > prevented:
+        return precision, recall, "fail", "blocked_by_broken"
+    if near_misses > 2:
+        return precision, recall, "inconclusive", "blocked_by_near_miss"
+    # broken <= prevented implies precision >= 0.5 -> net-positive pass.
+    return precision, recall, "pass", "pass"
+
+
 def compute_scores(
     prevented: int,
     broken: int,
@@ -16,22 +59,18 @@ def compute_scores(
 
     Broad-trigger penalty: if a trigger matches successes it would break,
     it is too broad. Triggers that break more successes than they prevent
-    failures are "fail". Triggers that break some but still prevent more
-    are "inconclusive" (broad, not dangerous).
+    failures are "fail".
 
     Near-miss penalty: if a trigger also matches near-miss references
     (recovered or ambiguous trajectories), it is over-broad. A candidate
-    with ``near_misses > 0`` is downgraded from ``pass`` to ``inconclusive``
+    with ``near_misses > 2`` is downgraded from ``pass`` to ``inconclusive``
     — the trigger fires on trajectories that should not have produced a
     rule (v0.3.0 field-test fix: nearmiss corpus false passes at precision
     1.0 because near-misses were computed but never penalised).
 
-    v0.3.0 field-test tuning: the penalty was zero-tolerance (any near-miss
-    → inconclusive), which over-fired on legitimate candidates that prevent
-    7 real failures and touch 1 near-miss. The tolerance band allows
-    ``near_misses <= 2`` to still pass if precision ≥ 0.5 — a candidate
-    that prevents more failures than it touches near-misses is a good rule.
-    Above 2 near-misses, the trigger is too broad and stays inconclusive.
+    v0.3.1 field-test tuning (#724): a net-positive rule (``broken <=
+    prevented``, ``precision >= 0.5``) passes even when it touches a few
+    successes; ``fail`` is reserved for ``broken > prevented``.
 
     Args:
         prevented: Failures prevented.
@@ -43,41 +82,11 @@ def compute_scores(
     Returns:
         (precision, recall, verdict) where verdict is pass/fail/inconclusive.
     """
-    denom = prevented + broken
-    if denom == 0:
-        precision = 0.0
-    else:
-        precision = prevented / denom
-
-    recall = (prevented / total_failures) if total_failures > 0 else 0.0
-
-    if prevented == 0 and broken == 0:
-        verdict: Verdict = "inconclusive"
-    elif broken > prevented:
-        # More successes broken than failures prevented — dangerously broad
-        verdict = "fail"
-    elif broken > 0:
-        # Some successes broken, but prevented more — broad but fixable
-        verdict = "inconclusive"
-    elif near_misses > 2:
-        # No successes broken, but matched >2 near-miss references —
-        # over-broad trigger. Downgrade from pass to inconclusive.
-        verdict = "inconclusive"
-    elif near_misses > 0 and precision < 0.5:
-        # 1-2 near-misses but precision too low — still inconclusive.
-        verdict = "inconclusive"
-    else:
-        # No successes broken, no near-misses — clean pass.
-        # v0.3.0: lowered from 0.8 to 0.5. The domain-scoped reference pool
-        # (#708) made precision more honest but rarely reaches 0.8 because
-        # candidates match 1–3 relevant references out of 10–30. At 0.5 a
-        # candidate that prevents more failures than it breaks still passes;
-        # the near-miss penalty and broad-trigger check guard safety.
-        if precision >= 0.5:
-            verdict = "pass"
-        elif precision >= 0.3:
-            verdict = "inconclusive"
-        else:
-            verdict = "fail"
-
+    precision, recall, verdict, _reason = compute_scores_detailed(
+        prevented=prevented,
+        broken=broken,
+        total_failures=total_failures,
+        total_successes=total_successes,
+        near_misses=near_misses,
+    )
     return precision, recall, verdict

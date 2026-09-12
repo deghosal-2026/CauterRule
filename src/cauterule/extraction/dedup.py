@@ -19,10 +19,19 @@ def is_duplicate(a: CandidateRule, b: CandidateRule) -> bool:
 
 
 def deduplicate(candidates: list[CandidateRule]) -> list[CandidateRule]:
-    """Remove semantically identical candidates, keeping first occurrence."""
+    """Remove semantically identical candidates, keeping the best occurrence.
+
+    When duplicates differ in confidence (e.g. one per extraction pass), the
+    higher-confidence candidate is kept while preserving first-seen order.
+    """
     seen: list[CandidateRule] = []
     for cand in candidates:
-        if any(is_duplicate(cand, existing) for existing in seen):
-            continue
-        seen.append(cand)
+        dup_idx = next(
+            (i for i, existing in enumerate(seen) if is_duplicate(cand, existing)),
+            None,
+        )
+        if dup_idx is None:
+            seen.append(cand)
+        elif cand.confidence > seen[dup_idx].confidence:
+            seen[dup_idx] = cand
     return seen

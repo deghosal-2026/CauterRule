@@ -450,13 +450,134 @@ def _build_haystack(trajectory: Trajectory, include_input: bool = True) -> str:
     return _normalize(" ".join(parts))
 
 
+def _build_signature(trajectory: Trajectory) -> str:
+    """Build the failure-signature view of a trajectory (#722).
+
+    The signature is the minimal text that describes *what failed*:
+    ``failure_point`` + ``failure_class`` + the ``error`` of the failing
+    step(s).  It deliberately excludes the task text and every step's
+    ``input``/``output`` (which can be long and off-topic) so a short trigger
+    phrase is compared against the failure, not the whole multi-step document.
+    """
+    parts: list[str] = []
+    if trajectory.failure_point:
+        parts.append(trajectory.failure_point)
+    if trajectory.failure_class:
+        parts.append(trajectory.failure_class)
+    for step in trajectory.steps:
+        if step.error:
+            parts.append(step.error)
+    return _normalize(" ".join(parts))
+
+
+# #725: score floor when the candidate's structured error_signature matches the
+# reference's failure_class/error. A signature hit is wording-independent.
+SIGNATURE_HIT_SCORE = 0.70
+
+
+def _reference_signature(trajectory: Trajectory) -> str:
+    """Normalized reference signature: failure_class + step errors (#725)."""
+    parts: list[str] = []
+    if trajectory.failure_class:
+        parts.append(trajectory.failure_class)
+    for step in trajectory.steps:
+        if step.error:
+            parts.append(step.error)
+    return _normalize(" ".join(parts))
+
+
+def _signature_hit(candidate: CandidateRule, trajectory: Trajectory) -> bool:
+    """Return True if the candidate's error_signature matches the reference.
+
+    Matching is normalized containment (the candidate signature appears in the
+    reference signature), with a token-subset fallback for reordered tokens.
+    """
+    raw = candidate.when.signature
+    if not raw or not raw.strip():
+        return False
+    sig = _normalize(raw)
+    if not sig:
+        return False
+    sig_tokens = _content_tokens(sig)
+    # A generic signature ("error", "timeout", ...) carries no discriminative
+    # signal and must not floor a match on its own.
+    if not sig_tokens or sig_tokens <= _GENERIC_TRIGGERS:
+        return False
+    ref = _reference_signature(trajectory)
+    if not ref:
+        return False
+    if sig in ref:
+        return True
+    return sig_tokens <= _content_tokens(ref)
+
+
+def is_grounded(candidate: CandidateRule, trajectory: Trajectory) -> bool:
+    """Return True if the rule is anchored to a specific failure (#720).
+
+    Grounding = a structured ``error_signature`` hit (#725) OR a distinctive
+    error phrase from the trigger appearing verbatim in the failure signature.
+    The behavioral-outcome signal uses this to separate a match that addresses
+    the failure (grounded) from a coincidental lexical match (unverified).
+    """
+    if _signature_hit(candidate, trajectory):
+        return True
+    signature = _build_signature(trajectory)
+    if not signature:
+        return False
+    raw_trigger = candidate.when.trigger.lower()
+    return any(
+        phrase in raw_trigger and _normalize(phrase) in signature
+        for phrase in _DISTINCTIVE_PHRASES
+    )
+
+
+def _view_scores(
+    trigger_content: set[str],
+    trigger_bigrams: set[tuple[str, str]],
+    alias_tokens: set[str],
+    view: str,
+) -> tuple[float, float]:
+    """Return (weighted_token_f1, bigram_recall) for *view* text.
+
+    Shared by the full-haystack and failure-signature views so the two can be
+    combined with ``max`` (a match against either view counts).
+    """
+    view_content = _content_tokens(view)
+    direct_hit = trigger_content & view_content
+    alias_hit = alias_tokens & view_content
+
+    weighted_hit = len(direct_hit) + 0.5 * len(alias_hit)
+    weighted_trigger = len(trigger_content) + 0.5 * len(alias_tokens)
+    # Denominator capped at 4x the trigger size so a verbose but genuinely
+    # matched view does not drive precision to zero.
+    weighted_view = min(len(view_content), max(4 * int(weighted_trigger), 1))
+    if weighted_trigger == 0:
+        token_f1 = 0.0
+    else:
+        precision = weighted_hit / max(weighted_view, 1)
+        recall = weighted_hit / weighted_trigger
+        token_f1 = (
+            0.0 if (precision + recall) == 0 else 2 * precision * recall / (precision + recall)
+        )
+
+    view_bigrams = _bigrams(_ordered_content_tokens(view))
+    bigram_recall = 0.0
+    if trigger_bigrams:
+        bigram_recall = len(trigger_bigrams & view_bigrams) / len(trigger_bigrams)
+
+    return token_f1, bigram_recall
+
+
 def match_score(candidate: CandidateRule, trajectory: Trajectory) -> float:
     """Return trigger similarity in [0.0, 1.0] for *candidate* vs *trajectory*.
 
     Score components:
-    - 1.0 for exact normalized-substring match.
+    - 1.0 for exact normalized-substring match (in the haystack or signature).
     - Otherwise a weighted blend: 0.6 * weighted-token-F1 + 0.4 * bigram-recall,
-      where alias-expanded tokens count at half weight.
+      where alias-expanded tokens count at half weight.  Each lexical term is
+      the max over the full haystack and the failure signature (#722), so a
+      trigger that matches the failure signature is not diluted by a long,
+      off-topic ``step.input``.
     """
     trigger = candidate.when.trigger
     if not trigger or not trigger.strip():
@@ -466,64 +587,50 @@ def match_score(candidate: CandidateRule, trajectory: Trajectory) -> float:
     if not norm_trigger:
         return 0.0
 
-    # --- Exact normalized-substring match → score 1.0 ---
+    # --- Exact normalized-substring match -> score 1.0 ---
     haystack = _build_haystack(trajectory)
     if norm_trigger in haystack:
         return 1.0
+    signature = _build_signature(trajectory)
+    if signature and norm_trigger in signature:
+        return 1.0
+
+    # Exact structured-signature match -> floor to the curated threshold (#725).
+    if _signature_hit(candidate, trajectory):
+        return SIGNATURE_HIT_SCORE
 
     # --- Token-based scoring ---
     trigger_content = _content_tokens(norm_trigger)
-    haystack_content = _content_tokens(haystack)
-
     if not trigger_content:
         return 0.0
+    haystack_content = _content_tokens(haystack)
+    signature_content = _content_tokens(signature) if signature else set()
 
-    # Phrase-level paraphrase: if any alias phrase appears verbatim in
-    # the haystack, that is strong equivalence evidence.
+    # Phrase-level paraphrase: if any alias phrase appears verbatim in the
+    # haystack or signature, that is strong equivalence evidence.
     alias_phrase_hit = any(
-        _normalize(phrase) in haystack
+        _normalize(phrase) in haystack or (bool(signature) and _normalize(phrase) in signature)
         for key, phrases in _ALIASES.items()
         if key in norm_trigger
         for phrase in phrases
     )
 
-    # Direct hit tokens
-    direct_hit = trigger_content & haystack_content
-    # Alias expansion
     alias_tokens = _expand_aliases(norm_trigger)
-    alias_hit = alias_tokens & haystack_content
-
-    # Weighted token F1: direct hits count 1.0, alias hits count 0.5 (#517).
-    # Precision measures the match concentration within the haystack so a
-    # noisy trajectory (large volume of irrelevant text) gets penalised.
-    # The denominator is capped at 4× the trigger size — otherwise a
-    # verbose but genuinely-matched trajectory (e.g. a multi-step CI run
-    # with a short, distinctive failure phrase) would see precision → 0
-    # and the token-F1 path would be unusable without an alias floor
-    # (code-review).
-    weighted_hit = len(direct_hit) + 0.5 * len(alias_hit)
-    weighted_trigger = len(trigger_content) + 0.5 * len(alias_tokens)
-    weighted_haystack = min(
-        len(haystack_content),
-        max(4 * int(weighted_trigger), 1),
-    )
-    if weighted_trigger == 0:
-        token_f1 = 0.0
-    else:
-        precision = weighted_hit / max(weighted_haystack, 1)
-        recall = weighted_hit / weighted_trigger
-        token_f1 = (
-            0.0 if (precision + recall) == 0 else 2 * precision * recall / (precision + recall)
-        )
-
-    # Bigram recall (adjacent content-token pairs)
+    alias_hit = bool(alias_tokens & (haystack_content | signature_content))
     trigger_bigrams = _bigrams(_ordered_content_tokens(norm_trigger))
-    haystack_bigrams = _bigrams(_ordered_content_tokens(haystack))
-    bigram_recall = 0.0
-    if trigger_bigrams:
-        bigram_recall = len(trigger_bigrams & haystack_bigrams) / len(trigger_bigrams)
 
-    semantic_sim = embedding_similarity(norm_trigger, haystack)
+    token_f1_h, bigram_h = _view_scores(trigger_content, trigger_bigrams, alias_tokens, haystack)
+    token_f1_s, bigram_s = (
+        _view_scores(trigger_content, trigger_bigrams, alias_tokens, signature)
+        if signature
+        else (0.0, 0.0)
+    )
+    token_f1 = max(token_f1_h, token_f1_s)
+    bigram_recall = max(bigram_h, bigram_s)
+
+    # Embed the trigger against the failure signature when available, so the
+    # cosine is not diluted by a long, off-topic haystack (#722).
+    semantic_sim = embedding_similarity(norm_trigger, signature or haystack)
     if semantic_sim > 0.0:
         score = (
             _SEMANTIC_TOKEN_WEIGHT * token_f1
@@ -535,19 +642,21 @@ def match_score(candidate: CandidateRule, trajectory: Trajectory) -> float:
             score = max(score, SEMANTIC_FLOOR_SCORE)
     else:
         score = 0.6 * token_f1 + 0.4 * bigram_recall
-    # Phrase-level paraphrase floors at 0.70 (alias text matches haystack verbatim).
+    # Phrase-level paraphrase floors at 0.70 (alias text matches verbatim).
     if alias_phrase_hit:
         score = 0.70
     elif alias_hit and score < DEFAULT_THRESHOLD:
         score = DEFAULT_THRESHOLD
 
     # Substring fallback: if trigger contains a distinctive error phrase
-    # that appears verbatim in the haystack, floor the score at 0.70 so
-    # it passes both default and curated thresholds.
+    # that appears verbatim in the haystack or signature, floor the score at
+    # 0.70 so it passes both default and curated thresholds.
     if score < 0.70 and len(norm_trigger) >= _LONG_PHRASE_THRESHOLD:
         raw_lower = trigger.lower()
         for phrase in _DISTINCTIVE_PHRASES:
-            if phrase in raw_lower and _normalize(phrase) in haystack:
+            if phrase in raw_lower and (
+                _normalize(phrase) in haystack or (bool(signature) and _normalize(phrase) in signature)
+            ):
                 score = 0.70
                 break
 
@@ -715,6 +824,37 @@ def trigger_prefilter_reason(candidate: CandidateRule) -> str | None:
     return None
 
 
+def rule_matches_with_score(
+    candidate: CandidateRule,
+    trajectory: Trajectory,
+    threshold: float = DEFAULT_THRESHOLD,
+) -> tuple[bool, float]:
+    """Return ``(matches, match_score)`` computing the score exactly once.
+
+    Same guards as :func:`rule_matches`; used by the simulator (#723) so the
+    match-strength margin does not require a second :func:`match_score` call.
+    """
+    if trigger_prefilter_reason(candidate) is not None:
+        return False, 0.0
+
+    score = match_score(candidate, trajectory)
+    if score < threshold:
+        return False, score
+
+    # Reject cross-domain matches for failure trajectories (e.g. a "docker"
+    # trigger matching a git/push trajectory) — #487 precision guard, wired
+    # in #694.  Success trajectories are excluded: recovery/near-miss
+    # classification is domain-independent and handled by the simulator
+    # (#616), so gating them would suppress genuine recovery signals.
+    if not trajectory.success and check_domain_mismatch(candidate, trajectory):
+        return False, score
+
+    if not _context_matches(candidate, trajectory):
+        return False, score
+
+    return True, score
+
+
 def rule_matches(
     candidate: CandidateRule,
     trajectory: Trajectory,
@@ -732,21 +872,8 @@ def rule_matches(
     Case-insensitive throughout. The ``threshold`` parameter enables
     corpus-aware calibration (see issue #420).
     """
-    if trigger_prefilter_reason(candidate) is not None:
-        return False
-
-    if match_score(candidate, trajectory) < threshold:
-        return False
-
-    # Reject cross-domain matches for failure trajectories (e.g. a "docker"
-    # trigger matching a git/push trajectory) — #487 precision guard, wired
-    # in #694.  Success trajectories are excluded: recovery/near-miss
-    # classification is domain-independent and handled by the simulator
-    # (#616), so gating them would suppress genuine recovery signals.
-    if not trajectory.success and check_domain_mismatch(candidate, trajectory):
-        return False
-
-    return _context_matches(candidate, trajectory)
+    matched, _score = rule_matches_with_score(candidate, trajectory, threshold)
+    return matched
 
 
 def is_near_miss(

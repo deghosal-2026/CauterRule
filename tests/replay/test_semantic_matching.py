@@ -123,3 +123,41 @@ def test_cosine_helpers() -> None:
     assert embeddings._cosine((1.0, 0.0), (1.0, 0.0)) == 1.0
     assert embeddings._cosine((1.0, 0.0), (0.0, 1.0)) == 0.0
     assert embeddings._cosine((0.0, 0.0), (1.0, 0.0)) == 0.0
+
+
+class FixedCosineEmbedder:
+    """Maps a 'database' text vs a 'postgres' text to a fixed cosine (#721)."""
+
+    def __init__(self, cos: float) -> None:
+        self.cos = cos
+
+    def encode(self, texts: list[str]) -> list[list[float]]:
+        import math
+
+        out: list[list[float]] = []
+        for t in texts:
+            low = t.lower()
+            if "database" in low:
+                out.append([1.0, 0.0])
+            elif "postgres" in low:
+                out.append([self.cos, math.sqrt(max(0.0, 1.0 - self.cos**2))])
+            else:
+                out.append([0.0, 0.0])
+        return out
+
+
+def test_partial_cosine_paraphrase_floors_to_threshold() -> None:
+    # Real MiniLM cosine for a true paraphrase is ~0.6-0.7, below the old 0.80
+    # floor. With a reachable floor the paraphrase must clear curated (0.70).
+    embeddings.set_embedder_for_testing(FixedCosineEmbedder(0.65))
+    cand = _cand("database connection dropped")
+    traj = _traj("run migration", "lost connection to postgres server")
+    assert match_score(cand, traj) >= 0.70
+
+
+def test_moderate_cosine_below_floor_stays_low() -> None:
+    # Below the floor, the semantic term must not by itself carry the match.
+    embeddings.set_embedder_for_testing(FixedCosineEmbedder(0.55))
+    cand = _cand("database connection dropped")
+    traj = _traj("run migration", "lost connection to postgres server")
+    assert match_score(cand, traj) < 0.60

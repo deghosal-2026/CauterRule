@@ -37,8 +37,9 @@ def test_multipass_three() -> None:
     )
     llm = FakeLLM([payload, payload, payload])
     cands = multipass_extract(_traj(), llm)
-    assert len(cands) == 3
-    assert all(c.extraction_pass in (1, 2, 3) for c in cands)
+    # #732: identical passes deduplicate to one candidate.
+    assert len(cands) == 1
+    assert cands[0].extraction_pass == 1
 
 
 def test_multipass_partial_failure() -> None:
@@ -47,7 +48,7 @@ def test_multipass_partial_failure() -> None:
     )
     llm = FakeLLM([payload, "bad json", payload])
     cands = multipass_extract(_traj(), llm)
-    assert len(cands) == 2
+    assert len(cands) == 1  # #732: duplicate passes collapse
 
 
 def test_multipass_custom_temps() -> None:
@@ -56,7 +57,7 @@ def test_multipass_custom_temps() -> None:
     )
     llm = FakeLLM([payload])
     cands = multipass_extract(_traj(), llm, temperatures=(0.1, 0.9))
-    assert len(cands) == 2
+    assert len(cands) == 1  # #732: identical passes collapse
     assert llm.temperatures == [0.1, 0.9], f"Expected [0.1, 0.9], got {llm.temperatures}"
 
 
@@ -66,7 +67,7 @@ def test_multipass_default_temps() -> None:
     )
     llm = FakeLLM([payload, payload, payload])
     cands = multipass_extract(_traj(), llm)
-    assert len(cands) == 3
+    assert len(cands) == 1  # #732: identical passes collapse
     # Default temperatures are (0.2, 0.5, 0.8)
     assert llm.temperatures == [0.2, 0.5, 0.8], f"Expected [0.2, 0.5, 0.8], got {llm.temperatures}"
 
@@ -82,7 +83,7 @@ def test_multipass_confidence_threshold_passthrough() -> None:
     good = FakeLLM([payload_high, payload_high, payload_high])
     bad = FakeLLM([payload_low, payload_low, payload_low])
     cands = multipass_extract(_traj(), good, confidence_threshold=0.7)
-    assert len(cands) == 3
+    assert len(cands) == 1  # #732: identical passes collapse
     cands2 = multipass_extract(_traj(), bad, confidence_threshold=0.9)
     assert len(cands2) == 0  # 0.65 < 0.9 gate
 
@@ -122,7 +123,7 @@ def test_multipass_gate_relaxed_proceeds() -> None:
         success=False,
     )
     cands = multipass_extract(traj, llm, gate_mode="relaxed")
-    assert len(cands) == 3
+    assert len(cands) == 1  # #732: identical passes collapse
     assert llm.calls == 3
 
 

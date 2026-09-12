@@ -34,3 +34,12 @@ def test_deduplicate() -> None:
 
 def test_deduplicate_empty() -> None:
     assert deduplicate([]) == []
+
+
+def test_deduplicate_keeps_higher_confidence() -> None:
+    # #732: when duplicate passes differ in confidence, keep the stronger one.
+    low = CandidateRule(when=RuleWhen(trigger="t"), do=RuleDo(directive="d"), confidence=0.6)
+    high = CandidateRule(when=RuleWhen(trigger="t"), do=RuleDo(directive="d"), confidence=0.9)
+    deduped = deduplicate([low, high])
+    assert len(deduped) == 1
+    assert deduped[0].confidence == 0.9

@@ -518,13 +518,25 @@ def extract_candidates(
                     "confidence": candidate.confidence,
                     "extraction_pass": candidate.extraction_pass,
                     "reasoning": candidate.reasoning,
+                    "error_signature": candidate.when.signature,
                     "temperature": temp,
                     "llm_response": raw_text,
                 }
             )
         except Exception as exc:
             print(f"NO CANDIDATE (pass {idx}, temp={temp}): {exc}")
-    return candidates, usage
+    # #732: collapse identical candidates across passes (keep higher confidence).
+    deduped: list[dict] = []
+    seen_keys: dict[tuple[str, str], int] = {}
+    for cand in candidates:
+        key = (str(cand["when"]).strip().lower(), str(cand["do"]).strip().lower())
+        idx = seen_keys.get(key)
+        if idx is None:
+            seen_keys[key] = len(deduped)
+            deduped.append(cand)
+        elif cand["confidence"] > deduped[idx]["confidence"]:
+            deduped[idx] = cand
+    return deduped, usage
 
 
 # ── Gate ───────────────────────────────────────────────────────────────
@@ -752,31 +764,42 @@ def process_one_trajectory(
         )
         # v0.2.0: specificity scoring on trigger
         test_result["trigger_specificity"] = score_specificity(cand["when"])
-        # v0.2.0: inconclusive attribution
-        if test_result.get("verdict") == "inconclusive":
-            from cauterule.models.candidate import CandidateRule
-            from cauterule.models.rule import RuleDo, RuleWhen
-            from cauterule.models.trajectory import Trajectory
-            from cauterule.replay.attribution import attribute_inconclusive
-            from cauterule.replay.report import build_evidence_report
+        # v0.3.1 (#720): behavioral outcome precision + (for inconclusive)
+        # attribution. Built for every candidate so the field test can compare
+        # text precision vs grounded outcome precision.
+        from cauterule.models.candidate import CandidateRule
+        from cauterule.models.rule import RuleDo, RuleWhen
+        from cauterule.models.trajectory import Trajectory
+        from cauterule.replay.report import build_evidence_report
 
-            cand_obj = CandidateRule(
-                when=RuleWhen(trigger=cand["when"]),
-                do=RuleDo(directive=cand["do"]),
-                confidence=cand["confidence"],
-                reasoning=cand.get("reasoning"),
-                extraction_pass=cand.get("extraction_pass", 1),
+        cand_obj = CandidateRule(
+            when=RuleWhen(trigger=cand["when"], signature=cand.get("error_signature")),
+            do=RuleDo(directive=cand["do"]),
+            confidence=cand["confidence"],
+            reasoning=cand.get("reasoning"),
+            extraction_pass=cand.get("extraction_pass", 1),
+        )
+        traj_objs = []
+        for t in reference_trajs:
+            with contextlib.suppress(Exception):
+                traj_objs.append(Trajectory.from_dict(t))
+        ev_report = build_evidence_report(cand_obj, traj_objs)
+        test_result["outcome_precision"] = ev_report.outcome_precision
+        if test_result.get("verdict") == "inconclusive":
+            from cauterule.replay.attribution import attribute_inconclusive
+
+            test_result["inconclusive_reason"] = attribute_inconclusive(
+                cand_obj, traj_objs, ev_report
             )
-            traj_objs = []
-            for t in reference_trajs:
-                with contextlib.suppress(Exception):
-                    traj_objs.append(Trajectory.from_dict(t))
-            ev_report = build_evidence_report(cand_obj, traj_objs)
-            reason = attribute_inconclusive(cand_obj, traj_objs, ev_report)
-            test_result["inconclusive_reason"] = reason
         test_results.append(test_result)
 
-    best = max(test_results, key=lambda r: r["precision"] * r["recall"]) if test_results else {}
+    from cauterule.extraction.ranking import score_candidate
+
+    best = (
+        max(test_results, key=lambda r: score_candidate(r["precision"], r["recall"]))
+        if test_results
+        else {}
+    )
 
     # Adversarial / should_reject: force fail regardless of precision.
     # The LLM can extract a legitimate-looking rule from an adversarial

@@ -68,9 +68,14 @@ def _parse_candidate_json(
         raw_context = []
     context_items = tuple(str(c).strip() for c in raw_context if c and str(c).strip())
 
+    # #725: structured error signature (exception type / error code), optional.
+    raw_signature = when_data.get("error_signature")
+    signature = str(raw_signature).strip() if raw_signature and str(raw_signature).strip() else None
+
     when = RuleWhen(
         trigger=str(when_data.get("trigger", "")),
         context=context_items,
+        signature=signature,
     )
     do = RuleDo(
         directive=str(do_data.get("directive", "")),

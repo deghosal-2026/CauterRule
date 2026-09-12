@@ -34,7 +34,13 @@ _ENV_FLAG = "CAUTERULE_SEMANTIC_MATCHING"
 _WS_RE = re.compile(r"\s+")
 
 # Cosine similarity at/above this is treated as strong paraphrase evidence.
-SEMANTIC_FLOOR = 0.80
+# #721: lowered from 0.80. For a short trigger vs. a failure signature (not a
+# long haystack), real MiniLM cosine for a true paraphrase lands ~0.60-0.70,
+# so a 0.80 floor was unreachable and the semantic channel could not carry a
+# match on its own. Below this floor the semantic term is only a minor blend
+# contributor; at/above it the matcher floors the score to the curated
+# threshold. Re-run scripts/calibrate_thresholds.py if this changes.
+SEMANTIC_FLOOR = 0.62
 
 
 class Embedder(Protocol):

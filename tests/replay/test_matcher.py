@@ -368,3 +368,16 @@ def test_context_domain_label_does_not_match_other_domain() -> None:
         domain="research",
     )
     assert not rule_matches(cand, traj)
+
+
+def test_rule_matches_with_score() -> None:
+    # #723: single-pass helper returns both the decision and the score.
+    from cauterule.replay.matcher import rule_matches_with_score
+
+    matched, score = rule_matches_with_score(_cand("git push"), _traj())
+    assert matched is True
+    assert score == 1.0
+
+    matched2, score2 = rule_matches_with_score(_cand("docker"), _traj())
+    assert matched2 is False
+    assert score2 < 0.6

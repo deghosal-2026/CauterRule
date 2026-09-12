@@ -6,7 +6,8 @@ from cauterule.models.candidate import CandidateRule
 from cauterule.models.evidence import EvidenceReport
 from cauterule.models.trajectory import Trajectory
 from cauterule.replay.attribution import attribute_inconclusive
-from cauterule.replay.scorer import compute_scores
+from cauterule.replay.outcome import build_outcome_report
+from cauterule.replay.scorer import compute_scores_detailed
 from cauterule.replay.simulator import simulate
 
 # Minimum history for a trustworthy verdict (#521). With fewer trajectories
@@ -48,7 +49,7 @@ def build_evidence_report(
         elif outcome == "near_miss":
             near_misses.append(traj.id)
 
-    precision, recall, computed_verdict = compute_scores(
+    precision, recall, computed_verdict, scorer_reason = compute_scores_detailed(
         prevented=len(prevented),
         broken=len(broken),
         total_failures=total_failures,
@@ -67,6 +68,16 @@ def build_evidence_report(
         verdict_reason = (
             f"min_sample: {len(trajectories)} < {MIN_TRAJECTORIES}; computed={computed_verdict}"
         )
+    elif computed_verdict in ("inconclusive", "fail"):
+        # #724: surface the true blocking reason (blocked_by_broken /
+        # blocked_by_near_miss / no_signal).
+        verdict_reason = scorer_reason
+
+    # #720: behavioral (grounded) outcome, reported alongside the text verdict.
+    # The text verdict still gates promotion for now; outcome_precision lets the
+    # next field test compare the two and validate the proxy before the gate
+    # migrates to it.
+    outcome_report = build_outcome_report(candidate, trajectories)
 
     report = EvidenceReport(
         failures_prevented=tuple(prevented),
@@ -77,6 +88,8 @@ def build_evidence_report(
         verdict=verdict,
         replay_trace=tuple(trace),
         verdict_reason=verdict_reason,
+        outcome_precision=outcome_report.precision,
+        outcome_verdict=outcome_report.verdict,
     )
     if report.verdict == "inconclusive":
         # Attribution needs the report; reconstruct once with the reason set.
@@ -91,6 +104,8 @@ def build_evidence_report(
             replay_trace=report.replay_trace,
             inconclusive_reason=reason,
             verdict_reason=report.verdict_reason,
+            outcome_precision=report.outcome_precision,
+            outcome_verdict=report.outcome_verdict,
         )
     # OTEL replay.verdict span (#588): best-effort, never blocks replay.
     try:

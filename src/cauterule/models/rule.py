@@ -29,17 +29,22 @@ class RuleWhen:
 
     trigger: str
     context: tuple[str, ...] = field(default_factory=tuple)
+    signature: str | None = None
 
     def __post_init__(self) -> None:
         _require_nonblank(self.trigger, "when.trigger")
         for c in self.context:
             _require_nonblank(c, "when.context item")
+        if self.signature is not None:
+            _require_nonblank(self.signature, "when.signature")
 
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-serializable dict."""
         d: dict[str, Any] = {"trigger": self.trigger}
         if self.context:
             d["context"] = list(self.context)
+        if self.signature is not None:
+            d["signature"] = self.signature
         return d
 
     @classmethod
@@ -47,7 +52,8 @@ class RuleWhen:
         """Create from a dict produced by :meth:`to_dict`."""
         trigger = data.get("trigger", "")
         context = tuple(data.get("context", []))
-        return cls(trigger=trigger, context=context)
+        signature = data.get("signature")
+        return cls(trigger=trigger, context=context, signature=signature)
 
 
 @dataclass(frozen=True)

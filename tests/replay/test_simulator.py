@@ -164,3 +164,83 @@ def test_domain_not_mismatched_when_same() -> None:
         failure_class="docker/build/package-not-found",
     )
     assert simulate(cand, traj) == "prevented"
+
+
+# ---------------------------------------------------------------------------
+# #723 — spurious 'broken' successes
+# ---------------------------------------------------------------------------
+
+
+def test_cross_domain_success_not_broken() -> None:
+    # A git rule must not be "broken" by a docker success that shares a token.
+    from cauterule.replay.matcher import match_score
+
+    cand = _cand("docker build failed")
+    traj = Trajectory(
+        id="S-git",
+        timestamp="t",
+        task="git push failed docker build step",
+        steps=(),
+        success=True,
+        failure_class="git/push",
+    )
+    assert match_score(cand, traj) >= 0.6  # precondition: it does match
+    assert simulate(cand, traj) == "no_effect"
+
+
+def test_borderline_success_not_broken() -> None:
+    # Matches just above threshold but below threshold + margin -> no_effect.
+    from cauterule.replay.matcher import match_score
+
+    cand = _cand("artifact upload failure")
+    traj = Trajectory(
+        id="S-up", timestamp="t", task="artifact upload", steps=(), success=True
+    )
+    assert 0.6 <= match_score(cand, traj) < 0.7  # precondition
+    assert simulate(cand, traj) == "no_effect"
+
+
+def test_high_confidence_success_still_broken() -> None:
+    cand = _cand("artifact upload failure")
+    traj = Trajectory(
+        id="S-up2",
+        timestamp="t",
+        task="artifact upload failure detected",
+        steps=(),
+        success=True,
+    )
+    assert simulate(cand, traj) == "broken"
+
+
+def test_nm_retry_success_is_near_miss() -> None:
+    cand = _cand("deploy timed out")
+    traj = Trajectory(
+        id="NM-024-deploy-timeout-retry",
+        timestamp="t",
+        task="deploy timed out",
+        steps=(),
+        success=True,
+        failure_class="deploy/timeout",
+    )
+    assert simulate(cand, traj) == "near_miss"
+
+
+def test_nm_rollback_success_is_near_miss() -> None:
+    cand = _cand("kubectl rollout failed")
+    traj = Trajectory(
+        id="NM-039-kubectl-rollback",
+        timestamp="t",
+        task="kubectl rollout failed",
+        steps=(),
+        success=True,
+        failure_class="k8s/deploy",
+    )
+    assert simulate(cand, traj) == "near_miss"
+
+
+def test_exhausted_retry_task_still_broken() -> None:
+    # Guard against over-broadening: retry tokens in failure_class were the #616
+    # trap; a genuine success with no recovery id/task stays "broken".
+    cand = _cand("git push")
+    traj = _success_traj("git push origin main", "retry budget exhausted")
+    assert simulate(cand, traj) == "broken"
