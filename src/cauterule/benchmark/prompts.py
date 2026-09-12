@@ -41,7 +41,7 @@ class PromptBakeoffHarness:
                 error: str | None = None
                 try:
                     candidate = prompt_fn(traj)
-                except Exception as exc:  # noqa: PERF203
+                except Exception as exc:
                     error = f"{type(exc).__name__}: {exc}"
                 results[name].append(
                     PromptResult(

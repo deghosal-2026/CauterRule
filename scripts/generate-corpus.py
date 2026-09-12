@@ -15,7 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -448,7 +448,6 @@ def _generate_nearmiss(idx: int) -> list[dict]:
 
 def generate_all(target: int = 220) -> list[dict]:
     trajectories: list[dict] = []
-    generators = []
     idx = 0
 
     # Domain generators — 25 each for major domains
@@ -476,11 +475,11 @@ def write_trajectories(trajectories: list[dict], source_dir: str = "synthetic") 
     outdir.mkdir(parents=True, exist_ok=True)
     count = 0
     for traj in trajectories:
-        traj["timestamp"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        traj["timestamp"] = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         outpath = outdir / f"{traj['trajectory_id']}.jsonl"
         # Don't overwrite existing
         if not outpath.exists():
-            with open(outpath, "w") as f:
+            with Path(outpath).open("w") as f:
                 f.write(json.dumps(traj) + "\n")
             count += 1
     return count
@@ -580,7 +579,7 @@ def main() -> int:
 
     # Show final status
     stats = show_status()
-    print(f"\nTarget: 200-250")
+    print("\nTarget: 200-250")
     print(f"Current: {stats['total']}")
     if stats["total"] >= 200:
         print("✅ Target reached")

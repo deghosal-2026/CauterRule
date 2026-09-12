@@ -54,7 +54,7 @@ def test_cli_extract_dry_run() -> None:
             '{"id": "T-1", "timestamp": "2024-01-01T00:00:00Z", "task": "deploy to prod", "steps": [{"step_number": 1, "tool": "deploy", "input": "deploy", "output": "", "error": "ENV not set"}], "success": false}',
             encoding="utf-8",
         )
-        cwd = os.getcwd()
+        cwd = Path.cwd()
         try:
             os.chdir(tmp)
             runner = CliRunner()
@@ -68,7 +68,7 @@ def test_cli_extract_dry_run() -> None:
 def test_cli_validate_empty_store() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "rules").mkdir(parents=True, exist_ok=True)
-        cwd = os.getcwd()
+        cwd = Path.cwd()
         try:
             os.chdir(tmp)
             runner = CliRunner()
@@ -81,7 +81,7 @@ def test_cli_validate_empty_store() -> None:
 def test_cli_health_empty_store() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "rules").mkdir(parents=True, exist_ok=True)
-        cwd = os.getcwd()
+        cwd = Path.cwd()
         try:
             os.chdir(tmp)
             runner = CliRunner()
@@ -179,7 +179,7 @@ def test_cli_counterfactual() -> None:
 def test_cli_history() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "rules").mkdir(parents=True, exist_ok=True)
-        cwd = os.getcwd()
+        cwd = Path.cwd()
         try:
             os.chdir(tmp)
             runner = CliRunner()

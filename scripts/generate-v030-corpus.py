@@ -151,7 +151,7 @@ def gen_mcp() -> int:
             rationale="Valid report_failure payload accepted by the MCP server",
         ))
     # malformed payloads (10) — should be schema-rejected
-    for i, missing in enumerate(["trajectory", "error", "steps", "success", "task"], 1):
+    for missing in ["trajectory", "error", "steps", "success", "task"]:
         for j in (1, 2):
             recs.append(_traj(
                 f"mcp-malformed-{missing}-{j:03d}", f"MCP malformed report_failure missing {missing} ({j})",

@@ -61,12 +61,13 @@ def _build_safety_adjusted_ranking(results_dir: str) -> None:
 
         passing = data.get("passing", 0)
         safety = data.get("safety", {})
-        successes_pass = safety.get("accepted", 0) if corpus_type in ("successes", "failures/negative") else 0
+        successes_pass = (
+            safety.get("accepted", 0)
+            if corpus_type in ("successes", "failures/negative")
+            else 0
+        )
         failures_neg_pass = safety.get("accepted", 0) if corpus_type == "failures/negative" else 0
         inconclusive = data.get("inconclusive", 0)
-        candidates = data.get("total_candidates", 0)
-        trajectories = data.get("done", 0) + data.get("gate_dropped", 0)
-        extraction_rate = round(candidates / trajectories, 2) if trajectories else 0.0
 
         if llm_label not in model_results:
             model_results[llm_label] = ModelResult(
@@ -98,8 +99,14 @@ def _build_safety_adjusted_ranking(results_dir: str) -> None:
 
     # Output markdown table
     print("\n## Safety-Adjusted Model Ranking\n")
-    header = "| Model | Total Pass | Safety-Adjusted Pass | Violation Rate | Inconclusive | Rank (Total) | Rank (Safety) |"
-    sep = "|-------|-----------|---------------------|----------------|-------------|-------------|--------------|"
+    header = (
+        "| Model | Total Pass | Safety-Adjusted Pass | Violation Rate | "
+        "Inconclusive | Rank (Total) | Rank (Safety) |"
+    )
+    sep = (
+        "|-------|-----------|---------------------|----------------|"
+        "-------------|-------------|--------------|"
+    )
     print(header)
     print(sep)
 
@@ -128,16 +135,26 @@ def _build_safety_adjusted_ranking(results_dir: str) -> None:
 
                 econ = decision_economics(
                     baseline_inconclusive=baseline.inconclusive,
-                    new_pass=new.total_pass - baseline.total_pass if new.total_pass > baseline.total_pass else 0,
-                    new_fail=baseline.total_pass - new.total_pass if new.total_pass < baseline.total_pass else 0,
+                    new_pass=(
+                        new.total_pass - baseline.total_pass
+                        if new.total_pass > baseline.total_pass
+                        else 0
+                    ),
+                    new_fail=(
+                        baseline.total_pass - new.total_pass
+                        if new.total_pass < baseline.total_pass
+                        else 0
+                    ),
                 )
                 wrong = f"{econ['wrong_decision_rate'] * 100:.1f}%"
                 print(
-                    f"| {baseline.model} → {new.model} | {econ['resolved']} | {econ['new_pass']} | {econ['new_fail']} | {wrong} |"
+                    f"| {baseline.model} → {new.model} | {econ['resolved']} | "
+                    f"{econ['new_pass']} | {econ['new_fail']} | {wrong} |"
                 )
         print()
 
     # Save to file
     output_path = root / "safety-ranking.md"
-    output_path.write_text("".join(sys.stdout.getvalue()) if hasattr(sys.stdout, 'getvalue') else "")
+    captured = "".join(sys.stdout.getvalue()) if hasattr(sys.stdout, "getvalue") else ""
+    output_path.write_text(captured)
     print(f"\nRanking saved to: {output_path}")

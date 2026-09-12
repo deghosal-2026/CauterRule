@@ -76,10 +76,9 @@ def main() -> int:
     if all_passed:
         print("All baselines PASSED")
         return 0
-    else:
-        failed = [r["command"] for r in results if not r["passed"]]
-        print(f"FAILED: {', '.join(failed)}")
-        return 1
+    failed = [r["command"] for r in results if not r["passed"]]
+    print(f"FAILED: {', '.join(failed)}")
+    return 1
 
 
 if __name__ == "__main__":

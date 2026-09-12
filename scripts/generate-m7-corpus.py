@@ -5,10 +5,10 @@ It is a maintenance script that regenerates all M7 corpus data under
 corpus/public/ from the canonical golden scenarios in field-test/corpus/.
 """
 import json
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 
-from cauterule.models.trajectory import Trajectory, Step
+from cauterule.models.trajectory import Step, Trajectory
 
 BASE = Path("corpus/public")
 
@@ -327,7 +327,7 @@ for i in range(1, 11):
         steps=(
             Step(1, "bash", f"old_command_{i}", None, f"deprecated_error_{i}"),
         ),
-        success=False if i % 2 == 0 else True,
+        success=i % 2 != 0,
         failure_point="step_1" if i % 2 == 0 else None,
         failure_class=f"deprecated/{['tool', 'config', 'env', 'workflow'][i%4]}/{i}" if i % 2 == 0 else None,
         quality_label="misleading",

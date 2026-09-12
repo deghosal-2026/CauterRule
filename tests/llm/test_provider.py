@@ -37,6 +37,8 @@ def test_openai_provider(_fake_modules: None) -> None:
         model="gpt-4o",
         messages=[{"role": "user", "content": "hello"}],
         temperature=0.7,
+        max_tokens=4096,
+        timeout=30,
     )
 
 

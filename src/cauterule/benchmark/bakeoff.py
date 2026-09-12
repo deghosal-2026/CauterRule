@@ -61,7 +61,7 @@ class BakeoffHarness:
                 error: str | None = None
                 try:
                     candidate = extractor(traj)
-                except Exception as exc:  # noqa: PERF203
+                except Exception as exc:
                     error = f"{type(exc).__name__}: {exc}"
                 elapsed_ms = (time.perf_counter() - t0) * 1000.0
                 results[name].append(

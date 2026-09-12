@@ -54,19 +54,17 @@ _TRANSIENT_HINTS = (
 
 
 def _is_transient(exc: BaseException) -> bool:
-    """Return True if *exc* looks like a transient provider failure.
+    """Return True if *exc* looks like a transient provider failure (#508).
 
-    Timeouts are **not** transient — a timeout on a local OMLX model means the
-    prompt triggers an infinite/repetitive generation that will not succeed on
-    retry. Retrying just blocks the worker for 3× the timeout (#713).
+    Timeouts are treated as transient (retryable) — a network timeout is
+    usually transient for cloud providers. The field-test runner additionally
+    bounds each trajectory with a per-future timeout (#713) so a local model
+    that hangs on a pathological prompt cannot block the corpus even if the
+    provider retries.
     """
-    if isinstance(exc, TimeoutError):
-        return False
-    if isinstance(exc, ConnectionError):
+    if isinstance(exc, (TimeoutError, ConnectionError)):
         return True
     text = f"{type(exc).__name__} {exc}".lower()
-    if "timeout" in text or "timed out" in text:
-        return False
     return any(hint in text for hint in _TRANSIENT_HINTS)
 
 

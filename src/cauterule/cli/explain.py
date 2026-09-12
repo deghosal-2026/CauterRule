@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import click
 
-from cauterule.store.manager import StoreManager
 from cauterule.injection.explainer import explain_rule
+from cauterule.store.manager import StoreManager
 
 
 @click.command("explain")

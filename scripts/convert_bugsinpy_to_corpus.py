@@ -529,10 +529,10 @@ def _is_java_supported() -> bool:
     # ``src/cauterule/replay/matcher.py`` defines _KNOWN_DOMAINS without java.
     try:
         from cauterule.replay.matcher import _KNOWN_DOMAINS
-
-        return "java" in _KNOWN_DOMAINS
     except Exception:
         return False
+    else:
+        return "java" in _KNOWN_DOMAINS
 
 
 def main(argv: list[str] | None = None) -> None:

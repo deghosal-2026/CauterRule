@@ -50,12 +50,13 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -344,7 +345,15 @@ def parse_args() -> argparse.Namespace:
 # ── Preflight ──────────────────────────────────────────────────────────
 
 def run_preflight_checks(corpus_type: str, corpus_dir: Path, args: argparse.Namespace) -> dict:
-    from cauterule.config import Config, LLMConfig, PathsConfig, ThresholdsConfig, PromotionConfig, RedactionConfig, ExtractionConfig
+    from cauterule.config import (
+        Config,
+        ExtractionConfig,
+        LLMConfig,
+        PathsConfig,
+        PromotionConfig,
+        RedactionConfig,
+        ThresholdsConfig,
+    )
     from cauterule.preflight import run_preflight
 
     api_key = os.getenv("CAUTERULE_LLM_API_KEY", "")
@@ -375,7 +384,15 @@ def _get_llm(provider: str, model: str, base_url: str):
     cache_key = f"{provider}/{model}/{base_url}"
     if cache_key in _LLM_CACHE:
         return _LLM_CACHE[cache_key]
-    from cauterule.config import Config, LLMConfig, PathsConfig, ThresholdsConfig, PromotionConfig, RedactionConfig, ExtractionConfig
+    from cauterule.config import (
+        Config,
+        ExtractionConfig,
+        LLMConfig,
+        PathsConfig,
+        PromotionConfig,
+        RedactionConfig,
+        ThresholdsConfig,
+    )
     from cauterule.llm.factory import get_llm
     api_key = os.getenv("CAUTERULE_LLM_API_KEY", "")
     cfg = Config(
@@ -433,7 +450,7 @@ def extract_candidates(
 # ── Gate ───────────────────────────────────────────────────────────────
 
 def run_gate(trajectory: dict, corpus_type: str) -> dict:
-    from cauterule.extraction.gate import run_gate, GateMode
+    from cauterule.extraction.gate import GateMode, run_gate
     from cauterule.models.trajectory import Trajectory
     base = corpus_type.split("/")[-1].strip().lower()
     is_safety = base in SAFETY_CORPORA or corpus_type.startswith("adversarial")
@@ -462,8 +479,8 @@ def replay_test_candidate(
     from cauterule.models.candidate import CandidateRule
     from cauterule.models.rule import RuleDo, RuleWhen
     from cauterule.models.trajectory import Trajectory
+    from cauterule.replay.matcher import match_detail, threshold_for_corpus
     from cauterule.replay.report import build_evidence_report
-    from cauterule.replay.matcher import threshold_for_corpus, match_detail
 
     cand = CandidateRule(
         when=RuleWhen(trigger=candidate["when"]),
@@ -484,10 +501,8 @@ def replay_test_candidate(
                 continue
             if exclude_ids and t.get("id") in exclude_ids:
                 continue
-            try:
+            with contextlib.suppress(Exception):
                 out.append(Trajectory.from_dict(t))
-            except Exception:
-                pass
         return out
 
     # #708: scope the reference pool to the source trajectory's domain so the
@@ -644,10 +659,10 @@ def process_one_trajectory(
         test_result["trigger_specificity"] = score_specificity(cand["when"])
         # v0.2.0: inconclusive attribution
         if test_result.get("verdict") == "inconclusive":
-            from cauterule.replay.attribution import attribute_inconclusive
             from cauterule.models.candidate import CandidateRule
             from cauterule.models.rule import RuleDo, RuleWhen
             from cauterule.models.trajectory import Trajectory
+            from cauterule.replay.attribution import attribute_inconclusive
             from cauterule.replay.report import build_evidence_report
             cand_obj = CandidateRule(
                 when=RuleWhen(trigger=cand["when"]),
@@ -658,10 +673,8 @@ def process_one_trajectory(
             )
             traj_objs = []
             for t in reference_trajs:
-                try:
+                with contextlib.suppress(Exception):
                     traj_objs.append(Trajectory.from_dict(t))
-                except Exception:
-                    pass
             ev_report = build_evidence_report(cand_obj, traj_objs)
             reason = attribute_inconclusive(cand_obj, traj_objs, ev_report)
             test_result["inconclusive_reason"] = reason
@@ -716,7 +729,7 @@ def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_ti
     inconclusive = sum(1 for r in best_results if r.get("verdict") == "inconclusive")
 
     # v0.2.0: safety-adjusted scoring
-    from cauterule.replay.safety import classify_outcome, score_safety_trajectory, safety_summary
+    from cauterule.replay.safety import classify_outcome, safety_summary
     safety_outcomes = []
     for r in done:
         best = r.get("best", {})
@@ -727,7 +740,7 @@ def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_ti
             replay_verdict=best.get("verdict"),
         )
         safety_outcomes.append(outcome)
-    for r in gate_dropped:
+    for _ in gate_dropped:
         safety_outcomes.append("silence")
     safety = safety_summary(safety_outcomes, corpus_type)
 
@@ -797,7 +810,7 @@ def _write_summary(results: list[dict], summary_file: Path, meta: dict, start_ti
         "confidence_intervals": confidence_intervals,
         "specificity_distribution": specificity_counts,
         "inconclusive_breakdown": inconclusive_breakdown,
-        "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "updated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     summary_file.write_text(json.dumps(summary, indent=2))
 
@@ -848,7 +861,7 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
     print(f"{'='*60}\n")
 
     # Output directory
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d")
     if args.llm_base_url and "localhost" in args.llm_base_url:
         llm_label = f"omlx-{args.llm_provider}-{args.llm_model}"
     else:
@@ -920,7 +933,7 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
         }
         for _, tid in skipped_quarantine
     ]
-    with open(results_file, "a") as fh:
+    with Path(results_file).open("a") as fh:
         for rec in quarantined_records:
             fh.write(json.dumps(rec, default=str) + "\n")
 
@@ -959,7 +972,7 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
             try:
                 result = future.result(timeout=args.per_trajectory_timeout)
                 results.append(result)
-                with open(results_file, "a") as fh:
+                with Path(results_file).open("a") as fh:
                     fh.write(json.dumps(result, default=str) + "\n")
                 _write_summary(results, summary_file, meta, start_time, corpus_type)
             except TimeoutError:
@@ -974,7 +987,7 @@ def run_corpus_type(corpus_type: str, args: argparse.Namespace) -> int:
                     "pre_extraction_drop": False,
                     "llm_calls_avoided": 0,
                 })
-                with open(results_file, "a") as fh:
+                with Path(results_file).open("a") as fh:
                     fh.write(json.dumps(results[-1], default=str) + "\n")
                 _write_summary(results, summary_file, meta, start_time, corpus_type)
             except Exception as exc:
@@ -1009,7 +1022,7 @@ def run_validation(args: argparse.Namespace) -> int:
 
     import subprocess
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d")
     out_root = Path(args.output_dir) / "validation" / timestamp
     out_root.mkdir(parents=True, exist_ok=True)
 
@@ -1117,7 +1130,7 @@ def _load_model_config(path: str) -> list[dict[str, str]]:
         import yaml
     except ImportError as exc:
         raise SystemExit(f"[error] PyYAML not installed: {exc}") from exc
-    with open(path, encoding="utf-8") as fh:
+    with Path(path).open(encoding="utf-8") as fh:
         data = yaml.safe_load(fh) or {}
     return data.get("models", [])
 

@@ -51,7 +51,6 @@ def feed_calibration_data(thresholds: dict[str, Any]) -> dict[str, Any]:
 
     # Compute adjusted thresholds: increase tightness when precision is low.
     precision = thresholds.get("min_precision", 0.0)
-    confidence = thresholds.get("min_confidence", 0.0)
     history = _load_history()
 
     adjustment = 0.0

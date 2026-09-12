@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import click
 
-from cauterule.store.manager import StoreManager
 from cauterule.injection.matcher import match_rules
+from cauterule.store.manager import StoreManager
 
 
 @click.command("search")

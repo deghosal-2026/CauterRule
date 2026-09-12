@@ -29,7 +29,13 @@ def extract(trajectory: str, dry_run: bool) -> None:
         traj = trajs[0]
     else:
         raw = json.loads(path.read_text(encoding="utf-8"))
-        traj = Trajectory.from_dict(raw) if isinstance(raw, dict) else Trajectory.from_dict({"id": "cli", "timestamp": "", "task": "", "steps": [], "success": False})
+        traj = (
+            Trajectory.from_dict(raw)
+            if isinstance(raw, dict)
+            else Trajectory.from_dict(
+                {"id": "cli", "timestamp": "", "task": "", "steps": [], "success": False}
+            )
+        )
 
     cfg = load_config()
     gate_mode: GateMode = (
@@ -65,9 +71,17 @@ def extract(trajectory: str, dry_run: bool) -> None:
     for i, c in enumerate(candidates, start=1):
         click.echo(f"  #{i}: when={c.when.trigger} | do={c.do.directive} | conf={c.confidence:.2f}")
 
-    trajectories = list(load_trajectories(Path(cfg.paths.trajectories))) if Path(cfg.paths.trajectories).is_file() else []
+    trajectories = (
+        list(load_trajectories(Path(cfg.paths.trajectories)))
+        if Path(cfg.paths.trajectories).is_file()
+        else []
+    )
     ranked = run_tournament(candidates, trajectories)
     if ranked:
         click.echo("Tournament results (best first):")
         for r in ranked:
-            click.echo(f"  Rank #{r.rank}: {r.candidate.when.trigger} (precision={r.evidence.precision:.2f}, recall={r.evidence.recall:.2f}, verdict={r.evidence.verdict})")
+            click.echo(
+                f"  Rank #{r.rank}: {r.candidate.when.trigger} "
+                f"(precision={r.evidence.precision:.2f}, "
+                f"recall={r.evidence.recall:.2f}, verdict={r.evidence.verdict})"
+            )

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import concurrent.futures
-from typing import Any
 
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.evidence import EvidenceReport
@@ -38,5 +37,4 @@ def run_parallel(
         return cache.get(cand, trajectories, threshold)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        results = list(executor.map(_replay, candidates))
-    return results
+        return list(executor.map(_replay, candidates))

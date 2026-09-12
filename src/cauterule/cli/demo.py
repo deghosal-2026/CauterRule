@@ -1,15 +1,13 @@
 from __future__ import annotations
 
+import time
+
 import click
 
-from cauterule.store.manager import StoreManager
-from cauterule.replay.report import build_evidence_report
-from cauterule.models.candidate import CandidateRule
-from cauterule.serialization.trajectory_jsonl import load_trajectories, dump_trajectories
-from cauterule.capture.failure import detect_failure_point, detect_failure_class
+from cauterule.capture.failure import detect_failure_class
 from cauterule.capture.metadata import enrich_trajectory
 from cauterule.models.trajectory import Step, Trajectory
-import time
+from cauterule.serialization.trajectory_jsonl import dump_trajectories
 
 
 def _seed_failure(task: str, tool: str, error: str, step_number: int = 1) -> Trajectory:

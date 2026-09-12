@@ -27,7 +27,9 @@ def load_catalog(path: str | Path) -> dict[str, CorpusMetadata]:
         raise FileNotFoundError(f"Catalog not found: {p}")
     raw = yaml.safe_load(p.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
-        raise ValueError(f"Catalog must be a mapping, got {type(raw).__name__}")
+        raise ValueError(  # noqa: TRY004
+            f"Catalog must be a mapping, got {type(raw).__name__}"
+        )
     catalog: dict[str, CorpusMetadata] = {}
     for key, val in raw.items():
         if not isinstance(val, dict):

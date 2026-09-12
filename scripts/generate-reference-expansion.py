@@ -23,7 +23,7 @@ BASE = Path("corpus/public/reference-expansion")
 TS = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 # (tool, command, error) step variants — distinct real diagnostics per class.
-# tasks: paraphrased descriptions. Variants = tasks × steps (cross product).
+# tasks: paraphrased descriptions. Variants = tasks x steps (cross product).
 CANONICAL: list[dict] = [
     {"failure_class": "git/push/non-fast-forward", "domain": "git", "severity": "medium",
      "expected_rule": "when git push fails with non-fast-forward, pull --rebase before pushing",
@@ -192,8 +192,8 @@ def main() -> int:
                 fh.write(json.dumps(r) + "\n")
     print(f"Reference expansion: wrote {total} trajectories -> {BASE}")
     print(f"  canonical failure classes: {len(CANONICAL)}")
-    print(f"  next: python scripts/normalize-corpus.py --path corpus/public/reference-expansion")
-    print(f"        pytest tests/corpus/ -q")
+    print("  next: python scripts/normalize-corpus.py --path corpus/public/reference-expansion")
+    print("        pytest tests/corpus/ -q")
     return 0
 
 

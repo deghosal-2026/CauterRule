@@ -15,7 +15,6 @@ import json
 import sys
 from pathlib import Path
 
-
 # Domains where specific failure classes are known
 _DOMAIN_FAILURE_MAP: dict[str, str] = {
     "coding": "coding/test-failure",
@@ -63,7 +62,6 @@ def infer_expected_outcome(
     domain: str | None,
 ) -> tuple[str, str]:
     """Infer expected_outcome and rationale from trajectory fields."""
-    task_lower = task.lower()
 
     # Staleness — historical failures that no longer matter
     if any("deprecated" in t.lower() or "stale" in t.lower() for t in tags):

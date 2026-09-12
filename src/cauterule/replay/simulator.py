@@ -6,7 +6,12 @@ from typing import Literal
 
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.trajectory import Trajectory
-from cauterule.replay.matcher import DEFAULT_THRESHOLD, check_domain_mismatch, is_near_miss, rule_matches
+from cauterule.replay.matcher import (
+    DEFAULT_THRESHOLD,
+    check_domain_mismatch,
+    is_near_miss,
+    rule_matches,
+)
 
 Outcome = Literal["prevented", "broken", "no_effect", "near_miss"]
 

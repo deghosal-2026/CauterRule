@@ -37,10 +37,7 @@ def _tool_matches(rule: StandingRule, **context: Any) -> bool:
         # not be filtered out merely because a tool filter was passed.
         return True
     tool_lower = str(tool).lower()
-    for ctx_item in rule.when.context:
-        if ctx_item.lower() == tool_lower:
-            return True
-    return False
+    return any(ctx_item.lower() == tool_lower for ctx_item in rule.when.context)
 
 
 def _error_matches(rule: StandingRule, **context: Any) -> bool:

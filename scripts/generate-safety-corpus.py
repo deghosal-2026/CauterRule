@@ -17,14 +17,14 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 SUCCESSES_DIR = Path("field-test/corpus/curated/successes")
 NEGATIVE_DIR = Path("field-test/corpus/curated/failures/negative")
 NEARMISS_DIR = Path("field-test/corpus/curated/nearmiss")
 
-TS = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+TS = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def _write_jsonl(path: Path, traj: dict) -> None:
     path.write_text(json.dumps(traj, separators=(",", ":")) + "\n")

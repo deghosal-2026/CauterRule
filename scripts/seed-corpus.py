@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import UTC
 from pathlib import Path
 
 CORPUS_DIR = Path("field-test/corpus")
@@ -44,7 +45,7 @@ def seed_from_fixtures() -> int:
             traj["domain"] = guess
         if "failure_class" not in traj:
             traj["failure_class"] = f"{traj.get('domain', 'generic')}/failure"
-        with open(dst_path, "w") as fh:
+        with Path(dst_path).open("w") as fh:
             fh.write(json.dumps(traj) + "\n")
         count += 1
     return count
@@ -62,7 +63,7 @@ def seed_from_golden() -> int:
         traj["source_repo"] = "CauterRule"
         dst_path = dst_dir / f"{traj_id}.jsonl"
         if not dst_path.exists():  # Don't overwrite
-            with open(dst_path, "w") as fh:
+            with Path(dst_path).open("w") as fh:
                 fh.write(json.dumps(traj) + "\n")
             count += 1
     return count
@@ -239,11 +240,11 @@ def create_failure_mode_catalog() -> int:
         if "success" not in scenario:
             scenario["success"] = False
         if "timestamp" not in scenario:
-            from datetime import datetime as dt, timezone as tz
-            scenario["timestamp"] = dt.now(tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            from datetime import datetime as dt
+            scenario["timestamp"] = dt.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         dst_path = dst_dir / f"{scenario['trajectory_id']}.jsonl"
-        with open(dst_path, "w") as fh:
+        with Path(dst_path).open("w") as fh:
             fh.write(json.dumps(scenario) + "\n")
         count += 1
 

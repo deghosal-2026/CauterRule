@@ -13,17 +13,17 @@ from __future__ import annotations
 import socket
 import threading
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator
 
 import anyio
 import pytest
-from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
 from cauterule.mcp.server import CauteruleMCPServer
 from cauterule.models.rule import Provenance, RuleDo, RuleWhen, StandingRule
 from cauterule.store.manager import StoreManager
+from mcp import ClientSession
 
 pytestmark = pytest.mark.slow
 

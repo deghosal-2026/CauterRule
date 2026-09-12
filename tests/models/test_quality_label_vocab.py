@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 
 from cauterule.models.trajectory import (
-    Trajectory,
-    Step,
     _VALID_QUALITY_LABELS,
+    Step,
+    Trajectory,
 )
 
 
@@ -26,7 +26,7 @@ def test_canonical_vocabulary_has_all_doc_endorsed() -> None:
     # The canonical set must include every value the corpus docs endorse
     # (clear, noisy, ambiguous, multi-causal, misleading, open-ended) plus
     # operator-induced.
-    assert _VALID_QUALITY_LABELS == {
+    assert {
         "clear",
         "noisy",
         "ambiguous",
@@ -34,7 +34,7 @@ def test_canonical_vocabulary_has_all_doc_endorsed() -> None:
         "misleading",
         "operator-induced",
         "open-ended",
-    }
+    } == _VALID_QUALITY_LABELS
 
 
 def test_noisy_is_accepted() -> None:

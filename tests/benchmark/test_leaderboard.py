@@ -28,7 +28,7 @@ class TestLeaderboard:
         ])
         lb.sort()
         rendered = lb.render()
-        lines = [l for l in rendered.splitlines() if l.startswith("|")]
+        lines = [ln for ln in rendered.splitlines() if ln.startswith("|")]
         # header + separator + 3 data rows
         assert len(lines) == 5
         assert lines[2].startswith("| m2")  # highest first
@@ -43,7 +43,7 @@ class TestLeaderboard:
         ])
         lb.sort(key="rank", reverse=False)
         rendered = lb.render()
-        lines = [l for l in rendered.splitlines() if l.startswith("|")]
+        lines = [ln for ln in rendered.splitlines() if ln.startswith("|")]
         assert "b" in lines[2]
         assert "c" in lines[3]
         assert "a" in lines[4]

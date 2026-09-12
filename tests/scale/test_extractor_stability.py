@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import statistics
+from typing import Any
 
 from cauterule.extraction.extractor import extract_candidate
 from cauterule.llm.provider import LLMResponse

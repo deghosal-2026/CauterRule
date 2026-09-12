@@ -17,7 +17,7 @@ def _fake_openai(usage: Any) -> types.SimpleNamespace:
         message = _Msg()
 
     class _Resp:
-        choices = [_Choice()]
+        choices = (_Choice(),)
 
         def __init__(self) -> None:
             if usage is not None:

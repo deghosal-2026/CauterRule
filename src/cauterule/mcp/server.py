@@ -128,7 +128,9 @@ class CauteruleMCPServer:
     def _register_tools(self) -> None:
 
         @self._mcp.tool(annotations=_TOOL_ANNOTATIONS["get_matching_rules"])
-        def get_matching_rules_tool(task: str, ctx: Context) -> list[dict[str, Any]] | dict[str, Any]:
+        def get_matching_rules_tool(
+            task: str, ctx: Context
+        ) -> list[dict[str, Any]] | dict[str, Any]:
             _, error = self._guard(ctx)
             if error is not None:
                 return error

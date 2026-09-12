@@ -7,8 +7,8 @@ import pytest
 from cauterule.linter.orchestrator import lint_rule
 from cauterule.linter.unsafe import check_unsafe
 from cauterule.models.candidate import CandidateRule
-from cauterule.models.rule import RuleDo, RuleWhen
 from cauterule.models.evidence import EvidenceReport
+from cauterule.models.rule import RuleDo, RuleWhen
 from cauterule.promotion.auto import auto_promote
 from cauterule.promotion.thresholds import get_thresholds
 

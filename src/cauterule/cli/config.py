@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import click
-from pathlib import Path
 
-from cauterule.config import load_config, config_to_dict
+from cauterule.config import config_to_dict, load_config
 
 
 @click.command("config")

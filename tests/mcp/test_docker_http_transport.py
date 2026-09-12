@@ -21,8 +21,9 @@ from pathlib import Path
 
 import anyio
 import pytest
-from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
+
+from mcp import ClientSession
 
 DOCKER_TAG = "cauterule:field-test"
 MCP_PORT = "8025"

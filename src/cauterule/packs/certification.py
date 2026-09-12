@@ -36,7 +36,11 @@ def certify_pack(pack: dict[str, Any]) -> dict[str, Any]:
     checks: list[dict[str, Any]] = []
 
     # --- Safety check ---
-    safety_errors = validate_manifest(manifest) if isinstance(manifest, PackManifest) else ["Invalid manifest type"]
+    safety_errors = (
+        validate_manifest(manifest)
+        if isinstance(manifest, PackManifest)
+        else ["Invalid manifest type"]
+    )
     if safety_errors:
         checks.append({
             "name": "safety",

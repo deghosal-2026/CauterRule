@@ -9,7 +9,6 @@ from cauterule.extraction.multipass import multipass_extract
 from cauterule.extraction.tournament import run_tournament
 from cauterule.linter.orchestrator import lint_rule
 from cauterule.models.candidate import CandidateRule
-from cauterule.models.evidence import EvidenceReport
 from cauterule.models.rule import StandingRule
 from cauterule.models.trajectory import Trajectory
 from cauterule.redaction.engine import redact_trajectory
@@ -61,7 +60,6 @@ def run_loop(trajectory: Trajectory, config: LoopConfig) -> str | None:
     redacted = redact_trajectory(trajectory) if not trajectory.redacted else trajectory
 
     # 3. Cluster — group with historical failures
-    all_failures = [redacted] + [t for t in config.historical_trajectories if not t.success]
     # Use single-pass extraction per trajectory for now; clustering integration pending.
 
     # 4. Extract (pre-extraction gate runs inside multipass_extract)
@@ -90,10 +88,8 @@ def run_loop(trajectory: Trajectory, config: LoopConfig) -> str | None:
         if not ranked:
             return None
         winner_candidate = ranked[0].candidate
-        winner_evidence = ranked[0].evidence
     else:
         winner_candidate = linted[0]
-        winner_evidence = EvidenceReport()
 
     # 8. Conflict — re-check winner against existing rules
     if config.existing_rules:
@@ -106,7 +102,5 @@ def run_loop(trajectory: Trajectory, config: LoopConfig) -> str | None:
             return None
 
     # 9. Promote
-    promoted_id = f"R-{trajectory.id}-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
-
     # 10. Inject — mark as ready; actual injection done by caller.
-    return promoted_id
+    return f"R-{trajectory.id}-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"

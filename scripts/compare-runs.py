@@ -156,7 +156,6 @@ def compare(metrics1: dict, metrics2: dict) -> str:
     for reason in all_reasons:
         v1 = t1.get("inconclusive_breakdown", {}).get(reason, 0)
         v2 = t2.get("inconclusive_breakdown", {}).get(reason, 0)
-        inc_total = t1.get("inconclusive", 1) or 1
         lines.append(f"| {reason} | {_pct_str(v1, t1.get('inconclusive', 1))} | {_pct_str(v2, t2.get('inconclusive', 1))} | {v2 - v1:+d} |")
 
     lines.append("")
