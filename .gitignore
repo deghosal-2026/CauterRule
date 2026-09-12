@@ -33,7 +33,11 @@ coverage.xml
 htmlcov/
 .pytest_cache/
 .mypy_cache/
-.ruff_cache/field-test/results/
+.ruff_cache/
+
+# Benchmark artifacts (generated)
+.benchmarks/
+benchmarks/*.raw.json
 
 # Runtime state
 calibration_history.json

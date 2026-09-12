@@ -44,8 +44,30 @@ def _thresholds() -> tuple[float, float]:
     return DEFAULT_FAIL_PCT, DEFAULT_WARN_PCT
 
 
+def write_baseline(src: str | Path, dst: str | Path) -> None:
+    """Write a minimal baseline (name -> mean) derived from a full pytest-benchmark JSON.
+
+    Keeps the committed ``benchmarks/baseline.json`` tiny instead of checking in
+    the multi-MB raw artifact (#679).
+    """
+    data = json.loads(Path(src).read_text(encoding="utf-8"))
+    benchmarks: list[dict[str, dict[str, float]]] = []
+    for bench in data.get("benchmarks", []):
+        stats = bench.get("stats", {})
+        mean = stats.get("mean")
+        if mean is not None:
+            benchmarks.append({"name": bench["name"], "stats": {"mean": float(mean)}})
+    Path(dst).write_text(
+        json.dumps({"benchmarks": benchmarks}, separators=(",", ":")), encoding="utf-8"
+    )
+
+
 def main(argv: list[str]) -> int:
     """Compare baseline vs current benchmark JSON. Returns exit status."""
+    if len(argv) == 4 and argv[1] == "--write-baseline":
+        write_baseline(argv[2], argv[3])
+        print(f"wrote baseline {argv[3]}")
+        return 0
     if len(argv) != 3:
         print(__doc__.strip().splitlines()[0])
         print("usage: compare_benchmarks.py <baseline.json> <current.json>")

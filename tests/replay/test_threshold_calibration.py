@@ -19,9 +19,10 @@ from cauterule.replay.matcher import (
 
 # Baseline observed on the committed sample (see
 # docs/field-test/v0.3.0/threshold-calibration.md):
-#   strict 0.70 / omlx 0.65 → precision 1.00, recall 0.50
+#   strict 0.70 / omlx 0.65 → precision 1.00, recall 0.90
+# (recall 0.90 after the #677 domain-aware context fix; was 0.50)
 _MIN_PRECISION = 0.90
-_MIN_RECALL = 0.45
+_MIN_RECALL = 0.85
 
 
 def test_calibration_sample_has_positives_and_negatives() -> None:

@@ -395,8 +395,14 @@ def run_preflight(
     probe: Callable[[Config], float] | None = None,
     output_dir: str | Path | None = None,
     catalog_path: str | Path | None = None,
+    cost_per_request_usd: float | None = None,
 ) -> PreflightResult:
-    """Run all preflight checks and return aggregate result."""
+    """Run all preflight checks and return aggregate result.
+
+    ``cost_per_request_usd`` optionally overrides cost estimation with a flat
+    $/LLM-request rate (used by the field-test runner, #678); when omitted, the
+    model's per-1k-token rate is used.
+    """
     provider_results = check_provider(config, probe=probe)
     corpus_results: list[CheckResult] = []
     if corpus_path is not None:
@@ -410,13 +416,13 @@ def run_preflight(
     if corpus_path is not None and all_passed:
         try:
             path = Path(corpus_path)
+            total = 0
             if path.is_file():
-                lines = [
-                    line
+                total = sum(
+                    1
                     for line in path.read_text(encoding="utf-8").splitlines()
                     if line.strip()
-                ]
-                cost = estimate_cost(len(lines), config.llm.model)
+                )
             elif path.is_dir():
                 total = sum(
                     1
@@ -424,6 +430,9 @@ def run_preflight(
                     for line in f.read_text(encoding="utf-8").splitlines()
                     if line.strip()
                 )
+            if cost_per_request_usd is not None:
+                cost = round(total * cost_per_request_usd, 2)
+            else:
                 cost = estimate_cost(total, config.llm.model)
         except Exception:
             cost = None

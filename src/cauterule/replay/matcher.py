@@ -484,12 +484,28 @@ def match_detail(candidate: CandidateRule, trajectory: Trajectory) -> dict[str, 
     }
 
 
+def _context_item_matches(ctx: str, haystack: str, traj_domain: str | None) -> bool:
+    """Return True if context *ctx* is satisfied.
+
+    A context item matches by normalized containment in the haystack, or — for
+    domain-label contexts like ``devops``/``research`` used by the golden corpus
+    (#677) — by equality with the trajectory's ``domain`` field.
+    """
+    norm_ctx = _normalize(ctx)
+    if not norm_ctx:
+        return False
+    if norm_ctx in haystack:
+        return True
+    if traj_domain is None:
+        return False
+    return norm_ctx == _normalize(traj_domain)
+
+
 def _context_matches(candidate: CandidateRule, trajectory: Trajectory) -> bool:
     """Return True if every context item matches (normalized containment)."""
     haystack = _build_haystack(trajectory)
     for ctx in candidate.when.context:
-        norm_ctx = _normalize(ctx)
-        if not norm_ctx or norm_ctx not in haystack:
+        if not _context_item_matches(ctx, haystack, trajectory.domain):
             return False
     return True
 
@@ -587,7 +603,11 @@ def is_near_miss(
     # If context exists and not all context matches, it's near miss.
     if candidate.when.context:
         haystack = _build_haystack(trajectory, include_input=include_input)
-        matched_ctx = sum(1 for ctx in candidate.when.context if _normalize(ctx) in haystack)
+        matched_ctx = sum(
+            1
+            for ctx in candidate.when.context
+            if _context_item_matches(ctx, haystack, trajectory.domain)
+        )
         if 0 < matched_ctx < len(candidate.when.context):
             return True
     return False

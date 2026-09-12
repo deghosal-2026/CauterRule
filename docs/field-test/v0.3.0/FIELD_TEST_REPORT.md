@@ -429,7 +429,7 @@ Coverage at ~86% remains below the 95% target (#494 deferred to M8).
 | Cross-session reduction not yet measured (#663) | Medium | Pending — needs 5-session protocol |
 | Human review agreement not measured (#493) | Medium | Pending — needs human sampling |
 | `openai` package missing from dev venv | Low | `pip install openai` (done) |
-| `benchmarks/baseline.json` committed as 284KB artifact | Low | Add to `.gitignore` |
+| `benchmarks/baseline.json` committed as 284KB artifact | Low | ✅ Fixed (#679): replaced the 12.4MB raw dump with a 1.2KB derived baseline (`--write-baseline`); raw dumps ignored via `.gitignore` |
 
 ---
 

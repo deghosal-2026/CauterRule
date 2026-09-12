@@ -281,3 +281,26 @@ def test_trigger_prefilter_reason_categories() -> None:
     assert trigger_prefilter_reason(_cand("error")) == "generic"
     assert trigger_prefilter_reason(_cand("error", context=("fatal",))) is None
     assert trigger_prefilter_reason(_cand("distinctive failure signature")) is None
+
+
+def test_context_matches_trajectory_domain_label() -> None:
+    # #677: golden rules use domain labels (e.g. "devops") as context; a
+    # context item equal to the trajectory's domain must satisfy it even when
+    # the domain word is not present in the trajectory text.
+    cand = _cand("no matches for kind", context=("devops",))
+    traj = Trajectory(
+        id="T-domain", timestamp="t", task="Deploy custom resource to Kubernetes cluster",
+        steps=(Step(1, "bash", error="no matches for kind CustomResourceDefinition"),),
+        success=False, failure_class="k8s/deploy/crd-not-found", domain="devops",
+    )
+    assert rule_matches(cand, traj)
+
+
+def test_context_domain_label_does_not_match_other_domain() -> None:
+    cand = _cand("no matches for kind", context=("devops",))
+    traj = Trajectory(
+        id="T-domain2", timestamp="t", task="Fetch data",
+        steps=(Step(1, "bash", error="no matches for kind X"),),
+        success=False, failure_class="api/x", domain="research",
+    )
+    assert not rule_matches(cand, traj)

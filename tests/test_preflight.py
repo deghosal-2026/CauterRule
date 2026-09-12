@@ -101,6 +101,30 @@ def test_run_preflight_cost_estimate() -> None:
         assert result.cost_estimate_usd == 0.02, f"got {result.cost_estimate_usd}"
 
 
+def test_run_preflight_cost_per_request_override() -> None:
+    # #678: the runner passes cost_per_request_usd; it must be accepted and
+    # applied as a flat $/request override.
+    with tempfile.TemporaryDirectory() as tmp:
+        p = Path(tmp) / "test.jsonl"
+        traj = {
+            "trajectory_id": "T-001",
+            "timestamp": "t",
+            "task": "do thing",
+            "steps": [],
+            "success": True,
+            "domain": "devops",
+            "quality_label": "clear",
+            "tags": [],
+        }
+        p.write_text(
+            "".join(json.dumps({**traj, "trajectory_id": f"T-{i:03d}"}) + "\n" for i in range(3)),
+            encoding="utf-8",
+        )
+        cfg = Config(llm=LLMConfig(provider="openai", api_key="sk-test", model="gpt-4o"))
+        result = run_preflight(cfg, corpus_path=p, cost_per_request_usd=0.25)
+        assert result.cost_estimate_usd == 0.75, f"got {result.cost_estimate_usd}"
+
+
 def test_run_preflight_aggregates() -> None:
     cfg = Config(llm=LLMConfig(provider="openai", api_key="", model="gpt-4o"))
     result = run_preflight(cfg, corpus_path="/nonexistent/path.jsonl")

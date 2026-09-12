@@ -47,3 +47,42 @@ class TestCompareBenchmarks:
         from compare_benchmarks import main
 
         assert main(["compare"]) == 2
+
+    def test_write_baseline_emits_minimal_json(self, tmp_path: Path) -> None:
+        import sys
+
+        sys.path.insert(0, "scripts")
+        from compare_benchmarks import write_baseline
+
+        full = tmp_path / "full.json"
+        full.write_text(
+            json.dumps(
+                {
+                    "machine_info": {"node": "x" * 5000},
+                    "benchmarks": [
+                        {"name": "a", "stats": {"mean": 1.25, "stddev": 9.9}, "extra": "y" * 5000}
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        out = tmp_path / "baseline.json"
+        write_baseline(full, out)
+        data = json.loads(out.read_text(encoding="utf-8"))
+        assert data == {"benchmarks": [{"name": "a", "stats": {"mean": 1.25}}]}
+        assert out.stat().st_size < 200
+
+    def test_write_baseline_cli(self, tmp_path: Path) -> None:
+        import sys
+
+        sys.path.insert(0, "scripts")
+        from compare_benchmarks import main
+
+        full = tmp_path / "full.json"
+        full.write_text(
+            json.dumps({"benchmarks": [{"name": "a", "stats": {"mean": 2.0}}]}),
+            encoding="utf-8",
+        )
+        out = tmp_path / "baseline.json"
+        assert main(["cb", "--write-baseline", str(full), str(out)]) == 0
+        assert json.loads(out.read_text(encoding="utf-8"))["benchmarks"][0]["stats"]["mean"] == 2.0
