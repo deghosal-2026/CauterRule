@@ -98,6 +98,7 @@ Before tagging v0.3.1, ALL of the following must be true:
 
 - **M1 (Critical Code Fixes): ✅ closed.** 9/10 code issues done; #681 coverage reached 88.5% (gate >92%), remainder folded into M3 (#747).
 - **Docker field test: ✅ 180/180 green** (2026-09-13) — [plan](../../field-test/v0.3.1/docker-test-plan.md) · [results](../../field-test/v0.3.1/docker-test-results.md) · raw artifacts `field-test/results/0.3.1/docker/` (#738).
+- **Pre-sweep blockers done** (2026-09-13): field-test plan (#733), extraction-accuracy metric (#730/#734), adapter/CI references + golden n=60 (#726/#735), threshold recalibration (#736), report reproducibility/drift check (#728). Ready for the cloud sweep (#737) → `field-test/results/0.3.1/`.
 - **M2 (Evaluation & Field Test): open** — **60 issues**: 4 original evaluation tickets + 13 field-test tickets + **43 from the `[0.3.1-M2-CodeReview]` audit** (#762, #763-#804). 11 Critical (10 code-review + #762), 32 Important. **11/11 Criticals + 32/32 Importants fixed** (all 43 code-review findings addressed) (#763, #764, #769, #770, #775, #776, #777, #778, #791, #795, #762 Phases 0–1; #762 Phase 2 tracked in #720).
 - **M3 (Release Readiness & Launch): open** — 16 issues.
 

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import importlib.util
+import json
+import subprocess
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -10,6 +12,15 @@ from types import ModuleType
 import pytest
 
 _SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "generate_field_test_report.py"
+
+
+def _write_run(root: Path, corpus: str, model: str, verdicts: list[str]) -> None:
+    d = root / corpus / model / "2026-09-13"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "results.jsonl").write_text(
+        "\n".join(json.dumps({"status": "done", "best": {"verdict": v}}) for v in verdicts) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _load() -> ModuleType:
@@ -88,3 +99,58 @@ def test_committed_generated_results_doc_is_current() -> None:
     generated = module.render_markdown(runs)
     current = module.DEFAULT_OUTPUT.read_text(encoding="utf-8")
     assert _strip_timestamp(generated) == _strip_timestamp(current)
+
+
+def test_default_paths_are_version_scoped() -> None:
+    # #728: v0.3.1 tables land under results/0.3.1 and the v0.3.1 docs dir.
+    module = _load()
+    root, output = module.default_paths("0.3.1")
+    assert root.parts[-2:] == ("results", "0.3.1")
+    assert output.parts[-3:-1] == ("field-test", "v0.3.1")
+
+
+def test_generate_and_drift_check_detects_change(tmp_path: Path) -> None:
+    # #728: the committed report must be reproducible and drift must fail loud.
+    root = tmp_path / "results"
+    _write_run(root, "golden", "openai-openai_gpt-4o-mini", ["pass", "fail"])
+    output = tmp_path / "generated-results.md"
+
+    gen = subprocess.run(
+        [sys.executable, str(_SCRIPT), "--results-root", str(root), "--output", str(output)],
+        capture_output=True,
+        text=True,
+    )
+    assert gen.returncode == 0, gen.stderr
+    assert output.is_file()
+
+    ok = subprocess.run(
+        [
+            sys.executable,
+            str(_SCRIPT),
+            "--results-root",
+            str(root),
+            "--output",
+            str(output),
+            "--check",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+
+    # Mutate the artifacts without regenerating -> drift must be detected.
+    _write_run(root, "golden", "openai-openai_gpt-4o-mini", ["pass"])
+    drift = subprocess.run(
+        [
+            sys.executable,
+            str(_SCRIPT),
+            "--results-root",
+            str(root),
+            "--output",
+            str(output),
+            "--check",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert drift.returncode == 1, drift.stdout + drift.stderr

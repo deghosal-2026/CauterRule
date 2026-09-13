@@ -189,6 +189,7 @@ class Trajectory:
     expected_outcome: ExpectedOutcome | None = None
     expected_outcome_rationale: str | None = None
     expected_outcome_confidence: ExpectedOutcomeConfidence = None
+    expected_rule: str | None = None
 
     def __post_init__(self) -> None:
         _require_nonblank(self.id, "trajectory.id")
@@ -240,6 +241,8 @@ class Trajectory:
             d["expected_outcome_rationale"] = self.expected_outcome_rationale
         if self.expected_outcome_confidence is not None:
             d["expected_outcome_confidence"] = self.expected_outcome_confidence
+        if self.expected_rule is not None:
+            d["expected_rule"] = self.expected_rule
         return d
 
     @classmethod
@@ -281,4 +284,5 @@ class Trajectory:
             expected_outcome=data.get("expected_outcome"),
             expected_outcome_rationale=data.get("expected_outcome_rationale"),
             expected_outcome_confidence=data.get("expected_outcome_confidence"),
+            expected_rule=data.get("expected_rule"),
         )

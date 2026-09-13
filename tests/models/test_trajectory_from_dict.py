@@ -114,3 +114,13 @@ def test_scalar_tags_rejected() -> None:
 def test_scalar_agent_tools_rejected() -> None:
     with pytest.raises(ValueError, match="tools"):
         Trajectory.from_dict(_base(success=False, agent_config={"tools": "bash"}))
+
+
+def test_expected_rule_round_trips() -> None:
+    # #730: expected_rule is parsed and preserved through to_dict/from_dict.
+    d = _base(success=False, expected_rule="when x fails, do y")
+    traj = Trajectory.from_dict(d)
+    assert traj.expected_rule == "when x fails, do y"
+    assert traj.to_dict()["expected_rule"] == "when x fails, do y"
+    # absent -> None, not ""
+    assert Trajectory.from_dict(_base(success=False)).expected_rule is None

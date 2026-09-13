@@ -20,10 +20,10 @@
 
 | # | Task | Issue |
 |---|------|-------|
-| 2.1 | Reference corpus: add adapter/CI failure signatures | [#726](https://github.com/deghosal-2026/CauterRule/issues/726) |
-| 2.2 | Make field-test report numbers reproducible from artifacts | [#728](https://github.com/deghosal-2026/CauterRule/issues/728) |
+| 2.1 | ✅ Reference corpus: add adapter/CI failure signatures | [#726](https://github.com/deghosal-2026/CauterRule/issues/726) |
+| 2.2 | ✅ Make field-test report numbers reproducible from artifacts | [#728](https://github.com/deghosal-2026/CauterRule/issues/728) |
 | 2.3 | Run release-gate measurements (human agreement, cross-session, cost) | [#729](https://github.com/deghosal-2026/CauterRule/issues/729) |
-| 2.4 | Add extraction-accuracy metric vs `expected_rule` | [#730](https://github.com/deghosal-2026/CauterRule/issues/730) |
+| 2.4 | ✅ Add extraction-accuracy metric vs `expected_rule` | [#730](https://github.com/deghosal-2026/CauterRule/issues/730) |
 
 > These overlap the field-test tickets below (#726↔#735, #730↔#734, #729↔#740-#742, #728↔#743). They were kept per request; close each as its counterpart lands.
 
@@ -31,10 +31,10 @@
 
 | # | Task | Issue |
 |---|------|-------|
-| 2.5 | Create the v0.3.1 field test plan — methodology, corpora, models, thresholds, exit criteria | [#733](https://github.com/deghosal-2026/CauterRule/issues/733) |
-| 2.6 | Wire M1/M2 fixes into the runner + add extraction-accuracy measurement | [#734](https://github.com/deghosal-2026/CauterRule/issues/734) |
-| 2.7 | Corpus: backfill `expected_rule` and add adapter/CI reference signatures | [#735](https://github.com/deghosal-2026/CauterRule/issues/735) |
-| 2.8 | Re-calibrate matcher thresholds after semantic and scorer changes | [#736](https://github.com/deghosal-2026/CauterRule/issues/736) |
+| 2.5 | ✅ Create the v0.3.1 field test plan — methodology, corpora, models, thresholds, exit criteria ([plan](../../field-test/v0.3.1/field-test-plan.md)) | [#733](https://github.com/deghosal-2026/CauterRule/issues/733) |
+| 2.6 | ✅ Wire M1/M2 fixes into the runner + add extraction-accuracy measurement | [#734](https://github.com/deghosal-2026/CauterRule/issues/734) |
+| 2.7 | ✅ Corpus: backfill `expected_rule` and add adapter/CI reference signatures | [#735](https://github.com/deghosal-2026/CauterRule/issues/735) |
+| 2.8 | ✅ Re-calibrate matcher thresholds after semantic and scorer changes ([calibration](../../field-test/v0.3.1/threshold-calibration.md)) | [#736](https://github.com/deghosal-2026/CauterRule/issues/736) |
 | 2.9 | Re-run the full cloud field-test sweep — 2 models × 40 corpora | [#737](https://github.com/deghosal-2026/CauterRule/issues/737) |
 | 2.10 | ✅ Re-run the Docker field test on the v0.3.1 image — **180/180 green** ([plan](../../field-test/v0.3.1/docker-test-plan.md), [results](../../field-test/v0.3.1/docker-test-results.md)) | [#738](https://github.com/deghosal-2026/CauterRule/issues/738) |
 | 2.11 | ✅ Multi-environment validation — macOS, Linux, Docker (`tests/field/test_docker_multienv.py` green; Docker results above) | [#739](https://github.com/deghosal-2026/CauterRule/issues/739) |

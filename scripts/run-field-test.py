@@ -215,6 +215,9 @@ REFERENCE_BUCKETS = [
     PUBLIC_ROOT / "browser",
     # #706: real-world python test failures (BugsInPy).
     PUBLIC_ROOT / "real-world" / "bugsinpy",
+    # #726: CI failure references routed into the raw/ci domain slice so its
+    # candidates score against CI phrasings (domain=ci), not the full pool.
+    PUBLIC_ROOT / "ci_reference",
     # #700/#707: success counterparts from external sources (InjecAgent).
     PUBLIC_ROOT / "successes",
 ]
@@ -636,6 +639,7 @@ def replay_test_candidate(
         "precision": report.precision,
         "recall": report.recall,
         "verdict": report.verdict,
+        "verdict_reason": report.verdict_reason,
         "replay_trace": [dict(r) for r in report.replay_trace],
         "threshold": threshold,
         "match_detail": match_diag,
@@ -920,6 +924,26 @@ def _write_summary(
                 match_scores.append(md["score"])
     avg_match_score = round(sum(match_scores) / len(match_scores), 3) if match_scores else None
 
+    # v0.3.1 (#730): extraction accuracy vs the corpus ground-truth rule.
+    # Independent of replay: measures whether the extractor produced the right
+    # rule, on trajectories that carry `expected_rule` (others are n/a).
+    from cauterule.measurement.extraction_accuracy import (
+        measure_extraction_accuracy,
+        records_from_results,
+    )
+
+    extraction = measure_extraction_accuracy(records_from_results(done))
+
+    # v0.3.1 (#724): why each best candidate got its verdict
+    # (blocked_by_broken / blocked_by_precision / blocked_by_near_miss / ...).
+    verdict_reason_breakdown: dict[str, int] = {}
+    for r in done:
+        best = r.get("best", {})
+        if not best:
+            continue
+        reason = best.get("verdict_reason") or f"verdict:{best.get('verdict', '?')}"
+        verdict_reason_breakdown[reason] = verdict_reason_breakdown.get(reason, 0) + 1
+
     # v0.3.0 (#697): break gate drops down by silencing reason so a spike in
     # one mechanism (e.g. #692 keyword substring, #693 output-as-success) is
     # visible without re-deriving it from raw results.jsonl.
@@ -961,6 +985,10 @@ def _write_summary(
         "confidence_intervals": confidence_intervals,
         "specificity_distribution": specificity_counts,
         "inconclusive_breakdown": inconclusive_breakdown,
+        "extraction": extraction.to_dict(),
+        "extraction_f1": extraction.semantic_f1,
+        "extraction_agreement": extraction.agreement,
+        "verdict_reason_breakdown": verdict_reason_breakdown,
         "updated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     summary_file.write_text(json.dumps(summary, indent=2))
