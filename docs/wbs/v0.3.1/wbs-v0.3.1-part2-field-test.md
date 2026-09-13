@@ -35,15 +35,23 @@
 | 2.6 | ✅ Wire M1/M2 fixes into the runner + add extraction-accuracy measurement | [#734](https://github.com/deghosal-2026/CauterRule/issues/734) |
 | 2.7 | ✅ Corpus: backfill `expected_rule` and add adapter/CI reference signatures | [#735](https://github.com/deghosal-2026/CauterRule/issues/735) |
 | 2.8 | ✅ Re-calibrate matcher thresholds after semantic and scorer changes ([calibration](../../field-test/v0.3.1/threshold-calibration.md)) | [#736](https://github.com/deghosal-2026/CauterRule/issues/736) |
-| 2.9 | Re-run the full cloud field-test sweep — 2 models × 40 corpora | [#737](https://github.com/deghosal-2026/CauterRule/issues/737) |
+| 2.9 | ✅ Re-run the full cloud field-test sweep — 2 models × 40 corpora (pass 5; all artifacts under `field-test/results/0.3.1/`) | [#737](https://github.com/deghosal-2026/CauterRule/issues/737) |
 | 2.10 | ✅ Re-run the Docker field test on the v0.3.1 image — **180/180 green** ([plan](../../field-test/v0.3.1/docker-test-plan.md), [results](../../field-test/v0.3.1/docker-test-results.md)) | [#738](https://github.com/deghosal-2026/CauterRule/issues/738) |
 | 2.11 | ✅ Multi-environment validation — macOS, Linux, Docker (`tests/field/test_docker_multienv.py` green; Docker results above) | [#739](https://github.com/deghosal-2026/CauterRule/issues/739) |
-| 2.12 | Cost measurement — token-enabled re-run + `$`/1k table | [#740](https://github.com/deghosal-2026/CauterRule/issues/740) |
+| 2.12 | ✅ Cost measurement — token-enabled re-run + `$`/1k table ([report §10](../../field-test/v0.3.1/FIELD_TEST_REPORT.md)) | [#740](https://github.com/deghosal-2026/CauterRule/issues/740) |
 | 2.13 | Cross-session repeat-failure reduction protocol (5 sessions) | [#741](https://github.com/deghosal-2026/CauterRule/issues/741) |
 | 2.14 | Human-vs-replay agreement sampling and scoring | [#742](https://github.com/deghosal-2026/CauterRule/issues/742) |
-| 2.15 | Regenerate and publish the v0.3.1 field test report (reproducible from artifacts) | [#743](https://github.com/deghosal-2026/CauterRule/issues/743) |
-| 2.16 | Document known issues from the v0.3.1 field test | [#744](https://github.com/deghosal-2026/CauterRule/issues/744) |
+| 2.15 | ✅ Regenerate and publish the v0.3.1 field test report (reproducible from artifacts; drift check passes) — [FIELD_TEST_REPORT.md](../../field-test/v0.3.1/FIELD_TEST_REPORT.md) | [#743](https://github.com/deghosal-2026/CauterRule/issues/743) |
+| 2.16 | ✅ Document known issues from the v0.3.1 field test (report §13 + Appendix A J1–J18; J16/J17/J18 open) | [#744](https://github.com/deghosal-2026/CauterRule/issues/744) |
 | 2.17 | M2 exit gate — thresholds, tests, docs, committed results | [#745](https://github.com/deghosal-2026/CauterRule/issues/745) |
+
+> **2026-09-13 status:** the full pass-5 sweep (40 corpora × 2 models) is complete and committed
+> under `field-test/results/0.3.1/`; the artifact-derived report is published and the drift check
+> passes. **All quality + safety §6 exit criteria pass** (golden 82–83%, failures/positive 50–52%,
+> nearmiss 0 accepts, adversarial 0 promotions, generic <1%); the `inconclusive <15%` target is
+> partial (golden 17–18%). Remaining M2 work: cross-session (#741), human-agreement (#742), and
+> the exit gate (#745). New open field-test issues: **J16** (llama `no_candidates` on adversarial),
+> **J17** (harness false-fail on gate-dropped corpora), **J18** (0-accepted corpora) — report §13.
 
 ### Code review findings (43 issues)
 
@@ -129,7 +137,7 @@
 ### Scope notes
 
 - **Models:** cloud only — `gpt-4o-mini`, `llama-3.1-8b-instruct` (local OMLX dropped, #713).
-- **Sweep command:** `.venv312` (Python 3.12) + `CAUTERULE_SEMANTIC_MATCHING=1`, OpenRouter `--max-workers 6`.
+- **Sweep command:** `.venv312` (Python 3.12) + `CAUTERULE_SEMANTIC_MATCHING=1`, OpenRouter `--max-workers 3` (lowered from 6 — higher concurrency crashes the embedding pool natively on macOS).
 - **Artifacts:** `field-test/results/0.3.1/` (`meta.json`, `results.jsonl`, `summary.json`, `harness_health.json` per run).
 - **Thresholds:** golden ≥70%, failures/positive ≥50%, nearmiss precision ≥90%, adversarial 0, generic <10%, inconclusive <15%.
 - **Statistical rigor:** Wilson CIs on every rate; paired per-trajectory model deltas; golden expanded to n≥60 (#735).
@@ -140,15 +148,15 @@
 - [ ] **Lint strict clean:** `ruff check .` — zero errors
 - [ ] **Types strict clean:** `mypy src/ tests/` (strict) — zero errors
 - [ ] **Test coverage > 92%** (deterministic subset)
-- [ ] **All necessary and affected docs updated** (field test plan, report, per-model sheets, known issues, WBS)
-- [ ] **Code committed and pushed** to `feat-v0.3.1`
-- [ ] **WBS updated** (`docs/wbs/v0.3.1/`)
+- [x] **All necessary and affected docs updated** (field test plan, field-test report, known issues, WBS)
+- [x] **Code committed and pushed** to `feat-v0.3.1`
+- [x] **WBS updated** (`docs/wbs/v0.3.1/`)
 - [ ] **All 60 M2 issues closed**
 - [x] All 11 M2 Critical issues fixed, or explicitly deferred with rationale (10 `[0.3.1-M2-CodeReview]` Criticals + #762: #763, #764, #769, #770, #775, #776, #777, #778, #791, #795)
-- [ ] Full sweep complete with results committed under `field-test/results/0.3.1/`
-- [ ] Release thresholds evaluated and reported (met / not-met with CIs)
+- [x] Full sweep complete with results committed under `field-test/results/0.3.1/`
+- [x] Release thresholds evaluated and reported (met / not-met with CIs)
 - [ ] Cost, cross-session, and human-agreement measured (not `_pending_`)
-- [ ] Report regenerated from artifacts; artifact-vs-report drift check passes
+- [x] Report regenerated from artifacts; artifact-vs-report drift check passes
 
 ### See also
 
