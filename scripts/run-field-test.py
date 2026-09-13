@@ -305,6 +305,23 @@ VALIDATION_SUITES: dict[str, dict[str, str]] = {
         "issue": "#605/#606 (M6 benchmark CLI)",
         "targets": ["tests/cli/test_benchmark_cli.py", "benchmarks/"],
     },
+    # ── v0.3.1 validation suites (#733) ──
+    "v031_extraction_accuracy": {
+        "issue": "#730/#734 (extraction accuracy vs expected_rule)",
+        "targets": ["tests/measurement/test_extraction_accuracy.py"],
+    },
+    "v031_corpus_coverage": {
+        "issue": "#726/#735 (adapter/CI references + expected_rule backfill)",
+        "targets": ["tests/corpus/test_v030_corpus_coverage.py"],
+    },
+    "v031_report_reproducibility": {
+        "issue": "#728 (artifact-derived report + drift check)",
+        "targets": ["tests/test_generate_field_test_report.py"],
+    },
+    "v031_harness_metrics": {
+        "issue": "#734 (runner summary carries extraction/verdict-reason metrics)",
+        "targets": ["tests/test_run_field_test_harness.py"],
+    },
 }
 
 

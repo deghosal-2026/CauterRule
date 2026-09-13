@@ -187,3 +187,114 @@ def test_quarantine_ids_from_env(harness: ModuleType, monkeypatch: pytest.Monkey
 def test_quarantine_empty_by_default(harness: ModuleType, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("CAUTERULE_QUARANTINE_IDS", raising=False)
     assert harness.quarantined_ids() == frozenset()
+
+
+# ---------------------------------------------------------------------------
+# v0.3.1 (#734): summary carries extraction accuracy + verdict-reason breakdown
+# ---------------------------------------------------------------------------
+def _done_record(
+    *,
+    verdict: str = "pass",
+    verdict_reason: str | None = None,
+    trigger: str = "when git push fails with non-fast-forward",
+    directive: str = "pull latest changes before pushing",
+    expected_rule: str = "when git push fails with non-fast-forward, pull latest changes before pushing",
+) -> dict[str, object]:
+    return {
+        "trajectory_id": "T-1",
+        "status": "done",
+        "candidate_count": 1,
+        "candidates": [
+            {
+                "verdict": verdict,
+                "verdict_reason": verdict_reason,
+                "trigger_specificity": "specific",
+                "precision": 1.0,
+                "recall": 1.0,
+                "match_detail": {"score": 1.0},
+            }
+        ],
+        "best": {
+            "verdict": verdict,
+            "verdict_reason": verdict_reason,
+            "precision": 1.0,
+            "recall": 1.0,
+            "candidate": {"when": trigger, "do": directive},
+        },
+        "trajectory": {"expected_rule": expected_rule},
+        "precision": 1.0,
+        "recall": 1.0,
+        "gate": {"reason": None, "is_silence": False},
+        "task_specificity": "specific",
+        "llm_calls_avoided": 0,
+    }
+
+
+def test_summary_includes_extraction_accuracy(harness: ModuleType, tmp_path: Path) -> None:
+    results: list[dict[str, object]] = [_done_record()]
+    summary_file = tmp_path / "summary.json"
+    harness._write_summary(
+        results, summary_file, {"corpus_type": "golden"}, harness.time.time(), "golden"
+    )
+    summary = json.loads(summary_file.read_text(encoding="utf-8"))
+    assert "extraction_f1" in summary
+    assert "extraction_agreement" in summary
+    assert summary["extraction"]["n"] == 1
+    assert summary["extraction_agreement"] == 1.0
+    assert 0.0 <= summary["extraction_f1"] <= 1.0
+
+
+def test_summary_includes_verdict_reason_breakdown(harness: ModuleType, tmp_path: Path) -> None:
+    results: list[dict[str, object]] = [
+        _done_record(verdict="inconclusive", verdict_reason="blocked_by_broken"),
+        _done_record(verdict="fail", verdict_reason="blocked_by_precision"),
+    ]
+    summary_file = tmp_path / "summary.json"
+    harness._write_summary(
+        results, summary_file, {"corpus_type": "golden"}, harness.time.time(), "golden"
+    )
+    summary = json.loads(summary_file.read_text(encoding="utf-8"))
+    assert summary["verdict_reason_breakdown"] == {
+        "blocked_by_broken": 1,
+        "blocked_by_precision": 1,
+    }
+
+
+def test_replay_candidate_reports_verdict_reason(harness: ModuleType) -> None:
+    ref = {
+        "trajectory_id": "R-1",
+        "timestamp": "t",
+        "task": "git push fails with non-fast-forward error",
+        "steps": [
+            {
+                "step_number": 1,
+                "tool": "bash",
+                "input": "git push",
+                "error": "non-fast-forward",
+            }
+        ],
+        "success": False,
+        "failure_class": "git/push",
+        "domain": "git",
+        "quality_label": "clear",
+        "severity": "medium",
+        "tags": [],
+    }
+    cand = {
+        "when": "git push fails with non-fast-forward",
+        "do": "pull before push",
+        "confidence": 0.8,
+    }
+    out = harness.replay_test_candidate(cand, [ref], "golden")
+    assert "verdict_reason" in out
+
+
+def test_v031_validation_suites_are_wired(harness: ModuleType) -> None:
+    for name in (
+        "v031_extraction_accuracy",
+        "v031_corpus_coverage",
+        "v031_report_reproducibility",
+        "v031_harness_metrics",
+    ):
+        assert name in harness.VALIDATION_SUITES, name
+        assert harness.VALIDATION_SUITES[name]["targets"], name

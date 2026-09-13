@@ -96,6 +96,20 @@ Every rate is reported with a Wilson 95% CI and evaluated against the threshold 
 - Output root: **`field-test/results/0.3.1/`**.
 - Harness health (`harness_health.json`) gates parse rate; a corpus with `no .jsonl records` or a parse-rate drop aborts the sweep.
 
+### 7.1 New/updated tests in v0.3.1 (wired into the runner's validation suites)
+
+| Suite (`VALIDATION_SUITES`) | Targets | Covers |
+|-----------------------------|---------|--------|
+| `v031_extraction_accuracy` | `tests/measurement/test_extraction_accuracy.py` | `expected_rule` parsing, token/semantic/directive F1, agreement (#730) |
+| `v031_corpus_coverage` | `tests/corpus/test_v030_corpus_coverage.py` | adapter signatures (≥20, domain `python`), CI reference slice (domain `ci`), `expected_rule` backfill (#726/#735) |
+| `v031_report_reproducibility` | `tests/test_generate_field_test_report.py` | versioned paths + `--check` drift detection (#728) |
+| `v031_harness_metrics` | `tests/test_run_field_test_harness.py` | `summary.json` carries `extraction_f1`/`extraction_agreement`/`verdict_reason_breakdown`; `replay_test_candidate` emits `verdict_reason` (#734) |
+| `replay_matcher` / `replay_safety` (existing) | `tests/replay/test_matcher.py`, `tests/replay/test_safety.py` | matcher/scorer fixes under test (#721–#724) |
+| `corpus` (existing) | `tests/corpus/` | golden n=60, adapter/CI coverage |
+| `adversarial` (existing) | `tests/adversarial/` | source-trust gate, 0 promotions (#727/#776) |
+
+The `golden` corpus now carries **60 freshly authored scenarios** (`field-test/corpus/golden/GX-v031-scenarios.jsonl`, 50 new across git/python/docker/k8s/terraform/ci/npm/shell/ssh/api/browser/aws/db/go/java/ruby/rust/deploy) plus the original 10, every one with an `expected_rule`.
+
 ## 8. Reproducibility (#728/#743)
 
 1. Commit the post-fix run artifacts under `field-test/results/0.3.1/`.
