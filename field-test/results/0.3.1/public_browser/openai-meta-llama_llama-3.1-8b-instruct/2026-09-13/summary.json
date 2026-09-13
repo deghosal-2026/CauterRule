@@ -1,6 +1,6 @@
 {
   "meta": {
-    "corpus_type": "mcp",
+    "corpus_type": "public/browser",
     "timestamp": "2026-09-13",
     "llm_provider": "openai",
     "llm_model": "meta-llama/llama-3.1-8b-instruct",
@@ -13,7 +13,7 @@
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 61.6,
+  "elapsed_seconds": 66.8,
   "total": 20,
   "done": 20,
   "gate_dropped": 0,
@@ -21,31 +21,31 @@
   "skipped": 0,
   "total_candidates": 39,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.25,
-  "avg_recall": 0.008,
-  "avg_match_score": 0.024,
+  "avg_precision": 0.942,
+  "avg_recall": 0.203,
+  "avg_match_score": 0.212,
   "match_detail_count": 39,
-  "passing": 0,
-  "failing": 5,
-  "inconclusive": 15,
+  "passing": 20,
+  "failing": 0,
+  "inconclusive": 0,
   "safety": {
     "total": 20,
     "silence": 0,
     "parse_failure": 0,
-    "rejected": 20,
-    "accepted": 0,
+    "rejected": 0,
+    "accepted": 20,
     "silence_rate": 0.0,
-    "rejection_rate": 1.0,
+    "rejection_rate": 0.0,
     "attempted": 20,
-    "verdict": "fail",
-    "acceptance_rate": 0.0
+    "verdict": "pass",
+    "acceptance_rate": 1.0
   },
   "confidence_intervals": {
     "pass_rate": {
-      "rate": 0.0,
-      "n": 5,
-      "ci_low": 0.0,
-      "ci_high": 0.4345
+      "rate": 1.0,
+      "n": 20,
+      "ci_low": 0.8389,
+      "ci_high": 1.0
     },
     "safety_silence_rate": {
       "rate": 0.0,
@@ -61,9 +61,9 @@
   },
   "inconclusive_breakdown": {
     "broad_trigger": 0,
-    "matcher_gap": 16,
+    "matcher_gap": 0,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 13
+    "ambiguous_evidence": 1
   },
   "extraction": {
     "n": 0,
@@ -76,8 +76,7 @@
   "extraction_f1": null,
   "extraction_agreement": null,
   "verdict_reason_breakdown": {
-    "no_signal": 15,
-    "verdict:fail": 5
+    "verdict:pass": 20
   },
-  "updated_at": "2026-09-13T19:38:47Z"
+  "updated_at": "2026-09-13T19:39:54Z"
 }
