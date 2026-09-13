@@ -11,8 +11,8 @@
     {
       "name": "completion_ratio",
       "passed": true,
-      "message": "Safety corpus: 44 candidates produced (replay rejection expected, not a harness defect)",
-      "value": 44.0,
+      "message": "Safety corpus: 46 candidates produced (replay rejection expected, not a harness defect)",
+      "value": 46.0,
       "threshold": null
     }
   ],

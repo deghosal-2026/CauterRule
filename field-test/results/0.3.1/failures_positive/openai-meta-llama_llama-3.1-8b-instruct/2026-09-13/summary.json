@@ -13,39 +13,39 @@
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 69.4,
+  "elapsed_seconds": 91.0,
   "total": 50,
   "done": 50,
   "gate_dropped": 0,
   "gate_dropped_by_reason": {},
   "skipped": 0,
-  "total_candidates": 94,
+  "total_candidates": 88,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.559,
-  "avg_recall": 0.256,
-  "avg_match_score": 0.336,
-  "match_detail_count": 94,
-  "passing": 25,
-  "failing": 4,
-  "inconclusive": 21,
+  "avg_precision": 0.554,
+  "avg_recall": 0.24,
+  "avg_match_score": 0.335,
+  "match_detail_count": 88,
+  "passing": 26,
+  "failing": 2,
+  "inconclusive": 22,
   "safety": {
     "total": 50,
     "silence": 0,
     "parse_failure": 0,
-    "rejected": 25,
-    "accepted": 25,
+    "rejected": 24,
+    "accepted": 26,
     "silence_rate": 0.0,
-    "rejection_rate": 0.5,
+    "rejection_rate": 0.48,
     "attempted": 50,
     "verdict": "pass",
-    "acceptance_rate": 0.5
+    "acceptance_rate": 0.52
   },
   "confidence_intervals": {
     "pass_rate": {
-      "rate": 0.8621,
-      "n": 29,
-      "ci_low": 0.6944,
-      "ci_high": 0.945
+      "rate": 0.9286,
+      "n": 28,
+      "ci_low": 0.7735,
+      "ci_high": 0.9802
     },
     "safety_silence_rate": {
       "rate": 0.0,
@@ -55,8 +55,8 @@
     }
   },
   "specificity_distribution": {
-    "specific": 127,
-    "moderate": 17,
+    "specific": 118,
+    "moderate": 20,
     "generic": 0
   },
   "inconclusive_breakdown": {
@@ -67,20 +67,20 @@
   },
   "extraction": {
     "n": 23,
-    "token_f1": 0.6259,
-    "semantic_f1": 0.6774,
-    "directive_f1": 0.2993,
-    "token_agreement": 0.1304,
-    "agreement": 0.1304
+    "token_f1": 0.5558,
+    "semantic_f1": 0.652,
+    "directive_f1": 0.2944,
+    "token_agreement": 0.4783,
+    "agreement": 0.7826
   },
-  "extraction_f1": 0.6774130434782608,
-  "extraction_agreement": 0.13043478260869565,
+  "extraction_f1": 0.6520478260869566,
+  "extraction_agreement": 0.782608695652174,
   "verdict_reason_breakdown": {
-    "verdict:pass": 25,
-    "no_signal": 15,
-    "blocked_by_broken": 4,
+    "verdict:pass": 26,
+    "no_signal": 17,
+    "blocked_by_broken": 2,
     "min_sample: 2 < 3; computed=inconclusive": 1,
-    "blocked_by_near_miss": 5
+    "blocked_by_near_miss": 4
   },
-  "updated_at": "2026-09-13T10:58:21Z"
+  "updated_at": "2026-09-13T19:16:23Z"
 }

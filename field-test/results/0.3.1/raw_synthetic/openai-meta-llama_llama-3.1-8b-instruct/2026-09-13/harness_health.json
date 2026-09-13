@@ -4,8 +4,8 @@
     {
       "name": "parse_rate",
       "passed": true,
-      "message": "Parse rate 98.6% (143/145)",
-      "value": 0.9862068965517241,
+      "message": "Parse rate 99.3% (144/145)",
+      "value": 0.993103448275862,
       "threshold": 0.7
     },
     {

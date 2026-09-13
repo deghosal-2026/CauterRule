@@ -26,9 +26,9 @@
     {
       "name": "corpus_ok",
       "passed": true,
-      "message": "Corpus OK: 48 files, 48 trajectories"
+      "message": "Corpus OK: 47 files, 47 trajectories"
     }
   ],
-  "cost_estimate_usd": 0.48,
+  "cost_estimate_usd": 0.47,
   "warnings": []
 }

@@ -8,79 +8,79 @@
     "extraction_passes": 2,
     "temperatures": "0.2,0.5",
     "target_trajectories": 145,
-    "reference_trajectories": 540,
+    "reference_trajectories": 588,
     "cost_per_request_usd": 0.01,
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 227.1,
+  "elapsed_seconds": 215.4,
   "total": 145,
-  "done": 143,
+  "done": 144,
   "gate_dropped": 0,
   "gate_dropped_by_reason": {},
-  "skipped": 2,
+  "skipped": 1,
   "total_candidates": 271,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.374,
-  "avg_recall": 0.149,
-  "avg_match_score": 0.22,
+  "avg_precision": 0.393,
+  "avg_recall": 0.151,
+  "avg_match_score": 0.223,
   "match_detail_count": 271,
-  "passing": 53,
-  "failing": 18,
-  "inconclusive": 72,
+  "passing": 58,
+  "failing": 13,
+  "inconclusive": 73,
   "safety": {
-    "total": 143,
+    "total": 144,
     "silence": 0,
     "parse_failure": 0,
-    "rejected": 90,
-    "accepted": 53,
+    "rejected": 86,
+    "accepted": 58,
     "silence_rate": 0.0,
-    "false_accept_rate": 0.3706,
-    "rejection_rate": 0.6294,
-    "attempted": 143,
-    "verdict": "pass"
+    "rejection_rate": 0.5972,
+    "attempted": 144,
+    "verdict": "pass",
+    "acceptance_rate": 0.4028
   },
   "confidence_intervals": {
     "pass_rate": {
-      "rate": 0.7465,
+      "rate": 0.8169,
       "n": 71,
-      "ci_low": 0.6345,
-      "ci_high": 0.8332
+      "ci_low": 0.7115,
+      "ci_high": 0.8898
     },
     "safety_silence_rate": {
       "rate": 0.0,
-      "n": 143,
+      "n": 144,
       "ci_low": 0.0,
-      "ci_high": 0.0262
+      "ci_high": 0.026
     }
   },
   "specificity_distribution": {
-    "specific": 365,
-    "moderate": 48,
-    "generic": 3
+    "specific": 368,
+    "moderate": 43,
+    "generic": 5
   },
   "inconclusive_breakdown": {
-    "broad_trigger": 2,
-    "matcher_gap": 82,
+    "broad_trigger": 6,
+    "matcher_gap": 84,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 66
+    "ambiguous_evidence": 57
   },
   "extraction": {
-    "n": 97,
-    "token_f1": 0.3642,
-    "semantic_f1": 0.4478,
-    "directive_f1": 0.3307,
-    "token_agreement": 0.0619,
-    "agreement": 0.1649
+    "n": 98,
+    "token_f1": 0.3961,
+    "semantic_f1": 0.4902,
+    "directive_f1": 0.3062,
+    "token_agreement": 0.2551,
+    "agreement": 0.551
   },
-  "extraction_f1": 0.44775360824742266,
-  "extraction_agreement": 0.16494845360824742,
+  "extraction_f1": 0.4901897959183673,
+  "extraction_agreement": 0.5510204081632653,
   "verdict_reason_breakdown": {
-    "verdict:pass": 53,
-    "no_signal": 71,
-    "blocked_by_broken": 14,
-    "blocked_by_near_miss": 1,
-    "verdict:fail": 4
+    "verdict:pass": 58,
+    "no_signal": 72,
+    "blocked_by_broken": 9,
+    "verdict:fail": 4,
+    "blocked_by_near_miss": 1
   },
-  "updated_at": "2026-09-13T09:56:43Z"
+  "updated_at": "2026-09-13T19:21:52Z"
 }

@@ -4,15 +4,15 @@
     {
       "name": "parse_rate",
       "passed": true,
-      "message": "Parse rate 100.0% (48/48)",
+      "message": "Parse rate 100.0% (47/47)",
       "value": 1.0,
       "threshold": 0.7
     },
     {
       "name": "completion_ratio",
       "passed": true,
-      "message": "Completion 93/48 (193.8%)",
-      "value": 1.9375,
+      "message": "Completion 92/47 (195.7%)",
+      "value": 1.9574468085106382,
       "threshold": 0.9
     }
   ],
