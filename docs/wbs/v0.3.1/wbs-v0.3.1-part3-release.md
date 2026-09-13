@@ -18,16 +18,16 @@
 |---|------|-------|
 | 3.1 | ✅ Version bump 0.3.0 → 0.3.1 — pyproject, `__init__`, README, CHANGELOG (`cauterule --version` → 0.3.1) | [#746](https://github.com/deghosal-2026/CauterRule/issues/746) |
 | 3.2 | ✅ Full test suite validation — tests green, coverage 89.15% (≥85 fail_under; >92% target not reached), ruff/mypy strict clean, Docker 180/180 | [#747](https://github.com/deghosal-2026/CauterRule/issues/747) |
-| 3.3 | Security scan — truffleHog, pip-audit, OpenSSF, secret detection | [#748](https://github.com/deghosal-2026/CauterRule/issues/748) |
-| 3.4 | PyPI packaging and publish 0.3.1 — build, TestPyPI, PyPI, verify install | [#749](https://github.com/deghosal-2026/CauterRule/issues/749) |
-| 3.5 | Docker publish — multi-arch build + push `v0.3.1` + `latest` | [#750](https://github.com/deghosal-2026/CauterRule/issues/750) |
-| 3.6 | Homebrew bump to 0.3.1 | [#751](https://github.com/deghosal-2026/CauterRule/issues/751) |
-| 3.7 | Docs sweep — README, user guide, architecture, adapters | [#752](https://github.com/deghosal-2026/CauterRule/issues/752) |
-| 3.8 | CHANGELOG — v0.3.1 entry (Keep a Changelog) | [#753](https://github.com/deghosal-2026/CauterRule/issues/753) |
-| 3.9 | Release notes — v0.3.1 (fixes, results, known issues, upgrade guide) | [#754](https://github.com/deghosal-2026/CauterRule/issues/754) |
-| 3.10 | Update SECURITY.md and CONTRIBUTING.md | [#755](https://github.com/deghosal-2026/CauterRule/issues/755) |
-| 3.11 | Refresh badges (version, coverage, field test) | [#756](https://github.com/deghosal-2026/CauterRule/issues/756) |
-| 3.12 | Pre-release aggregate gate — verify all gates pass before tagging | [#757](https://github.com/deghosal-2026/CauterRule/issues/757) |
+| 3.3 | ✅ Security scan — truffleHog 0/0, pip-audit 0 prod vulns, secret regex clean, Scorecard 5.1/10; #727 documented | [#748](https://github.com/deghosal-2026/CauterRule/issues/748) |
+| 3.4 | ✅ PyPI publish 0.3.1 — built, `twine check` PASSED, published, fresh-venv install verified (`cauterule --version` → 0.3.1); TestPyPI skipped (separate credential) | [#749](https://github.com/deghosal-2026/CauterRule/issues/749) |
+| 3.5 | ⏭️ Docker publish — **skipped by request** | [#750](https://github.com/deghosal-2026/CauterRule/issues/750) |
+| 3.6 | ⏭️ Homebrew bump to 0.3.1 — **skipped by request** | [#751](https://github.com/deghosal-2026/CauterRule/issues/751) |
+| 3.7 | ✅ Docs sweep — README, user guide, architecture, adapters, docs index | [#752](https://github.com/deghosal-2026/CauterRule/issues/752) |
+| 3.8 | ✅ CHANGELOG — v0.3.1 entry (Keep a Changelog) | [#753](https://github.com/deghosal-2026/CauterRule/issues/753) |
+| 3.9 | ✅ Release notes — v0.3.1 (`docs/release/v0.3.1/release-notes.md`) | [#754](https://github.com/deghosal-2026/CauterRule/issues/754) |
+| 3.10 | ✅ Update SECURITY.md (+#727) and CONTRIBUTING.md (measurement/source-trust) | [#755](https://github.com/deghosal-2026/CauterRule/issues/755) |
+| 3.11 | ✅ Refresh badges (version, coverage, field test) | [#756](https://github.com/deghosal-2026/CauterRule/issues/756) |
+| 3.12 | ✅ Pre-release aggregate gate — tests pass, coverage 89.16% (≥85), ruff + mypy strict clean, security clean | [#757](https://github.com/deghosal-2026/CauterRule/issues/757) |
 | 3.13 | Tag `v0.3.1`, GitHub release, close milestones | [#758](https://github.com/deghosal-2026/CauterRule/issues/758) |
 | 3.14 | Launch — announcements + dev.to articles | [#759](https://github.com/deghosal-2026/CauterRule/issues/759) |
 | 3.15 | Post-release verification checklist | [#760](https://github.com/deghosal-2026/CauterRule/issues/760) |
