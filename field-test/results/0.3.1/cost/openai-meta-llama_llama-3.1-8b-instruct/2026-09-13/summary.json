@@ -13,59 +13,59 @@
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 42.1,
-  "total": 324,
-  "done": 24,
-  "gate_dropped": 300,
+  "elapsed_seconds": 2249.0,
+  "total": 1000,
+  "done": 667,
+  "gate_dropped": 333,
   "gate_dropped_by_reason": {
-    "no_failure_signal": 300
+    "no_failure_signal": 333
   },
   "skipped": 0,
-  "total_candidates": 47,
-  "total_llm_calls_avoided": 600,
-  "avg_precision": 0.125,
-  "avg_recall": 0.02,
-  "avg_match_score": 0.146,
-  "match_detail_count": 47,
-  "passing": 2,
-  "failing": 3,
-  "inconclusive": 19,
+  "total_candidates": 1316,
+  "total_llm_calls_avoided": 666,
+  "avg_precision": 0.135,
+  "avg_recall": 0.029,
+  "avg_match_score": 0.139,
+  "match_detail_count": 1316,
+  "passing": 78,
+  "failing": 59,
+  "inconclusive": 530,
   "safety": {
-    "total": 324,
-    "silence": 300,
+    "total": 1000,
+    "silence": 333,
     "parse_failure": 0,
-    "rejected": 22,
-    "accepted": 2,
-    "silence_rate": 0.9259,
-    "rejection_rate": 0.9938,
-    "attempted": 24,
+    "rejected": 589,
+    "accepted": 78,
+    "silence_rate": 0.333,
+    "rejection_rate": 0.922,
+    "attempted": 667,
     "verdict": "pass",
-    "acceptance_rate": 0.0833
+    "acceptance_rate": 0.1169
   },
   "confidence_intervals": {
     "pass_rate": {
-      "rate": 0.4,
-      "n": 5,
-      "ci_low": 0.1176,
-      "ci_high": 0.7693
+      "rate": 0.5693,
+      "n": 137,
+      "ci_low": 0.4857,
+      "ci_high": 0.6493
     },
     "safety_silence_rate": {
-      "rate": 0.9259,
-      "n": 324,
-      "ci_low": 0.8922,
-      "ci_high": 0.9497
+      "rate": 0.333,
+      "n": 1000,
+      "ci_low": 0.3045,
+      "ci_high": 0.3628
     }
   },
   "specificity_distribution": {
-    "specific": 367,
-    "moderate": 4,
+    "specific": 2229,
+    "moderate": 87,
     "generic": 0
   },
   "inconclusive_breakdown": {
     "broad_trigger": 0,
-    "matcher_gap": 17,
+    "matcher_gap": 711,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 21
+    "ambiguous_evidence": 371
   },
   "extraction": {
     "n": 0,
@@ -78,9 +78,9 @@
   "extraction_f1": null,
   "extraction_agreement": null,
   "verdict_reason_breakdown": {
-    "no_signal": 19,
-    "blocked_by_broken": 3,
-    "verdict:pass": 2
+    "no_signal": 530,
+    "blocked_by_broken": 59,
+    "verdict:pass": 78
   },
-  "updated_at": "2026-09-13T19:36:29Z"
+  "updated_at": "2026-09-13T20:37:17Z"
 }
