@@ -55,6 +55,26 @@ def _reserve_rule_id(rules_dir: Path) -> tuple[str, Path]:
     return rule_id, rule_path
 
 
+def _normalize(text: str) -> str:
+    return " ".join(text.lower().strip().split())
+
+
+def _find_active_duplicate(rules_dir: Path, candidate: CandidateRule) -> StandingRule | None:
+    """Return an existing active rule with the same normalized when/do (#780)."""
+    from cauterule.serialization.rule_yaml import load_rules_from_dir
+
+    for rule in load_rules_from_dir(rules_dir, quarantine=False):
+        if rule.status != "active":
+            continue
+        if (
+            _normalize(rule.when.trigger) == _normalize(candidate.when.trigger)
+            and _normalize(rule.do.directive) == _normalize(candidate.do.directive)
+            and _normalize(rule.when.signature or "") == _normalize(candidate.when.signature or "")
+        ):
+            return rule
+    return None
+
+
 def _next_rule_id(rules_dir: Path) -> str:
     existing: list[int] = []
     if rules_dir.is_dir():
@@ -122,6 +142,17 @@ def execute_promotion(
         promotion_commit=None,
         promotion_mode=str(config.get("promotion_mode", "auto")),
     )
+
+    # Idempotency (#780): never create a second active duplicate of the same
+    # rule. Return the existing rule's id instead.
+    existing = _find_active_duplicate(rules_dir, candidate)
+    if existing is not None:
+        _log.info(
+            "promotion skipped for %r: duplicate of %s",
+            candidate.when.trigger,
+            existing.id,
+        )
+        return existing.id
 
     # Allocate + reserve the rule file atomically, and only after the required
     # config was validated (a missing key must not leave an empty reservation).

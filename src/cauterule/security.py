@@ -10,6 +10,7 @@ trajectory's tool I/O.
 from __future__ import annotations
 
 import re
+import unicodedata
 
 from cauterule.models.trajectory import Trajectory
 
@@ -33,6 +34,55 @@ _INJECTION_MARKERS: tuple[str, ...] = (
     "do not follow the",
 )
 
+# #779: common confusable Cyrillic/Greek characters folded to Latin before
+# marker matching, so homoglyph-obfuscated injections are still detected.
+# Keys are written as escapes to keep this file ASCII (RUF003).
+_HOMOGLYPHS = str.maketrans(
+    {
+        "\u0430": "a",
+        "\u0435": "e",
+        "\u043e": "o",
+        "\u0440": "p",
+        "\u0441": "c",
+        "\u0443": "y",
+        "\u0445": "x",
+        "\u0456": "i",
+        "\u0455": "s",
+        "\u0458": "j",
+        "\u0501": "d",
+        "\u051b": "q",
+        "\u04bb": "h",
+        "\u051d": "w",
+        "\u0391": "A",
+        "\u0392": "B",
+        "\u0395": "E",
+        "\u0396": "Z",
+        "\u0397": "H",
+        "\u0399": "I",
+        "\u039a": "K",
+        "\u039c": "M",
+        "\u039d": "N",
+        "\u039f": "O",
+        "\u03a1": "P",
+        "\u03a4": "T",
+        "\u03a5": "Y",
+        "\u03a7": "X",
+    }
+)
+
+
+def _fold(text: str) -> str:
+    """NFKC-normalize and fold confusable homoglyphs before matching."""
+    return unicodedata.normalize("NFKC", text).translate(_HOMOGLYPHS)
+
+
+# #779: match each marker with ``\\s+`` between words so whitespace/newline
+# perturbations do not evade detection.
+_INJECTION_RES: tuple[re.Pattern[str], ...] = tuple(
+    re.compile(r"\s+".join(re.escape(word) for word in marker.split()), re.IGNORECASE)
+    for marker in _INJECTION_MARKERS
+)
+
 # Long base64 blobs are a common injection-obfuscation vector. Detection
 # requires base64-specific punctuation (``+`` / ``/`` / padding ``=``) so that
 # ordinary 40-char git SHAs and hex digests — which are ubiquitous in tool
@@ -54,8 +104,8 @@ def detect_injection_signal(trajectory: Trajectory) -> bool:
         text = f"{step.input or ''}\n{step.output or ''}"
         if not text.strip():
             continue
-        lowered = text.lower()
-        if any(marker in lowered for marker in _INJECTION_MARKERS):
+        folded = _fold(text)
+        if any(pattern.search(folded) for pattern in _INJECTION_RES):
             return True
         if _has_encoded_blob(text):
             return True

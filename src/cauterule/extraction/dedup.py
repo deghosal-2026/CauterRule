@@ -15,6 +15,9 @@ def is_duplicate(a: CandidateRule, b: CandidateRule) -> bool:
         _normalize(a.when.trigger) == _normalize(b.when.trigger)
         and _normalize(a.do.directive) == _normalize(b.do.directive)
         and _normalize(" ".join(a.when.context)) == _normalize(" ".join(b.when.context))
+        # #774: different error_signatures describe different failure shapes;
+        # merging them loses signature-hit grounding for one shape.
+        and _normalize(a.when.signature or "") == _normalize(b.when.signature or "")
     )
 
 

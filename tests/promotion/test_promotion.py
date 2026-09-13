@@ -220,6 +220,31 @@ def test_hybrid_invalid_threshold() -> None:
         hybrid_promote(c, _passing_evidence(), _clean_linter(), None, threshold=1.5)
 
 
+def test_hybrid_forwards_safety_gate() -> None:
+    # #781: hybrid must not silently skip the safety gate.
+    c = _candidate(confidence=0.95)
+    broken = EvidenceReport(
+        failures_prevented=("F1",),
+        successes_broken=("S1", "S2", "S3"),
+        precision=1.0,
+        recall=1.0,
+        verdict="pass",
+    )
+    result = hybrid_promote(
+        c, broken, _clean_linter(), None, threshold=0.8, corpus_name="successes"
+    )
+    assert result.verdict == "reject"
+
+
+def test_hybrid_forwards_source_taint() -> None:
+    # #781: hybrid must not silently skip the #727 source-trust gate.
+    c = _candidate(confidence=0.95)
+    result = hybrid_promote(
+        c, _passing_evidence(), _clean_linter(), None, threshold=0.8, source_tainted=True
+    )
+    assert result.verdict == "reject"
+
+
 # ---------------------------------------------------------------------------
 # execute_promotion
 # ---------------------------------------------------------------------------
@@ -256,10 +281,33 @@ def test_execute_promotion_increments_id(tmp_path: Path) -> None:
         "promotion_mode": "auto",
         "status": "active",
     }
+    other = CandidateRule(
+        when=RuleWhen(trigger="docker build fails"),
+        do=RuleDo(directive="clear cache"),
+        confidence=0.95,
+    )
     r1 = execute_promotion(_candidate(), config)
-    r2 = execute_promotion(_candidate(), config)
+    r2 = execute_promotion(other, config)
     assert r1 == "R-001"
     assert r2 == "R-002"
+
+
+def test_execute_promotion_skips_duplicate(tmp_path: Path) -> None:
+    # #780: promoting the same rule twice must not create two active duplicates.
+    rules_dir = tmp_path / "rules"
+    config = {
+        "rules_dir": str(rules_dir),
+        "source_trajectory": "traj-001",
+        "extracted_by": "extractor-m1",
+        "extract_timestamp": "2025-01-01T00:00:00Z",
+        "extraction_pass": 1,
+        "promotion_mode": "auto",
+        "status": "active",
+    }
+    r1 = execute_promotion(_candidate(), config)
+    r2 = execute_promotion(_candidate(), config)
+    assert r1 == r2 == "R-001"
+    assert sorted(p.name for p in rules_dir.glob("R-*.yaml")) == ["R-001.yaml"]
 
 
 def test_execute_promotion_concurrent_ids_do_not_collide(tmp_path: Path) -> None:

@@ -51,7 +51,7 @@
 
 **Why these block M2:** several defects corrupt the measurements M2 exists to publish — cost reports `$0.00` for Anthropic/LiteLLM/Ollama (#802), the end-to-end loop promotes with no gate and never persists (#775), the #727 injection defense has no production caller (#776), and the unsafe-directive blocklist is trivially bypassed (#777). **Fix the Criticals before the M2 exit gate; Importants may be fixed or explicitly deferred with rationale.**
 
-**Fix progress (2026-09-12):** ✅ all 11 Criticals fixed with tests. First batch: CR-1 (#763), CR-2 (#764), CR-7 (#769), CR-8 (#770), CR-13 (#775). Second batch: CR-14 (#776), CR-15 (#777), CR-16 (#778), CR-29 (#791), CR-33 (#795). Third batch: CR-43 (#762) Phase 0 (invariance pinned) + Phase 1 (directive-aware `simulate_outcome` grounding + destructive-directive linter hardening + `auto_promote` guard); Phase 2 (true executor) remains tracked in #720. `mypy src/ tests/`, `ruff check .`, and the non-field/scale/docker `pytest` suite green. Importants first batch (CR-3/4/5/6/9/10) also fixed with tests.
+**Fix progress (2026-09-12):** ✅ all 11 Criticals fixed with tests. First batch: CR-1 (#763), CR-2 (#764), CR-7 (#769), CR-8 (#770), CR-13 (#775). Second batch: CR-14 (#776), CR-15 (#777), CR-16 (#778), CR-29 (#791), CR-33 (#795). Third batch: CR-43 (#762) Phase 0 (invariance pinned) + Phase 1 (directive-aware `simulate_outcome` grounding + destructive-directive linter hardening + `auto_promote` guard); Phase 2 (true executor) remains tracked in #720. `mypy src/ tests/`, `ruff check .`, and the non-field/scale/docker `pytest` suite green. Importants first two batches (CR-3/4/5/6/9/10, CR-11/12/17/18/19/20) also fixed with tests.
 
 **Replay / matcher / cache (6)**
 
@@ -72,8 +72,8 @@
 | CR-8 | Critical | ✅ `enrich_trajectory` drops `injection_signal` + `expected_outcome*` | [#770](https://github.com/deghosal-2026/CauterRule/issues/770) |
 | CR-9 | Important | ✅ `RuleWhen.from_dict` splits scalar `context` into characters | [#771](https://github.com/deghosal-2026/CauterRule/issues/771) |
 | CR-10 | Important | ✅ Extraction gate misses state-only failures (`exit_code=1`, no error text) | [#772](https://github.com/deghosal-2026/CauterRule/issues/772) |
-| CR-11 | Important | `load_trajectories` silently drops EOF-truncated multi-line record in strict mode | [#773](https://github.com/deghosal-2026/CauterRule/issues/773) |
-| CR-12 | Important | `is_duplicate` ignores `when.signature` → false dedup | [#774](https://github.com/deghosal-2026/CauterRule/issues/774) |
+| CR-11 | Important | ✅ `load_trajectories` silently drops EOF-truncated multi-line record in strict mode | [#773](https://github.com/deghosal-2026/CauterRule/issues/773) |
+| CR-12 | Important | ✅ `is_duplicate` ignores `when.signature` → false dedup | [#774](https://github.com/deghosal-2026/CauterRule/issues/774) |
 
 **Promotion / loop / linter / conflict (12)**
 
@@ -83,10 +83,10 @@
 | CR-14 | Critical | ✅ #727 injection defense wired into `run_loop` (`is_source_tainted`) | [#776](https://github.com/deghosal-2026/CauterRule/issues/776) |
 | CR-15 | Critical | ✅ `check_unsafe` blocklist bypassed (`rm -fr`, `push -f`, `chmod 0777`, `\| sudo bash`) | [#777](https://github.com/deghosal-2026/CauterRule/issues/777) |
 | CR-16 | Critical | ✅ Rule-ID assignment TOCTOU race → concurrent promotions overwrite | [#778](https://github.com/deghosal-2026/CauterRule/issues/778) |
-| CR-17 | Important | Injection-marker detection bypassed by whitespace/newlines/homoglyphs | [#779](https://github.com/deghosal-2026/CauterRule/issues/779) |
-| CR-18 | Important | `execute_promotion` has no dedup → duplicate active rules | [#780](https://github.com/deghosal-2026/CauterRule/issues/780) |
-| CR-19 | Important | `hybrid_promote` silently disables safety/cutoff/source-trust gates | [#781](https://github.com/deghosal-2026/CauterRule/issues/781) |
-| CR-20 | Important | `check_tautology` false-positives on "note"/"notes" | [#782](https://github.com/deghosal-2026/CauterRule/issues/782) |
+| CR-17 | Important | ✅ Injection-marker detection bypassed by whitespace/newlines/homoglyphs | [#779](https://github.com/deghosal-2026/CauterRule/issues/779) |
+| CR-18 | Important | ✅ `execute_promotion` has no dedup → duplicate active rules | [#780](https://github.com/deghosal-2026/CauterRule/issues/780) |
+| CR-19 | Important | ✅ `hybrid_promote` silently disables safety/cutoff/source-trust gates | [#781](https://github.com/deghosal-2026/CauterRule/issues/781) |
+| CR-20 | Important | ✅ `check_tautology` false-positives on "note"/"notes" | [#782](https://github.com/deghosal-2026/CauterRule/issues/782) |
 | CR-21 | Important | Near-duplicate check false-positives on distinct failure modes | [#783](https://github.com/deghosal-2026/CauterRule/issues/783) |
 | CR-22 | Important | Hyphenated generic phrases score as "specific" | [#784](https://github.com/deghosal-2026/CauterRule/issues/784) |
 | CR-23 | Important | `consolidate()` sets `superseded` without `superseded_by` → store invalid | [#785](https://github.com/deghosal-2026/CauterRule/issues/785) |

@@ -35,6 +35,16 @@ def test_tautology() -> None:
     assert check_tautology("git push", "pull --rebase") == []
 
 
+def test_tautology_note_not_false_positive() -> None:
+    # #782: "note"/"notes" must not match the substring "not".
+    assert check_tautology("when a test fails", "write a note about the failure") == []
+    assert check_tautology("when build fails", "note the failure in the log") == []
+    # genuine negation still flags
+    assert check_tautology("when build fails", "do not fail again") == [
+        "tautology: when failing, don't fail"
+    ]
+
+
 def test_duplicate() -> None:
     existing = [_rule("git push", "pull --rebase")]
     assert check_duplicate("git push", "pull --rebase", existing) == [

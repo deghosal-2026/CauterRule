@@ -43,3 +43,33 @@ def test_deduplicate_keeps_higher_confidence() -> None:
     deduped = deduplicate([low, high])
     assert len(deduped) == 1
     assert deduped[0].confidence == 0.9
+
+
+def test_signature_difference_not_duplicate() -> None:
+    # #774: same trigger/directive but different error_signature are distinct.
+    a = CandidateRule(
+        when=RuleWhen(trigger="git push", signature="exit 128"),
+        do=RuleDo(directive="pull --rebase"),
+        confidence=0.9,
+    )
+    b = CandidateRule(
+        when=RuleWhen(trigger="git push", signature="non-fast-forward"),
+        do=RuleDo(directive="pull --rebase"),
+        confidence=0.9,
+    )
+    assert not is_duplicate(a, b)
+    assert len(deduplicate([a, b])) == 2
+
+
+def test_same_signature_is_duplicate() -> None:
+    a = CandidateRule(
+        when=RuleWhen(trigger="git push", signature="non-fast-forward"),
+        do=RuleDo(directive="pull --rebase"),
+        confidence=0.9,
+    )
+    b = CandidateRule(
+        when=RuleWhen(trigger="  Git Push ", signature="Non-Fast-Forward"),
+        do=RuleDo(directive=" pull --rebase "),
+        confidence=0.8,
+    )
+    assert is_duplicate(a, b)

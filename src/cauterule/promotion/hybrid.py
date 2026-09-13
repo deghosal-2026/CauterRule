@@ -19,6 +19,10 @@ def hybrid_promote(
     conflict_reports: list[ConflictReport] | None = None,
     threshold: float | None = None,
     threshold_mode: str | None = None,
+    *,
+    corpus_name: str | None = None,
+    cutoffs: object | None = None,
+    source_tainted: bool = False,
 ) -> PromotionDecision:
     """Decide promotion for *candidate* in hybrid mode.
 
@@ -36,6 +40,10 @@ def hybrid_promote(
         threshold_mode: Optional preset mode name (``"conservative"``,
             ``"balanced"``, ``"aggressive"``).  If provided, overrides
             *threshold* with the preset's ``min_confidence``.
+        corpus_name: Safety corpus forwarded to :func:`auto_promote` (#781).
+        cutoffs: Promotion cutoffs forwarded to :func:`auto_promote` (#781).
+        source_tainted: #727 source-trust flag forwarded to
+            :func:`auto_promote` (#781); the hard gate cannot be skipped.
 
     Returns:
         A :class:`PromotionDecision` based on the candidate's confidence.
@@ -49,6 +57,14 @@ def hybrid_promote(
         raise ValueError(f"threshold must be in [0.0, 1.0], got {threshold}")
 
     if candidate.confidence >= threshold:
-        return auto_promote(candidate, evidence_report, linter_result, conflict_reports)
+        return auto_promote(
+            candidate,
+            evidence_report,
+            linter_result,
+            conflict_reports,
+            corpus_name=corpus_name,
+            cutoffs=cutoffs,
+            source_tainted=source_tainted,
+        )
 
     return human_review(candidate, evidence_report, linter_result)
