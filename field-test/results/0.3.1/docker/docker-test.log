@@ -1,0 +1,401 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.5, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.3.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /Users/deghosal/Desktop/code/github/CauterRule
+configfile: pyproject.toml
+plugins: cov-7.1.0, benchmark-5.3.0, anyio-4.15.1
+collected 241 items / 61 deselected / 180 selected
+
+tests/field/test_docker_build.py [00:49:08] inherited        PASSED  test_docker_image_builds (18.89s)
+.[00:49:08] inherited        PASSED  test_docker_version (0.326s)
+.[00:49:08] inherited        PASSED  test_docker_help (0.192s)
+.[00:49:08] inherited        PASSED  test_docker_pip_show (0.242s)
+.[00:49:09] inherited        PASSED  test_docker_import (0.16s)
+.                                   [  2%]
+tests/field/test_docker_cli.py [00:49:09] inherited        PASSED  test_cli_init (0.112s)
+.[00:49:09] inherited        PASSED  test_cli_extract_dry_run (0.078s)
+.[00:49:09] inherited        PASSED  test_cli_test (0.099s)
+.[00:49:09] inherited        PASSED  test_cli_promote (0.082s)
+.[00:49:09] inherited        PASSED  test_cli_list (0.079s)
+.[00:49:09] inherited        PASSED  test_cli_show (0.077s)
+.[00:49:09] inherited        PASSED  test_cli_inject (0.084s)
+.[00:49:09] inherited        PASSED  test_cli_retire (0.093s)
+.[00:49:09] inherited        PASSED  test_cli_history (0.082s)
+.[00:49:10] inherited        PASSED  test_cli_conflicts (0.078s)
+.[00:49:10] inherited        PASSED  test_cli_validate (0.078s)
+.[00:49:10] inherited        PASSED  test_cli_health (0.081s)
+.[00:49:10] inherited        PASSED  test_cli_search (0.082s)
+.[00:49:10] inherited        PASSED  test_cli_explain (0.08s)
+.[00:49:10] inherited        PASSED  test_cli_config (0.076s)
+.[00:49:10] inherited        PASSED  test_cli_metrics (0.08s)
+.[00:49:10] inherited        PASSED  test_cli_report (0.079s)
+.[00:49:10] inherited        PASSED  test_cli_pack_list (0.285s)
+.[00:49:11] inherited        PASSED  test_cli_pack_info (0.283s)
+.[00:49:11] inherited        PASSED  test_cli_diff (0.079s)
+.[00:49:11] inherited        PASSED  test_cli_audit (0.077s)
+.[00:49:11] inherited        PASSED  test_cli_story (0.093s)
+.[00:49:11] inherited        PASSED  test_cli_counterfactual (0.082s)
+.                   [ 15%]
+tests/field/test_docker_compose.py [00:49:11] inherited        PASSED  test_compose_start_demo (0.441s)
+.[00:49:12] inherited        PASSED  test_compose_mcp_accepts (0.781s)
+.[00:49:14] inherited        PASSED  test_compose_test_passes (1.891s)
+.[00:49:14] inherited        PASSED  test_compose_clean_shutdown (0.097s)
+.[00:49:14] inherited        PASSED  test_compose_all_services (0.033s)
+.                                 [ 18%]
+tests/field/test_docker_export_import.py [00:49:14] inherited        PASSED  test_export_cursorrules (0.0s)
+.[00:49:14] inherited        PASSED  test_export_claude_md (0.0s)
+.[00:49:14] inherited        PASSED  test_export_agents_md (0.0s)
+.[00:49:14] inherited        PASSED  test_export_windsurf (0.0s)
+.[00:49:14] inherited        PASSED  test_export_aider (0.0s)
+.[00:49:14] inherited        PASSED  test_export_markdown (0.0s)
+.[00:49:14] inherited        PASSED  test_export_json (0.0s)
+.[00:49:14] inherited        PASSED  test_export_active_only (0.0s)
+.[00:49:14] inherited        PASSED  test_export_include_retired (0.0s)
+.[00:49:14] inherited        PASSED  test_import_cursorrules (0.0s)
+.[00:49:14] inherited        PASSED  test_import_claude_md (0.0s)
+.[00:49:14] inherited        PASSED  test_import_agents_md (0.0s)
+.[00:49:14] inherited        PASSED  test_import_chat_history (0.0s)
+.                   [ 25%]
+tests/field/test_docker_git.py [00:49:14] inherited        PASSED  test_git_init (0.017s)
+.[00:49:14] inherited        PASSED  test_promote_creates_commit (0.062s)
+.[00:49:14] inherited        PASSED  test_yaml_has_real_hash (0.075s)
+.[00:49:14] inherited        PASSED  test_hash_matches_git (0.07s)
+.[00:49:15] inherited        PASSED  test_rollback (0.073s)
+.[00:49:15] inherited        PASSED  test_validate_after_rollback (0.153s)
+.[00:49:15] inherited        PASSED  test_retire_creates_commit (0.188s)
+.[00:49:15] inherited        PASSED  test_history_timeline (0.133s)
+.[00:49:15] inherited        PASSED  test_rollback_restores (0.102s)
+.[00:49:15] inherited        PASSED  test_hash_not_uuid (0.072s)
+.                                [ 31%]
+tests/field/test_docker_loop.py [00:49:15] inherited        PASSED  test_loop_returns_rule_id (0.017s)
+.[00:49:15] inherited        PASSED  test_loop_creates_rule_file (0.107s)
+.[00:49:15] inherited        PASSED  test_loop_creates_git_commit (0.114s)
+.[00:49:15] inherited        PASSED  test_loop_all_stages_execute (0.011s)
+.[00:49:15] inherited        PASSED  test_loop_empty_trajectory (0.0s)
+.[00:49:15] inherited        PASSED  test_loop_no_lesson (0.0s)
+.                                   [ 34%]
+tests/field/test_docker_mcp.py [00:49:15] inherited        PASSED  test_mcp_server_command_registered (0.012s)
+.[00:49:15] inherited        PASSED  test_get_matching_rules (0.002s)
+.[00:49:15] inherited        PASSED  test_get_matching_rules_empty_task (0.001s)
+.[00:49:15] inherited        PASSED  test_get_rule (0.001s)
+.[00:49:15] inherited        PASSED  test_get_rule_missing (0.0s)
+.[00:49:15] inherited        PASSED  test_list_rules (0.002s)
+.[00:49:15] inherited        PASSED  test_list_rules_status_filter (0.001s)
+.[00:49:15] inherited        PASSED  test_report_failure (0.0s)
+.[00:49:15] inherited        PASSED  test_report_failure_invalid_json (0.0s)
+.[00:49:15] inherited        PASSED  test_list_rules_no_store (0.0s)
+.                                [ 40%]
+tests/field/test_docker_multienv.py [00:49:37] inherited        PASSED  test_build_py311 (21.685s)
+.[00:49:41] inherited        PASSED  test_py311_tests_pass (4.069s)
+.[00:50:00] inherited        PASSED  test_build_py312 (18.562s)
+.[00:50:04] inherited        PASSED  test_py312_tests_pass (4.291s)
+.[00:50:21] inherited        PASSED  test_build_py313 (16.686s)
+.[00:50:25] inherited        PASSED  test_py313_tests_pass (4.32s)
+.                               [ 43%]
+tests/field/test_docker_pipeline.py [00:50:25] inherited        PASSED  test_pipeline_init (0.242s)
+.[00:50:26] inherited        PASSED  test_pipeline_extract_dry_run (0.205s)
+.[00:50:26] inherited        PASSED  test_pipeline_test (0.213s)
+.[00:50:26] inherited        PASSED  test_pipeline_promote (0.204s)
+.[00:50:26] inherited        PASSED  test_pipeline_list (0.207s)
+.[00:50:26] inherited        PASSED  test_pipeline_inject (0.195s)
+.[00:50:27] inherited        PASSED  test_pipeline_show (0.193s)
+.[00:50:27] inherited        PASSED  test_pipeline_health (0.203s)
+.[00:50:27] inherited        PASSED  test_pipeline_validate (0.215s)
+.[00:50:27] inherited        PASSED  test_pipeline_hash_check (0.003s)
+.                           [ 48%]
+tests/field/test_docker_redaction.py [00:50:27] inherited        PASSED  test_api_key_redacted (0.0s)
+.[00:50:27] inherited        PASSED  test_token_redacted (0.0s)
+.[00:50:27] inherited        PASSED  test_password_redacted (0.0s)
+.[00:50:27] inherited        PASSED  test_redacted_flag_set (0.0s)
+.[00:50:27] inherited        PASSED  test_export_no_secrets (0.0s)
+.[00:50:27] inherited        PASSED  test_watch_decorator_redacts (0.001s)
+.                              [ 52%]
+tests/field/test_docker_tui.py [00:50:27] inherited        PASSED  test_review_screen_mounts (0.184s)
+.[00:50:27] inherited        PASSED  test_candidates_load (0.002s)
+.[00:50:27] inherited        PASSED  test_evidence_cards_render (0.067s)
+.[00:50:27] inherited        PASSED  test_confidence_cards_render (0.046s)
+.[00:50:28] inherited        PASSED  test_annotation_screen (0.131s)
+.[00:50:28] inherited        PASSED  test_batch_review (0.134s)
+.[00:50:28] inherited        PASSED  test_filter_by_tag (0.0s)
+.[00:50:28] inherited        PASSED  test_approve_promotes (0.128s)
+.[00:50:28] inherited        PASSED  test_reject_advances (0.126s)
+.[00:50:28] inherited        PASSED  test_keybindings (0.048s)
+.                                [ 57%]
+tests/field/test_docker_v020_cli.py [00:50:28] v0.2.0           PASSED  test_cli_preflight_no_corpus (0.097s)
+.[00:50:28] v0.2.0           PASSED  test_cli_preflight_with_corpus (0.086s)
+.[00:50:28] v0.2.0           PASSED  test_cli_harness_health_pass (0.076s)
+.[00:50:28] v0.2.0           PASSED  test_cli_harness_health_fail (0.078s)
+.[00:50:28] v0.2.0           PASSED  test_cli_review_batch_json (0.08s)
+.[00:50:28] v0.2.0           PASSED  test_cli_review_filter_json (0.08s)
+.[00:50:29] v0.2.0           PASSED  test_cli_metrics_coverage (0.081s)
+.[00:50:29] v0.2.0           PASSED  test_cli_metrics_by_domain (0.081s)
+.[00:50:29] v0.2.0           PASSED  test_cli_gaps (0.08s)
+.[00:50:29] v0.2.0           PASSED  test_cli_leaderboard (0.082s)
+.[00:50:29] v0.2.0           PASSED  test_cli_frontier (0.08s)
+.[00:50:29] v0.2.0           PASSED  test_cli_journal (0.079s)
+.[00:50:29] v0.2.0           PASSED  test_cli_report_monthly (0.077s)
+.[00:50:29] v0.2.0           PASSED  test_cli_show_hits (0.079s)
+.[00:50:29] v0.2.0           PASSED  test_cli_inject_records_hits (0.091s)
+.                      [ 66%]
+tests/field/test_docker_v020_metrics.py [00:50:29] v0.2.0           PASSED  test_demo_completes_under_60s_and_walkthrough (0.077s)
+.[00:50:29] v0.2.0           PASSED  test_cli_version_under_500ms (0.076s)
+.[00:50:29] v0.2.0           PASSED  test_cli_help_under_500ms (0.082s)
+.[00:50:30] v0.2.0           PASSED  test_preflight_runs_under_30s (0.079s)
+.[00:50:30] v0.2.0           PASSED  test_harness_health_reports_metrics (0.078s)
+.[00:50:30] v0.2.0           PASSED  test_metrics_coverage_returns_score (0.078s)
+.[00:50:30] v0.2.0           PASSED  test_review_batch_json_valid_queue (0.08s)
+.[00:50:30] v0.2.0           PASSED  test_inject_records_hits_metric (0.084s)
+.                         [ 70%]
+tests/field/test_docker_v030.py [00:50:53] v0.3.0           PASSED  test_docker_build_hardening (22.736s)
+.[00:50:53] v0.3.0           PASSED  test_docker_compose_config (0.064s)
+.[00:50:53] v0.3.0           PASSED  test_docker_cli_smoke (0.598s)
+.[00:50:54] v0.3.0           PASSED  test_docker_corpus_cli (0.697s)
+.[00:50:59] v0.3.0           PASSED  test_docker_benchmark_cli (4.731s)
+.[00:50:59] v0.3.0           PASSED  test_docker_pack_create (0.234s)
+.[00:50:59] v0.3.0           PASSED  test_docker_pack_install (0.444s)
+.[00:51:00] v0.3.0           PASSED  test_docker_pack_persistence (0.384s)
+.[00:51:00] v0.3.0           PASSED  test_docker_adapter_import (0.196s)
+.[00:51:00] v0.3.0           PASSED  test_docker_lifecycle (0.283s)
+.[00:51:01] v0.3.0           PASSED  test_docker_mcp_stdio (0.428s)
+.[00:51:02] v0.3.0           PASSED  test_docker_mcp_http_auth (0.87s)
+.[00:51:03] v0.3.0           PASSED  test_docker_mcp_http_schema_and_rate_limit (0.908s)
+.[00:51:03] v0.3.0           PASSED  test_docker_otel_emit (0.434s)
+.[00:51:03] v0.3.0           PASSED  test_docker_preflight (0.214s)
+.[00:51:04] v0.3.0           PASSED  test_docker_preflight_max_cost (0.41s)
+.[00:51:08] v0.3.0           PASSED  test_docker_benchmark_compare (4.833s)
+.[00:51:09] v0.3.0           PASSED  test_docker_extract_test_promote (0.255s)
+.[00:51:09] v0.3.0           PASSED  test_docker_pipeline_git_commit (0.407s)
+.[00:51:09] v0.3.0           PASSED  test_docker_corpus_export_csv_content (0.338s)
+.[00:51:10] v0.3.0           PASSED  test_docker_badge (0.278s)
+.[00:51:10] v0.3.0           PASSED  test_docker_webhook_cli (0.345s)
+.[00:51:10] v0.3.0           PASSED  test_docker_webhook (0.277s)
+.[00:51:11] v0.3.0           PASSED  test_docker_rules_persistence (0.302s)
+.[00:51:11] v0.3.0           PASSED  test_docker_image_size (0.044s)
+.[00:51:11] v0.3.0           PASSED  test_docker_multi_arch (0.06s)
+.[00:51:11] v0.3.0           PASSED  test_docker_resource_limits (0.205s)
+.[00:51:11] v0.3.0           PASSED  test_docker_network_isolated (0.163s)
+.             [ 86%]
+tests/field/test_docker_v031.py [00:51:11] v0.3.1           PASSED  test_docker_v031_replay_matcher (0.192s)
+.[00:51:12] v0.3.1           PASSED  test_docker_v031_serialization_strict (0.189s)
+.[00:51:12] v0.3.1           PASSED  test_docker_v031_jsonl_eof_strict (0.191s)
+.[00:51:12] v0.3.1           PASSED  test_docker_v031_promotion_idempotent_and_concurrent (0.213s)
+.[00:51:12] v0.3.1           PASSED  test_docker_v031_run_loop_gated_persist (0.213s)
+.[00:51:12] v0.3.1           PASSED  test_docker_v031_hybrid_gate_forwarding (0.192s)
+.[00:51:13] v0.3.1           PASSED  test_docker_v031_unsafe_and_grounding (0.202s)
+.[00:51:13] v0.3.1           PASSED  test_docker_v031_linter_correctness (0.187s)
+.[00:51:13] v0.3.1           PASSED  test_docker_v031_mcp_fail_closed_bind_python (0.418s)
+.[00:51:14] v0.3.1           PASSED  test_docker_v031_mcp_fail_closed_bind_cli (0.412s)
+.[00:51:14] v0.3.1           PASSED  test_docker_v031_mcp_report_failure_strict (0.186s)
+.[00:51:14] v0.3.1           PASSED  test_docker_v031_cli_retire_exit (0.205s)
+.[00:51:14] v0.3.1           PASSED  test_docker_v031_cli_test_store (0.217s)
+.[00:51:14] v0.3.1           PASSED  test_docker_v031_cli_init_gitignore (0.23s)
+.[00:51:15] v0.3.1           PASSED  test_docker_v031_cli_extract_missing (0.226s)
+.[00:51:15] v0.3.1           PASSED  test_docker_v031_report_safety_adjusted_nonempty (0.217s)
+.[00:51:15] v0.3.1           PASSED  test_docker_v031_export_escaping (0.203s)
+.[00:51:15] v0.3.1           PASSED  test_docker_v031_pack_publish_excludes_git (0.211s)
+.[00:51:16] v0.3.1           PASSED  test_docker_v031_pack_install_tar_filter (0.199s)
+.[00:51:16] v0.3.1           PASSED  test_docker_v031_provider_token_fields (0.176s)
+.[00:51:16] v0.3.1           PASSED  test_docker_v031_calibration_escalation (0.191s)
+.                    [ 97%]
+tests/mcp/test_docker_http_transport.py [00:51:17] mcp-transport    PASSED  test_docker_http_tools_listed (0.031s)
+.[00:51:17] mcp-transport    PASSED  test_docker_http_call_tools_valid (0.039s)
+.[00:51:18] mcp-transport    PASSED  test_docker_http_invalid_args_schema_error (0.014s)
+.[00:51:19] mcp-transport    PASSED  test_docker_http_unknown_tool_no_traceback (0.03s)
+.                             [100%]
+
+==================================== PASSES ====================================
+__________________________ test_loop_returns_rule_id ___________________________
+------------------------------ Captured log call -------------------------------
+ERROR    cauterule.store.git:git.py:53 git_commit failed (rc=128): fatal: not a git repository (or any of the parent directories): .git
+
+WARNING  cauterule.promotion.executor:executor.py:189 promotion commit failed for R-001 — continuing without hash
+_________________________ test_loop_all_stages_execute _________________________
+------------------------------ Captured log call -------------------------------
+ERROR    cauterule.store.git:git.py:53 git_commit failed (rc=128): fatal: not a git repository (or any of the parent directories): .git
+
+WARNING  cauterule.promotion.executor:executor.py:189 promotion commit failed for R-001 — continuing without hash
+- generated xml file: /Users/deghosal/Desktop/code/github/CauterRule/field-test/results/0.3.1/docker/docker-junit.xml -
+docker results -> field-test/results/0.3.1/docker/docker-results.jsonl (field-test/results/0.3.1/docker/docker-test-report.md)
+docker results -> field-test/results/0.3.1/docker/docker-results.jsonl (field-test/results/0.3.1/docker/docker-test-report.md)
+=========================== short test summary info ============================
+PASSED tests/field/test_docker_build.py::test_docker_image_builds
+PASSED tests/field/test_docker_build.py::test_docker_version
+PASSED tests/field/test_docker_build.py::test_docker_help
+PASSED tests/field/test_docker_build.py::test_docker_pip_show
+PASSED tests/field/test_docker_build.py::test_docker_import
+PASSED tests/field/test_docker_cli.py::test_cli_init
+PASSED tests/field/test_docker_cli.py::test_cli_extract_dry_run
+PASSED tests/field/test_docker_cli.py::test_cli_test
+PASSED tests/field/test_docker_cli.py::test_cli_promote
+PASSED tests/field/test_docker_cli.py::test_cli_list
+PASSED tests/field/test_docker_cli.py::test_cli_show
+PASSED tests/field/test_docker_cli.py::test_cli_inject
+PASSED tests/field/test_docker_cli.py::test_cli_retire
+PASSED tests/field/test_docker_cli.py::test_cli_history
+PASSED tests/field/test_docker_cli.py::test_cli_conflicts
+PASSED tests/field/test_docker_cli.py::test_cli_validate
+PASSED tests/field/test_docker_cli.py::test_cli_health
+PASSED tests/field/test_docker_cli.py::test_cli_search
+PASSED tests/field/test_docker_cli.py::test_cli_explain
+PASSED tests/field/test_docker_cli.py::test_cli_config
+PASSED tests/field/test_docker_cli.py::test_cli_metrics
+PASSED tests/field/test_docker_cli.py::test_cli_report
+PASSED tests/field/test_docker_cli.py::test_cli_pack_list
+PASSED tests/field/test_docker_cli.py::test_cli_pack_info
+PASSED tests/field/test_docker_cli.py::test_cli_diff
+PASSED tests/field/test_docker_cli.py::test_cli_audit
+PASSED tests/field/test_docker_cli.py::test_cli_story
+PASSED tests/field/test_docker_cli.py::test_cli_counterfactual
+PASSED tests/field/test_docker_compose.py::test_compose_start_demo
+PASSED tests/field/test_docker_compose.py::test_compose_mcp_accepts
+PASSED tests/field/test_docker_compose.py::test_compose_test_passes
+PASSED tests/field/test_docker_compose.py::test_compose_clean_shutdown
+PASSED tests/field/test_docker_compose.py::test_compose_all_services
+PASSED tests/field/test_docker_export_import.py::test_export_cursorrules
+PASSED tests/field/test_docker_export_import.py::test_export_claude_md
+PASSED tests/field/test_docker_export_import.py::test_export_agents_md
+PASSED tests/field/test_docker_export_import.py::test_export_windsurf
+PASSED tests/field/test_docker_export_import.py::test_export_aider
+PASSED tests/field/test_docker_export_import.py::test_export_markdown
+PASSED tests/field/test_docker_export_import.py::test_export_json
+PASSED tests/field/test_docker_export_import.py::test_export_active_only
+PASSED tests/field/test_docker_export_import.py::test_export_include_retired
+PASSED tests/field/test_docker_export_import.py::test_import_cursorrules
+PASSED tests/field/test_docker_export_import.py::test_import_claude_md
+PASSED tests/field/test_docker_export_import.py::test_import_agents_md
+PASSED tests/field/test_docker_export_import.py::test_import_chat_history
+PASSED tests/field/test_docker_git.py::test_git_init
+PASSED tests/field/test_docker_git.py::test_promote_creates_commit
+PASSED tests/field/test_docker_git.py::test_yaml_has_real_hash
+PASSED tests/field/test_docker_git.py::test_hash_matches_git
+PASSED tests/field/test_docker_git.py::test_rollback
+PASSED tests/field/test_docker_git.py::test_validate_after_rollback
+PASSED tests/field/test_docker_git.py::test_retire_creates_commit
+PASSED tests/field/test_docker_git.py::test_history_timeline
+PASSED tests/field/test_docker_git.py::test_rollback_restores
+PASSED tests/field/test_docker_git.py::test_hash_not_uuid
+PASSED tests/field/test_docker_loop.py::test_loop_returns_rule_id
+PASSED tests/field/test_docker_loop.py::test_loop_creates_rule_file
+PASSED tests/field/test_docker_loop.py::test_loop_creates_git_commit
+PASSED tests/field/test_docker_loop.py::test_loop_all_stages_execute
+PASSED tests/field/test_docker_loop.py::test_loop_empty_trajectory
+PASSED tests/field/test_docker_loop.py::test_loop_no_lesson
+PASSED tests/field/test_docker_mcp.py::test_mcp_server_command_registered
+PASSED tests/field/test_docker_mcp.py::test_get_matching_rules
+PASSED tests/field/test_docker_mcp.py::test_get_matching_rules_empty_task
+PASSED tests/field/test_docker_mcp.py::test_get_rule
+PASSED tests/field/test_docker_mcp.py::test_get_rule_missing
+PASSED tests/field/test_docker_mcp.py::test_list_rules
+PASSED tests/field/test_docker_mcp.py::test_list_rules_status_filter
+PASSED tests/field/test_docker_mcp.py::test_report_failure
+PASSED tests/field/test_docker_mcp.py::test_report_failure_invalid_json
+PASSED tests/field/test_docker_mcp.py::test_list_rules_no_store
+PASSED tests/field/test_docker_multienv.py::test_build_py311
+PASSED tests/field/test_docker_multienv.py::test_py311_tests_pass
+PASSED tests/field/test_docker_multienv.py::test_build_py312
+PASSED tests/field/test_docker_multienv.py::test_py312_tests_pass
+PASSED tests/field/test_docker_multienv.py::test_build_py313
+PASSED tests/field/test_docker_multienv.py::test_py313_tests_pass
+PASSED tests/field/test_docker_pipeline.py::test_pipeline_init
+PASSED tests/field/test_docker_pipeline.py::test_pipeline_extract_dry_run
+PASSED tests/field/test_docker_pipeline.py::test_pipeline_test
+PASSED tests/field/test_docker_pipeline.py::test_pipeline_promote
+PASSED tests/field/test_docker_pipeline.py::test_pipeline_list
+PASSED tests/field/test_docker_pipeline.py::test_pipeline_inject
+PASSED tests/field/test_docker_pipeline.py::test_pipeline_show
+PASSED tests/field/test_docker_pipeline.py::test_pipeline_health
+PASSED tests/field/test_docker_pipeline.py::test_pipeline_validate
+PASSED tests/field/test_docker_pipeline.py::test_pipeline_hash_check
+PASSED tests/field/test_docker_redaction.py::test_api_key_redacted
+PASSED tests/field/test_docker_redaction.py::test_token_redacted
+PASSED tests/field/test_docker_redaction.py::test_password_redacted
+PASSED tests/field/test_docker_redaction.py::test_redacted_flag_set
+PASSED tests/field/test_docker_redaction.py::test_export_no_secrets
+PASSED tests/field/test_docker_redaction.py::test_watch_decorator_redacts
+PASSED tests/field/test_docker_tui.py::test_review_screen_mounts
+PASSED tests/field/test_docker_tui.py::test_candidates_load
+PASSED tests/field/test_docker_tui.py::test_evidence_cards_render
+PASSED tests/field/test_docker_tui.py::test_confidence_cards_render
+PASSED tests/field/test_docker_tui.py::test_annotation_screen
+PASSED tests/field/test_docker_tui.py::test_batch_review
+PASSED tests/field/test_docker_tui.py::test_filter_by_tag
+PASSED tests/field/test_docker_tui.py::test_approve_promotes
+PASSED tests/field/test_docker_tui.py::test_reject_advances
+PASSED tests/field/test_docker_tui.py::test_keybindings
+PASSED tests/field/test_docker_v020_cli.py::test_cli_preflight_no_corpus
+PASSED tests/field/test_docker_v020_cli.py::test_cli_preflight_with_corpus
+PASSED tests/field/test_docker_v020_cli.py::test_cli_harness_health_pass
+PASSED tests/field/test_docker_v020_cli.py::test_cli_harness_health_fail
+PASSED tests/field/test_docker_v020_cli.py::test_cli_review_batch_json
+PASSED tests/field/test_docker_v020_cli.py::test_cli_review_filter_json
+PASSED tests/field/test_docker_v020_cli.py::test_cli_metrics_coverage
+PASSED tests/field/test_docker_v020_cli.py::test_cli_metrics_by_domain
+PASSED tests/field/test_docker_v020_cli.py::test_cli_gaps
+PASSED tests/field/test_docker_v020_cli.py::test_cli_leaderboard
+PASSED tests/field/test_docker_v020_cli.py::test_cli_frontier
+PASSED tests/field/test_docker_v020_cli.py::test_cli_journal
+PASSED tests/field/test_docker_v020_cli.py::test_cli_report_monthly
+PASSED tests/field/test_docker_v020_cli.py::test_cli_show_hits
+PASSED tests/field/test_docker_v020_cli.py::test_cli_inject_records_hits
+PASSED tests/field/test_docker_v020_metrics.py::test_demo_completes_under_60s_and_walkthrough
+PASSED tests/field/test_docker_v020_metrics.py::test_cli_version_under_500ms
+PASSED tests/field/test_docker_v020_metrics.py::test_cli_help_under_500ms
+PASSED tests/field/test_docker_v020_metrics.py::test_preflight_runs_under_30s
+PASSED tests/field/test_docker_v020_metrics.py::test_harness_health_reports_metrics
+PASSED tests/field/test_docker_v020_metrics.py::test_metrics_coverage_returns_score
+PASSED tests/field/test_docker_v020_metrics.py::test_review_batch_json_valid_queue
+PASSED tests/field/test_docker_v020_metrics.py::test_inject_records_hits_metric
+PASSED tests/field/test_docker_v030.py::test_docker_build_hardening
+PASSED tests/field/test_docker_v030.py::test_docker_compose_config
+PASSED tests/field/test_docker_v030.py::test_docker_cli_smoke
+PASSED tests/field/test_docker_v030.py::test_docker_corpus_cli
+PASSED tests/field/test_docker_v030.py::test_docker_benchmark_cli
+PASSED tests/field/test_docker_v030.py::test_docker_pack_create
+PASSED tests/field/test_docker_v030.py::test_docker_pack_install
+PASSED tests/field/test_docker_v030.py::test_docker_pack_persistence
+PASSED tests/field/test_docker_v030.py::test_docker_adapter_import
+PASSED tests/field/test_docker_v030.py::test_docker_lifecycle
+PASSED tests/field/test_docker_v030.py::test_docker_mcp_stdio
+PASSED tests/field/test_docker_v030.py::test_docker_mcp_http_auth
+PASSED tests/field/test_docker_v030.py::test_docker_mcp_http_schema_and_rate_limit
+PASSED tests/field/test_docker_v030.py::test_docker_otel_emit
+PASSED tests/field/test_docker_v030.py::test_docker_preflight
+PASSED tests/field/test_docker_v030.py::test_docker_preflight_max_cost
+PASSED tests/field/test_docker_v030.py::test_docker_benchmark_compare
+PASSED tests/field/test_docker_v030.py::test_docker_extract_test_promote
+PASSED tests/field/test_docker_v030.py::test_docker_pipeline_git_commit
+PASSED tests/field/test_docker_v030.py::test_docker_corpus_export_csv_content
+PASSED tests/field/test_docker_v030.py::test_docker_badge
+PASSED tests/field/test_docker_v030.py::test_docker_webhook_cli
+PASSED tests/field/test_docker_v030.py::test_docker_webhook
+PASSED tests/field/test_docker_v030.py::test_docker_rules_persistence
+PASSED tests/field/test_docker_v030.py::test_docker_image_size
+PASSED tests/field/test_docker_v030.py::test_docker_multi_arch
+PASSED tests/field/test_docker_v030.py::test_docker_resource_limits
+PASSED tests/field/test_docker_v030.py::test_docker_network_isolated
+PASSED tests/field/test_docker_v031.py::test_docker_v031_replay_matcher
+PASSED tests/field/test_docker_v031.py::test_docker_v031_serialization_strict
+PASSED tests/field/test_docker_v031.py::test_docker_v031_jsonl_eof_strict
+PASSED tests/field/test_docker_v031.py::test_docker_v031_promotion_idempotent_and_concurrent
+PASSED tests/field/test_docker_v031.py::test_docker_v031_run_loop_gated_persist
+PASSED tests/field/test_docker_v031.py::test_docker_v031_hybrid_gate_forwarding
+PASSED tests/field/test_docker_v031.py::test_docker_v031_unsafe_and_grounding
+PASSED tests/field/test_docker_v031.py::test_docker_v031_linter_correctness
+PASSED tests/field/test_docker_v031.py::test_docker_v031_mcp_fail_closed_bind_python
+PASSED tests/field/test_docker_v031.py::test_docker_v031_mcp_fail_closed_bind_cli
+PASSED tests/field/test_docker_v031.py::test_docker_v031_mcp_report_failure_strict
+PASSED tests/field/test_docker_v031.py::test_docker_v031_cli_retire_exit
+PASSED tests/field/test_docker_v031.py::test_docker_v031_cli_test_store
+PASSED tests/field/test_docker_v031.py::test_docker_v031_cli_init_gitignore
+PASSED tests/field/test_docker_v031.py::test_docker_v031_cli_extract_missing
+PASSED tests/field/test_docker_v031.py::test_docker_v031_report_safety_adjusted_nonempty
+PASSED tests/field/test_docker_v031.py::test_docker_v031_export_escaping
+PASSED tests/field/test_docker_v031.py::test_docker_v031_pack_publish_excludes_git
+PASSED tests/field/test_docker_v031.py::test_docker_v031_pack_install_tar_filter
+PASSED tests/field/test_docker_v031.py::test_docker_v031_provider_token_fields
+PASSED tests/field/test_docker_v031.py::test_docker_v031_calibration_escalation
+PASSED tests/mcp/test_docker_http_transport.py::test_docker_http_tools_listed
+PASSED tests/mcp/test_docker_http_transport.py::test_docker_http_call_tools_valid
+PASSED tests/mcp/test_docker_http_transport.py::test_docker_http_invalid_args_schema_error
+PASSED tests/mcp/test_docker_http_transport.py::test_docker_http_unknown_tool_no_traceback
+================ 180 passed, 61 deselected in 150.89s (0:02:30) ================

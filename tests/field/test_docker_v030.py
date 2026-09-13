@@ -7,7 +7,7 @@ stdio+HTTP+security, OTEL, preflight cost, badge/webhook, persistence, image
 size, multi-arch, resource + network limits.
 
 Marked ``@pytest.mark.docker`` — skipped when no Docker daemon is reachable.
-Results are recorded to ``field-test/results/0.3.0/docker/`` by the field conftest.
+Results are recorded to ``field-test/results/0.3.1/docker/`` by the field conftest.
 """
 
 from __future__ import annotations
@@ -388,6 +388,8 @@ def test_docker_mcp_http_auth() -> None:
             "mcp-http-v030",
             "-e",
             f"CAUTERULE_MCP_TOKEN={token}",
+            "-v",
+            f"{FIXTURES / 'rules'}:/app/rules:ro",
             DOCKER_TAG,
             "mcp",
             "--transport",
@@ -464,6 +466,8 @@ def test_docker_mcp_http_schema_and_rate_limit() -> None:
             "mcp-http-v030-rl",
             "-e",
             f"CAUTERULE_MCP_TOKEN={token}",
+            "-v",
+            f"{FIXTURES / 'rules'}:/app/rules:ro",
             DOCKER_TAG,
             "mcp",
             "--transport",

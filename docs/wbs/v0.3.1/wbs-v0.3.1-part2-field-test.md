@@ -36,8 +36,8 @@
 | 2.7 | Corpus: backfill `expected_rule` and add adapter/CI reference signatures | [#735](https://github.com/deghosal-2026/CauterRule/issues/735) |
 | 2.8 | Re-calibrate matcher thresholds after semantic and scorer changes | [#736](https://github.com/deghosal-2026/CauterRule/issues/736) |
 | 2.9 | Re-run the full cloud field-test sweep — 2 models × 40 corpora | [#737](https://github.com/deghosal-2026/CauterRule/issues/737) |
-| 2.10 | Re-run the Docker field test on the v0.3.1 image | [#738](https://github.com/deghosal-2026/CauterRule/issues/738) |
-| 2.11 | Multi-environment validation — macOS, Linux, Docker | [#739](https://github.com/deghosal-2026/CauterRule/issues/739) |
+| 2.10 | ✅ Re-run the Docker field test on the v0.3.1 image — **180/180 green** ([plan](../../field-test/v0.3.1/docker-test-plan.md), [results](../../field-test/v0.3.1/docker-test-results.md)) | [#738](https://github.com/deghosal-2026/CauterRule/issues/738) |
+| 2.11 | ✅ Multi-environment validation — macOS, Linux, Docker (`tests/field/test_docker_multienv.py` green; Docker results above) | [#739](https://github.com/deghosal-2026/CauterRule/issues/739) |
 | 2.12 | Cost measurement — token-enabled re-run + `$`/1k table | [#740](https://github.com/deghosal-2026/CauterRule/issues/740) |
 | 2.13 | Cross-session repeat-failure reduction protocol (5 sessions) | [#741](https://github.com/deghosal-2026/CauterRule/issues/741) |
 | 2.14 | Human-vs-replay agreement sampling and scoring | [#742](https://github.com/deghosal-2026/CauterRule/issues/742) |
