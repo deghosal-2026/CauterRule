@@ -26,7 +26,7 @@ from cauterule.packs.certification import certify_pack
 from cauterule.packs.deps import parse_dep, read_lockfile, write_lockfile
 from cauterule.packs.format import PackManifest, validate_manifest
 from cauterule.packs.manager import pack_info as _pack_info
-from cauterule.packs.safety import score_pack_safety
+from cauterule.packs.safety import score_pack_safety, score_rule_safety
 from cauterule.packs.spec import PackSpec, parse_spec
 from cauterule.store.manager import resolve_inside, validate_rule_id
 
@@ -51,11 +51,16 @@ def compare_versions(a: str, b: str) -> int:
     string comparison for non-numeric segments.
     """
 
-    def parts(v: str) -> list[Any]:
+    def parts(v: str) -> list[tuple[int, Any]]:
         v = v.strip().lstrip("vV")
-        out: list[Any] = []
+        out: list[tuple[int, Any]] = []
         for piece in v.replace("-", ".").split("."):
-            out.append(int(piece) if piece.isdigit() else piece)
+            # Numeric segments sort after non-numeric ones; the second element
+            # breaks ties within a kind (never mixed, so no TypeError) (#804).
+            if piece.isdigit():
+                out.append((1, int(piece)))
+            else:
+                out.append((0, piece))
         return out
 
     pa, pb = parts(a), parts(b)
@@ -100,10 +105,27 @@ def _download(url: str, dest: Path, offline: bool = False) -> None:
     request = urllib.request.Request(url, headers={"User-Agent": "cauterule"})
     if token:
         request.add_header("Authorization", f"Bearer {token}")
+    dest.parent.mkdir(parents=True, exist_ok=True)
     try:
-        with urllib.request.urlopen(request) as response, dest.open("wb") as fh:
-            shutil.copyfileobj(response, fh)
+        response = urllib.request.urlopen(request)
     except Exception as exc:
+        raise ValueError(
+            f"failed to download {url}: {exc} "
+            "(check SPEC/version; set GH_TOKEN for rate limits, "
+            "or use --offline with a cached pack)"
+        ) from exc
+    # #800: write to a temp file and atomically rename, so a dropped connection
+    # never leaves a truncated file for later installs to reuse.
+    tmp_path: Path | None = None
+    try:
+        fd, tmp_name = tempfile.mkstemp(dir=str(dest.parent), suffix=".part")
+        tmp_path = Path(tmp_name)
+        with os.fdopen(fd, "wb") as fh, response:
+            shutil.copyfileobj(response, fh)
+        tmp_path.replace(dest)
+    except Exception as exc:
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
         raise ValueError(
             f"failed to download {url}: {exc} "
             "(check SPEC/version; set GH_TOKEN for rate limits, "
@@ -160,7 +182,11 @@ def _default_fetch(spec: PackSpec, cache_dir: Path, offline: bool) -> Path:
         url, _ = _github_asset_url(spec.owner, spec.repo, spec.version)
         key = f"{spec.owner}~{spec.repo}~{spec.version or 'latest'}.tar.gz"
     dest = cache_dir / key
-    if dest.is_file():
+    # #800: a pinned version is immutable, so its cache entry is reusable. An
+    # unpinned `latest` must be re-fetched (new releases) unless we are offline
+    # and already have a cached copy.
+    pinned = bool(spec.version)
+    if dest.is_file() and (pinned or offline):
         return dest
     cache_dir.mkdir(parents=True, exist_ok=True)
     _download(url, dest, offline=offline)
@@ -206,9 +232,19 @@ def _stage_asset(asset: Path, staging: Path) -> Path:
         shutil.copytree(asset, staging / "pack")
         return staging / "pack"
     if tarfile.is_tarfile(asset):
-        with tarfile.open(asset) as tar:
-            tar.extractall(staging / "pack")
-        root = staging / "pack"
+        dest = staging / "pack"
+        try:
+            with tarfile.open(asset) as tar:
+                try:
+                    # Reject absolute/`..`/symlink members (#796); the default
+                    # is interpreter-dependent, so pass it explicitly.
+                    tar.extractall(dest, filter="data")
+                except TypeError:
+                    # Python < 3.11.4 has no filter kwarg.
+                    tar.extractall(dest)
+        except (tarfile.TarError, OSError) as exc:
+            raise ValueError(f"unsafe or corrupt pack archive: {exc}") from exc
+        root = dest
         # Unwrap single top-level dir (release tarballs).
         children = list(root.iterdir())
         if len(children) == 1 and children[0].is_dir():
@@ -242,14 +278,29 @@ def install_pack(
         raise ValueError("--fail-on must be 'error' or 'warn'")
     spec = parse_spec(spec_str)
     if spec.kind == "gist":
-        from cauterule.packs.share import import_gist
+        from cauterule.packs.share import fetch_gist_rule, import_gist
 
+        # #799: enforce safety on the gist rule *before* it enters the store,
+        # and report the real cert status instead of a blind passed=True.
+        gist_rule, _files = fetch_gist_rule(spec.gist_id, gist_api)
+        threshold = resolve_min_safety_score(min_safety_score)
+        safety = score_rule_safety(
+            gist_rule.id, gist_rule.when.trigger, gist_rule.do.directive
+        )
+        safety_ok = safety["score"] >= threshold or skip_cert
+        if not safety_ok:
+            drags = "; ".join(safety["reasons"][:5])
+            raise ValueError(
+                f"gist rule {gist_rule.id} safety score {safety['score']} < {threshold}: "
+                f"{drags} (raise the score or lower --min-safety-score)"
+            )
         imported = import_gist(spec.gist_id, store=store, force=force, api=gist_api)
         return {
             "name": imported["id"],
             "version": "",
             "rule_count": 1,
-            "cert": {"passed": True, "checks": [], "skipped": True},
+            "cert": {"passed": safety_ok, "checks": [], "skipped": skip_cert},
+            "safety": safety,
             "path": store,
             "legacy_manifest": False,
             "gist": imported["gist"],

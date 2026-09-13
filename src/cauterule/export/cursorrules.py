@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from cauterule.models.rule import StandingRule
 
-from .redaction import redact_export
+from .redaction import redact_export, sanitize_inline
 
 
 def export(rules: list[StandingRule], include_retired: bool = False) -> str:
@@ -20,11 +20,11 @@ def export(rules: list[StandingRule], include_retired: bool = False) -> str:
         rules = [r for r in rules if r.status == "active"]
     lines: list[str] = ["# Standing Rules", "", "You MUST follow these standing rules:", ""]
     for i, rule in enumerate(rules, 1):
-        trigger = redact_export(rule.when.trigger)
-        directive = redact_export(rule.do.directive)
+        trigger = sanitize_inline(redact_export(rule.when.trigger))
+        directive = sanitize_inline(redact_export(rule.do.directive))
         lines.append(f"{i}. **When** {trigger} → **Do** {directive}")
         if rule.do.because:
-            because = redact_export(rule.do.because)
+            because = sanitize_inline(redact_export(rule.do.because))
             lines.append(f"   - Because: {because}")
         if rule.tags:
             lines.append(f"   - Tags: {', '.join(rule.tags)}")

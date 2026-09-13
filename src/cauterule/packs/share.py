@@ -19,6 +19,7 @@ import yaml
 
 from cauterule import __version__
 from cauterule.export.redaction import contains_secret, redact_export
+from cauterule.models.rule import StandingRule
 from cauterule.store.manager import StoreManager
 
 FORMAT = "cauterule-share/1"
@@ -166,14 +167,10 @@ def share_rule(
     return {"url": url, "files": sorted(files), "redacted": redacted, "rule_id": rule.id}
 
 
-def import_gist(
-    gist_id: str,
-    store: str = "rules",
-    as_id: str | None = None,
-    force: bool = False,
-    api: GistApi | None = None,
-) -> dict[str, Any]:
-    """Import a shared rule gist into the store. Returns a summary dict."""
+def fetch_gist_rule(
+    gist_id: str, api: GistApi | None = None
+) -> tuple[StandingRule, dict[str, str]]:
+    """Fetch and parse the single rule in a gist without importing it (#799)."""
     gist_api = api or GitHubGistApi()
     files = gist_api.fetch_gist(gist_id)
     rule_files = {n: c for n, c in files.items() if n.startswith("R-") and n.endswith(".yaml")}
@@ -187,14 +184,22 @@ def import_gist(
     data = yaml.safe_load(content)
     if not isinstance(data, dict) or not data.get("id"):
         raise ValueError(f"gist {gist_id}: {gist_name} is not a valid rule (missing id)")
+    return StandingRule.from_dict(data), files
 
-    from cauterule.models.rule import StandingRule
 
-    rule = StandingRule.from_dict(data)
+def import_gist(
+    gist_id: str,
+    store: str = "rules",
+    as_id: str | None = None,
+    force: bool = False,
+    api: GistApi | None = None,
+) -> dict[str, Any]:
+    """Import a shared rule gist into the store. Returns a summary dict."""
+    rule, files = fetch_gist_rule(gist_id, api)
     target_id = as_id or rule.id
     manager = StoreManager(base_dir=store)
     existing = manager.get_rule(target_id)
-    if existing is not None and not force and target_id == rule.id:
+    if existing is not None and not force:
         raise ValueError(
             f"rule {target_id} already exists in the store; "
             "re-run with --force to overwrite (default aborts)"

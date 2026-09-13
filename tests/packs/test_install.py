@@ -69,11 +69,78 @@ class TestParseSpec:
             parse_spec("  ")
 
 
+class TestFetchCache:
+    def test_unpinned_refetches_but_pinned_reuses(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # #800: `latest` must not be cached forever; pinned versions may be.
+        from cauterule.packs import install as inst
+
+        calls = {"n": 0}
+
+        def fake_download(url: str, dest: Path, offline: bool = False) -> None:
+            calls["n"] += 1
+            dest.write_bytes(b"data")
+
+        monkeypatch.setattr(inst, "_download", fake_download)
+        cache = tmp_path / "cache"
+
+        latest = parse_spec("acme/pack-demo")
+        inst._default_fetch(latest, cache, offline=False)
+        inst._default_fetch(latest, cache, offline=False)
+        assert calls["n"] == 2
+
+        pinned = parse_spec("acme/pack-demo@1.2.0")
+        inst._default_fetch(pinned, cache, offline=False)
+        inst._default_fetch(pinned, cache, offline=False)
+        assert calls["n"] == 3
+
+    def test_download_is_atomic_on_failure(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # #800: a dropped connection must not leave a cached partial file.
+        import urllib.request
+
+        from cauterule.packs import install as inst
+
+        state = {"n": 0}
+
+        class _Resp:
+            def read(self, n: int = -1) -> bytes:
+                state["n"] += 1
+                if state["n"] == 1:
+                    return b"partial-data"
+                raise OSError("connection reset")
+
+            def __enter__(self) -> _Resp:
+                return self
+
+            def __exit__(self, *a: object) -> None:
+                return None
+
+        def fake_urlopen(req: object) -> _Resp:
+            return _Resp()
+
+        monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+        dest = tmp_path / "pack.tar.gz"
+        with pytest.raises(ValueError, match="failed to download"):
+            inst._download("https://example.invalid/x", dest)
+        assert not dest.exists()
+        assert list(tmp_path.glob("*.part")) == []
+
+
 class TestCompareVersions:
     def test_ordering(self) -> None:
         assert compare_versions("1.0.0", "1.0.1") == -1
         assert compare_versions("v1.2.0", "1.2.0") == 0
         assert compare_versions("2.0.0", "1.9.9") == 1
+
+    def test_mixed_segments_do_not_crash(self) -> None:
+        # #804: third-party version strings like "1.0.rc" must be sortable.
+        assert compare_versions("1.0.1", "1.0.rc") == 1
+        assert compare_versions("1.0.rc", "1.0.1") == -1
+        assert compare_versions("1.0.rc", "1.0.rc") == 0
+        assert compare_versions("1.0.0", "1.0.rc") == 1
 
 
 class TestInstallPack:
@@ -142,6 +209,26 @@ class TestInstallPack:
     def test_offline_no_cache_errors(self, tmp_path: Path) -> None:
         with pytest.raises(ValueError, match="[Oo]ffline|unknown pack shorthand"):
             install_pack("pack-demo@1.0.0", store=str(tmp_path / "store"), offline=True)
+
+    def test_stage_asset_blocks_path_traversal(self, tmp_path: Path) -> None:
+        # #796: a malicious tar member must not be written outside staging.
+        import io
+        import tarfile as _tarfile
+
+        from cauterule.packs.install import _stage_asset
+
+        asset = tmp_path / "evil.tar.gz"
+        with _tarfile.open(asset, "w:gz") as tar:
+            info = _tarfile.TarInfo("../../escape.txt")
+            payload = b"pwned"
+            info.size = len(payload)
+            tar.addfile(info, io.BytesIO(payload))
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        with pytest.raises(ValueError):
+            _stage_asset(asset, staging)
+        assert not (tmp_path / "escape.txt").exists()
+        assert not (tmp_path.parent / "escape.txt").exists()
 
     def test_cli_install_and_list(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         src = _make_source_pack(tmp_path)

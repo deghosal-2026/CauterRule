@@ -51,7 +51,7 @@
 
 **Why these block M2:** several defects corrupt the measurements M2 exists to publish — cost reports `$0.00` for Anthropic/LiteLLM/Ollama (#802), the end-to-end loop promotes with no gate and never persists (#775), the #727 injection defense has no production caller (#776), and the unsafe-directive blocklist is trivially bypassed (#777). **Fix the Criticals before the M2 exit gate; Importants may be fixed or explicitly deferred with rationale.**
 
-**Fix progress (2026-09-12):** ✅ all 11 Criticals fixed with tests. First batch: CR-1 (#763), CR-2 (#764), CR-7 (#769), CR-8 (#770), CR-13 (#775). Second batch: CR-14 (#776), CR-15 (#777), CR-16 (#778), CR-29 (#791), CR-33 (#795). Third batch: CR-43 (#762) Phase 0 (invariance pinned) + Phase 1 (directive-aware `simulate_outcome` grounding + destructive-directive linter hardening + `auto_promote` guard); Phase 2 (true executor) remains tracked in #720. `mypy src/ tests/`, `ruff check .`, and the non-field/scale/docker `pytest` suite green. Importants batches 1-3 fixed with tests: CR-3/4/5/6/9/10, CR-11/12/17/18/19/20, CR-21/22/23/24/25/26/27/28/30/31/32/39/40. Remaining: CR-34/35/36/37/38/41/42 (packs/export).
+**Fix progress (2026-09-12):** ✅ all 11 Criticals fixed with tests. First batch: CR-1 (#763), CR-2 (#764), CR-7 (#769), CR-8 (#770), CR-13 (#775). Second batch: CR-14 (#776), CR-15 (#777), CR-16 (#778), CR-29 (#791), CR-33 (#795). Third batch: CR-43 (#762) Phase 0 (invariance pinned) + Phase 1 (directive-aware `simulate_outcome` grounding + destructive-directive linter hardening + `auto_promote` guard); Phase 2 (true executor) remains tracked in #720. `mypy src/ tests/`, `ruff check .`, and the non-field/scale/docker `pytest` suite green. Importants batches 1-3 fixed with tests: CR-3/4/5/6/9/10, CR-11/12/17/18/19/20, CR-21/22/23/24/25/26/27/28/30/31/32/39/40. Importants batch 4 (CR-34/35/36/37/38/41/42) fixed. All 43 code-review findings addressed.
 
 **Replay / matcher / cache (6)**
 
@@ -110,15 +110,15 @@
 | # | Severity | Task | Issue |
 |---|----------|------|-------|
 | CR-33 | Critical | ✅ `pack publish` ships `.git/` (incl. credentials in `.git/config`) | [#795](https://github.com/deghosal-2026/CauterRule/issues/795) |
-| CR-34 | Important | `pack install`: `tar.extractall` without filter → path traversal (3.11–3.13) | [#796](https://github.com/deghosal-2026/CauterRule/issues/796) |
-| CR-35 | Important | Exporters don't escape rule text → forged rule entry (prompt injection) | [#797](https://github.com/deghosal-2026/CauterRule/issues/797) |
-| CR-36 | Important | Aider export emits unescaped YAML → corruption/injection | [#798](https://github.com/deghosal-2026/CauterRule/issues/798) |
-| CR-37 | Important | Gist import skips cert + safety yet reports `cert.passed=True` | [#799](https://github.com/deghosal-2026/CauterRule/issues/799) |
-| CR-38 | Important | Pack `latest` cache stale forever; dropped connection poisons cache | [#800](https://github.com/deghosal-2026/CauterRule/issues/800) |
+| CR-34 | Important | ✅ `pack install`: `tar.extractall` without filter → path traversal (3.11–3.13) | [#796](https://github.com/deghosal-2026/CauterRule/issues/796) |
+| CR-35 | Important | ✅ Exporters don't escape rule text → forged rule entry (prompt injection) | [#797](https://github.com/deghosal-2026/CauterRule/issues/797) |
+| CR-36 | Important | ✅ Aider export emits unescaped YAML → corruption/injection | [#798](https://github.com/deghosal-2026/CauterRule/issues/798) |
+| CR-37 | Important | ✅ Gist import skips cert + safety yet reports `cert.passed=True` | [#799](https://github.com/deghosal-2026/CauterRule/issues/799) |
+| CR-38 | Important | ✅ Pack `latest` cache stale forever; dropped connection poisons cache | [#800](https://github.com/deghosal-2026/CauterRule/issues/800) |
 | CR-39 | Important | ✅ `calibration_loop` low-precision escalation branch is dead | [#801](https://github.com/deghosal-2026/CauterRule/issues/801) |
 | CR-40 | Important | ✅ Anthropic/Ollama/LiteLLM drop token usage → cost shows `$0.00` | [#802](https://github.com/deghosal-2026/CauterRule/issues/802) |
-| CR-41 | Important | `import_gist(as_id=...)` silently overwrites existing rule | [#803](https://github.com/deghosal-2026/CauterRule/issues/803) |
-| CR-42 | Important | `compare_versions` raises `TypeError` on mixed segments | [#804](https://github.com/deghosal-2026/CauterRule/issues/804) |
+| CR-41 | Important | ✅ `import_gist(as_id=...)` silently overwrites existing rule | [#803](https://github.com/deghosal-2026/CauterRule/issues/803) |
+| CR-42 | Important | ✅ `compare_versions` raises `TypeError` on mixed segments | [#804](https://github.com/deghosal-2026/CauterRule/issues/804) |
 
 **Related — replay gate directive invariance (1)**
 

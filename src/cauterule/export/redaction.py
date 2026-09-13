@@ -17,4 +17,14 @@ def redact_export(text: str) -> str:
     return redact_text(text)
 
 
-__all__ = ["contains_secret", "redact_export"]
+def sanitize_inline(text: str) -> str:
+    """Collapse whitespace/newlines so rule text cannot forge export entries.
+
+    Exporters interpolate rule text inline; a newline would let the text
+    terminate the current line and forge a heading or rule entry that agents
+    then obey (#797). Collapsing runs of whitespace keeps the value on one line.
+    """
+    return " ".join(text.split())
+
+
+__all__ = ["contains_secret", "redact_export", "sanitize_inline"]
