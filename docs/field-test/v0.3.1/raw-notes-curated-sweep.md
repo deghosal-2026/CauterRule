@@ -9,7 +9,7 @@
 > entries — the log is the audit trail.
 
 - **Date started:** 2026-09-13
-- **Date last updated:** 2026-09-13 (pass 4 re-verification; then offline analysis: **J6** FIXED — `extraction_agreement` redefined to trigger-only; **J12**/**J14** CLOSED (accepted + documented); **J7** noted as sweep-scope, left OPEN)
+- **Date last updated:** 2026-09-13 (**pass 5: FULL 40-corpus × 2-model sweep complete** — the J7 gated corpora are now swept; §1 below reflects the full sweep. Earlier: J6 FIXED (agreement → trigger-only); J12/J14 CLOSED (accepted))
 - **Runner:** `scripts/run-field-test.py` (one corpus type per invocation)
 - **Env:** `.venv312` (Python 3.12.14), `CAUTERULE_SEMANTIC_MATCHING=1`, `--max-workers 6`
 - **Provider:** OpenRouter `https://openrouter.ai/api/v1`, extraction passes 2, temps `0.2,0.5`
@@ -18,92 +18,171 @@
   - `llama-3.1-8b` → `meta-llama/llama-3.1-8b-instruct` (label `openai-meta-llama_llama-3.1-8b-instruct`)
 - **Artifacts:** `field-test/results/0.3.1/<corpus>/<model>/2026-09-13/`
 - **Baseline:** `field-test/results/0.3.0/.../2026-09-12/`, `docs/field-test/v0.3.0/FIELD_TEST_REPORT.md`
-- **Scope:** pass 1–2 = the 7 curated corpora; pass 3 = the raw slice
-  `raw/opencode`, `raw/synthetic`, `raw/ci`; pass 4 = post-fix re-verification of
-  `golden`, `failures/positive`, `nearmiss`, `raw/ci` (raw/ci repaired: 62
-  signal-less/bogus logs deleted, 110→48; 48 sibling refs added to
-  `corpus/public/ci_reference/refs_v031.jsonl`). The gated corpora `adversarial/*`,
-  `adapters`, `raw/sibling-repos`, `raw/corrections`, `raw/cross-session`,
-  `public/*`, `lifecycle`/`packs`/`mcp`/`otel`, `public/browser`,
-  `public/real-world/bugsinpy`, `public/lifecycle_infra`, `reference-expansion`,
-  `reference-expansion/paraphrase-diversity`, `cost` are not run yet (J7 / OPEN).
+- **Scope:** pass 1–3 = the 7 curated corpora + raw slice (`raw/opencode`,
+  `raw/synthetic`, `raw/ci`); pass 4 = post-fix re-verification (raw/ci repaired
+  110→48). **pass 5 (2026-09-13) = the FULL 40-corpus × 2-model sweep, including every
+  previously-gated corpus** (`adversarial/*`, `adapters`, `raw/sibling-repos`,
+  `raw/corrections`, `raw/cross-session`, `public/*`, `lifecycle`/`packs`/`mcp`/`otel`,
+  `reference-expansion` (+`paraphrase-diversity`), `cost`) — **J7 is now swept.** This is
+  the current artifact set in §1 (`field-test/results/0.3.1/<corpus>/<model>/2026-09-13/`).
 
 ---
 
 ## 1. Latest results (current committed artifacts)
 
-Scored = `passing + failing + inconclusive`. Gate-dropped safety trajectories are not scored.
+Full **pass-5 sweep** (2026-09-13), 40 corpora × 2 models, from committed artifacts.
+Scored = `passing + failing + inconclusive`; gate-dropped safety trajectories are not scored.
+`done` = records with `status=done` (llama `no_candidates` rows are not scored — see J16).
+`exF1`/`agree` are `—` when the corpus carries no `expected_rule` (`extraction.n=0`).
 
 | Corpus | Model | done | gate | cand | pass | fail | incon | prec | rec | exF1 | agree | safety |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| golden | gpt-4o-mini | 60 | 0 | 101 | **49** | 0 | 11 | 0.817 | 0.383 | 0.621 | 0.083 | pass |
-| golden | llama-3.1-8b | 60 | 0 | 118 | **50** | 0 | 10 | 0.833 | 0.422 | 0.686 | 0.100 | pass |
-| failures/positive | gpt-4o-mini | 50 | 0 | 93 | 25 | 2 | 23 | 0.532 | 0.214 | 0.665 | 0.217 | pass |
-| failures/positive | llama-3.1-8b | 50 | 0 | 94 | 25 | 4 | 21 | 0.559 | 0.256 | 0.677 | 0.130 | pass |
+| golden | gpt-4o-mini | 60 | 0 | 99 | **49** | 0 | 11 | 0.817 | 0.377 | 0.611 | 0.783 | pass |
+| golden | llama-3.1-8b | 60 | 0 | 114 | **50** | 0 | 10 | 0.833 | 0.427 | 0.670 | 0.850 | pass |
+| failures/positive | gpt-4o-mini | 50 | 0 | 84 | 25 | 3 | 22 | 0.544 | 0.221 | 0.664 | 0.739 | pass |
+| failures/positive | llama-3.1-8b | 50 | 0 | 88 | 26 | 2 | 22 | 0.554 | 0.240 | 0.652 | 0.783 | pass |
 | failures/negative | both | 0 | 60 | 0 | 0 | 0 | 0 | — | — | — | — | pass (silence 1.0) |
 | successes | both | 0 | 60 | 0 | 0 | 0 | 0 | — | — | — | — | pass (silence 1.0) |
-| nearmiss | gpt-4o-mini | 23 | 27 | 41 | 0 | 3 | 20 | 0.174 | 0.032 | — | — | pass |
-| nearmiss | llama-3.1-8b | 23 | 27 | 44 | 0 | 5 | 18 | 0.261 | 0.058 | — | — | pass |
-| noisy | gpt-4o-mini | 5 | 0 | 9 | 3 | 0 | 2 | 0.600 | 0.255 | 0.700 | 1.000 | pass |
+| nearmiss | gpt-4o-mini | 23 | 27 | 40 | 0 | 5 | 18 | 0.261 | 0.050 | — | — | pass |
+| nearmiss | llama-3.1-8b | 23 | 27 | 46 | 0 | 4 | 19 | 0.217 | 0.035 | — | — | pass |
+| noisy | gpt-4o-mini | 5 | 0 | 8 | 2 | 0 | 3 | 0.400 | 0.236 | 0.700 | 1.000 | pass |
 | noisy | llama-3.1-8b | 5 | 0 | 10 | 2 | 0 | 3 | 0.400 | 0.218 | 0.700 | 1.000 | pass |
-| corrections | gpt-4o-mini | 5 | 0 | 9 | 4 | 0 | 1 | 0.800 | 0.181 | 0.578 | 0.250 | pass |
-| corrections | llama-3.1-8b | 5 | 0 | 8 | 4 | 0 | 1 | 0.800 | 0.176 | 0.644 | 0.500 | pass |
-| raw/opencode | gpt-4o-mini | 25 | 0 | 45 | 17 | 1 | 7 | 0.603 | 0.215 | 0.697 | 0.250 | pass |
-| raw/opencode | llama-3.1-8b | 25 | 0 | 46 | 18 | 1 | 6 | 0.650 | 0.251 | 0.744 | 0.350 | pass |
-| raw/synthetic | gpt-4o-mini | 145 | 0 | 256 | 53 | 19 | 73 | 0.359 | 0.131 | 0.494 | 0.152 | pass |
-| raw/synthetic | llama-3.1-8b | 143 | 0 | 271 | 53 | 18 | 72 | 0.374 | 0.149 | 0.448 | 0.165 | pass |
-| raw/ci | gpt-4o-mini | 48 | 0 | 95 | 21 | 0 | 27 | 0.436 | 0.027 | n/a | n/a | pass |
-| raw/ci | llama-3.1-8b | 48 | 0 | 93 | 30 | 0 | 18 | 0.623 | 0.055 | n/a | n/a | pass |
+| corrections | gpt-4o-mini | 5 | 0 | 8 | 4 | 0 | 1 | 0.800 | 0.176 | 0.558 | 0.750 | pass |
+| corrections | llama-3.1-8b | 5 | 0 | 8 | 4 | 0 | 1 | 0.800 | 0.219 | 0.665 | 0.750 | pass |
+| raw/opencode | gpt-4o-mini | 25 | 0 | 42 | 17 | 1 | 7 | 0.621 | 0.215 | 0.697 | 0.800 | pass |
+| raw/opencode | llama-3.1-8b | 25 | 0 | 45 | 17 | 2 | 6 | 0.621 | 0.241 | 0.699 | 0.750 | pass |
+| raw/synthetic | gpt-4o-mini | 145 | 0 | 254 | 56 | 19 | 70 | 0.377 | 0.133 | 0.498 | 0.626 | pass |
+| raw/synthetic | llama-3.1-8b | 144 | 0 | 271 | 58 | 13 | 73 | 0.393 | 0.151 | 0.490 | 0.551 | pass |
+| raw/ci | gpt-4o-mini | 47 | 0 | 89 | 21 | 0 | 26 | 0.438 | 0.026 | — | — | pass |
+| raw/ci | llama-3.1-8b | 47 | 0 | 92 | 26 | 0 | 21 | 0.541 | 0.043 | — | — | pass |
+| raw/sibling-repos | gpt-4o-mini | 10 | 0 | 17 | 1 | 0 | 9 | 0.082 | 0.012 | 0.153 | 0.100 | pass |
+| raw/sibling-repos | llama-3.1-8b | 10 | 0 | 19 | 1 | 0 | 9 | 0.082 | 0.012 | 0.183 | 0.000 | pass |
+| raw/corrections | gpt-4o-mini | 5 | 0 | 8 | 4 | 0 | 1 | 0.733 | 0.219 | 0.578 | 0.750 | pass |
+| raw/corrections | llama-3.1-8b | 5 | 0 | 8 | 4 | 0 | 1 | 0.733 | 0.240 | 0.653 | 0.750 | pass |
+| raw/cross-session | gpt-4o-mini | 5 | 0 | 8 | 3 | 0 | 2 | 0.500 | 0.182 | 0.938 | 1.000 | pass |
+| raw/cross-session | llama-3.1-8b | 5 | 0 | 9 | 3 | 0 | 2 | 0.476 | 0.182 | 0.998 | 1.000 | pass |
+| public/golden | gpt-4o-mini | 10 | 0 | 16 | 5 | 0 | 5 | 0.500 | 0.240 | 0.642 | 0.800 | pass |
+| public/golden | llama-3.1-8b | 10 | 0 | 18 | 7 | 0 | 3 | 0.800 | 0.263 | 0.623 | 0.800 | pass |
+| public/counterexample | both | 0 | 20 | 0 | 0 | 0 | 0 | — | — | — | — | fail (all gate-dropped) |
+| public/nearmiss | both | 0 | 20 | 0 | 0 | 0 | 0 | — | — | — | — | pass (silence) |
+| public/staleness | gpt-4o-mini | 10 | 0 | 16 | 0 | 0 | 10 | 0.000 | 0.000 | — | — | fail (0 accepted) |
+| public/staleness | llama-3.1-8b | 10 | 0 | 19 | 0 | 0 | 10 | 0.000 | 0.000 | — | — | fail (0 accepted) |
+| public/synthetic | gpt-4o-mini | 10 | 20 | 19 | 0 | 0 | 10 | 0.000 | 0.000 | — | — | fail (0 accepted) |
+| public/synthetic | llama-3.1-8b | 10 | 20 | 20 | 0 | 0 | 10 | 0.000 | 0.000 | — | — | fail (0 accepted) |
+| public/domains | gpt-4o-mini | 30 | 20 | 55 | 0 | 0 | 30 | 0.167 | 0.027 | — | — | fail (0 accepted) |
+| public/domains | llama-3.1-8b | 30 | 20 | 59 | 5 | 0 | 25 | 0.289 | 0.032 | — | — | pass |
+| adversarial/injection | gpt-4o-mini | 10 | 0 | 14 | 0 | 4 | 6 | 0.400 | 0.153 | — | — | pass |
+| adversarial/injection | llama-3.1-8b | 10 | 0 | 15 | 0 | 4 | 6 | 0.400 | 0.153 | — | — | pass |
+| adversarial/misleading | gpt-4o-mini | 10 | 0 | 20 | 0 | 5 | 5 | 0.483 | 0.243 | — | — | pass |
+| adversarial/misleading | llama-3.1-8b | 10 | 0 | 20 | 0 | 8 | 2 | 0.683 | 0.330 | — | — | pass |
+| adversarial/contradiction | gpt-4o-mini | 10 | 0 | 20 | 0 | 1 | 9 | 0.067 | 0.017 | — | — | pass |
+| adversarial/contradiction | llama-3.1-8b | 10 | 0 | 20 | 0 | 3 | 7 | 0.200 | 0.082 | — | — | pass |
+| adversarial/unsafe | gpt-4o-mini | 10 | 0 | 19 | 0 | 0 | 10 | 0.000 | 0.000 | — | — | pass |
+| adversarial/unsafe | llama-3.1-8b | 10 | 0 | 20 | 0 | 1 | 9 | 0.100 | 0.050 | — | — | pass |
+| adversarial/poisoning | gpt-4o-mini | 10 | 0 | 19 | 0 | 2 | 8 | 0.200 | 0.090 | — | — | pass |
+| adversarial/poisoning | llama-3.1-8b | 10 | 0 | 18 | 0 | 3 | 7 | 0.280 | 0.124 | — | — | pass |
+| adversarial/tool_output_injection | gpt-4o-mini | 20 | 0 | 39 | 0 | 0 | 20 | 0.000 | 0.000 | — | — | pass |
+| adversarial/tool_output_injection | llama-3.1-8b | 20 | 0 | 40 | 0 | 0 | 20 | 0.000 | 0.000 | — | — | pass |
+| adversarial/compounding_multiturn | gpt-4o-mini | 10 | 0 | 19 | 0 | 0 | 10 | 0.000 | 0.000 | — | — | pass |
+| adversarial/compounding_multiturn | llama-3.1-8b | 10 | 0 | 20 | 0 | 0 | 10 | 0.000 | 0.000 | — | — | pass |
+| adversarial/unsafe_realistic | gpt-4o-mini | 20 | 0 | 39 | 0 | 0 | 20 | 0.000 | 0.000 | — | — | pass |
+| adversarial/unsafe_realistic | llama-3.1-8b | 7* | 0 | 9 | 0 | 0 | 7 | 0.000 | 0.000 | — | — | pass |
+| adversarial/misleading_harmbench | gpt-4o-mini | 15 | 0 | 28 | 0 | 0 | 15 | 0.000 | 0.000 | — | — | pass |
+| adversarial/misleading_harmbench | llama-3.1-8b | 11* | 0 | 18 | 0 | 0 | 11 | 0.000 | 0.000 | — | — | pass |
+| adversarial/contradiction_harmbench | gpt-4o-mini | 15 | 0 | 28 | 0 | 0 | 15 | 0.000 | 0.000 | — | — | pass |
+| adversarial/contradiction_harmbench | llama-3.1-8b | 5* | 0 | 7 | 0 | 0 | 5 | 0.000 | 0.000 | — | — | pass |
+| adapters | gpt-4o-mini | 60 | 0 | 117 | 60 | 0 | 0 | 1.000 | 0.168 | — | — | pass |
+| adapters | llama-3.1-8b | 60 | 0 | 118 | 60 | 0 | 0 | 1.000 | 0.175 | — | — | pass |
+| lifecycle | gpt-4o-mini | 40 | 0 | 77 | 0 | 0 | 40 | 0.000 | 0.000 | — | — | fail (0 accepted) |
+| lifecycle | llama-3.1-8b | 40 | 0 | 80 | 0 | 0 | 40 | 0.000 | 0.000 | — | — | fail (0 accepted) |
+| packs | gpt-4o-mini | 40 | 0 | 70 | 20 | 0 | 20 | 0.920 | 0.427 | — | — | pass |
+| packs | llama-3.1-8b | 40 | 0 | 68 | 20 | 0 | 20 | 0.893 | 0.427 | — | — | pass |
+| mcp | gpt-4o-mini | 20 | 0 | 38 | 0 | 5 | 15 | 0.250 | 0.008 | — | — | fail |
+| mcp | llama-3.1-8b | 20 | 0 | 39 | 0 | 5 | 15 | 0.250 | 0.008 | — | — | fail |
+| otel | both | 0 | 20 | 0 | 0 | 0 | 0 | — | — | — | — | fail (all gate-dropped) |
+| cost | gpt-4o-mini | 667 | 333 | 1241 | 69 | 18 | 580 | 0.071 | 0.010 | — | — | pass |
+| cost | llama-3.1-8b | 667 | 333 | 1316 | 78 | 59 | 530 | 0.135 | 0.029 | — | — | pass |
+| public/browser | gpt-4o-mini | 20 | 0 | 34 | 19 | 0 | 1 | 0.891 | 0.271 | — | — | pass |
+| public/browser | llama-3.1-8b | 20 | 0 | 39 | 20 | 0 | 0 | 0.942 | 0.203 | — | — | pass |
+| public/real-world/bugsinpy | gpt-4o-mini | 36 | 0 | 66 | 30 | 0 | 6 | 0.829 | 0.118 | — | — | pass |
+| public/real-world/bugsinpy | llama-3.1-8b | 36 | 0 | 70 | 28 | 1 | 7 | 0.785 | 0.118 | — | — | pass |
+| public/lifecycle_infra | gpt-4o-mini | 20 | 0 | 34 | 7 | 0 | 13 | 0.612 | 0.143 | — | — | pass |
+| public/lifecycle_infra | llama-3.1-8b | 20 | 0 | 38 | 11 | 0 | 9 | 0.771 | 0.158 | — | — | pass |
+| reference-expansion | gpt-4o-mini | 303 | 0 | 515 | 201 | 27 | 75 | 0.665 | 0.161 | 0.734 | 0.917 | pass |
+| reference-expansion | llama-3.1-8b | 303 | 0 | 578 | 198 | 24 | 81 | 0.668 | 0.185 | 0.749 | 0.917 | pass |
+| reference-expansion/paraphrase-diversity | gpt-4o-mini | 15 | 0 | 26 | 8 | 1 | 6 | 0.725 | 0.290 | 0.717 | 0.933 | pass |
+| reference-expansion/paraphrase-diversity | llama-3.1-8b | 15 | 0 | 26 | 8 | 0 | 7 | 0.850 | 0.448 | 0.711 | 0.933 | pass |
 
-**Pass 4 note:** golden/failures/positive/nearmiss/raw/ci were re-run after the
-matcher fix that embeds the trigger against a class-free failure view (J11).
-Cross-run deltas of ±1–2 trajectories are **within LLM sampling variance** (temps
-0.2/0.5) — e.g. failures/positive 26→25 despite a matcher change that can only
-*add* matches (J15).
+\* llama `done` is lower than the corpus size because the 8B returned **`no_candidates`** on
+the remainder (e.g. `unsafe_realistic` 13/20, `contradiction_harmbench` 10/15) — an extraction
+variance on adversarial corpora, tracked as **J16**.
 
-**raw-slice notes:** `raw/synthetic` llama shows `done=143/145` (2 `no_candidates` — 8B
-extraction variance, cf. J5; not a gate regression). `raw/ci` `exF1`/`agree` are
-**`null`** (n/a): the corpus carries no `expected_rule`, so the extraction metric has
-`n=0` and the runner now emits `null` rather than a hard `0.0` (J10 FIXED). `raw/ci`
-inconclusive is **56% gpt / 38% llama** — down from 77–83%; llama is under the raw
-<40% target, gpt is not (J11 FIXED; J14 accepted as a gpt model gap). `raw/synthetic` shows `blocked_by_broken`
-14–15 and `verdict:fail` 4/model (J12, accepted — reference-pool precision limit).
+**Key sweep findings (new issues in §2):**
+- **Adapters & raw/ci now produce rules** (plan Q3): adapters 60/60 pass (was 0/60 in v0.3.0);
+  raw/ci pass 21/47 gpt, 26/47 llama (was 0/110). J7 gated corpora are swept.
+- **0-accepted corpora** (safety `fail`, no promotable rules): `public/staleness`,
+  `public/synthetic`, `lifecycle`, `mcp`, and gpt `public/domains` — persistent
+  reference-coverage/matcher gaps carried over from v0.3.0 → **J18**.
+- **Harness health false-FAIL** on fully gate-dropped corpora (`public/counterexample`,
+  `otel`) and on llama `no_candidates` corpora → **J17**.
+- **nearmiss** `fail` count (5 gpt / 4 llama) is **not** a regression — every one is
+  `_forced_reject` on a `should_reject` source with `precision=1.0`, `successes_broken=[]`
+  (safety working); `accepted=0`, `false_accept_rate=0.0` for both. All `adversarial/*`
+  corpora: `accepted=0` (0 promotions) → the #727/#776 source-trust gate holds.
 
-**nearmiss note:** the `fail` count (3 gpt / 5 llama) is **not** a regression — every one is
-`_forced_reject=True` on a `should_reject` source (candidate passed replay but the source is
-expected-to-reject) with `precision=1.0`, `successes_broken=[]`. Safety mechanism working.
-`accepted=0`, `false_accept_rate=0.0` for both.
+### 1a. Exit criteria (plan §6) — Wilson 95% CI
 
-### 1a. Pass rate vs plan §6 exit criteria (Wilson 95% CI)
+| Criterion | Model | value | rate [95% CI] | threshold | verdict |
+|---|---|---|---:|---|---|
+| golden pass rate (pass/done) | gpt-4o-mini | 49/60 | 0.82 [0.70, 0.89] | ≥0.70 | **PASS** |
+| golden pass rate | llama-3.1-8b | 50/60 | 0.83 [0.72, 0.91] | ≥0.70 | **PASS** |
+| failures/positive pass rate | gpt-4o-mini | 25/50 | 0.50 [0.37, 0.63] | ≥0.50 | **PASS** (borderline) |
+| failures/positive pass rate | llama-3.1-8b | 26/50 | 0.52 [0.39, 0.65] | ≥0.50 | **PASS** |
+| nearmiss rejection (0 accepts) | both | 23/23 | 1.000 [0.857, 1.000] | 0 accepts | **PASS** |
+| adversarial/\* promotions | both | 0 | — | =0 | **PASS** |
+| generic triggers (golden) | gpt / llama | 6/159 · 7/174 | 0.038 · 0.040 | <0.10 | **PASS** |
+| generic triggers (failures/positive) | both | 0/134 · 0/138 | 0.000 | <0.10 | **PASS** |
 
-| Corpus | Model | pass/n | rate | CI low | CI high | threshold | verdict |
-|---|---|---|---:|---:|---:|---:|---|
-| golden | gpt-4o-mini | 49/60 | 0.82 | 0.70 | 0.89 | ≥0.70 | **PASS** |
-| golden | llama-3.1-8b | 50/60 | 0.83 | 0.72 | 0.91 | ≥0.70 | **PASS** |
-| failures/positive | gpt-4o-mini | 25/50 | 0.50 | 0.37 | 0.63 | ≥0.50 | **PASS** (borderline) |
-| failures/positive | llama-3.1-8b | 25/50 | 0.50 | 0.37 | 0.63 | ≥0.50 | **PASS** (borderline) |
+- **All 8 plan §6 exit criteria PASS** for both models.
+- **Golden inconclusive** 11/60 (18.3%) gpt, 10/60 (16.7%) llama — still above the <15%
+  target (replay/matcher residual). The J6 *agreement* metric is a separate axis (now FIXED,
+  §1e). The plan's "all corpora inconclusive <15%" is applied to the curated target corpora;
+  safety/adversarial/public corpora are legitimately high-inconclusive and are measured, not
+  gated, by that threshold.
+- **nearmiss:** 0 false accepts, both models. **adversarial/\*:** 0 promotions across all 9
+  corpora — the #727/#776 source-trust gate holds (J7 swept).
+- **raw/ci:** pass 21/47 (45%) gpt, 26/47 (55%) llama; inconclusive 55% gpt / 45% llama
+  (gpt residual = accepted model gap, J14).
 
-- golden inconclusive = 11/60 (18.3%) gpt, 10/60 (16.7%) llama — still above the <15% target (replay/matcher residual, within CIs; the J6 *agreement* metric is now FIXED trigger-only — a different axis).
-- generic triggers: golden 6/166 = 3.6% gpt, 7/174 = 4.0% llama; failures/positive 0% / 1/141 → PASS (<10%).
-- nearmiss safety verdict PASS for both (0 false accepts).
-- raw/ci (post-fix): pass 21/48 (44%, CI [0.31,0.58]) gpt, 30/48 (62%, CI [0.48,0.75]) llama; inconclusive 56% / 38% (raw target <40% → llama PASS, gpt accepted as model gap — J14).
-- adversarial promoted = 0 → not run (J7 / OPEN).
+### 1b. Two-model comparison (paired per-trajectory deltas, plan §2.4)
 
-### 1b. Two-model comparison
+Paired on identical `trajectory_id` (same corpus, both models, same run):
 
-- **Golden:** llama 50/60 vs gpt 49/60 — statistically tied (CIs overlap); weak model matches the strong one.
-- **failures/positive:** identical, both 25/50 (50%).
-- **nearmiss:** both safety PASS, 0 false accepts.
-- **noisy:** gpt 3/5 vs llama 2/5 (5-example noise). **corrections:** both 4/5.
-- **raw/ci:** llama 30/48 (62%) vs gpt 21/48 (44%) — the 8B's more generic triggers match the sibling references better (J14).
-- **Extraction semantic F1:** golden 0.621 / 0.686; failures/positive 0.665 / 0.677. Directive F1 low (0.21–0.32).
-- **Conclusion:** golden and failures/positive are pipeline-bound, not model-bound after the fixes.
+| Corpus | paired | discordant | gpt-only pass | llama-only pass |
+|---|---:|---:|---:|---:|
+| golden | 60 | 1 | 0 | 1 |
+| failures/positive | 50 | 7 | 2 | 3 |
+| nearmiss | 50 | 5 | 0 | 0 |
+| raw/ci | 47 | 11 | 3 | 8 |
+| adapters | 60 | 0 | 0 | 0 |
+| reference-expansion | 303 | 33 | 16 | 13 |
 
-### 1c. Harness health
+- **golden:** llama 50/60 vs gpt 49/60 (1 discordant) — near-identical; the weak model matches the strong one.
+- **failures/positive:** llama 26/50 vs gpt 25/50. **adapters:** 60/60 tie. **reference-expansion:** gpt 201/303 vs llama 198/303.
+- **raw/ci:** llama 26/47 (55%) vs gpt 21/47 (45%) — the 8B's broader triggers match the CI sibling refs better (J14 model gap).
+- **nearmiss:** 0 passes either way (all correctly blocked); both safety PASS, 0 false accepts.
+- **Conclusion:** golden, failures/positive, adapters and reference-expansion are
+  **pipeline-bound, not model-bound** after the v0.3.1 fixes.
 
-All 7 curated corpora: **PASS** for both models. Raw slice also **PASS**:
-`raw/opencode` 25/25 both; `raw/synthetic` 145/145 gpt, 143/145 llama (2
-`no_candidates`); `raw/ci` 48/48 both (repaired corpus).
+### 1c. Harness health (full sweep)
+
+**PASS** for the vast majority of corpora (all curated + raw + adapters + reference-expansion
++ browser/bugsinpy/lifecycle_infra). **FAIL** — all false-fails, tracked as **J17** (harness
+mis-fails on gate-dropped / no-candidate corpora, not a real regression):
+- both models: `public/counterexample`, `otel` — 100% gate-dropped, so parse-rate is computed
+  over 0 attempted trajectories.
+- llama: `adversarial/unsafe_realistic` (13 `no_candidates`), `adversarial/contradiction_harmbench`
+  (10 `no_candidates`) — completion ratio falls below the 0.9 threshold (J16 extraction variance).
 
 ### 1d. Corpus inventory / reference pool
 
@@ -118,34 +197,105 @@ All 7 curated corpora: **PASS** for both models. Raw slice also **PASS**:
 | corrections | 5 | human-correction flow |
 | raw/opencode | 25 | real agent-session failures |
 | raw/synthetic | 145 | synthetic failures |
-| raw/ci | 48 | real CI failure logs (repaired from 110; J11) |
+| raw/ci | 48 | real CI failure logs (repaired 110→48; J11) |
+| raw/sibling-repos | 10 | sibling-repo failures |
+| raw/corrections | 5 | raw corrections |
+| raw/cross-session | 5 | cross-session protocol |
+| public/golden | 10 | public golden |
+| public/counterexample | 20 | safety (gate-dropped) |
+| public/nearmiss | 20 | safety (gate-dropped) |
+| public/staleness | 10 | staleness (0 accepted — J18) |
+| public/synthetic | 30 | public synthetic (0 accepted — J18) |
+| public/domains | 50 | cross-domain (J18, gpt 0 accepted) |
+| public/browser | 20 | browser-tool failures |
+| public/real-world/bugsinpy | 36 | real Python bugs |
+| public/lifecycle_infra | 20 | infra lifecycle |
+| adversarial/\* (9 corpora) | 10–20 ea | safety **rejection** (0 promotions) |
+| adapters | 60 | framework coverage (#726) |
+| lifecycle | 40 | lifecycle (0 accepted — J18) |
+| packs | 40 | pack replay |
+| mcp | 20 | MCP (0 accepted — J18) |
+| otel | 20 | OTel (gate-dropped) |
+| cost | 1000 | fixed $/1k sample (#740) |
+| reference-expansion | 303 | extraction accuracy (#730) |
+| reference-expansion/paraphrase-diversity | 15 | paraphrase validation (#689) |
 
-Safety keyed by `expected_outcome`: `should_silence` (successes, failures/negative) →
-pass = 100% silence; `should_reject` (nearmiss, adversarial/*) → pass = 0 accepts.
-Replay pool = **588** trajectories (`meta.reference_trajectories`): the 540 from
-pass 1–2 (incl. `corpus/public/golden_replay/`, 54 refs, J3) plus 48 sibling CI
-refs in `corpus/public/ci_reference/refs_v031.jsonl` (J11).
+Safety keyed by `expected_outcome`: `should_silence` (successes, failures/negative,
+public/counterexample, otel) → pass = 100% silence; `should_reject` (nearmiss,
+adversarial/*) → pass = 0 accepts. Replay pool = **588** trajectories
+(`meta.reference_trajectories`): 540 curated (incl. `corpus/public/golden_replay/`, 54 refs,
+J3) + 48 sibling CI refs (`corpus/public/ci_reference/refs_v031.jsonl`, J11).
 
 ### 1e. Breakdown appendix
 
-inconclusive_breakdown (per candidate): golden gpt `{matcher_gap:3, ambiguous_evidence:13}`,
-llama `{matcher_gap:2, ambiguous_evidence:21}`; failures/positive gpt `{matcher_gap:4,
-ambiguous_evidence:40}`, llama `{matcher_gap:2, ambiguous_evidence:38}`; nearmiss gpt
-`{matcher_gap:5, ambiguous_evidence:31}`, llama `{broad_trigger:2, matcher_gap:3,
-ambiguous_evidence:30}`; raw/ci gpt `{matcher_gap:25, ambiguous_evidence:28}`, llama
-`{broad_trigger:1, matcher_gap:25, ambiguous_evidence:16}`.
+Extraction metrics (n, token_f1, semantic_f1, directive_f1, token_agree, **agreement**):
+golden gpt (60, 0.419, 0.611, 0.205, 0.250, **0.783**), llama (60, 0.484, 0.670, 0.220,
+0.367, **0.850**); failures/positive gpt (23, 0.527, 0.664, 0.302, 0.304, **0.739**), llama
+(23, 0.556, 0.652, 0.294, 0.478, **0.783**); reference-expansion gpt (303, 0.608, 0.734,
+0.244, 0.548, **0.917**), llama (303, 0.654, 0.749, 0.205, 0.630, **0.917**);
+reference-expansion/paraphrase-diversity gpt (15, 0.512, 0.718, 0.311, 0.267, **0.933**),
+llama (15, 0.509, 0.711, 0.388, 0.200, **0.933**). After the **J6 fix**, `agreement`
+(trigger-only) is 0.78–0.92 while `token_f1`/`token_agreement` stay much lower — the
+semantic headline is the intended signal (**plan Q2 confirmed**: semantic F1 high, token F1
+lower). `raw/ci` `extraction.n=0` → all metrics `null` (J10).
 
-verdict_reason_breakdown (per trajectory): golden gpt `verdict:pass 49, no_signal 11`;
-llama `verdict:pass 50, no_signal 10`; failures/positive gpt `verdict:pass 25, no_signal 19,
-blocked_by_broken 2, blocked_by_near_miss 3, min_sample 1`, llama `verdict:pass 25,
-no_signal 15, blocked_by_broken 4, blocked_by_near_miss 5, min_sample 1`; nearmiss gpt
-`verdict:fail 3 (forced should_reject), no_signal 18, blocked_by_near_miss 1, min_sample 1`;
-raw/ci gpt `verdict:pass 21, no_signal 27`, llama `verdict:pass 30, no_signal 18`.
+inconclusive_breakdown (per candidate): golden gpt `{matcher_gap:2, ambiguous_evidence:16}`,
+llama `{matcher_gap:2, ambiguous_evidence:22}`; failures/positive gpt `{matcher_gap:4,
+ambiguous_evidence:36}`, llama `{matcher_gap:2, ambiguous_evidence:38}`; nearmiss gpt
+`{matcher_gap:4, ambiguous_evidence:30}`, llama `{broad_trigger:3, matcher_gap:6,
+ambiguous_evidence:29}`; raw/ci gpt `{matcher_gap:26, ambiguous_evidence:24}`, llama
+`{broad_trigger:1, matcher_gap:25, ambiguous_evidence:20}`; reference-expansion gpt
+`{matcher_gap:39, ambiguous_evidence:95}`, llama `{broad_trigger:4, matcher_gap:36,
+ambiguous_evidence:118}`.
 
-Extraction metrics (n, token_f1, semantic_f1, directive_f1, agreement):
-golden gpt (60, 0.416, 0.621, 0.209, 0.083), llama (60, 0.514, 0.686, 0.227, 0.100);
-failures/positive gpt (23, 0.533, 0.665, 0.318, 0.217), llama (23, 0.629, 0.677, 0.281, 0.130);
-raw/ci gpt/llama `extraction.n = 0` → all metrics `null` (no `expected_rule`; J10 FIXED).
+verdict_reason_breakdown (per trajectory): golden gpt `pass 49, no_signal 11`, llama
+`pass 50, no_signal 10`; failures/positive gpt `pass 25, no_signal 17, blocked_by_broken 3,
+blocked_by_near_miss 4, min_sample 1`, llama `pass 26, no_signal 17, blocked_by_broken 2,
+blocked_by_near_miss 4, min_sample 1`; nearmiss gpt `fail 5 (forced), no_signal 16,
+blocked_by_near_miss 1, min_sample 1`, llama `fail 4, no_signal 17, blocked_by_near_miss 1,
+min_sample 1`; raw/ci gpt `pass 21, no_signal 26`, llama `pass 26, no_signal 21`;
+reference-expansion gpt `pass 201, no_signal 54, blocked_by_near_miss 21, blocked_by_broken 27`,
+llama `pass 198, no_signal 53, blocked_by_near_miss 28, blocked_by_broken 24`; adapters both
+`pass 60`.
+
+### 1f. v0.3.0 → v0.3.1 deltas (plan §1; baseline `field-test/results/0.3.0/`)
+
+| Corpus | Model | pass | incon | done |
+|---|---|---|---|---|
+| golden | gpt-4o-mini | 4 → **49** | 6 → 11 | 10 → 60 |
+| golden | llama-3.1-8b | 5 → **50** | 5 → 10 | 10 → 60 |
+| failures/positive | gpt-4o-mini | 4 → **25** | 40 → **22** | 50 |
+| failures/positive | llama-3.1-8b | 5 → **26** | 39 → **22** | 50 |
+| raw/ci | gpt-4o-mini | 0 → **21** | 110 → **26** | 110 → 48 |
+| raw/ci | llama-3.1-8b | 0 → **26** | 109 → **21** | 110 → 48 |
+| adapters | gpt-4o-mini | 0 → **60** | 60 → **0** | 60 |
+| adapters | llama-3.1-8b | 0 → **60** | 60 → **0** | 60 |
+| reference-expansion | gpt-4o-mini | 19 → **201** | 272 → **75** | 303 |
+| reference-expansion | llama-3.1-8b | 19 → **198** | 267 → **81** | 303 |
+
+**Plan §1 question answers:**
+- **Q1 (replay/scorer fixes moved the pass rate):** golden 4→49 / 5→50 (n 10→60),
+  failures/positive 4→25 / 5→26 with inconclusive 40→22. Pass rates up, inconclusive down. ✓
+- **Q2 (extraction good independent of replay):** extraction agreement 0.74–0.92 on
+  failures/positive & reference-expansion while token-F1 stays lower (0.42–0.65). ✓ (J6)
+- **Q3 (worst corpora fixed):** adapters 0→60 pass (was 0/60), raw/ci 0→21/26 pass (was
+  0/110). ✓ (J11, #726/#735)
+
+### 1g. Cost (#740) — from the 40-corpus sweep
+
+Real per-model token prices; cloud models only.
+
+| Model | Trajs | LLM reqs | Candidates | Promoted | Total $ | $/candidate | $/promoted | $/1k trajs | Gate savings |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| gpt-4o-mini | 2371 | 3582 | 3226 | 601 | $0.49 | 0.0002 | 0.0008 | $0.20 | $0.05 |
+| llama-3.1-8b | 2371 | 3582 | 3385 | 626 | $0.12 | 0.0000 | 0.0002 | $0.05 | $0.01 |
+
+(`cost` corpus: 333/1000 gate-dropped for both; pass 69 gpt / 78 llama of 667 scored. The
+`cost` corpus is a fixed 1k mixed sample, so its own pass rate is low by design.)
+
+> **Cross-session (#741) and human-agreement (#742) are NOT measured in this sweep** — they
+> need the 5-session protocol and human reviews respectively, neither of which was run. Tracked
+> as OPEN in §2; the report must not mark them `_pending_` until they are measured.
 
 ---
 
@@ -163,7 +313,7 @@ Append new entries at the bottom with the next `J#`.
 | J4 | golden ≥70% threshold looked unrealistic | FIXED (was J3) | `6f6e89b` |
 | J5 | llama `corrections` `C-002 no_candidates` | FIXED (variance) | — |
 | J6 | `extraction_agreement` low + golden ~20% inconclusive | FIXED (agreement now trigger-only) | uncommitted |
-| J7 | gated corpora not run (adversarial/adapters/raw/ref-exp) | OPEN (sweep scope — needs field run) | — |
+| J7 | gated corpora not run (adversarial/adapters/raw/ref-exp) | CLOSED (swept — pass 5 full 40-corpus sweep) | — |
 | J8 | stale corpus inventory in README | FIXED | (this commit) |
 | J9 | final report + #740–#742 measurements | OPEN | — |
 | J10 | `extraction_f1`/`extraction_agreement` emit `0.0` when `extraction.n == 0` | FIXED (verified) | uncommitted |
@@ -171,7 +321,10 @@ Append new entries at the bottom with the next `J#`.
 | J12 | `raw/synthetic` `blocked_by_broken` 14–15 + 4 `fail`/model | CLOSED (accepted: reference-pool precision limit) | — |
 | J13 | `safety.false_accept_rate` mislabelled on non-rejection corpora | FIXED (verified) | uncommitted |
 | J14 | `raw/ci` gpt residual 56% inconclusive (vs llama 38%) | CLOSED (accepted: gpt model gap; real thr 0.35) | — |
-| J15 | cross-run pass/fail deltas confounded by LLM sampling variance | OPEN (methodology) | — |
+| J15 | cross-run pass/fail deltas confounded by LLM sampling variance | OPEN (methodology; paired deltas added §1b) | — |
+| J16 | llama `no_candidates` extraction variance on adversarial corpora | OPEN | — |
+| J17 | harness-health false-FAIL on gate-dropped / no-candidate corpora | OPEN | — |
+| J18 | 0-accepted corpora (public/staleness, public/synthetic, lifecycle, mcp, public/domains-gpt) | OPEN | — |
 
 ### J1 — nearmiss (+ adversarial) safety scoring inverted — FIXED
 - **Found:** pass 1 (2026-09-13). nearmiss safety verdict `fail` despite 0 false accepts.
@@ -247,22 +400,24 @@ Append new entries at the bottom with the next `J#`.
   move the replay inconclusive count. The residual golden inconclusive (11/10 = 17–18%) is a
   separate matcher/recall matter, still above the <15% curated target but within the CIs
   (see §1a), and is intentionally left as-is.
+- **Pass 5 (2026-09-13): CONFIRMED.** The full sweep shows trigger-only `agreement` of 0.78–0.92
+  on golden / failures-positive / reference-expansion while `token_f1` stays 0.42–0.65 — plan Q2
+  confirmed (the model extracts correctly; the old token-F1 proxy was the bottleneck). See the
+  artifact-derived `FIELD_TEST_REPORT.md` §8.
 
-### J7 — gated corpora not run — OPEN (sweep scope)
+### J7 — gated corpora not run — CLOSED (swept)
 - **Found:** scope choice. Pass 3 ran the raw slice: `raw/opencode` (25), `raw/synthetic`
   (145), `raw/ci` (110) — both models, all harness-PASS.
-- **Still not run:** `adversarial/*` (must be 0 promotions — now correctly scored by J1),
-  `adapters`, `raw/sibling-repos`, `raw/corrections`, `raw/cross-session`, `public/*`,
-  `lifecycle`/`packs`/`mcp`/`otel`, `public/browser`, `public/real-world/bugsinpy`,
-  `public/lifecycle_infra`, `reference-expansion` (+`paraphrase-diversity`), `cost`.
-- **Status (analysis):** this is a **sweep-scope** item, not a code defect — every listed
-  corpus is registered in `CORPUS_TYPES` and runnable via `run-field-test.py`, and the
-  pre-extraction gate already routes them correctly (strict for `adversarial/*`). Nothing to
-  fix in code; it stays OPEN until the sweep is actually run.
-- **Next:** run them (prerequisites for the v0.3.1 exit gate). Deliberately **not** run in the
-  J6/J12/J14 analysis session under the "no field/scale/docker tests" constraint — needs a
-  dedicated field sweep with `CAUTERULE_LLM_API_KEY` and the gated corpora selected
-  (`--all` or each name).
+- **Still not run (at pass 3):** `adversarial/*`, `adapters`, `raw/sibling-repos`,
+  `raw/corrections`, `raw/cross-session`, `public/*`, `lifecycle`/`packs`/`mcp`/`otel`,
+  `public/browser`, `public/real-world/bugsinpy`, `public/lifecycle_infra`,
+  `reference-expansion` (+`paraphrase-diversity`), `cost`.
+- **Pass 5 (2026-09-13): RESOLVED.** The full 40-corpus × 2-model sweep was run — every gated
+  corpus above now has committed artifacts in `field-test/results/0.3.1/` (see §1). J7 closed.
+  Findings from the sweep became **J16** (llama `no_candidates` on adversarial), **J17**
+  (harness-health false-fail on gate-dropped corpora), and **J18** (0-accepted corpora).
+  Results are now in the artifact-derived `FIELD_TEST_REPORT.md` (this file is the interim
+  journal; the report supersedes it).
 
 ### J8 — stale corpus inventory in README — FIXED
 - **Found:** README table said 10/30/10/20/14/5/5 and "84 curated".
@@ -411,6 +566,43 @@ Append new entries at the bottom with the next `J#`.
   §1 and §1a numbers are a snapshot, not a precise delta.
 - **Next (report):** for the final `FIELD_TEST_REPORT.md`, either freeze one extraction per
   corpus and re-score pipelines on it, or carry Wilson CIs and state the variance explicitly.
+  **Pass 5 (2026-09-13):** §1b now reports the paired per-trajectory model deltas the plan
+  required (e.g. golden 1 discordant, reference-expansion 33/303, adapters 0/60).
+
+### J16 — llama `no_candidates` extraction variance on adversarial corpora — OPEN
+- **Found:** pass 5. The 8B returned `no_candidates` (extraction produced zero candidates) on a
+  large fraction of several adversarial corpora: `unsafe_realistic` 13/20,
+  `contradiction_harmbench` 10/15, `misleading_harmbench` 4/15 (vs gpt 0/20, 0/15, 0/15). These
+  are **not** gate drops (gate=0) — the extractor returned no candidates, so `done` < corpus size
+  and llama's `done`-based rates are understated on those corpora (see `done*` in §1).
+- **Impact:** harness health fails on those corpora (completion ratio < 0.9, J17); llama's
+  adversarial numbers undercount. Same `no_candidates` variance as J5 (corrections) but far more
+  severe on the adversarial/unsafe prompts.
+- **Next:** inspect whether the 8B is failing to parse its output or genuinely emitting empty
+  candidates on adversarial prompts; consider a retry or a `no_candidates` re-extraction pass.
+
+### J17 — harness-health false-FAIL on gate-dropped / no-candidate corpora — OPEN
+- **Found:** pass 5. `harness_health` reports `FAIL` for corpora that are correctly all
+  gate-dropped (`public/counterexample`, `otel`: 100% gate-dropped → parse-rate computed over
+  0 attempted trajectories) and for llama `no_candidates` corpora (completion ratio < 0.9). Not
+  real regressions.
+- **Root cause:** the parse-rate check divides by `attempted = total - gate_dropped`; when
+  `attempted == 0` the rate is undefined and is treated as a fail. No-candidate corpora trip the
+  completion-ratio check for the same reason.
+- **Next:** make `harness_health` `n/a`/PASS when `attempted == 0`, and exempt expected
+  all-gate-dropped corpora from the completion-ratio gate.
+
+### J18 — 0-accepted corpora (no promotable rules) — OPEN
+- **Found:** pass 5. Several corpora meant to yield rules produced **0 accepted** rules (safety
+  verdict `fail`) for both models: `public/staleness` (0/10), `public/synthetic` (0/10 scored,
+  20 gate-dropped), `lifecycle` (0/40), `mcp` (0/20, 5 fail), and gpt `public/domains` (0/30;
+  llama 5/30). These carry over the v0.3.0 reference-coverage / matcher gaps (adapters/lifecycle/
+  mcp = missing references; otel/mcp = matcher mismatch).
+- **Impact:** these corpora are effectively unreleased; the v0.3.1 full sweep confirms they still
+  produce no promotable rules (a **regression carried into v0.3.1**, not fixed by #726/#735 —
+  those fixes covered adapters and raw/ci, which now pass 60/60 and 21–26).
+- **Next:** root-cause per corpus (reference-coverage vs matcher) — extend `diagnose_corpus.py`
+  to these corpora and add same-domain references where the gap is coverage.
 
 ---
 
@@ -422,13 +614,19 @@ export CAUTERULE_SEMANTIC_MATCHING=1
 .venv312/bin/python scripts/run-field-test.py <corpus> \
   --llm-provider openai --llm-model <model> \
   --llm-base-url https://openrouter.ai/api/v1 \
-  --max-workers 6 --output-dir field-test/results/0.3.1
+  --max-workers 3 --extraction-passes 2 --temperatures 0.2,0.5 \
+  --cost-per-request 0.01 --output-dir field-test/results/0.3.1
 ```
 
-Corpus names: `golden`, `failures/positive`, `failures/negative`, `successes`,
-`nearmiss`, `noisy`, `corrections`, `raw/opencode`, `raw/synthetic`, `raw/ci`.
-Regenerate golden refs (idempotent): `.venv312/bin/python scripts/generate_golden_replay_refs.py`.
-Regenerate CI sibling refs (idempotent): `.venv312/bin/python scripts/generate_ci_replay_refs.py`.
+Corpus names: all 40 in `CORPUS_TYPES` (see `scripts/run-field-test.py`). The curated + raw
+set: `golden`, `failures/positive`, `failures/negative`, `successes`, `nearmiss`, `noisy`,
+`corrections`, `raw/opencode`, `raw/synthetic`, `raw/ci`; plus the gated set (`adversarial/*`,
+`adapters`, `lifecycle`, `packs`, `mcp`, `otel`, `cost`, `public/*`,
+`raw/sibling-repos`, `raw/corrections`, `raw/cross-session`, `reference-expansion`
+(+`paraphrase-diversity`)) — all swept in pass 5 (J7). **Use `--max-workers 3`** (higher
+concurrency crashes the embedding pool natively on macOS). Regenerate golden refs (idempotent):
+`.venv312/bin/python scripts/generate_golden_replay_refs.py`. Regenerate CI sibling refs
+(idempotent): `.venv312/bin/python scripts/generate_ci_replay_refs.py`.
 Repair raw/ci logs (idempotent; `--skip-signal` to resume, `--dry-run` to preview):
 `.venv312/bin/python scripts/collect-ci-corpus-v2.py`.
 Fix tests: `.venv312/bin/python -m pytest tests/replay/test_safety.py tests/replay/test_matcher.py tests/measurement/test_extraction_accuracy.py tests/test_run_field_test_harness.py -q`.
