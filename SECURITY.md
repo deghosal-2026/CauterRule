@@ -37,7 +37,7 @@ CauterRule processes agent trajectories that may contain untrusted content (tool
 | Webhook SSRF / URL injection | Integrations | Webhook URLs are config-supplied only (no user-controlled runtime input); scheme/host validated and requests are bounded by timeout; `http(s)` only (M1 SSRF fix) |
 | OTEL data exposure | Integrations | OpenTelemetry export is opt-in; event filtering strips sensitive fields; no raw trajectory bodies are exported |
 | CI secret exposure | GitHub Action | Redaction runs before extraction; CI secrets never sent to LLM |
-| Unauthenticated MCP access | MCP server (remote mode) | Bearer-token auth (`auth_mode="bearer"`) required off loopback; stdio stays local. Warns (does not silently allow) when auth is disabled on a non-loopback host (#601) |
+| Unauthenticated MCP access | MCP server (remote mode) | Bearer-token auth (`auth_mode="bearer"`) required off loopback; stdio stays local. The server **refuses to start** when auth is disabled (`auth_mode="none"`) on a non-loopback host (#601, hardened in #794) |
 | MCP request flooding | MCP server (remote mode) | Per-client token-bucket rate limiter returns HTTP 429 with `retry_after`; stdio calls bypass |
 | Malformed MCP tool payloads | MCP server | `validate_report_failure` schema-checks payloads before extraction; 400 with field-level errors |
 | Adapter-captured data leakage | Adapters (LangGraph/CrewAI/PydanticAI/generic) | Every adapter routes trajectory I/O through the same redaction engine before persistence; conformance kit asserts secrets are redacted on disk (#540) |

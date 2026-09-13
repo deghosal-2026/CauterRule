@@ -17,10 +17,12 @@ from __future__ import annotations
 import shutil
 import subprocess
 import time
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import anyio
+import httpx
 import pytest
 from mcp.client.streamable_http import streamable_http_client
 from mcp.types import TextContent
@@ -30,9 +32,22 @@ from mcp import ClientSession
 DOCKER_TAG = "cauterule:field-test"
 MCP_PORT = "8025"
 CONTAINER_NAME = "mcp-http-v030-it"
+MCP_TOKEN = "field-test-bearer-token"
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 
 pytestmark = [pytest.mark.docker, pytest.mark.slow]
+
+
+@asynccontextmanager
+async def _authenticated_session(base_url: str) -> AsyncIterator[ClientSession]:
+    """Open an MCP session with the bearer token the container requires (#794)."""
+    headers = {"Authorization": f"Bearer {MCP_TOKEN}"}
+    async with (
+        httpx.AsyncClient(headers=headers) as http_client,
+        streamable_http_client(base_url, http_client=http_client) as (read, write, _),
+        ClientSession(read, write) as session,
+    ):
+        yield session
 
 
 def _docker_available() -> bool:
@@ -69,6 +84,8 @@ def _wait_http(host_port: str, timeout: int = 40) -> None:
                 "Content-Type: application/json",
                 "-H",
                 "Accept: application/json, text/event-stream",
+                "-H",
+                f"Authorization: Bearer {MCP_TOKEN}",
                 "-d",
                 '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"t","version":"0"}}}',
             ],
@@ -103,6 +120,8 @@ def mcp_http_container(tmp_path: Path) -> Iterator[str]:
             f"0:{MCP_PORT}",
             "-v",
             f"{store}:/app/rules",
+            "-e",
+            f"CAUTERULE_MCP_TOKEN={MCP_TOKEN}",
             DOCKER_TAG,
             "mcp",
             "--transport",
@@ -111,6 +130,8 @@ def mcp_http_container(tmp_path: Path) -> Iterator[str]:
             "0.0.0.0",
             "--port",
             MCP_PORT,
+            "--auth-mode",
+            "bearer",
         ],
         capture_output=True,
         text=True,
@@ -142,10 +163,7 @@ def test_docker_http_tools_listed(mcp_http_container: str) -> None:
     base_url = mcp_http_container
 
     async def _main() -> list[str]:
-        async with (
-            streamable_http_client(base_url) as (read, write, _),
-            ClientSession(read, write) as session,
-        ):
+        async with _authenticated_session(base_url) as session:
             await session.initialize()
             result = await session.list_tools()
             return [t.name for t in result.tools]
@@ -164,10 +182,7 @@ def test_docker_http_call_tools_valid(mcp_http_container: str) -> None:
     base_url = mcp_http_container
 
     async def _main() -> None:
-        async with (
-            streamable_http_client(base_url) as (read, write, _),
-            ClientSession(read, write) as session,
-        ):
+        async with _authenticated_session(base_url) as session:
             await session.initialize()
             res = await session.call_tool("list_rules_tool", {})
             assert res.isError is False
@@ -185,10 +200,7 @@ def test_docker_http_invalid_args_schema_error(mcp_http_container: str) -> None:
     base_url = mcp_http_container
 
     async def _main() -> str:
-        async with (
-            streamable_http_client(base_url) as (read, write, _),
-            ClientSession(read, write) as session,
-        ):
+        async with _authenticated_session(base_url) as session:
             await session.initialize()
             res = await session.call_tool("list_rules_tool", {"status": 123})
             content = res.content[0] if res.content else None
@@ -206,10 +218,7 @@ def test_docker_http_unknown_tool_no_traceback(mcp_http_container: str) -> None:
     base_url = mcp_http_container
 
     async def _main() -> str:
-        async with (
-            streamable_http_client(base_url) as (read, write, _),
-            ClientSession(read, write) as session,
-        ):
+        async with _authenticated_session(base_url) as session:
             await session.initialize()
             res = await session.call_tool("nope_tool", {})
             content = res.content[0] if res.content else None
