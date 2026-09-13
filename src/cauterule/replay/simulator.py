@@ -102,6 +102,11 @@ def simulate(
 ) -> Outcome:
     """Simulate whether *candidate* would change *trajectory* outcome.
 
+    The verdict is a pure function of ``when`` (trigger/context/signature) and
+    the trajectory text: ``do.directive`` is **not** read, so two candidates
+    with an identical trigger but different directives yield identical
+    outcomes (#762). Directive-aware grounding is Phase 1 of #762 / #720.
+
     Args:
         candidate: The candidate rule to test.
         trajectory: The trajectory to test against.

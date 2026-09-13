@@ -51,7 +51,7 @@
 
 **Why these block M2:** several defects corrupt the measurements M2 exists to publish — cost reports `$0.00` for Anthropic/LiteLLM/Ollama (#802), the end-to-end loop promotes with no gate and never persists (#775), the #727 injection defense has no production caller (#776), and the unsafe-directive blocklist is trivially bypassed (#777). **Fix the Criticals before the M2 exit gate; Importants may be fixed or explicitly deferred with rationale.**
 
-**Fix progress (2026-09-12):** ✅ CR-1 (#763), CR-2 (#764), CR-7 (#769), CR-8 (#770), CR-13 (#775) fixed with tests. 5/11 Criticals done (`mypy src/ tests/`, `ruff check .`, and the non-field/scale/docker `pytest` suite green).
+**Fix progress (2026-09-12):** ✅ CR-1 (#763), CR-2 (#764), CR-7 (#769), CR-8 (#770), CR-13 (#775) fixed with tests. **10/11 Criticals done.** Second batch: ✅ CR-14 (#776, wired to `run_loop`), ✅ CR-15 (#777), ✅ CR-16 (#778), ✅ CR-29 (#791), ✅ CR-33 (#795). CR-43 (#762) Phase 0 landed (invariance pinned + documented); Phase 1 (directive-aware grounding) deferred pending a design decision — see #762. `mypy src/ tests/`, `ruff check .`, and the non-field/scale/docker `pytest` suite green.
 
 **Replay / matcher / cache (6)**
 
@@ -80,9 +80,9 @@
 | # | Severity | Task | Issue |
 |---|----------|------|-------|
 | CR-13 | Critical | ✅ `run_loop` "promotes" with zero gates and never persists | [#775](https://github.com/deghosal-2026/CauterRule/issues/775) |
-| CR-14 | Critical | #727 injection defense unwired — `is_source_tainted` has no production caller | [#776](https://github.com/deghosal-2026/CauterRule/issues/776) |
-| CR-15 | Critical | `check_unsafe` blocklist bypassed (`rm -fr`, `push -f`, `chmod 0777`, `\| sudo bash`) | [#777](https://github.com/deghosal-2026/CauterRule/issues/777) |
-| CR-16 | Critical | Rule-ID assignment TOCTOU race → concurrent promotions overwrite | [#778](https://github.com/deghosal-2026/CauterRule/issues/778) |
+| CR-14 | Critical | ✅ #727 injection defense wired into `run_loop` (`is_source_tainted`) | [#776](https://github.com/deghosal-2026/CauterRule/issues/776) |
+| CR-15 | Critical | ✅ `check_unsafe` blocklist bypassed (`rm -fr`, `push -f`, `chmod 0777`, `\| sudo bash`) | [#777](https://github.com/deghosal-2026/CauterRule/issues/777) |
+| CR-16 | Critical | ✅ Rule-ID assignment TOCTOU race → concurrent promotions overwrite | [#778](https://github.com/deghosal-2026/CauterRule/issues/778) |
 | CR-17 | Important | Injection-marker detection bypassed by whitespace/newlines/homoglyphs | [#779](https://github.com/deghosal-2026/CauterRule/issues/779) |
 | CR-18 | Important | `execute_promotion` has no dedup → duplicate active rules | [#780](https://github.com/deghosal-2026/CauterRule/issues/780) |
 | CR-19 | Important | `hybrid_promote` silently disables safety/cutoff/source-trust gates | [#781](https://github.com/deghosal-2026/CauterRule/issues/781) |
@@ -100,7 +100,7 @@
 | CR-26 | Important | `cauterule test` ignores `--store` | [#788](https://github.com/deghosal-2026/CauterRule/issues/788) |
 | CR-27 | Important | `cauterule init` overwrites existing `.gitignore` | [#789](https://github.com/deghosal-2026/CauterRule/issues/789) |
 | CR-28 | Important | `cauterule extract` crashes on non-existent path | [#790](https://github.com/deghosal-2026/CauterRule/issues/790) |
-| CR-29 | Critical | `cauterule report --safety-adjusted` saves an empty file | [#791](https://github.com/deghosal-2026/CauterRule/issues/791) |
+| CR-29 | Critical | ✅ `cauterule report --safety-adjusted` saves an empty file | [#791](https://github.com/deghosal-2026/CauterRule/issues/791) |
 | CR-30 | Important | MCP `report_failure` returns `accepted: true` on construction failure | [#792](https://github.com/deghosal-2026/CauterRule/issues/792) |
 | CR-31 | Important | TUI `reject_current` leaves detail panel stale → wrong candidate approved | [#793](https://github.com/deghosal-2026/CauterRule/issues/793) |
 | CR-32 | Important | MCP server allows unauthenticated non-loopback binding | [#794](https://github.com/deghosal-2026/CauterRule/issues/794) |
@@ -109,7 +109,7 @@
 
 | # | Severity | Task | Issue |
 |---|----------|------|-------|
-| CR-33 | Critical | `pack publish` ships `.git/` (incl. credentials in `.git/config`) | [#795](https://github.com/deghosal-2026/CauterRule/issues/795) |
+| CR-33 | Critical | ✅ `pack publish` ships `.git/` (incl. credentials in `.git/config`) | [#795](https://github.com/deghosal-2026/CauterRule/issues/795) |
 | CR-34 | Important | `pack install`: `tar.extractall` without filter → path traversal (3.11–3.13) | [#796](https://github.com/deghosal-2026/CauterRule/issues/796) |
 | CR-35 | Important | Exporters don't escape rule text → forged rule entry (prompt injection) | [#797](https://github.com/deghosal-2026/CauterRule/issues/797) |
 | CR-36 | Important | Aider export emits unescaped YAML → corruption/injection | [#798](https://github.com/deghosal-2026/CauterRule/issues/798) |
@@ -124,7 +124,7 @@
 
 | # | Severity | Task | Issue |
 |---|----------|------|-------|
-| CR-43 | Critical | Replay gate has zero discriminating power over `do.directive` (from the dev.to negative-control report) | [#762](https://github.com/deghosal-2026/CauterRule/issues/762) |
+| CR-43 | Critical | ◻ Phase 0 done: replay gate directive-invariance pinned + documented; Phase 1 deferred (design) | [#762](https://github.com/deghosal-2026/CauterRule/issues/762) |
 
 ### Scope notes
 

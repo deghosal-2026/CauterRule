@@ -262,6 +262,36 @@ def test_execute_promotion_increments_id(tmp_path: Path) -> None:
     assert r2 == "R-002"
 
 
+def test_execute_promotion_concurrent_ids_do_not_collide(tmp_path: Path) -> None:
+    # #778: id scan + write must be atomic — concurrent promotions get
+    # distinct ids and never overwrite each other.
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+
+    rules_dir = tmp_path / "rules"
+    config = {
+        "rules_dir": str(rules_dir),
+        "source_trajectory": "traj-001",
+        "extracted_by": "extractor-m1",
+        "extract_timestamp": "2025-01-01T00:00:00Z",
+        "extraction_pass": 1,
+        "promotion_mode": "auto",
+        "status": "active",
+    }
+    barrier = threading.Barrier(2)
+
+    def promote() -> str:
+        barrier.wait()
+        return execute_promotion(_candidate(), config)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        ids = list(pool.map(lambda _: promote(), range(2)))
+
+    assert len(set(ids)) == 2, ids
+    files = sorted(p.name for p in rules_dir.glob("R-*.yaml"))
+    assert files == ["R-001.yaml", "R-002.yaml"]
+
+
 def test_execute_promotion_writes_index(tmp_path: Path) -> None:
     import yaml
 

@@ -41,7 +41,13 @@ class OutcomeReport:
 
 
 def simulate_outcome(candidate: CandidateRule, trajectory: Trajectory) -> str:
-    """Return the grounded outcome: prevented / broken / unverified / no_effect."""
+    """Return the grounded outcome: prevented / broken / unverified / no_effect.
+
+    Grounding is evaluated over ``when`` only, so this signal is currently
+    directive-blind as well (#762): two candidates with identical triggers but
+    different directives get the same grounded outcome. Phase 1 of #762/#720
+    adds directive-aware grounding; Phase 2 (#720) adds a true executor.
+    """
     outcome = simulate(candidate, trajectory)
     if outcome in ("prevented", "broken"):
         return outcome if is_grounded(candidate, trajectory) else "unverified"

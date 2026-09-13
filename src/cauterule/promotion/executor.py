@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import fcntl
+import os
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +20,39 @@ from cauterule.store.index import IndexManager
 _log = get_logger(__name__)
 
 _RULE_ID_PREFIX = "R"
+
+
+@contextmanager
+def _promotion_lock(rules_dir: Path) -> Iterator[None]:
+    """Serialize rule-ID allocation across processes (#778).
+
+    A cross-process ``flock`` ensures the scan-then-write window cannot be
+    interleaved by a concurrent promotion.
+    """
+    rules_dir.mkdir(parents=True, exist_ok=True)
+    lock_path = rules_dir / ".promotion.lock"
+    with lock_path.open("w") as fh:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+
+
+def _reserve_rule_id(rules_dir: Path) -> tuple[str, Path]:
+    """Allocate the next ID and atomically reserve its file (#778).
+
+    Must be called while holding :func:`_promotion_lock`; ``O_EXCL`` turns a
+    lost race into a loud error instead of a silent overwrite.
+    """
+    rule_id = _next_rule_id(rules_dir)
+    rule_path = rules_dir / f"{rule_id}.yaml"
+    try:
+        fd = os.open(rule_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+    except FileExistsError as exc:
+        raise ValueError(f"rule id collision: {rule_id} already exists") from exc
+    os.close(fd)
+    return rule_id, rule_path
 
 
 def _next_rule_id(rules_dir: Path) -> str:
@@ -64,7 +101,6 @@ def execute_promotion(
         ValueError: If required config keys are missing.
     """
     rules_dir = Path(str(config.get("rules_dir", "rules")))
-    rule_id = _next_rule_id(rules_dir)
 
     # Taxonomy gate (#586): required field, auto-classified when missing.
     from cauterule.taxonomy import ensure_taxonomy
@@ -87,6 +123,11 @@ def execute_promotion(
         promotion_mode=str(config.get("promotion_mode", "auto")),
     )
 
+    # Allocate + reserve the rule file atomically, and only after the required
+    # config was validated (a missing key must not leave an empty reservation).
+    with _promotion_lock(rules_dir):
+        rule_id, rule_path = _reserve_rule_id(rules_dir)
+
     rule = StandingRule(
         id=rule_id,
         when=candidate.when,
@@ -100,7 +141,6 @@ def execute_promotion(
     )
 
     rules_dir.mkdir(parents=True, exist_ok=True)
-    rule_path = rules_dir / f"{rule_id}.yaml"
     dump_rule_to_file(rule, str(rule_path))
 
     index_mgr = IndexManager(str(rules_dir))
