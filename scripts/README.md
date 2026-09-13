@@ -119,6 +119,7 @@ CAUTERULE_LLM_API_KEY=dummy \
 python scripts/run-field-test.py golden \
   --llm-provider openai --llm-model llama-3.2-3b-instruct \
   --llm-base-url http://localhost:8000/v1 \
+  --max-workers 3 \
   --output-dir field-test/results/0.3.0
 
 # Regenerate the field-test result tables (single source of truth) and check for drift
