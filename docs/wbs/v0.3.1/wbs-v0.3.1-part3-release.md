@@ -28,9 +28,9 @@
 | 3.10 | ✅ Update SECURITY.md (+#727) and CONTRIBUTING.md (measurement/source-trust) | [#755](https://github.com/deghosal-2026/CauterRule/issues/755) |
 | 3.11 | ✅ Refresh badges (version, coverage, field test) | [#756](https://github.com/deghosal-2026/CauterRule/issues/756) |
 | 3.12 | ✅ Pre-release aggregate gate — tests pass, coverage 89.16% (≥85), ruff + mypy strict clean, security clean | [#757](https://github.com/deghosal-2026/CauterRule/issues/757) |
-| 3.13 | Tag `v0.3.1`, GitHub release, close milestones | [#758](https://github.com/deghosal-2026/CauterRule/issues/758) |
-| 3.14 | Launch — announcements + dev.to articles | [#759](https://github.com/deghosal-2026/CauterRule/issues/759) |
-| 3.15 | Post-release verification checklist | [#760](https://github.com/deghosal-2026/CauterRule/issues/760) |
+| 3.13 | ✅ Tag `v0.3.1` + GitHub release published with assets | [#758](https://github.com/deghosal-2026/CauterRule/issues/758) |
+| 3.14 | ✅ Launch — GitHub release announcement + `announcements.md` (social copy + 5 article ideas) | [#759](https://github.com/deghosal-2026/CauterRule/issues/759) |
+| 3.15 | ✅ Post-release verification checklist — all channels except deferred Docker/Homebrew | [#760](https://github.com/deghosal-2026/CauterRule/issues/760) |
 | 3.16 | Merge all changes to main | [#761](https://github.com/deghosal-2026/CauterRule/issues/761) |
 
 ### Launch scope (#759)
