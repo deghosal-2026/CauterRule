@@ -14,9 +14,12 @@ Two comparators are reported because they fail differently:
   ``extraction_f1``; a reworded-but-correct rule scores high.
 * **directive F1** — word overlap on the ``do`` half.
 
-``extraction_agreement`` is the rate of trajectories whose extracted rule is
-semantically equivalent to ``expected_rule``. Trajectories without an
-``expected_rule`` are excluded (``n/a``), never counted as 0.
+``extraction_agreement`` is the rate of trajectories whose extracted *trigger*
+is semantically equivalent to the ``expected_rule`` trigger. The directive is
+reported as ``directive_f1`` alongside but does **not** gate agreement: short
+directive phrases are unreliable under both literal token F1 and embeddings
+(J6), so gating the headline on them only added pessimism. Trajectories without
+an ``expected_rule`` are excluded (``n/a``), never counted as 0.
 """
 
 from __future__ import annotations
@@ -119,24 +122,26 @@ def score_rule(
     expected_rule: str,
     *,
     match_threshold: float = 0.6,
-    directive_threshold: float = 0.5,
 ) -> ExtractionScore:
     """Score extracted (*trigger*, *directive*) against *expected_rule*.
 
-    ``agreement`` is semantic (the headline); ``token_agreement`` is the strict
-    literal-match signal, reported separately.
+    ``agreement`` (the headline) is decided on the *trigger* only, using the
+    semantic comparator — the same comparator the replay matcher uses. The
+    directive is scored as ``directive_f1`` and reported alongside but does not
+    gate agreement, because short directive phrases are unreliable under both
+    literal token F1 and embeddings (J6). ``token_agreement`` is the strict
+    literal-match signal on the trigger, reported separately.
     """
     exp_trigger, exp_directive = parse_expected_rule(expected_rule)
     token_f1 = _f1(_tokens(trigger), _tokens(exp_trigger))
     semantic_f1 = _semantic_similarity(trigger, exp_trigger)
     directive_f1 = _f1(_tokens(directive), _tokens(exp_directive)) if exp_directive else 0.0
-    directive_ok = not exp_directive or directive_f1 >= directive_threshold
     return ExtractionScore(
         token_f1=token_f1,
         semantic_f1=semantic_f1,
         directive_f1=directive_f1,
-        token_agreement=token_f1 >= match_threshold and directive_ok,
-        agreement=semantic_f1 >= match_threshold and directive_ok,
+        token_agreement=token_f1 >= match_threshold,
+        agreement=semantic_f1 >= match_threshold,
     )
 
 
@@ -215,7 +220,6 @@ def measure_extraction_accuracy(
     records: list[ExtractionRecord],
     *,
     match_threshold: float = 0.6,
-    directive_threshold: float = 0.5,
 ) -> ExtractionAccuracyReport:
     """Aggregate extraction scores over *records*."""
     if not records:
@@ -226,7 +230,6 @@ def measure_extraction_accuracy(
             r.directive,
             r.expected_rule,
             match_threshold=match_threshold,
-            directive_threshold=directive_threshold,
         )
         for r in records
     ]

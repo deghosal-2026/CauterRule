@@ -39,6 +39,21 @@ def test_unrelated_rule_low_f1_and_no_agreement() -> None:
     assert score.agreement is False
 
 
+def test_agreement_is_trigger_only_directive_not_gated() -> None:
+    """J6: a semantically-correct trigger agrees even when the directive is
+    reworded or wrong; the directive is reported as ``directive_f1`` alongside
+    but does not gate the headline ``agreement``."""
+    score = score_rule(
+        "when git push fails with non-fast-forward",
+        "delete the remote branch",
+        _EXPECTED,
+    )
+    assert score.semantic_f1 >= 0.6
+    assert score.agreement is True
+    # the directive genuinely differs from the expected one, yet still agrees
+    assert score.directive_f1 < 0.5
+
+
 def test_measure_excludes_no_expected_rule() -> None:
     records = [
         ExtractionRecord(
