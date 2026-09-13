@@ -8,7 +8,7 @@
     "extraction_passes": 2,
     "temperatures": "0.2,0.5",
     "target_trajectories": 60,
-    "reference_trajectories": 540,
+    "reference_trajectories": 588,
     "cost_per_request_usd": 0.01,
     "gate_mode": "strict",
     "quarantined": []
@@ -37,10 +37,10 @@
     "rejected": 0,
     "accepted": 0,
     "silence_rate": 1.0,
-    "false_accept_rate": 0.0,
     "rejection_rate": 1.0,
     "attempted": 0,
-    "verdict": "pass"
+    "verdict": "pass",
+    "acceptance_rate": 0.0
   },
   "confidence_intervals": {
     "pass_rate": {
@@ -69,14 +69,14 @@
   },
   "extraction": {
     "n": 0,
-    "token_f1": 0.0,
-    "semantic_f1": 0.0,
-    "directive_f1": 0.0,
-    "token_agreement": 0.0,
-    "agreement": 0.0
+    "token_f1": null,
+    "semantic_f1": null,
+    "directive_f1": null,
+    "token_agreement": null,
+    "agreement": null
   },
-  "extraction_f1": 0.0,
-  "extraction_agreement": 0.0,
+  "extraction_f1": null,
+  "extraction_agreement": null,
   "verdict_reason_breakdown": {},
-  "updated_at": "2026-09-13T09:21:06Z"
+  "updated_at": "2026-09-13T18:43:05Z"
 }

@@ -8,12 +8,12 @@
     "extraction_passes": 2,
     "temperatures": "0.2,0.5",
     "target_trajectories": 5,
-    "reference_trajectories": 540,
+    "reference_trajectories": 588,
     "cost_per_request_usd": 0.01,
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 10.7,
+  "elapsed_seconds": 12.7,
   "total": 5,
   "done": 5,
   "gate_dropped": 0,
@@ -21,30 +21,30 @@
   "skipped": 0,
   "total_candidates": 8,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.6,
-  "avg_recall": 0.255,
-  "avg_match_score": 0.352,
+  "avg_precision": 0.4,
+  "avg_recall": 0.236,
+  "avg_match_score": 0.405,
   "match_detail_count": 8,
-  "passing": 3,
+  "passing": 2,
   "failing": 0,
-  "inconclusive": 2,
+  "inconclusive": 3,
   "safety": {
     "total": 5,
     "silence": 0,
     "parse_failure": 0,
-    "rejected": 2,
-    "accepted": 3,
+    "rejected": 3,
+    "accepted": 2,
     "silence_rate": 0.0,
-    "false_accept_rate": 0.6,
-    "rejection_rate": 0.4,
+    "rejection_rate": 0.6,
     "attempted": 5,
-    "verdict": "pass"
+    "verdict": "pass",
+    "acceptance_rate": 0.4
   },
   "confidence_intervals": {
     "pass_rate": {
       "rate": 1.0,
-      "n": 3,
-      "ci_low": 0.4385,
+      "n": 2,
+      "ci_low": 0.3424,
       "ci_high": 1.0
     },
     "safety_silence_rate": {
@@ -61,7 +61,7 @@
   },
   "inconclusive_breakdown": {
     "broad_trigger": 0,
-    "matcher_gap": 3,
+    "matcher_gap": 4,
     "corpus_mismatch": 0,
     "ambiguous_evidence": 1
   },
@@ -76,8 +76,8 @@
   "extraction_f1": 0.7,
   "extraction_agreement": 1.0,
   "verdict_reason_breakdown": {
-    "verdict:pass": 3,
-    "no_signal": 2
+    "no_signal": 3,
+    "verdict:pass": 2
   },
-  "updated_at": "2026-09-13T09:21:45Z"
+  "updated_at": "2026-09-13T18:43:53Z"
 }

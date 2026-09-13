@@ -1,0 +1,85 @@
+{
+  "meta": {
+    "corpus_type": "reference-expansion",
+    "timestamp": "2026-09-13",
+    "llm_provider": "openai",
+    "llm_model": "openai/gpt-4o-mini",
+    "llm_base_url": "https://openrouter.ai/api/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2,0.5",
+    "target_trajectories": 303,
+    "reference_trajectories": 588,
+    "cost_per_request_usd": 0.01,
+    "gate_mode": "relaxed",
+    "quarantined": []
+  },
+  "elapsed_seconds": 266.9,
+  "total": 303,
+  "done": 303,
+  "gate_dropped": 0,
+  "gate_dropped_by_reason": {},
+  "skipped": 0,
+  "total_candidates": 515,
+  "total_llm_calls_avoided": 0,
+  "avg_precision": 0.665,
+  "avg_recall": 0.161,
+  "avg_match_score": 0.299,
+  "match_detail_count": 515,
+  "passing": 201,
+  "failing": 27,
+  "inconclusive": 75,
+  "safety": {
+    "total": 303,
+    "silence": 0,
+    "parse_failure": 0,
+    "rejected": 102,
+    "accepted": 201,
+    "silence_rate": 0.0,
+    "rejection_rate": 0.3366,
+    "attempted": 303,
+    "verdict": "pass",
+    "acceptance_rate": 0.6634
+  },
+  "confidence_intervals": {
+    "pass_rate": {
+      "rate": 0.8816,
+      "n": 228,
+      "ci_low": 0.8332,
+      "ci_high": 0.9173
+    },
+    "safety_silence_rate": {
+      "rate": 0.0,
+      "n": 303,
+      "ci_low": 0.0,
+      "ci_high": 0.0125
+    }
+  },
+  "specificity_distribution": {
+    "specific": 621,
+    "moderate": 188,
+    "generic": 9
+  },
+  "inconclusive_breakdown": {
+    "broad_trigger": 0,
+    "matcher_gap": 39,
+    "corpus_mismatch": 0,
+    "ambiguous_evidence": 95
+  },
+  "extraction": {
+    "n": 303,
+    "token_f1": 0.6077,
+    "semantic_f1": 0.734,
+    "directive_f1": 0.2442,
+    "token_agreement": 0.5479,
+    "agreement": 0.9175
+  },
+  "extraction_f1": 0.733975907590759,
+  "extraction_agreement": 0.9174917491749175,
+  "verdict_reason_breakdown": {
+    "no_signal": 54,
+    "verdict:pass": 201,
+    "blocked_by_near_miss": 21,
+    "blocked_by_broken": 27
+  },
+  "updated_at": "2026-09-13T19:12:25Z"
+}

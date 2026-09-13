@@ -8,23 +8,23 @@
     "extraction_passes": 2,
     "temperatures": "0.2,0.5",
     "target_trajectories": 25,
-    "reference_trajectories": 540,
+    "reference_trajectories": 588,
     "cost_per_request_usd": 0.01,
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 28.4,
+  "elapsed_seconds": 31.9,
   "total": 25,
   "done": 25,
   "gate_dropped": 0,
   "gate_dropped_by_reason": {},
   "skipped": 0,
-  "total_candidates": 45,
+  "total_candidates": 42,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.603,
+  "avg_precision": 0.621,
   "avg_recall": 0.215,
-  "avg_match_score": 0.448,
-  "match_detail_count": 45,
+  "avg_match_score": 0.461,
+  "match_detail_count": 42,
   "passing": 17,
   "failing": 1,
   "inconclusive": 7,
@@ -35,10 +35,10 @@
     "rejected": 8,
     "accepted": 17,
     "silence_rate": 0.0,
-    "false_accept_rate": 0.68,
     "rejection_rate": 0.32,
     "attempted": 25,
-    "verdict": "pass"
+    "verdict": "pass",
+    "acceptance_rate": 0.68
   },
   "confidence_intervals": {
     "pass_rate": {
@@ -55,7 +55,7 @@
     }
   },
   "specificity_distribution": {
-    "specific": 66,
+    "specific": 63,
     "moderate": 4,
     "generic": 0
   },
@@ -67,18 +67,18 @@
   },
   "extraction": {
     "n": 20,
-    "token_f1": 0.5502,
+    "token_f1": 0.5413,
     "semantic_f1": 0.6968,
-    "directive_f1": 0.3302,
-    "token_agreement": 0.15,
-    "agreement": 0.25
+    "directive_f1": 0.3169,
+    "token_agreement": 0.3,
+    "agreement": 0.8
   },
-  "extraction_f1": 0.69678,
-  "extraction_agreement": 0.25,
+  "extraction_f1": 0.69682,
+  "extraction_agreement": 0.8,
   "verdict_reason_breakdown": {
     "verdict:pass": 17,
     "no_signal": 7,
     "blocked_by_broken": 1
   },
-  "updated_at": "2026-09-13T09:48:41Z"
+  "updated_at": "2026-09-13T18:44:39Z"
 }
