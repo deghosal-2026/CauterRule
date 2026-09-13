@@ -176,6 +176,32 @@ def test_load_trajectories_multiline_objects(tmp_path: Path) -> None:
     assert loaded[1].success is False
 
 
+def test_load_trajectories_truncated_multiline_strict_raises(tmp_path: Path) -> None:
+    # #773: a multi-line record truncated at EOF must fail loud in strict mode.
+    p = tmp_path / "corpus.jsonl"
+    p.write_text(
+        dump_trajectory(_valid_trajectory())
+        + '\n{\n  "trajectory_id": "T-trunc",\n  "task": "x",\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="truncated"):
+        list(load_trajectories(p, strict=True))
+
+
+def test_load_trajectories_truncated_multiline_non_strict_skips(tmp_path: Path) -> None:
+    # #773: non-strict mode reports the truncation instead of dropping silently.
+    p = tmp_path / "corpus.jsonl"
+    p.write_text(
+        dump_trajectory(_valid_trajectory())
+        + '\n{\n  "trajectory_id": "T-trunc",\n  "task": "x",\n',
+        encoding="utf-8",
+    )
+    result = load_trajectories_result(p)
+    assert len(result.loaded) == 1
+    assert result.skipped == 1
+    assert any("truncated" in e for e in result.errors)
+
+
 def test_load_trajectories_multiline_with_braces_in_strings(tmp_path: Path) -> None:
     # #490: braces inside JSON string values must not confuse depth counter.
     multi = """{

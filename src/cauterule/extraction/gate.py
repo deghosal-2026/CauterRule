@@ -86,6 +86,21 @@ def _step_shows_success(step: Step) -> bool:
     return True
 
 
+def _step_shows_failure(step: Step) -> bool:
+    """Return True if *step* carries a failure signal by state or error (#772)."""
+    state = step.state or {}
+    exit_code = state.get("exit_code")
+    if exit_code is not None:
+        try:
+            if int(exit_code) != 0:
+                return True
+        except (ValueError, TypeError):
+            pass
+    if state.get("assertion_failed") or state.get("schema_violation"):
+        return True
+    return bool(step.error and step.error.strip())
+
+
 def _detect_nearmiss_recovery(trajectory: Trajectory) -> bool:
     """Detect a near-miss pattern: first step fails, later step succeeds.
 
@@ -119,7 +134,7 @@ def _detect_nearmiss_recovery(trajectory: Trajectory) -> bool:
     has_later_success = False
 
     for i, step in enumerate(trajectory.steps):
-        if step.error and step.error.strip():
+        if _step_shows_failure(step):
             has_early_error = True
         elif has_early_error and _step_shows_success(step):
             has_later_success = True

@@ -117,8 +117,12 @@ class ReviewScreen(Screen[Any]):
         self._candidates.pop(self._current_index)
         if self._candidates:
             self._current_index = min(self._current_index, len(self._candidates) - 1)
+            self._show_candidate(self._candidates[self._current_index])
         else:
             self._current_index = 0
+            detail = self.query_one("#detail", RichLog)
+            detail.clear()
+            detail.write("No more candidates.")
 
     def _advance(self) -> None:
         self._current_index += 1

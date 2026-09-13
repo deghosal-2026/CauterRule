@@ -13,6 +13,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional distribution channels
 - Enhanced observability dashboards
 
+## [0.3.1] - 2026-09-13
+
+Fix-and-re-verify patch: the M1 matcher/scorer fixes and M2 code-review fixes,
+re-validated by a full 40-corpus × 2-model field-test sweep. **All quality and
+safety field-test exit criteria pass** (golden 82–83%, failures/positive 50–52%,
+nearmiss 0 false accepts, adversarial 0 promotions). See
+[`docs/field-test/v0.3.1/FIELD_TEST_REPORT.md`](docs/field-test/v0.3.1/FIELD_TEST_REPORT.md).
+
+### Added
+
+- Extraction-accuracy metric vs `expected_rule` — `extraction_f1` / `extraction_agreement` in every `summary.json` (#730)
+- Wilson confidence intervals, paired per-trajectory model deltas, and `verdict_reason_breakdown` in the field-test runner (#695, #724, #734)
+- Artifact-derived v0.3.1 field-test report + drift check (#728, #743)
+
+### Changed
+
+- **Replay/scorer**: semantic floor lowered to 0.62 with a class-free failure-signature view; domain-gated `broken` with a match-strength margin; scorer reordered so net-positive rules pass; near-miss band bounded (#721–#724, J11)
+- **Extraction agreement**: redefined to the trigger-only semantic match; the directive is reported as `directive_f1` alongside (J6)
+- **Reference corpus**: 588 references (adapter + 48 CI sibling refs); golden expanded to n=60 with `expected_rule` backfill (#726, #735)
+- **Thresholds**: recalibrated after the semantic/scorer changes (#736)
+- **Safety scoring**: nearmiss/adversarial scored as rejection corpora (pass iff 0 accepts); extraction corpora report `acceptance_rate` (J1, J13)
+- **raw/ci corpus**: repaired 110→48 (signal-less/bogus logs removed) (J11)
+- **Version**: bumped 0.3.0 → 0.3.1 across `pyproject.toml`, `__init__.py`, README (#746)
+
+### Fixed
+
+- Spurious `broken` successes and scorer ordering that blocked correct rules (#723, #724)
+- Extraction metrics emitted `0.0` with no ground truth — now `null` (J10)
+- Harness-health false positive on gate-dropped corpora (J2)
+- `raw/ci` 0-pass / 77–83% inconclusive (J11); `adapters` 0-pass / 100% inconclusive (#726)
+- 43 `[0.3.1-M2-CodeReview]` defects, incl. the #727 source-trust gate now enforced in production auto-promotion (#762–#804)
+
+### Field test (v0.3.1)
+
+- Full sweep: 2 models × 40 corpora — golden 82–83% (n=60), failures/positive 50–52%, adapters 60/60, raw/ci 21–26/47
+- Safety: 100% silence on successes/negatives, 0 nearmiss false accepts, 0 adversarial promotions
+- Cost: gpt-4o-mini $0.20 / 1k trajectories, llama-3.1-8b $0.05 / 1k
+
+### Known issues
+
+- 0-accepted corpora (`public/staleness`, `public/synthetic`, `lifecycle`, `mcp`, gpt `public/domains`) and llama `no_candidates` on adversarial corpora (J16–J18)
+- Cross-session and human-vs-replay agreement deferred (out of scope for v0.3.1)
+
 ## [0.3.0] - 2026-09-12
 
 Hardening & Ecosystem — fixes critical data-integrity bugs found by the v0.2.0

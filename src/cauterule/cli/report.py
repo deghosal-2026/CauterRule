@@ -95,8 +95,12 @@ def _build_safety_adjusted_ranking(results_dir: str) -> None:
     by_total = rank_by_total(list(model_results.values()))
     by_safety = rank_by_safety_adjusted(list(model_results.values()))
 
-    # Output markdown table
-    print("\n## Safety-Adjusted Model Ranking\n")
+    # Build the report as a string first so it can be both printed and saved
+    # verbatim (#791: a real terminal has no sys.stdout.getvalue()).
+    lines: list[str] = []
+    lines.append("")
+    lines.append("## Safety-Adjusted Model Ranking")
+    lines.append("")
     header = (
         "| Model | Total Pass | Safety-Adjusted Pass | Violation Rate | "
         "Inconclusive | Rank (Total) | Rank (Safety) |"
@@ -105,27 +109,28 @@ def _build_safety_adjusted_ranking(results_dir: str) -> None:
         "|-------|-----------|---------------------|----------------|"
         "-------------|-------------|--------------|"
     )
-    print(header)
-    print(sep)
+    lines.append(header)
+    lines.append(sep)
 
     rank_total_map = {m.model: i + 1 for i, m in enumerate(by_total)}
     rank_safety_map = {m.model: i + 1 for i, m in enumerate(by_safety)}
 
     for m in sorted(model_results.values(), key=lambda x: x.safety_adjusted_pass, reverse=True):
         vr = f"{m.safety_violation_rate * 100:.1f}%"
-        print(
+        lines.append(
             f"| {m.model} | {m.total_pass} | {m.safety_adjusted_pass} | {vr} | {m.inconclusive} "
             f"| #{rank_total_map.get(m.model, '?')} | #{rank_safety_map.get(m.model, '?')} |"
         )
 
-    print()
+    lines.append("")
 
     # Pairwise comparison
     if len(model_results) >= 2:
         models = list(model_results.values())
-        print("## Decision Economics (Model Pairs)\n")
-        print("| Baseline → New | Resolved | New Pass | New Fail | Wrong-Decision Rate |")
-        print("|----------------|----------|----------|----------|---------------------|")
+        lines.append("## Decision Economics (Model Pairs)")
+        lines.append("")
+        lines.append("| Baseline → New | Resolved | New Pass | New Fail | Wrong-Decision Rate |")
+        lines.append("|----------------|----------|----------|----------|---------------------|")
         for i, baseline in enumerate(models):
             for j in range(i + 1, len(models)):
                 new = models[j]
@@ -145,14 +150,16 @@ def _build_safety_adjusted_ranking(results_dir: str) -> None:
                     ),
                 )
                 wrong = f"{econ['wrong_decision_rate'] * 100:.1f}%"
-                print(
+                lines.append(
                     f"| {baseline.model} → {new.model} | {econ['resolved']} | "
                     f"{econ['new_pass']} | {econ['new_fail']} | {wrong} |"
                 )
-        print()
+        lines.append("")
 
-    # Save to file
+    output = "\n".join(lines)
+    print(output)
+
+    # Save the same string that was printed.
     output_path = root / "safety-ranking.md"
-    captured = "".join(sys.stdout.getvalue()) if hasattr(sys.stdout, "getvalue") else ""
-    output_path.write_text(captured)
+    output_path.write_text(output + "\n", encoding="utf-8")
     print(f"\nRanking saved to: {output_path}")

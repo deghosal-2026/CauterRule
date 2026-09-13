@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import tarfile
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -170,3 +171,21 @@ class TestPublish:
         d = _pack_dir(tmp_path)
         asset = build_asset(d, "pack-deploy", "1.0.0", tmp_path)
         assert asset.is_file()
+
+    def test_build_asset_excludes_git_dir(self, tmp_path: Path) -> None:
+        # #795: `.git/` (with credentials in `.git/config`) must never ship.
+        d = _pack_dir(tmp_path)
+        git_dir = d / ".git"
+        git_dir.mkdir()
+        (git_dir / "config").write_text(
+            '[remote "origin"]\n\turl = https://user:TOKEN@github.com/a/b.git\n',
+            encoding="utf-8",
+        )
+        asset = build_asset(d, "pack-deploy", "1.0.0", tmp_path)
+        with tarfile.open(asset, "r:gz") as tar:
+            names = tar.getnames()
+            members = [m for m in tar.getmembers() if m.isfile()]
+            blobs = [tar.extractfile(m) for m in members]
+            payloads = [b.read() for b in blobs if b is not None]
+        assert not any(".git" in Path(n).parts for n in names)
+        assert not any(b"TOKEN" in p for p in payloads)

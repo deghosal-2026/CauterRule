@@ -15,10 +15,7 @@ import pytest
 import yaml
 
 from cauterule.loop.orchestrator import LoopConfig, run_loop
-from cauterule.models.candidate import CandidateRule
-from cauterule.models.rule import RuleDo, RuleWhen
 from cauterule.models.trajectory import Step, Trajectory
-from cauterule.promotion.executor import execute_promotion
 
 
 class MockLLM:
@@ -100,13 +97,19 @@ def _init_git_repo(path: Path) -> None:
 
 
 @pytest.mark.docker
-def test_loop_returns_rule_id() -> None:
+def test_loop_returns_rule_id(tmp_path: Path) -> None:
     llm = MockLLM()
     traj = _simple_trajectory()
-    config = LoopConfig(llm=llm)
+    config = LoopConfig(
+        llm=llm,
+        historical_trajectories=(_simple_trajectory(tid="H-1"),),
+        rules_dir=str(tmp_path),
+    )
     result = run_loop(traj, config)
     assert isinstance(result, str)
-    assert result.startswith("R-T-001-")
+    # #775: the ID is a real persisted rule, not a fabricated R-<traj>-<ts>.
+    assert result.startswith("R-")
+    assert (tmp_path / f"{result}.yaml").exists()
 
 
 @pytest.mark.docker
@@ -114,27 +117,13 @@ def test_loop_creates_rule_file(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     llm = MockLLM()
     traj = _simple_trajectory()
-    config = LoopConfig(llm=llm, historical_trajectories=())
-    rule_id = run_loop(traj, config)
-    assert rule_id is not None
-
-    candidate = CandidateRule(
-        when=RuleWhen(trigger="git push fails", context=("shared branch",)),
-        do=RuleDo(directive="pull --rebase first", because="non-fast-forward rejected"),
-        confidence=0.9,
-        reasoning="prevents push rejection",
+    config = LoopConfig(
+        llm=llm,
+        historical_trajectories=(_simple_trajectory(tid="H-1"),),
+        rules_dir=str(tmp_path),
     )
-    promoted_id = execute_promotion(
-        candidate,
-        {
-            "rules_dir": str(tmp_path),
-            "source_trajectory": "T-001",
-            "extracted_by": "mock-llm",
-            "extract_timestamp": "2026-09-03T18:35:00Z",
-            "extraction_pass": 1,
-            "promotion_mode": "auto",
-        },
-    )
+    promoted_id = run_loop(traj, config)
+    assert promoted_id is not None
     rule_path = tmp_path / f"{promoted_id}.yaml"
     assert rule_path.exists()
     loaded: dict[str, Any] = yaml.safe_load(rule_path.read_text(encoding="utf-8"))
@@ -146,27 +135,13 @@ def test_loop_creates_git_commit(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     llm = MockLLM()
     traj = _simple_trajectory()
-    config = LoopConfig(llm=llm, historical_trajectories=())
+    config = LoopConfig(
+        llm=llm,
+        historical_trajectories=(_simple_trajectory(tid="H-1"),),
+        rules_dir=str(tmp_path),
+    )
     rule_id = run_loop(traj, config)
     assert rule_id is not None
-
-    candidate = CandidateRule(
-        when=RuleWhen(trigger="git push fails", context=("shared branch",)),
-        do=RuleDo(directive="pull --rebase first", because="non-fast-forward rejected"),
-        confidence=0.9,
-        reasoning="prevents push rejection",
-    )
-    execute_promotion(
-        candidate,
-        {
-            "rules_dir": str(tmp_path),
-            "source_trajectory": "T-001",
-            "extracted_by": "mock-llm",
-            "extract_timestamp": "2026-09-03T18:35:00Z",
-            "extraction_pass": 1,
-            "promotion_mode": "auto",
-        },
-    )
     result = subprocess.run(
         ["git", "log", "--oneline", "-5"],
         cwd=tmp_path,
@@ -178,20 +153,21 @@ def test_loop_creates_git_commit(tmp_path: Path) -> None:
 
 
 @pytest.mark.docker
-def test_loop_all_stages_execute() -> None:
+def test_loop_all_stages_execute(tmp_path: Path) -> None:
     llm = MockLLM()
     traj = _simple_trajectory()
-    h1 = _simple_trajectory(tid="H-1", task="git push rejected", failure_class="git/push")
+    h1 = _simple_trajectory(tid="H-1", task="git push fails on shared branch")
     h2 = _simple_trajectory(tid="H-2", task="docker build fails", failure_class="docker/build")
     config = LoopConfig(
         llm=llm,
         historical_trajectories=(h1, h2),
         existing_rules=(),
         replay_enabled=True,
+        rules_dir=str(tmp_path),
     )
     result = run_loop(traj, config)
     assert isinstance(result, str)
-    assert result.startswith("R-T-001-")
+    assert result.startswith("R-")
 
 
 @pytest.mark.docker

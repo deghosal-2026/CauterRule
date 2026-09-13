@@ -25,7 +25,7 @@ def test(rule: str | None, pack_name: str | None, store_dir: str, ci: bool) -> N
     if not rule:
         msg = "pass a RULE id or use --pack <name>"
         raise click.ClickException(msg)
-    store = StoreManager()
+    store = StoreManager(base_dir=store_dir)
     candidate = store.get_rule(rule)
     if candidate:
         cand = CandidateRule(

@@ -50,3 +50,21 @@ def test_retired_rule_roundtrip_stays_retired() -> None:
 def test_invalid_status_rejected() -> None:
     with pytest.raises(ValueError, match="status"):
         StandingRule.from_dict(_valid_rule_dict(status="archived"))
+
+
+def test_scalar_context_rejected() -> None:
+    # #771: a scalar context string must not split into characters.
+    with pytest.raises(ValueError, match="context"):
+        StandingRule.from_dict(
+            _valid_rule_dict(when={"trigger": "t", "context": "nonfastforward"})
+        )
+
+
+def test_non_string_context_item_rejected() -> None:
+    with pytest.raises(ValueError, match="context"):
+        StandingRule.from_dict(_valid_rule_dict(when={"trigger": "t", "context": [1]}))
+
+
+def test_scalar_tags_rejected() -> None:
+    with pytest.raises(ValueError, match="tags"):
+        StandingRule.from_dict(_valid_rule_dict(tags="git"))

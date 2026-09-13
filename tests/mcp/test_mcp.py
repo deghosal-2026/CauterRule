@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -177,18 +178,36 @@ class TestListRules:
 # ======================================================================
 class TestReportFailure:
     def test_valid_trajectory(self) -> None:
-        result = report_failure('{"steps": [{"action": "run"}, {"action": "fail"}]}')
+        payload = json.dumps(
+            {
+                "trajectory_id": "T-1",
+                "timestamp": "2024-01-01T00:00:00Z",
+                "task": "demo",
+                "steps": [
+                    {"step_number": 1, "tool": "run"},
+                    {"step_number": 2, "tool": "fail"},
+                ],
+                "success": False,
+            }
+        )
+        result = report_failure(payload)
         assert result["accepted"] is True
         assert result["trajectory_length"] == 2
 
-    def test_trajectory_without_steps(self) -> None:
+    def test_missing_success_rejected(self) -> None:
+        result = report_failure('{"steps": []}')
+        assert result["accepted"] is False
+        assert result["trajectory_length"] == 0
+        assert "construction failed" in result["message"]
+
+    def test_trajectory_without_steps_rejected(self) -> None:
         result = report_failure('{"foo": "bar"}')
-        assert result["accepted"] is True
+        assert result["accepted"] is False
         assert result["trajectory_length"] == 0
 
-    def test_empty_object(self) -> None:
+    def test_empty_object_rejected(self) -> None:
         result = report_failure("{}")
-        assert result["accepted"] is True
+        assert result["accepted"] is False
         assert result["trajectory_length"] == 0
 
     def test_invalid_json(self) -> None:
@@ -205,7 +224,7 @@ class TestReportFailure:
 
     def test_steps_is_not_a_list(self) -> None:
         result = report_failure('{"steps": "not a list"}')
-        assert result["accepted"] is True
+        assert result["accepted"] is False
         assert result["trajectory_length"] == 0
 
 
@@ -228,7 +247,9 @@ class TestCauteruleMCPServer:
 
     def test_run_http_invokes_mcp_run(self) -> None:
         store = _mock_store()
-        server = CauteruleMCPServer(store, host="0.0.0.0", port=9001)
+        server = CauteruleMCPServer(
+            store, host="0.0.0.0", port=9001, auth_mode="bearer", auth_tokens=["s"]
+        )
         with patch.object(server._mcp, "run") as mock_run:
             server.run_http()
         mock_run.assert_called_once_with(transport="streamable-http")

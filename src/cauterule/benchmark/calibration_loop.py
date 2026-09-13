@@ -7,8 +7,9 @@ low-confidence results tighten thresholds over time (#596).
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from cauterule.promotion.thresholds import get_thresholds, set_thresholds
 
@@ -19,16 +20,33 @@ def _history_path() -> Path:
     return Path(_CALIBRATION_FILE)
 
 
-def _load_history() -> dict[str, float]:
+def _load_history() -> list[dict[str, Any]]:
+    """Load calibration entries, accepting legacy flat-dict files (#801).
+
+    The current format is a JSON list of timestamped threshold snapshots.
+    Older files stored a single flat ``{key: value}`` dict; that is read as a
+    one-entry history so existing installations keep their accumulated signal.
+    """
     try:
-        return cast(dict[str, float], json.loads(_history_path().read_text(encoding="utf-8")))
+        raw: Any = json.loads(_history_path().read_text(encoding="utf-8"))
     except (FileNotFoundError, json.JSONDecodeError, OSError):
-        return {}
+        return []
+    if isinstance(raw, list):
+        return [entry for entry in raw if isinstance(entry, dict)]
+    if isinstance(raw, dict):
+        entries = raw.get("entries")
+        if isinstance(entries, list):
+            return [entry for entry in entries if isinstance(entry, dict)]
+        # Legacy format: a single flat threshold dict.
+        return [raw] if raw else []
+    return []
 
 
-def _save_history(updates: dict[str, float]) -> None:
+def _save_history(updates: dict[str, Any]) -> None:
     history = _load_history()
-    history.update(updates)
+    entry = dict(updates)
+    entry["recorded_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    history.append(entry)
     _history_path().write_text(json.dumps(history, indent=2), encoding="utf-8")
 
 
@@ -56,7 +74,10 @@ def feed_calibration_data(thresholds: dict[str, Any]) -> dict[str, Any]:
     adjustment = 0.0
     # Multiple low-precision reports tighten thresholds.
     low_precision_count = sum(
-        1 for k, v in history.items() if k.startswith("min_precision") and v < 0.8
+        1
+        for entry in history
+        if isinstance(entry.get("min_precision"), (int, float))
+        and entry["min_precision"] < 0.8
     )
     if low_precision_count >= 3:
         adjustment = 0.05  # tighten by 5%

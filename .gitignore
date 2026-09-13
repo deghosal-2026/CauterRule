@@ -44,3 +44,4 @@ benchmarks/*.raw.json
 # Runtime state
 calibration_history.json
 rules/.quarantine/
+.promotion.lock

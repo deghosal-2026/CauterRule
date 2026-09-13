@@ -1,0 +1,22 @@
+{
+  "passed": false,
+  "checks": [
+    {
+      "name": "parse_rate",
+      "passed": false,
+      "message": "Parse rate 35.0% (7/20) below threshold 70% \u2014 harness defect suspected",
+      "value": 0.35,
+      "threshold": 0.7
+    },
+    {
+      "name": "completion_ratio",
+      "passed": true,
+      "message": "Safety corpus: 9 candidates produced (replay rejection expected, not a harness defect)",
+      "value": 9.0,
+      "threshold": null
+    }
+  ],
+  "warnings": [
+    "Parse rate 35.0% (7/20) below threshold 70% \u2014 harness defect suspected"
+  ]
+}

@@ -2,12 +2,12 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
-[![PyPI](https://img.shields.io/badge/pypi-v0.3.0-blue)](https://pypi.org/project/cauterule/)
+[![PyPI](https://img.shields.io/badge/pypi-v0.3.1-blue)](https://pypi.org/project/cauterule/)
 [![Ruff](https://img.shields.io/badge/code%20style-ruff-000000)](https://github.com/astral-sh/ruff)
 [![Type checked](https://img.shields.io/badge/mypy-strict-blue)](https://github.com/python/mypy)
 [![Coverage](https://img.shields.io/badge/coverage-87%25%20(deterministic%20subset)-yellow)](https://github.com/deghosal-2026/CauterRule/actions)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14464/badge)](https://www.bestpractices.dev/projects/14464)
-[![Field Test](https://img.shields.io/badge/field%20test-v0.3.0%20%7C%2098%E2%80%93100%25%20near-miss%20precision-brightgreen)](docs/field-test/v0.3.0/FIELD_TEST_REPORT.md)
+[![Field Test](https://img.shields.io/badge/field%20test-v0.3.1%20%7C%20100%25%20near-miss%20precision-brightgreen)](docs/field-test/v0.3.1/FIELD_TEST_REPORT.md)
 [![Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
 [![Cauterule](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/deghosal-2026/Cauterule/main/badge.json)](docs/USER_GUIDE.md)
 
@@ -22,7 +22,7 @@ After every failure, CauterRule:
 
 No more corrections dying in chat. No more hand-written standing rules. No more vague reflection paragraphs nobody re-reads. Rules are actionable, tested, and permanent.
 
-**Status:** v0.3.0 — Hardening & Ecosystem: critical fixes, adapters, rule lifecycle, pack ecosystem, corpus/benchmark infra, full field test.
+**Status:** v0.3.1 — Fix-and-re-verify: all field-test quality + safety exit criteria pass, extraction-accuracy metric added, 43 code-review fixes.
 
 ---
 
@@ -43,7 +43,7 @@ CauterRule automates the extract → test → promote loop. Same pattern as CI/C
 | Framework memory is unstructured (LangGraph) | Rules have provenance, versioning, conflict detection, linter, and retirement |
 | Standing rules maintained by hand | The agent writes its own rules, tests them, and promotes only what survives |
 | `.cursorrules` / `CLAUDE.md` are static files | Rules are living artifacts that grow from real failures, not guesses |
-| No OSS tool ships a corpus or benchmarks | 40 corpora, 2,384 trajectories per model, 444 domain-scoped reference trajectories, golden set, safety corpora, public domain corpora, adversarial/staleness/counterexample corpora, corpus + benchmark + leaderboard CLI, field test runner |
+| No OSS tool ships a corpus or benchmarks | 40 corpora, 2,371 trajectories per model, 588-trajectory domain-scoped reference pool, golden set, safety corpora, public domain corpora, adversarial/staleness/counterexample corpora, corpus + benchmark + leaderboard CLI, field test runner |
 
 ---
 
@@ -67,11 +67,11 @@ pip install cauterule[all]
 brew install deghosal-2026/cauterule/cauterule
 
 # Docker
-docker pull ghcr.io/deghosal-2026/cauterule:v0.3.0
+docker pull ghcr.io/deghosal-2026/cauterule:v0.3.1
 docker compose up cauterule-demo
 
 # Standalone binary — download from the GitHub Release assets
-# https://github.com/deghosal-2026/CauterRule/releases/tag/v0.3.0
+# https://github.com/deghosal-2026/CauterRule/releases/tag/v0.3.1
 ```
 
 ---
@@ -101,7 +101,7 @@ cauterule validate
 cauterule export --format agents
 
 # Install an official rule pack (GitHub + version pinning)
-cauterule pack install deghosal-2026/cauterule-packs/pack-docker@v0.3.0
+cauterule pack install deghosal-2026/cauterule-packs/pack-docker@v0.3.1
 
 # Corpus + benchmark infrastructure
 cauterule corpus list
@@ -211,7 +211,7 @@ See [Adapters & Rule Lifecycle](docs/ADAPTERS.md) for CrewAI and PydanticAI.
 ### Corpus, Benchmark & Release Infrastructure (New in v0.3.0)
 - `cauterule corpus` — add/list/validate/lint/build/export trajectory corpora
 - `cauterule benchmark` + `cauterule leaderboard` — determinism, acceptance, rejection, bake-off, mutation, calibration, ablation suites
-- 40 corpora / 2,384 trajectories per model; 444 domain-scoped reference trajectories
+- 40 corpora / 2,371 trajectories per model; 588-trajectory domain-scoped reference pool
 - pytest-benchmark perf-regression CI for hot paths
 - `cauterule release check` — version consistency + publish guidance; tag-triggered `Release` workflow (build, `twine check`, TestPyPI/PyPI)
 - OpenTelemetry standalone exporter (`cauterule otel`); cost/latency tiering guidance
@@ -231,26 +231,30 @@ See [Adapters & Rule Lifecycle](docs/ADAPTERS.md) for CrewAI and PydanticAI.
 ### Security
 - Remote MCP auth / rate-limit / payload validation; adapter redaction-on-disk; pack checksums/certification
 - 0 verified secrets (truffleHog), 0 production vulnerabilities (pip-audit), custom secret regex clean
-- OpenSSF Scorecard 3.8/10 with structural remediation tracked (#713)
+- OpenSSF Scorecard 5.1/10 with structural remediation tracked (#713)
 - Details: [SECURITY.md](SECURITY.md)
 
 ---
 
 ## Field Test Results
 
-The v0.3.0 field test ran **40 corpora × 2 cloud models (gpt-4o-mini, llama-3.1-8b) = 4,768 trajectory-runs**, with a 444-trajectory domain-scoped reference corpus.
+The v0.3.1 field test ran **40 corpora × 2 cloud models (gpt-4o-mini, llama-3.1-8b) = 4,742 trajectory-runs**, against a 588-trajectory domain-scoped reference pool. It is the first release to clear every hard quality and safety gate on both models.
 
 Key findings:
-- **Near-miss precision 98–100%** (was 86–90% in v0.2.0) — near-miss penalty + self-match exclusion + recovery gate
-- **Adversarial promotions: 0** on both models (`should_reject` override)
-- **100% safety silence** — 60/60 successes and 60/60 failures-negative gate-dropped
-- **Recall improved 2–3×** (0.170 / 0.228 vs 0.087) after domain-scoping the reference pool (#708)
-- **#601 MCP auth bug** caught by the Docker field test and fixed (unit-green, deployment-broken)
-- **Known gap:** golden pass 40–50% (target ≥70%) and failures/positive 8–10% (target ≥50%) — the matcher's paraphrase limitation, targeted for v0.4.0
+- **Golden pass 30–50% → 82–83%** (n=60) — semantic floor + class-free failure signature + scorer ordering (#721–#724, #735)
+- **Failures/positive pass 8–10% → 50–52%** — spurious-`broken` fix + scorer reordering (#723, #724)
+- **Adapters 0/60 → 60/60** — adapter-specific reference signatures (#726)
+- **raw/ci 0/110 → 21–26/47** — corpus repair + CI sibling references (#726, J11)
+- **Near-miss false accepts: 0** · **Adversarial promotions: 0** across all 9 adversarial corpora
+- **Extraction accuracy measured for the first time** — `extraction_agreement` 0.74–0.92 (trigger-only) while token-F1 stays 0.42–0.65 (#730, J6)
+- **100% safety silence** on successes, failures/negative, and gate-dropped safety corpora
+- **Cost:** $0.20 / 1k trajectories (gpt-4o-mini), $0.05 / 1k (llama-3.1-8b)
+- **Known gaps:** 0-accepted corpora (`public/staleness`, `public/synthetic`, `lifecycle`, `mcp`, gpt `public/domains`); cross-session + human-vs-replay agreement not yet measured; golden inconclusive 17–18%
 
-Full report: [`docs/field-test/v0.3.0/FIELD_TEST_REPORT.md`](docs/field-test/v0.3.0/FIELD_TEST_REPORT.md)
+Full report: [`docs/field-test/v0.3.1/FIELD_TEST_REPORT.md`](docs/field-test/v0.3.1/FIELD_TEST_REPORT.md)
 
 Prior reports:
+- v0.3.0: [`docs/field-test/v0.3.0/FIELD_TEST_REPORT.md`](docs/field-test/v0.3.0/FIELD_TEST_REPORT.md)
 - v0.2.0: [`docs/field-test/v0.2.0/FIELD_TEST_REPORT.md`](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md)
 - v0.1.0: [`docs/field-test/v0.1.0/FIELD_TEST_REPORT.md`](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md)
 
@@ -292,12 +296,10 @@ Prior reports:
 
 ## Known Limitations
 
-- **Golden pass rate 40–50%** (target ≥70%) — the token-F1 matcher cannot bridge the paraphrase gap between LLM-extracted triggers and reference phrasings. Targeted for v0.4.0 matcher work.
-- **Failures/positive pass rate 8–10%** (target ≥50%) — blocked by the broad-trigger penalty (`broken > 0`) and precision below 0.5. v0.4.0 matcher work.
-- **Semantic matching is still maturing** — optional via `pip install "cauterule[matching]"`, but it contributes only a 0.2 weight to the score blend today. Raising the semantic weight is v0.4.0 work.
+- **0-accepted corpora** — `public/staleness`, `public/synthetic`, `lifecycle`, `mcp`, and gpt `public/domains` still produce no promotable rules (reference-coverage/matcher gaps carried from v0.3.0, J18). v0.4.0 work.
 - **Cross-session repeat-failure reduction and human-vs-replay agreement** — tooling is ready; the measurement protocols have not been run.
 - **Local OMLX models are unusable** (slow, hung on `raw/ci`) — use cloud models.
-- **OpenSSF Scorecard 3.8/10** — structural gaps (branch protection, review, fuzzing, dependency pinning); remediation tracked in #713, #614, #615.
+- **OpenSSF Scorecard 5.1/10** — structural gaps (branch protection, code review, fuzzing, dependency pinning); remediation tracked in #713, #614.
 - **Replay matcher is still heuristic** (substring + token overlap + 0.2 semantic) — the embedding index is planned for a later release.
 - **TUI review requires a color-capable terminal** — use the CLI commands otherwise.
 
@@ -310,6 +312,7 @@ Prior reports:
 | **v0.1.0** ✅ | Core Loop + DX | Full loop, 25+ CLI commands, MCP, export/import, packs, corpus, field tests |
 | **v0.2.0** ✅ | Distribution + Polish | TUI review, observability, corpus infra (160 public trajs), 12 benchmarks, adversarial corpora, Docker, binary, GitHub Action, webhook, OTEL |
 | **v0.3.0** ✅ | Hardening & Ecosystem | Critical fixes, adapters (LangGraph/CrewAI/PydanticAI), rule lifecycle, pack ecosystem, corpus/benchmark infra, 40-corpus field test |
+| **v0.3.1** ✅ | Accuracy & Trust | Matcher/scorer fixes, extraction-accuracy metric, production source-trust gate, 43 code-review fixes, field test clears all hard gates |
 | **v0.4.0** | Intelligence & Scale | Matcher quality + paraphrase bridging, higher semantic weight, cross-session repeat-failure measurement, human-vs-replay agreement, deep integrations, observability dashboard, fleet support |
 | **v0.5.0** | Observability & Analytics | Web dashboard, trend lines, weekly digest |
 | **v0.6.0** | Advanced Retrieval | Rule embedding index, hybrid retrieval tuning |
@@ -337,9 +340,11 @@ CauterRule is the **learning layer** in an open-source agent infrastructure stac
 - [Adapters & Rule Lifecycle](docs/ADAPTERS.md)
 - [Observability](docs/observability.md)
 - [Contributing Rule Packs](docs/packs/CONTRIBUTING-PACKS.md)
+- [Field Test Report (v0.3.1)](docs/field-test/v0.3.1/FIELD_TEST_REPORT.md)
 - [Field Test Report (v0.3.0)](docs/field-test/v0.3.0/FIELD_TEST_REPORT.md)
 - [Field Test Report (v0.2.0)](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md)
 - [Field Test Report (v0.1.0)](docs/field-test/v0.1.0/FIELD_TEST_REPORT.md)
+- [Release Notes (v0.3.1)](docs/release/v0.3.1/release-notes.md)
 - [Release Notes (v0.3.0)](docs/release/v0.3.0/release-notes.md)
 - [Release Notes (v0.2.0)](docs/release/v0.2.0/release-notes.md)
 - [Release Notes (v0.1.0)](docs/release/v0.1.0/release-notes.md)
@@ -348,6 +353,7 @@ CauterRule is the **learning layer** in an open-source agent infrastructure stac
 - [Docs Index](docs/README.md)
 - [PRD: Why](docs/design/prd/01-why.md)
 - [Architecture](docs/design/prd/02-architecture.md)
+- [WBS v0.3.1](docs/wbs/v0.3.1/wbs-v0.3.1-index.md)
 - [WBS v0.3.0](docs/wbs/v0.3.0/wbs-v0.3.0-index.md)
 - [WBS v0.1.0](docs/wbs/v0.1.0/wbs-v0.1.0-index.md)
 

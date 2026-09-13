@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from cauterule.conflict.consolidation import consolidate
 from cauterule.conflict.specificity import score_specificity
+from cauterule.lifecycle.supersede import orphan_middles
 from cauterule.models.rule import Provenance, ReplayEvidence, RuleDo, RuleWhen, StandingRule
 
 
@@ -70,3 +71,27 @@ def test_tie_break_hit_count() -> None:
     merged, reports = consolidate([a, b])
     assert reports and reports[0].type == "contradiction"
     assert len([r for r in merged if r.status == "superseded"]) == 1
+
+
+def test_superseded_loser_points_at_winner() -> None:
+    # #785: the loser must record its successor; otherwise orphan_middles
+    # (and validate_store) reject the consolidated store as corrupt.
+    a = _rule("R-A", "git push fails", "pull --rebase")
+    b = _rule("R-B", "git push fails", "force push")
+    merged, _ = consolidate([a, b])
+    loser = next(r for r in merged if r.status == "superseded")
+    winner = next(r for r in merged if r.status == "active")
+    assert loser.superseded_by == winner.id
+    assert orphan_middles(merged) == []
+
+
+def test_superseded_loser_points_at_winner_on_overlap_merge() -> None:
+    # #785: the overlap-merge branch must set the pointer too.
+    a = _rule("R-001", directive="pull --rebase && fetch", hit_count=1)
+    b = _rule("R-002", directive="pull --rebase", hit_count=9)
+    merged, reports = consolidate([a, b])
+    assert reports and reports[0].type == "overlap"
+    loser = next(r for r in merged if r.status == "superseded")
+    winner = next(r for r in merged if r.status == "active")
+    assert loser.superseded_by == winner.id
+    assert orphan_middles(merged) == []

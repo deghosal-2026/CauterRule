@@ -194,6 +194,24 @@ def test_state_only_recovery_is_nearmiss() -> None:
     assert result.reason == SILENCE_REASON_NEARMISS
 
 
+def test_state_only_early_failure_is_nearmiss() -> None:
+    # #772: an early step that failed only via state (exit_code=1, no error
+    # text) followed by a state recovery is a near-miss and must be dropped.
+    traj = Trajectory(
+        id="T-state-only",
+        timestamp="t",
+        task="retry",
+        steps=(
+            Step(step_number=1, tool="bash", state={"exit_code": 1}),
+            Step(step_number=2, tool="bash", state={"exit_code": 0}),
+        ),
+        success=True,
+    )
+    result = run_gate(traj, mode="strict")
+    assert result.should_extract is False
+    assert result.reason == SILENCE_REASON_NEARMISS
+
+
 # ------------------------------------------------------------------
 # #692 — recovery keyword must match whole tokens, not substrings
 # ------------------------------------------------------------------

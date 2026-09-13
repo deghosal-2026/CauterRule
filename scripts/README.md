@@ -31,13 +31,14 @@ Utility scripts for development, testing, corpus management, and field test exec
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `run-field-test.py` | Run v0.3.0 field test sweeps (single corpus, `--all`, or hermetic validation suites). Outputs to `field-test/results/0.3.0/` | `python scripts/run-field-test.py golden --output-dir field-test/results/0.3.0` |
+| `run-field-test.py` | Run v0.3.0 field test sweeps (single corpus, `--all`, or hermetic validation suites). Outputs to `field-test/results/0.3.0/` | `python scripts/run-field-test.py golden --max-workers 3 --output-dir field-test/results/0.3.0` |
 | `run-field-test.py --run-validation` | Run all hermetic pre-field validation suites (#432-#437, #443-#444): gate, matcher, safety, attribution, specificity, sentinel benchmarks, scale, adversarial, corpus, observe, tui | `python scripts/run-field-test.py --run-validation --output-dir field-test/results/0.3.0/` |
 | `run-field-test.py --validation-suite <name>` | Run a single validation suite only | `python scripts/run-field-test.py --run-validation --validation-suite sentinel_benchmark` |
 | `run-field-test.py --skip-preflight` | Skip provider/corpus preflight checks (for hermetic local runs) | `python scripts/run-field-test.py successes --llm-provider openai --llm-base-url http://localhost:8000/v1 --skip-preflight --output-dir field-test/results/0.3.0` |
 | `run-field-test.py --regression-v020` | Emit a per-corpus delta table vs the v0.2.0 baseline | `python scripts/run-field-test.py --regression-v020 --output-dir field-test/results/0.3.0` |
 
 **v0.3.0 runner features:**
+- **Use `--max-workers 3` for field sweeps.** Higher concurrency (4+) can crash the embedding pool natively (`SIGBUS`) on macOS; 3 workers is the recommended default.
 - Pre-extraction gate (strict on `successes`/`failures/negative`/`nearmiss`, relaxed elsewhere)
 - Corpus-aware matcher thresholds (`strict` 0.70, `loose` 0.35, `semantic` 0.60, `transfer` 0.40 — see `replay/matcher.py`), with an OMLX override
 - Safety-adjusted scoring — `silence_rate`, `safety_summary` per corpus
@@ -118,6 +119,7 @@ CAUTERULE_LLM_API_KEY=dummy \
 python scripts/run-field-test.py golden \
   --llm-provider openai --llm-model llama-3.2-3b-instruct \
   --llm-base-url http://localhost:8000/v1 \
+  --max-workers 3 \
   --output-dir field-test/results/0.3.0
 
 # Regenerate the field-test result tables (single source of truth) and check for drift

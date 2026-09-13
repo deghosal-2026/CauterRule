@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
+import pytest
 from click.testing import CliRunner
 
 from cauterule.cli.app import main
@@ -372,6 +374,41 @@ class TestReport:
         assert "anthropic/claude" in result.output
         assert "Decision Economics" in result.output
         assert (results / "safety-ranking.md").is_file()
+        assert "Safety-Adjusted Model Ranking" in (results / "safety-ranking.md").read_text()
+
+    def test_safety_ranking_file_nonempty_without_getvalue(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # #791: a real terminal's sys.stdout has no getvalue; the saved file
+        # must still contain the ranking (no silent empty file).
+        from cauterule.cli.report import _build_safety_adjusted_ranking
+
+        results = tmp_path / "results"
+        _write_summary(
+            results / "successes" / "openai/gpt-4" / "2026-09-01" / "summary.json",
+            corpus_type="successes",
+            provider="openai",
+            model="gpt-4",
+            passing=10,
+            accepted=2,
+        )
+
+        class _Sink:
+            def __init__(self) -> None:
+                self.data: list[str] = []
+
+            def write(self, s: str) -> None:
+                self.data.append(s)
+
+            def flush(self) -> None:
+                pass
+
+        sink = _Sink()
+        monkeypatch.setattr(sys, "stdout", sink)
+        _build_safety_adjusted_ranking(str(results))
+        content = (results / "safety-ranking.md").read_text()
+        assert "Safety-Adjusted Model Ranking" in content
+        assert len(content) > 0
 
     def test_invalid_json_skipped(self, tmp_path: Path) -> None:
         results = tmp_path / "results"

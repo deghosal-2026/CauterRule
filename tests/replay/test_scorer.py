@@ -11,7 +11,25 @@ def test_prevented_all() -> None:
 def test_mixed() -> None:
     prec, _rec, verdict = compute_scores(prevented=3, broken=1, total_failures=5, total_successes=5)
     assert prec == 0.75
-    assert verdict == "inconclusive"  # broad but fixable: broken < prevented
+    # #724: a net-positive rule (broken <= prevented, precision >= 0.5) passes.
+    assert verdict == "pass"
+
+
+def test_net_positive_broad_rule_passes() -> None:
+    """#724: the F-001 case — prevents 5, breaks 3, precision 0.625 -> pass."""
+    prec, _rec, verdict = compute_scores(
+        prevented=5, broken=3, total_failures=8, total_successes=8
+    )
+    assert prec == 0.625
+    assert verdict == "pass"
+
+
+def test_dangerously_broad_still_fails() -> None:
+    """#724: broken > prevented stays fail (safety preserved)."""
+    _prec, _rec, verdict = compute_scores(
+        prevented=3, broken=4, total_failures=8, total_successes=8
+    )
+    assert verdict == "fail"
 
 
 def test_no_matches() -> None:
@@ -93,7 +111,8 @@ def test_near_miss_zero_stays_pass() -> None:
 
 
 def test_near_miss_does_not_override_broken() -> None:
-    """broken > 0 takes precedence over near_misses."""
+    """#724: >2 near-misses take precedence; broken<=prevented alone no longer
+    forces inconclusive, so the near-miss guard is what keeps this inconclusive."""
     _prec, _rec, verdict = compute_scores(
         prevented=3,
         broken=1,
@@ -101,4 +120,13 @@ def test_near_miss_does_not_override_broken() -> None:
         total_successes=5,
         near_misses=5,
     )
-    assert verdict == "inconclusive"  # broken>0 path, not near-miss path
+    assert verdict == "inconclusive"  # near_misses>2 path
+
+
+def test_detailed_reasons() -> None:
+    from cauterule.replay.scorer import compute_scores_detailed
+
+    assert compute_scores_detailed(5, 0, 5, 5, 0)[3] == "pass"
+    assert compute_scores_detailed(0, 0, 5, 5, 0)[3] == "no_signal"
+    assert compute_scores_detailed(3, 4, 8, 8, 0)[3] == "blocked_by_broken"
+    assert compute_scores_detailed(5, 0, 5, 5, 3)[3] == "blocked_by_near_miss"

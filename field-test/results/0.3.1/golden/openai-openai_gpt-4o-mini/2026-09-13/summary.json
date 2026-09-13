@@ -1,0 +1,83 @@
+{
+  "meta": {
+    "corpus_type": "golden",
+    "timestamp": "2026-09-13",
+    "llm_provider": "openai",
+    "llm_model": "openai/gpt-4o-mini",
+    "llm_base_url": "https://openrouter.ai/api/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2,0.5",
+    "target_trajectories": 60,
+    "reference_trajectories": 588,
+    "cost_per_request_usd": 0.01,
+    "gate_mode": "relaxed",
+    "quarantined": []
+  },
+  "elapsed_seconds": 63.8,
+  "total": 60,
+  "done": 60,
+  "gate_dropped": 0,
+  "gate_dropped_by_reason": {},
+  "skipped": 0,
+  "total_candidates": 99,
+  "total_llm_calls_avoided": 0,
+  "avg_precision": 0.817,
+  "avg_recall": 0.377,
+  "avg_match_score": 0.458,
+  "match_detail_count": 99,
+  "passing": 49,
+  "failing": 0,
+  "inconclusive": 11,
+  "safety": {
+    "total": 60,
+    "silence": 0,
+    "parse_failure": 0,
+    "rejected": 11,
+    "accepted": 49,
+    "silence_rate": 0.0,
+    "rejection_rate": 0.1833,
+    "attempted": 60,
+    "verdict": "pass",
+    "acceptance_rate": 0.8167
+  },
+  "confidence_intervals": {
+    "pass_rate": {
+      "rate": 1.0,
+      "n": 49,
+      "ci_low": 0.9273,
+      "ci_high": 1.0
+    },
+    "safety_silence_rate": {
+      "rate": 0.0,
+      "n": 60,
+      "ci_low": 0.0,
+      "ci_high": 0.0602
+    }
+  },
+  "specificity_distribution": {
+    "specific": 119,
+    "moderate": 34,
+    "generic": 6
+  },
+  "inconclusive_breakdown": {
+    "broad_trigger": 0,
+    "matcher_gap": 2,
+    "corpus_mismatch": 0,
+    "ambiguous_evidence": 16
+  },
+  "extraction": {
+    "n": 60,
+    "token_f1": 0.4195,
+    "semantic_f1": 0.6113,
+    "directive_f1": 0.2051,
+    "token_agreement": 0.25,
+    "agreement": 0.7833
+  },
+  "extraction_f1": 0.6112866666666666,
+  "extraction_agreement": 0.7833333333333333,
+  "verdict_reason_breakdown": {
+    "verdict:pass": 49,
+    "no_signal": 11
+  },
+  "updated_at": "2026-09-13T18:40:17Z"
+}

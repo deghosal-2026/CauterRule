@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from cauterule.models._coercion import require_str_tuple
+
 ConflictType = Literal["contradiction", "duplicate", "overlap", "specificity"]
 _VALID_TYPES: frozenset[str] = frozenset({"contradiction", "duplicate", "overlap", "specificity"})
 
@@ -51,7 +53,7 @@ class ConflictReport:
         """Create from a dict produced by :meth:`to_dict`."""
         return cls(
             type=data.get("type", "overlap"),
-            rules=tuple(data.get("rules", [])),
+            rules=require_str_tuple(data.get("rules", []), "rules"),
             trigger=data.get("trigger"),
             resolution=data.get("resolution"),
             specificity_scores=dict(data.get("specificity_scores", {})),

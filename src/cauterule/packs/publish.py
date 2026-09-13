@@ -209,7 +209,7 @@ def build_asset(pack_dir: Path, name: str, version: str, dest_dir: Path) -> Path
     asset = dest_dir / f"pack-{name}-v{version}.tar.gz"
     with tarfile.open(asset, "w:gz") as tar:
         for path in sorted(pack_dir.rglob("*")):
-            if path.is_file() and ".git/" not in path.parts:
+            if path.is_file() and ".git" not in path.parts:
                 tar.add(path, arcname=str(path.relative_to(pack_dir)))
     return asset
 

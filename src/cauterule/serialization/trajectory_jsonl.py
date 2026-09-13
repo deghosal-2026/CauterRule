@@ -80,6 +80,7 @@ def load_trajectories(
     with p.open("r", encoding="utf-8") as f:
         buf: str | None = None
         depth = 0
+        lineno = 0
         for lineno, line in enumerate(f, start=1):
             stripped = line.strip()
             if not stripped:
@@ -117,6 +118,19 @@ def load_trajectories(
                 _log.warning(msg)
                 if on_skip is not None:
                     on_skip(lineno, str(exc))
+
+        # #773: a multi-line record truncated at EOF must be reported, not
+        # silently dropped — route it through the same strict/warn/on_skip path.
+        if buf is not None:
+            try:
+                yield load_trajectory(buf)
+            except (json.JSONDecodeError, ValueError, KeyError, TypeError) as exc:
+                msg = f"{p}:{lineno}: multi-line JSON truncated at EOF ({exc})"
+                if strict:
+                    raise ValueError(msg) from exc
+                _log.warning(msg)
+                if on_skip is not None:
+                    on_skip(lineno, f"truncated at EOF: {exc}")
 
 
 @dataclass(frozen=True)

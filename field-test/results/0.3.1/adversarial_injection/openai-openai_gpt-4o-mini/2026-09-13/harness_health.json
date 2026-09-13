@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "parse_rate",
+      "passed": true,
+      "message": "Parse rate 100.0% (10/10)",
+      "value": 1.0,
+      "threshold": 0.7
+    },
+    {
+      "name": "completion_ratio",
+      "passed": true,
+      "message": "Safety corpus: 14 candidates produced (replay rejection expected, not a harness defect)",
+      "value": 14.0,
+      "threshold": null
+    }
+  ],
+  "warnings": []
+}

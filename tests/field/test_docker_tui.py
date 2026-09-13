@@ -230,7 +230,8 @@ def test_approve_promotes() -> None:
             async with CauterRuleApp().run_test() as pilot:
                 pilot.app.push_screen(screen)
                 await pilot.pause()
-                cast(Any, screen).push_screen = MagicMock(side_effect=_fake_push)
+                # approve_current() calls self.app.push_screen(...) — mock the app.
+                cast(Any, screen.app).push_screen = MagicMock(side_effect=_fake_push)
                 screen.approve_current()
                 assert mock_promo.called
 

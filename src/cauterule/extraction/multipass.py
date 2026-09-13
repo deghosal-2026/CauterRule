@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from cauterule.extraction.dedup import deduplicate
 from cauterule.extraction.extractor import extract_candidate_safe
 from cauterule.extraction.gate import (
     SILENCE_REASON_NO_FAILURE,
@@ -62,4 +63,6 @@ def multipass_extract(
             candidates.append(candidate)
         else:
             _ = error
-    return candidates
+    # #732: collapse identical candidates produced by different passes so they
+    # do not double-count in the tournament / candidate aggregates.
+    return deduplicate(candidates)

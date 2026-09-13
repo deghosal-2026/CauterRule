@@ -215,8 +215,15 @@ REFERENCE_BUCKETS = [
     PUBLIC_ROOT / "browser",
     # #706: real-world python test failures (BugsInPy).
     PUBLIC_ROOT / "real-world" / "bugsinpy",
+    # #726: CI failure references routed into the raw/ci domain slice so its
+    # candidates score against CI phrasings (domain=ci), not the full pool.
+    PUBLIC_ROOT / "ci_reference",
     # #700/#707: success counterparts from external sources (InjecAgent).
     PUBLIC_ROOT / "successes",
+    # #735 gap: sibling failure references for the 50 freshly-authored golden
+    # scenarios so each new domain has same-domain failures to "prevent"
+    # (see scripts/generate_golden_replay_refs.py).
+    PUBLIC_ROOT / "golden_replay",
 ]
 
 GATE_MODE_STRICT = "strict"
@@ -301,6 +308,23 @@ VALIDATION_SUITES: dict[str, dict[str, str]] = {
     "benchmark_cli": {
         "issue": "#605/#606 (M6 benchmark CLI)",
         "targets": ["tests/cli/test_benchmark_cli.py", "benchmarks/"],
+    },
+    # ── v0.3.1 validation suites (#733) ──
+    "v031_extraction_accuracy": {
+        "issue": "#730/#734 (extraction accuracy vs expected_rule)",
+        "targets": ["tests/measurement/test_extraction_accuracy.py"],
+    },
+    "v031_corpus_coverage": {
+        "issue": "#726/#735 (adapter/CI references + expected_rule backfill)",
+        "targets": ["tests/corpus/test_v030_corpus_coverage.py"],
+    },
+    "v031_report_reproducibility": {
+        "issue": "#728 (artifact-derived report + drift check)",
+        "targets": ["tests/test_generate_field_test_report.py"],
+    },
+    "v031_harness_metrics": {
+        "issue": "#734 (runner summary carries extraction/verdict-reason metrics)",
+        "targets": ["tests/test_run_field_test_harness.py"],
     },
 }
 
@@ -518,13 +542,25 @@ def extract_candidates(
                     "confidence": candidate.confidence,
                     "extraction_pass": candidate.extraction_pass,
                     "reasoning": candidate.reasoning,
+                    "error_signature": candidate.when.signature,
                     "temperature": temp,
                     "llm_response": raw_text,
                 }
             )
         except Exception as exc:
             print(f"NO CANDIDATE (pass {idx}, temp={temp}): {exc}")
-    return candidates, usage
+    # #732: collapse identical candidates across passes (keep higher confidence).
+    deduped: list[dict] = []
+    seen_keys: dict[tuple[str, str], int] = {}
+    for cand in candidates:
+        key = (str(cand["when"]).strip().lower(), str(cand["do"]).strip().lower())
+        idx = seen_keys.get(key)
+        if idx is None:
+            seen_keys[key] = len(deduped)
+            deduped.append(cand)
+        elif cand["confidence"] > deduped[idx]["confidence"]:
+            deduped[idx] = cand
+    return deduped, usage
 
 
 # ── Gate ───────────────────────────────────────────────────────────────
@@ -624,6 +660,7 @@ def replay_test_candidate(
         "precision": report.precision,
         "recall": report.recall,
         "verdict": report.verdict,
+        "verdict_reason": report.verdict_reason,
         "replay_trace": [dict(r) for r in report.replay_trace],
         "threshold": threshold,
         "match_detail": match_diag,
@@ -752,31 +789,42 @@ def process_one_trajectory(
         )
         # v0.2.0: specificity scoring on trigger
         test_result["trigger_specificity"] = score_specificity(cand["when"])
-        # v0.2.0: inconclusive attribution
-        if test_result.get("verdict") == "inconclusive":
-            from cauterule.models.candidate import CandidateRule
-            from cauterule.models.rule import RuleDo, RuleWhen
-            from cauterule.models.trajectory import Trajectory
-            from cauterule.replay.attribution import attribute_inconclusive
-            from cauterule.replay.report import build_evidence_report
+        # v0.3.1 (#720): behavioral outcome precision + (for inconclusive)
+        # attribution. Built for every candidate so the field test can compare
+        # text precision vs grounded outcome precision.
+        from cauterule.models.candidate import CandidateRule
+        from cauterule.models.rule import RuleDo, RuleWhen
+        from cauterule.models.trajectory import Trajectory
+        from cauterule.replay.report import build_evidence_report
 
-            cand_obj = CandidateRule(
-                when=RuleWhen(trigger=cand["when"]),
-                do=RuleDo(directive=cand["do"]),
-                confidence=cand["confidence"],
-                reasoning=cand.get("reasoning"),
-                extraction_pass=cand.get("extraction_pass", 1),
+        cand_obj = CandidateRule(
+            when=RuleWhen(trigger=cand["when"], signature=cand.get("error_signature")),
+            do=RuleDo(directive=cand["do"]),
+            confidence=cand["confidence"],
+            reasoning=cand.get("reasoning"),
+            extraction_pass=cand.get("extraction_pass", 1),
+        )
+        traj_objs = []
+        for t in reference_trajs:
+            with contextlib.suppress(Exception):
+                traj_objs.append(Trajectory.from_dict(t))
+        ev_report = build_evidence_report(cand_obj, traj_objs)
+        test_result["outcome_precision"] = ev_report.outcome_precision
+        if test_result.get("verdict") == "inconclusive":
+            from cauterule.replay.attribution import attribute_inconclusive
+
+            test_result["inconclusive_reason"] = attribute_inconclusive(
+                cand_obj, traj_objs, ev_report
             )
-            traj_objs = []
-            for t in reference_trajs:
-                with contextlib.suppress(Exception):
-                    traj_objs.append(Trajectory.from_dict(t))
-            ev_report = build_evidence_report(cand_obj, traj_objs)
-            reason = attribute_inconclusive(cand_obj, traj_objs, ev_report)
-            test_result["inconclusive_reason"] = reason
         test_results.append(test_result)
 
-    best = max(test_results, key=lambda r: r["precision"] * r["recall"]) if test_results else {}
+    from cauterule.extraction.ranking import score_candidate
+
+    best = (
+        max(test_results, key=lambda r: score_candidate(r["precision"], r["recall"]))
+        if test_results
+        else {}
+    )
 
     # Adversarial / should_reject: force fail regardless of precision.
     # The LLM can extract a legitimate-looking rule from an adversarial
@@ -897,6 +945,26 @@ def _write_summary(
                 match_scores.append(md["score"])
     avg_match_score = round(sum(match_scores) / len(match_scores), 3) if match_scores else None
 
+    # v0.3.1 (#730): extraction accuracy vs the corpus ground-truth rule.
+    # Independent of replay: measures whether the extractor produced the right
+    # rule, on trajectories that carry `expected_rule` (others are n/a).
+    from cauterule.measurement.extraction_accuracy import (
+        measure_extraction_accuracy,
+        records_from_results,
+    )
+
+    extraction = measure_extraction_accuracy(records_from_results(done))
+
+    # v0.3.1 (#724): why each best candidate got its verdict
+    # (blocked_by_broken / blocked_by_precision / blocked_by_near_miss / ...).
+    verdict_reason_breakdown: dict[str, int] = {}
+    for r in done:
+        best = r.get("best", {})
+        if not best:
+            continue
+        reason = best.get("verdict_reason") or f"verdict:{best.get('verdict', '?')}"
+        verdict_reason_breakdown[reason] = verdict_reason_breakdown.get(reason, 0) + 1
+
     # v0.3.0 (#697): break gate drops down by silencing reason so a spike in
     # one mechanism (e.g. #692 keyword substring, #693 output-as-success) is
     # visible without re-deriving it from raw results.jsonl.
@@ -938,6 +1006,11 @@ def _write_summary(
         "confidence_intervals": confidence_intervals,
         "specificity_distribution": specificity_counts,
         "inconclusive_breakdown": inconclusive_breakdown,
+        "extraction": extraction.to_dict(),
+        # J10: null (not 0.0) when the corpus has no ground-truth `expected_rule`.
+        "extraction_f1": extraction.semantic_f1 if extraction.n else None,
+        "extraction_agreement": extraction.agreement if extraction.n else None,
+        "verdict_reason_breakdown": verdict_reason_breakdown,
         "updated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     summary_file.write_text(json.dumps(summary, indent=2))
@@ -953,8 +1026,13 @@ def write_harness_health(
 
     done = [r for r in results if r.get("status") == "done"]
     gate_dropped = [r for r in results if r.get("status") == "gate_dropped"]
+    no_cand = [r for r in results if r.get("status") == "no_candidates"]
     parsed = sum(1 for r in done if r.get("candidate_count", 0) > 0)
     total = len(done) + len(gate_dropped)
+    # attempted = trajectories that actually reached the LLM. Gate-dropped
+    # trajectories are intentional silence on safety/rejection corpora and must
+    # not be counted as "unparsed" (#nearmiss harness false positive).
+    attempted = len(done) + len(no_cand)
     candidates = sum(r.get("candidate_count", 0) for r in done)
     base = corpus_type.split("/")[-1].strip().lower()
     is_safety = base in SAFETY_CORPORA or corpus_type.startswith("adversarial")
@@ -963,6 +1041,7 @@ def write_harness_health(
         total=total,
         candidates=candidates,
         trajectories=total,
+        attempted=attempted,
         is_safety_corpus=is_safety,
     )
     health_data = {

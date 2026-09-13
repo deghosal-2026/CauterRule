@@ -25,7 +25,7 @@ import re
 from dataclasses import replace
 from typing import Any
 
-from cauterule.extraction.specificity import _CONCRETE_MARKERS, _STOPWORDS
+from cauterule.extraction.specificity import _CONCRETE_MARKERS, _STOPWORDS, _has_code_like_token
 from cauterule.models.rule import StandingRule
 from cauterule.store.manager import StoreManager
 
@@ -42,7 +42,6 @@ _BREADTH_PENALTY = 0.2
 _MIN_OUTCOMES_FOR_CONFIDENCE = 10
 
 _DEGENERATE_RE = re.compile(r"^step[_\s]*\d+$", re.IGNORECASE)
-_HYPHEN_RE = re.compile(r"[a-z]+[-_][a-z]+")
 
 # Concrete tool names give a 2-token trigger meaningful signal.
 _TOOL_WORDS = frozenset(
@@ -52,7 +51,8 @@ _TOOL_WORDS = frozenset(
 
 def _content_tokens(trigger: str) -> list[str]:
     lower = trigger.lower()
-    tokens = [t.strip(".,;:!?\"'()[]{}") for t in lower.split()]
+    separated = re.sub(r"[-_]+", " ", lower)
+    tokens = [t.strip(".,;:!?\"'()[]{}") for t in separated.split()]
     return [t for t in tokens if t and t not in _STOPWORDS and len(t) > 1]
 
 
@@ -67,8 +67,8 @@ def trigger_score(trigger: str) -> float:
     if not lower or _DEGENERATE_RE.match(lower):
         return 0.0
 
-    # Concrete markers / hyphenated codes are strong specificity evidence.
-    if _HYPHEN_RE.search(lower):
+    # Code-like tokens / concrete markers are strong specificity evidence.
+    if _has_code_like_token(trigger):
         return 1.0
     if any(phrase in lower for phrase in _CONCRETE_MARKERS):
         return 1.0

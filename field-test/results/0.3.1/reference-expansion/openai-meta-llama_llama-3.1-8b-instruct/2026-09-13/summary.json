@@ -1,0 +1,85 @@
+{
+  "meta": {
+    "corpus_type": "reference-expansion",
+    "timestamp": "2026-09-13",
+    "llm_provider": "openai",
+    "llm_model": "meta-llama/llama-3.1-8b-instruct",
+    "llm_base_url": "https://openrouter.ai/api/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2,0.5",
+    "target_trajectories": 303,
+    "reference_trajectories": 588,
+    "cost_per_request_usd": 0.01,
+    "gate_mode": "relaxed",
+    "quarantined": []
+  },
+  "elapsed_seconds": 929.8,
+  "total": 303,
+  "done": 303,
+  "gate_dropped": 0,
+  "gate_dropped_by_reason": {},
+  "skipped": 0,
+  "total_candidates": 578,
+  "total_llm_calls_avoided": 0,
+  "avg_precision": 0.668,
+  "avg_recall": 0.185,
+  "avg_match_score": 0.306,
+  "match_detail_count": 578,
+  "passing": 198,
+  "failing": 24,
+  "inconclusive": 81,
+  "safety": {
+    "total": 303,
+    "silence": 0,
+    "parse_failure": 0,
+    "rejected": 105,
+    "accepted": 198,
+    "silence_rate": 0.0,
+    "rejection_rate": 0.3465,
+    "attempted": 303,
+    "verdict": "pass",
+    "acceptance_rate": 0.6535
+  },
+  "confidence_intervals": {
+    "pass_rate": {
+      "rate": 0.8919,
+      "n": 222,
+      "ci_low": 0.8442,
+      "ci_high": 0.9263
+    },
+    "safety_silence_rate": {
+      "rate": 0.0,
+      "n": 303,
+      "ci_low": 0.0,
+      "ci_high": 0.0125
+    }
+  },
+  "specificity_distribution": {
+    "specific": 668,
+    "moderate": 200,
+    "generic": 13
+  },
+  "inconclusive_breakdown": {
+    "broad_trigger": 4,
+    "matcher_gap": 36,
+    "corpus_mismatch": 0,
+    "ambiguous_evidence": 118
+  },
+  "extraction": {
+    "n": 303,
+    "token_f1": 0.6544,
+    "semantic_f1": 0.7486,
+    "directive_f1": 0.2054,
+    "token_agreement": 0.6304,
+    "agreement": 0.9175
+  },
+  "extraction_f1": 0.7485871287128713,
+  "extraction_agreement": 0.9174917491749175,
+  "verdict_reason_breakdown": {
+    "no_signal": 53,
+    "verdict:pass": 198,
+    "blocked_by_near_miss": 28,
+    "blocked_by_broken": 24
+  },
+  "updated_at": "2026-09-13T19:58:36Z"
+}

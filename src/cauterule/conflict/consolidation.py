@@ -72,7 +72,9 @@ def consolidate(
                     # Non-contradictory overlap — merge by keeping higher hit_count
                     if b.hit_count > a.hit_count:
                         winner, loser = b, a
-                    merged[loser.id] = replace(loser, status="superseded")
+                    merged[loser.id] = replace(
+                        loser, status="superseded", superseded_by=winner.id
+                    )
                     reports.append(
                         ConflictReport(
                             type="overlap",
@@ -87,7 +89,7 @@ def consolidate(
                     continue
 
             # Contradiction path (different specificity or low overlap)
-            merged[loser.id] = replace(loser, status="superseded")
+            merged[loser.id] = replace(loser, status="superseded", superseded_by=winner.id)
             reports.append(
                 ConflictReport(
                     type="contradiction",

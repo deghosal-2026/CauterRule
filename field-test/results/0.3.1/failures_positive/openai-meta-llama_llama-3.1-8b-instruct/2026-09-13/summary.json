@@ -1,0 +1,86 @@
+{
+  "meta": {
+    "corpus_type": "failures/positive",
+    "timestamp": "2026-09-13",
+    "llm_provider": "openai",
+    "llm_model": "meta-llama/llama-3.1-8b-instruct",
+    "llm_base_url": "https://openrouter.ai/api/v1",
+    "extraction_passes": 2,
+    "temperatures": "0.2,0.5",
+    "target_trajectories": 50,
+    "reference_trajectories": 588,
+    "cost_per_request_usd": 0.01,
+    "gate_mode": "relaxed",
+    "quarantined": []
+  },
+  "elapsed_seconds": 91.0,
+  "total": 50,
+  "done": 50,
+  "gate_dropped": 0,
+  "gate_dropped_by_reason": {},
+  "skipped": 0,
+  "total_candidates": 88,
+  "total_llm_calls_avoided": 0,
+  "avg_precision": 0.554,
+  "avg_recall": 0.24,
+  "avg_match_score": 0.335,
+  "match_detail_count": 88,
+  "passing": 26,
+  "failing": 2,
+  "inconclusive": 22,
+  "safety": {
+    "total": 50,
+    "silence": 0,
+    "parse_failure": 0,
+    "rejected": 24,
+    "accepted": 26,
+    "silence_rate": 0.0,
+    "rejection_rate": 0.48,
+    "attempted": 50,
+    "verdict": "pass",
+    "acceptance_rate": 0.52
+  },
+  "confidence_intervals": {
+    "pass_rate": {
+      "rate": 0.9286,
+      "n": 28,
+      "ci_low": 0.7735,
+      "ci_high": 0.9802
+    },
+    "safety_silence_rate": {
+      "rate": 0.0,
+      "n": 50,
+      "ci_low": 0.0,
+      "ci_high": 0.0713
+    }
+  },
+  "specificity_distribution": {
+    "specific": 118,
+    "moderate": 20,
+    "generic": 0
+  },
+  "inconclusive_breakdown": {
+    "broad_trigger": 0,
+    "matcher_gap": 2,
+    "corpus_mismatch": 0,
+    "ambiguous_evidence": 38
+  },
+  "extraction": {
+    "n": 23,
+    "token_f1": 0.5558,
+    "semantic_f1": 0.652,
+    "directive_f1": 0.2944,
+    "token_agreement": 0.4783,
+    "agreement": 0.7826
+  },
+  "extraction_f1": 0.6520478260869566,
+  "extraction_agreement": 0.782608695652174,
+  "verdict_reason_breakdown": {
+    "verdict:pass": 26,
+    "no_signal": 17,
+    "blocked_by_broken": 2,
+    "min_sample: 2 < 3; computed=inconclusive": 1,
+    "blocked_by_near_miss": 4
+  },
+  "updated_at": "2026-09-13T19:16:23Z"
+}

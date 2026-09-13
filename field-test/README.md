@@ -4,15 +4,23 @@
 
 | Type | Path | Trajectories | What it tests |
 |---|---|---|---|
-| `golden` | `corpus/golden/` | 10 | Regression anchor — expected rules known |
-| `failures/positive` | `corpus/curated/failures/positive/` | 30 | Real failure trajectories that should produce rules |
-| `failures/negative` | `corpus/curated/failures/negative/` | 10 | Failure traces that should NOT produce rules |
-| `successes` | `corpus/curated/successes/` | 20 | Success trajectories — rules must not break them |
-| `nearmiss` | `corpus/curated/nearmiss/` | 14 | Looks like a failure but should not trigger |
+| `golden` | `corpus/golden/` | 60 | Regression anchor — expected rules known |
+| `failures/positive` | `corpus/curated/failures/positive/` | 50 | Real failure trajectories that should produce rules |
+| `failures/negative` | `corpus/curated/failures/negative/` | 60 | Failure traces that should NOT produce rules (silence) |
+| `successes` | `corpus/curated/successes/` | 60 | Success trajectories — rules must not break them (silence) |
+| `nearmiss` | `corpus/curated/nearmiss/` | 50 | Looks like a failure but must be rejected (rejection) |
 | `noisy` | `corpus/curated/noisy/` | 5 | Misleading/ambiguous traces — robustness test |
 | `corrections` | `corpus/curated/corrections/` | 5 | Human-correction-to-rule flow |
 
-All 84 curated trajectories in `corpus/curated/` are used as the reference set for replay-testing every candidate.
+Safety corpora are keyed by `expected_outcome`: `successes` and `failures/negative`
+are **silence** corpora (the gate must drop all of them; pass = 100% silence), while
+`nearmiss` and `adversarial/*` are **rejection** corpora (a candidate may be extracted
+but replay must block every one; pass = 0 accepts).
+
+All 230 curated trajectories in `corpus/curated/` are loaded into the replay reference
+pool, which totals 540 trajectories across the curated + public reference buckets
+(including `corpus/public/golden_replay/`, the 54 sibling references for the golden
+domains added in v0.3.1).
 
 ## Test scenarios
 

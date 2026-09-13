@@ -23,7 +23,7 @@ def _corpus_hash(trajectories: list[Trajectory]) -> str:
     parts: list[str] = []
     for t in sorted(trajectories, key=lambda t: t.id):
         steps = [f"{s.tool}|{s.input}|{s.error}|{s.output}" for s in t.steps]
-        meta = f"{t.id}|{t.task}|{t.failure_class}|{t.success}|{t.failure_point}"
+        meta = f"{t.id}|{t.task}|{t.failure_class}|{t.success}|{t.failure_point}|{t.domain}"
         parts.append(f"{meta}|{'|'.join(steps)}")
     return hashlib.sha256(json.dumps(parts, sort_keys=True).encode()).hexdigest()[:8]
 

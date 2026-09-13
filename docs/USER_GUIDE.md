@@ -27,6 +27,7 @@ This guide covers:
 - [File Format](#file-format)
 - [Troubleshooting](#troubleshooting)
 - [v0.2.0 Features](#v020-features)
+- [v0.3.1 — Accuracy & Trust](#v031--accuracy--trust)
 - [v0.3.0 M4 — Rule Lifecycle & Framework Adapters](#v030-m4--rule-lifecycle--framework-adapters)
 - [Rule Pack Ecosystem](#rule-pack-ecosystem)
 - [Corpus Management](#corpus-management-cauterule-corpus)
@@ -578,6 +579,29 @@ cauterule test --corpus adversarial
 - **GitHub Action:** run `cauterule test --ci` in any CI workflow
 - **Webhook:** configure promotion webhook in `cauterule.toml`
 - **OpenTelemetry:** emit traces and metrics to any OTEL collector
+
+---
+
+## v0.3.1 — Accuracy & Trust
+
+The v0.3.1 patch makes the *verdict* trustworthy rather than adding surface area.
+Behavior changes worth knowing when you run `extract` / `test` / `promote`:
+
+- **Replay matcher:** the semantic floor is now `0.62` with a class-free
+  failure-signature view; a match no longer dilutes on `failure_class` (#721/#722).
+- **Scorer:** verdicts are ordered no-signal → `broken > prevented` fail →
+  `near_misses > 2` inconclusive → pass, and the near-miss band is bounded (#724).
+  Net-positive rules (precision ≥ 0.5) now pass.
+- **Promotion:** `auto_promote` hard-rejects any candidate mined from a
+  prompt-injection-tainted source (`injection_signal`), even with clean linter /
+  `pass` evidence / high confidence; `force` does not override it (#727).
+- **Extraction accuracy:** every field-test `summary.json` now carries
+  `extraction_f1` / `extraction_agreement` (trigger-only) so extraction quality
+  is measured directly instead of inferred from replay verdicts (#730).
+- **Safety corpora:** nearmiss/adversarial are scored as rejection corpora
+  (pass iff 0 accepts); extraction corpora report `acceptance_rate`.
+
+See [`docs/field-test/v0.3.1/FIELD_TEST_REPORT.md`](field-test/v0.3.1/FIELD_TEST_REPORT.md).
 
 ---
 

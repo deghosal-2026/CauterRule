@@ -34,3 +34,9 @@ def test_conflict_validation() -> None:
         ConflictReport(type="overlap", rules=("R-001",), specificity_scores={" ": 0.5})
     with pytest.raises(ValueError, match="specificity_scores values"):
         ConflictReport(type="overlap", rules=("R-001",), specificity_scores={"R-001": 1.5})
+
+
+def test_scalar_rules_rejected() -> None:
+    # #771: scalar rules must not split into characters.
+    with pytest.raises(ValueError, match="rules"):
+        ConflictReport.from_dict({"type": "overlap", "rules": "R-001"})

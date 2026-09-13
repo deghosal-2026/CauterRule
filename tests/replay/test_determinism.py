@@ -103,3 +103,23 @@ def test_same_corpus_same_hash() -> None:
     r2 = deterministic_replay(cand, trajs)
     assert r1.corpus_hash == r2.corpus_hash
     assert r1 == r2
+
+
+def test_domain_change_invalidates_cached_verdict() -> None:
+    # #767: domain is verdict-decisive (domain-label context, #677), so a
+    # domain-only change must change corpus_hash.
+    cand = _cand("git push")
+
+    def traj(domain: str) -> Trajectory:
+        return Trajectory(
+            id="T-1",
+            timestamp="t",
+            task="git push",
+            steps=(Step(1, "bash", error="err"),),
+            success=False,
+            domain=domain,
+        )
+
+    r1 = deterministic_replay(cand, [traj("devops")])
+    r2 = deterministic_replay(cand, [traj("research")])
+    assert r1.corpus_hash != r2.corpus_hash

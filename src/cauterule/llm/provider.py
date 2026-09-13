@@ -195,19 +195,26 @@ class AnthropicProvider(LLMProvider):
         max_tokens = kwargs.get("max_tokens", self._max_tokens)
         client = anthropic.Anthropic(**client_kwargs)
 
-        def _call() -> str:
-            resp = client.messages.create(
+        def _call() -> Any:
+            return client.messages.create(
                 model=self._model,
                 max_tokens=max_tokens,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
             )
-            return "".join(
-                block.text if hasattr(block, "text") else str(block) for block in resp.content
-            )
 
-        text = _call_with_retries(_call, int(kwargs.get("max_retries", self._max_retries)))
-        return LLMResponse(text=text, model=self._model, provider=self.name)
+        resp = _call_with_retries(_call, int(kwargs.get("max_retries", self._max_retries)))
+        text = "".join(
+            block.text if hasattr(block, "text") else str(block) for block in resp.content
+        )
+        usage = getattr(resp, "usage", None)
+        return LLMResponse(
+            text=text,
+            model=self._model,
+            provider=self.name,
+            prompt_tokens=int(getattr(usage, "input_tokens", 0) or 0),
+            completion_tokens=int(getattr(usage, "output_tokens", 0) or 0),
+        )
 
 
 class OllamaProvider(LLMProvider):
@@ -244,17 +251,24 @@ class OllamaProvider(LLMProvider):
             "stream": False,
         }
 
-        def _call() -> str:
+        def _call() -> dict[str, Any]:
             resp = requests.post(
                 f"{self._base_url}/api/generate",
                 json=payload,
                 timeout=timeout,
             )
             resp.raise_for_status()
-            return str(resp.json().get("response", ""))
+            body: dict[str, Any] = resp.json()
+            return body
 
-        text = _call_with_retries(_call, int(kwargs.get("max_retries", self._max_retries)))
-        return LLMResponse(text=text, model=self._model, provider=self.name)
+        body = _call_with_retries(_call, int(kwargs.get("max_retries", self._max_retries)))
+        return LLMResponse(
+            text=str(body.get("response", "")),
+            model=self._model,
+            provider=self.name,
+            prompt_tokens=int(body.get("prompt_eval_count", 0) or 0),
+            completion_tokens=int(body.get("eval_count", 0) or 0),
+        )
 
 
 class LiteLLMProvider(LLMProvider):
@@ -296,9 +310,16 @@ class LiteLLMProvider(LLMProvider):
         if self._base_url:
             completion_kwargs["api_base"] = self._base_url
 
-        def _call() -> str:
-            resp = litellm.completion(**completion_kwargs)
-            return resp.choices[0].message.content or ""
+        def _call() -> Any:
+            return litellm.completion(**completion_kwargs)
 
-        text = _call_with_retries(_call, int(kwargs.get("max_retries", self._max_retries)))
-        return LLMResponse(text=text, model=self._model, provider=self.name)
+        resp = _call_with_retries(_call, int(kwargs.get("max_retries", self._max_retries)))
+        text = resp.choices[0].message.content or ""
+        usage = getattr(resp, "usage", None)
+        return LLMResponse(
+            text=text,
+            model=self._model,
+            provider=self.name,
+            prompt_tokens=int(getattr(usage, "prompt_tokens", 0) or 0),
+            completion_tokens=int(getattr(usage, "completion_tokens", 0) or 0),
+        )

@@ -2,7 +2,7 @@
 
 Documentation for the CauterRule project — automated standing-rule extraction from agent failures.
 
-**Current release:** v0.3.0 (2026-09-12) — Hardening & Ecosystem.
+**Current release:** v0.3.1 (2026-09-13) — Accuracy & Trust.
 
 ## Sections
 
@@ -14,6 +14,14 @@ Documentation for the CauterRule project — automated standing-rule extraction 
 | [wbs/](wbs/) | Work breakdown structure, organized by version |
 | [field-test/](field-test/) | Field test plans and reports, organized by version |
 | [release/](release/) | Release notes, organized by version |
+
+## v0.3.1
+
+- [Release notes](release/v0.3.1/release-notes.md)
+- [Field test report](field-test/v0.3.1/FIELD_TEST_REPORT.md) — 40 corpora × 2 cloud models, 4,742 runs, all hard gates pass
+- [WBS v0.3.1](wbs/v0.3.1/wbs-v0.3.1-index.md) — M1 fixes, M2 evaluation & field test, M3 release
+- [CHANGELOG](../CHANGELOG.md)
+- [SECURITY](../SECURITY.md)
 
 ## v0.3.0
 

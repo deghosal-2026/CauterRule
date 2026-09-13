@@ -33,6 +33,35 @@ def test_none_success_raises() -> None:
         Trajectory.from_dict(d)
 
 
+@pytest.mark.parametrize("value", ["false", "true", 0, 1, False, True])
+def test_success_accepts_real_booleans(value: Any) -> None:
+    # #769: numeric/string booleans are coerced; string "false" must not
+    # become True via bool().
+    traj = Trajectory.from_dict(_base(success=value))
+    assert traj.success is bool(value in (True, 1, "true"))
+
+
+@pytest.mark.parametrize("value", ["yes", "no", 2, -1, [], {}, 3.14])
+def test_success_rejects_non_boolean(value: Any) -> None:
+    # #769: fail loud instead of silently coercing arbitrary truthy values.
+    with pytest.raises(ValueError, match="success"):
+        Trajectory.from_dict(_base(success=value))
+
+
+def test_optional_boolean_fields_strict() -> None:
+    # #769: redacted/injection_signal get the same strict coercion.
+    traj = Trajectory.from_dict(_base(success=False, redacted="false", injection_signal="false"))
+    assert traj.redacted is False
+    assert traj.injection_signal is False
+    traj2 = Trajectory.from_dict(_base(success=False, redacted="true", injection_signal=1))
+    assert traj2.redacted is True
+    assert traj2.injection_signal is True
+    with pytest.raises(ValueError, match="redacted"):
+        Trajectory.from_dict(_base(success=False, redacted="maybe"))
+    with pytest.raises(ValueError, match="injection_signal"):
+        Trajectory.from_dict(_base(success=False, injection_signal=2))
+
+
 def test_steps_missing_step_number_do_not_collide() -> None:
     # #595: auto-number by position instead of collapsing to 1.
     d = _base(
@@ -74,3 +103,24 @@ def test_steps_auto_number_logs_warning(caplog: pytest.LogCaptureFixture) -> Non
         traj = Trajectory.from_dict(d)
     assert [s.step_number for s in traj.steps] == [1, 2]
     assert "auto-numbering" in caplog.text
+
+
+def test_scalar_tags_rejected() -> None:
+    # #771: scalar tags must not split into characters.
+    with pytest.raises(ValueError, match="tags"):
+        Trajectory.from_dict(_base(success=False, tags="git"))
+
+
+def test_scalar_agent_tools_rejected() -> None:
+    with pytest.raises(ValueError, match="tools"):
+        Trajectory.from_dict(_base(success=False, agent_config={"tools": "bash"}))
+
+
+def test_expected_rule_round_trips() -> None:
+    # #730: expected_rule is parsed and preserved through to_dict/from_dict.
+    d = _base(success=False, expected_rule="when x fails, do y")
+    traj = Trajectory.from_dict(d)
+    assert traj.expected_rule == "when x fails, do y"
+    assert traj.to_dict()["expected_rule"] == "when x fails, do y"
+    # absent -> None, not ""
+    assert Trajectory.from_dict(_base(success=False)).expected_rule is None
