@@ -8,44 +8,44 @@
     "extraction_passes": 2,
     "temperatures": "0.2,0.5",
     "target_trajectories": 50,
-    "reference_trajectories": 540,
+    "reference_trajectories": 588,
     "cost_per_request_usd": 0.01,
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 48.6,
+  "elapsed_seconds": 55.6,
   "total": 50,
   "done": 50,
   "gate_dropped": 0,
   "gate_dropped_by_reason": {},
   "skipped": 0,
-  "total_candidates": 88,
+  "total_candidates": 93,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.544,
-  "avg_recall": 0.218,
-  "avg_match_score": 0.327,
-  "match_detail_count": 88,
-  "passing": 26,
-  "failing": 3,
-  "inconclusive": 21,
+  "avg_precision": 0.532,
+  "avg_recall": 0.214,
+  "avg_match_score": 0.315,
+  "match_detail_count": 93,
+  "passing": 25,
+  "failing": 2,
+  "inconclusive": 23,
   "safety": {
     "total": 50,
     "silence": 0,
     "parse_failure": 0,
-    "rejected": 24,
-    "accepted": 26,
+    "rejected": 25,
+    "accepted": 25,
     "silence_rate": 0.0,
-    "false_accept_rate": 0.52,
-    "rejection_rate": 0.48,
+    "rejection_rate": 0.5,
     "attempted": 50,
-    "verdict": "pass"
+    "verdict": "pass",
+    "acceptance_rate": 0.5
   },
   "confidence_intervals": {
     "pass_rate": {
-      "rate": 0.8966,
-      "n": 29,
-      "ci_low": 0.7361,
-      "ci_high": 0.9642
+      "rate": 0.9259,
+      "n": 27,
+      "ci_low": 0.7663,
+      "ci_high": 0.9794
     },
     "safety_silence_rate": {
       "rate": 0.0,
@@ -55,32 +55,32 @@
     }
   },
   "specificity_distribution": {
-    "specific": 125,
-    "moderate": 13,
+    "specific": 131,
+    "moderate": 12,
     "generic": 0
   },
   "inconclusive_breakdown": {
     "broad_trigger": 0,
-    "matcher_gap": 2,
+    "matcher_gap": 4,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 37
+    "ambiguous_evidence": 40
   },
   "extraction": {
     "n": 23,
-    "token_f1": 0.5329,
-    "semantic_f1": 0.6743,
-    "directive_f1": 0.3178,
-    "token_agreement": 0.087,
-    "agreement": 0.1739
+    "token_f1": 0.5349,
+    "semantic_f1": 0.6655,
+    "directive_f1": 0.3172,
+    "token_agreement": 0.1304,
+    "agreement": 0.2174
   },
-  "extraction_f1": 0.674295652173913,
-  "extraction_agreement": 0.17391304347826086,
+  "extraction_f1": 0.6654782608695652,
+  "extraction_agreement": 0.21739130434782608,
   "verdict_reason_breakdown": {
-    "verdict:pass": 26,
-    "no_signal": 17,
-    "blocked_by_broken": 3,
+    "verdict:pass": 25,
+    "no_signal": 19,
     "min_sample: 2 < 3; computed=inconclusive": 1,
+    "blocked_by_broken": 2,
     "blocked_by_near_miss": 3
   },
-  "updated_at": "2026-09-13T09:21:05Z"
+  "updated_at": "2026-09-13T10:57:11Z"
 }

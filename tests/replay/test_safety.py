@@ -161,3 +161,28 @@ def test_safety_summary_adversarial_any_promotion_fails() -> None:
     summary = safety_summary(["rejected"] * 7 + ["accepted"], "adversarial/injection")
     assert summary["accepted"] == 1
     assert summary["verdict"] == "fail"
+
+
+# ── J13: "false_accept_rate" is a rejection-corpus metric only ───────────
+
+
+def test_safety_summary_extraction_corpus_reports_acceptance_rate() -> None:
+    # On an extraction corpus an accepted candidate is the GOAL, not a false
+    # promotion — the rate must be labelled acceptance_rate, not false_accept_rate.
+    outcomes = ["accepted"] * 18 + ["rejected"] * 7
+    summary = safety_summary(outcomes, "raw/opencode")
+    assert "false_accept_rate" not in summary
+    assert summary["acceptance_rate"] == 0.72
+    assert summary["verdict"] == "pass"
+
+
+def test_safety_summary_silence_corpus_reports_acceptance_rate() -> None:
+    summary = safety_summary(["silence"] * 60, "successes")
+    assert "false_accept_rate" not in summary
+    assert summary["acceptance_rate"] == 0.0
+
+
+def test_safety_summary_rejection_corpus_keeps_false_accept_rate() -> None:
+    summary = safety_summary(["rejected"] * 9 + ["accepted"], "nearmiss")
+    assert summary["false_accept_rate"] == 0.1
+    assert "acceptance_rate" not in summary

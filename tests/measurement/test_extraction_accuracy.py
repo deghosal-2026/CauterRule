@@ -65,6 +65,29 @@ def test_measure_empty_is_na_zero_not_error() -> None:
     assert report.agreement == 0.0
 
 
+def test_to_dict_is_null_when_no_ground_truth() -> None:
+    """J10: an empty report must serialize as nulls, not a hard 0.0."""
+    d = measure_extraction_accuracy([]).to_dict()
+    assert d["n"] == 0
+    for key in ("token_f1", "semantic_f1", "directive_f1", "token_agreement", "agreement"):
+        assert d[key] is None, key
+
+
+def test_to_dict_has_numbers_when_measured() -> None:
+    d = measure_extraction_accuracy(
+        [
+            ExtractionRecord(
+                trigger="when git push fails with non-fast-forward",
+                directive="pull latest changes before pushing",
+                expected_rule=_EXPECTED,
+            )
+        ]
+    ).to_dict()
+    assert d["n"] == 1
+    assert isinstance(d["semantic_f1"], float)
+    assert isinstance(d["agreement"], float)
+
+
 def test_records_from_results_skips_missing_expected() -> None:
     results: list[dict[str, object]] = [
         {

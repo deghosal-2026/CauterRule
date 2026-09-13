@@ -1007,8 +1007,9 @@ def _write_summary(
         "specificity_distribution": specificity_counts,
         "inconclusive_breakdown": inconclusive_breakdown,
         "extraction": extraction.to_dict(),
-        "extraction_f1": extraction.semantic_f1,
-        "extraction_agreement": extraction.agreement,
+        # J10: null (not 0.0) when the corpus has no ground-truth `expected_rule`.
+        "extraction_f1": extraction.semantic_f1 if extraction.n else None,
+        "extraction_agreement": extraction.agreement if extraction.n else None,
         "verdict_reason_breakdown": verdict_reason_breakdown,
         "updated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }

@@ -450,7 +450,7 @@ def _build_haystack(trajectory: Trajectory, include_input: bool = True) -> str:
     return _normalize(" ".join(parts))
 
 
-def _build_signature(trajectory: Trajectory) -> str:
+def _build_signature(trajectory: Trajectory, include_class: bool = True) -> str:
     """Build the failure-signature view of a trajectory (#722).
 
     The signature is the minimal text that describes *what failed*:
@@ -458,11 +458,15 @@ def _build_signature(trajectory: Trajectory) -> str:
     step(s).  It deliberately excludes the task text and every step's
     ``input``/``output`` (which can be long and off-topic) so a short trigger
     phrase is compared against the failure, not the whole multi-step document.
+
+    With ``include_class=False`` the domain-class label (e.g. ``ci/lint``) is
+    dropped, leaving only the failure's own wording — used for the semantic
+    embedding, where class tokens dilute a short trigger's cosine (J11).
     """
     parts: list[str] = []
     if trajectory.failure_point:
         parts.append(trajectory.failure_point)
-    if trajectory.failure_class:
+    if include_class and trajectory.failure_class:
         parts.append(trajectory.failure_class)
     for step in trajectory.steps:
         if step.error:
@@ -662,6 +666,13 @@ def match_score(candidate: CandidateRule, trajectory: Trajectory) -> float:
     # Embed the trigger against the failure signature when available, so the
     # cosine is not diluted by a long, off-topic haystack (#722).
     semantic_sim = embedding_similarity(norm_trigger, signature or haystack)
+    # J11: the domain-class label (e.g. "ci/lint") is not failure wording and
+    # dilutes a short trigger's cosine below the paraphrase floor. When the
+    # failure's own wording (failure_point + step errors) exists, embed
+    # against that view too and keep the stronger signal.
+    failure_view = _build_signature(trajectory, include_class=False)
+    if failure_view and failure_view != signature:
+        semantic_sim = max(semantic_sim, embedding_similarity(norm_trigger, failure_view))
     if semantic_sim > 0.0:
         score = (
             _SEMANTIC_TOKEN_WEIGHT * token_f1

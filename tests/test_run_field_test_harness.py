@@ -244,6 +244,37 @@ def test_summary_includes_extraction_accuracy(harness: ModuleType, tmp_path: Pat
     assert 0.0 <= summary["extraction_f1"] <= 1.0
 
 
+def test_summary_extraction_metrics_null_when_no_ground_truth(
+    harness: ModuleType, tmp_path: Path
+) -> None:
+    """J10: a corpus with no `expected_rule` must report null, not a hard 0.0."""
+    rec = _done_record()
+    rec["trajectory"] = {}  # no expected_rule
+    summary_file = tmp_path / "summary.json"
+    harness._write_summary(
+        [rec], summary_file, {"corpus_type": "raw/ci"}, harness.time.time(), "raw/ci"
+    )
+    summary = json.loads(summary_file.read_text(encoding="utf-8"))
+    assert summary["extraction"]["n"] == 0
+    assert summary["extraction_f1"] is None
+    assert summary["extraction_agreement"] is None
+    assert summary["extraction"]["semantic_f1"] is None
+    assert summary["extraction"]["agreement"] is None
+
+
+def test_summary_safety_uses_acceptance_rate_for_extraction_corpus(
+    harness: ModuleType, tmp_path: Path
+) -> None:
+    """J13: an extraction corpus must not be labelled with a safety false-accept rate."""
+    summary_file = tmp_path / "summary.json"
+    harness._write_summary(
+        [_done_record()], summary_file, {"corpus_type": "raw/ci"}, harness.time.time(), "raw/ci"
+    )
+    summary = json.loads(summary_file.read_text(encoding="utf-8"))
+    assert "false_accept_rate" not in summary["safety"]
+    assert summary["safety"]["acceptance_rate"] == 1.0
+
+
 def test_summary_includes_verdict_reason_breakdown(harness: ModuleType, tmp_path: Path) -> None:
     results: list[dict[str, object]] = [
         _done_record(verdict="inconclusive", verdict_reason="blocked_by_broken"),

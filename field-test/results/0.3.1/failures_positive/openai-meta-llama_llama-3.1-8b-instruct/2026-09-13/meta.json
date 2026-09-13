@@ -7,7 +7,7 @@
   "extraction_passes": 2,
   "temperatures": "0.2,0.5",
   "target_trajectories": 50,
-  "reference_trajectories": 540,
+  "reference_trajectories": 588,
   "cost_per_request_usd": 0.01,
   "gate_mode": "relaxed",
   "quarantined": []

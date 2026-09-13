@@ -1,9 +1,13 @@
+import math
+
 import pytest
 
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.rule import RuleDo, RuleWhen
 from cauterule.models.trajectory import Step, Trajectory
+from cauterule.replay import embeddings
 from cauterule.replay.matcher import (
+    SEMANTIC_FLOOR_SCORE,
     is_near_miss,
     match_detail,
     match_score,
@@ -23,6 +27,49 @@ def _traj(
     return Trajectory(
         id="T-001", timestamp="t", task=task, steps=(Step(1, "bash", error=error),), success=success
     )
+
+
+class _ControlledEmbedder:
+    """Deterministic stand-in for the sentence-embedding model.
+
+    The trigger text is pinned to the vector (1, 0). Each reference view gets
+    the unit vector whose cosine against the trigger equals ``sims[text]``.
+    Unlisted texts get cosine 0 (vector (0, 1)).
+    """
+
+    def __init__(self, sims: dict[str, float], trigger: str) -> None:
+        # The matcher normalizes punctuation to spaces before embedding, so
+        # pin the trigger in that normalized form.
+        from cauterule.replay.matcher import _normalize
+
+        self._trigger = _normalize(trigger)
+        self._sims = sims
+        self._vecs: dict[str, list[float]] = {}
+
+    def encode(self, texts: list[str]) -> list[list[float]]:
+        out: list[list[float]] = []
+        for text in texts:
+            norm = " ".join(text.lower().split())
+            if norm not in self._vecs:
+                if norm == self._trigger:
+                    self._vecs[norm] = [1.0, 0.0]
+                else:
+                    s = self._sims.get(norm, 0.0)
+                    self._vecs[norm] = [s, math.sqrt(max(0.0, 1.0 - s * s))]
+            out.append(list(self._vecs[norm]))
+        return out
+
+
+_TRIGGER = "import statements are not at the top-level of a file"
+
+
+@pytest.fixture
+def controlled_embedder():
+    def _install(sims: dict[str, float], trigger: str = _TRIGGER) -> None:
+        embeddings.set_embedder_for_testing(_ControlledEmbedder(sims, trigger))
+
+    yield _install
+    embeddings.reset_embedder()
 
 
 def test_matches_trigger() -> None:
@@ -394,6 +441,59 @@ def test_context_domain_label_does_not_match_other_domain() -> None:
         domain="research",
     )
     assert not rule_matches(cand, traj)
+
+
+# ── J11: semantic signature must not be diluted by failure_class tokens ──
+
+
+def test_semantic_signature_not_diluted_by_failure_class(controlled_embedder) -> None:
+    # A correct paraphrase trigger ("import statements are not at the
+    # top-level of a file") vs the raw CI error ("E402 module level import
+    # not at top of file"). With the "ci/lint" class tokens in the signature,
+    # the cosine drops below SEMANTIC_FLOOR (0.55); against the
+    # failure_point-only view it is 0.70. The matcher must still floor to
+    # SEMANTIC_FLOOR_SCORE via the class-free view.
+    fp = "E402 module level import not at top of file"
+    controlled_embedder(
+        {
+            "e402 module level import not at top of file ci lint": 0.55,
+            "e402 module level import not at top of file": 0.70,
+        }
+    )
+    cand = _cand("import statements are not at the top-level of a file")
+    traj = Trajectory(
+        id="T-ci",
+        timestamp="t",
+        task="Run CI",
+        steps=(),
+        success=False,
+        failure_point=fp,
+        failure_class="ci/lint",
+        domain="ci",
+    )
+    assert match_score(cand, traj) >= SEMANTIC_FLOOR_SCORE
+
+
+def test_semantic_low_similarity_everywhere_stays_low(controlled_embedder) -> None:
+    # Control: when no view reaches the floor, nothing is floored — the
+    # class-free view must not manufacture matches for unrelated failures.
+    controlled_embedder(
+        {
+            "ci lint boom happened": 0.30,
+            "boom happened": 0.30,
+        }
+    )
+    cand = _cand("import statements are not at the top-level of a file")
+    traj = Trajectory(
+        id="T-ci2",
+        timestamp="t",
+        task="Run CI",
+        steps=(Step(1, "ci", error="boom happened"),),
+        success=False,
+        failure_class="ci/lint",
+        domain="ci",
+    )
+    assert match_score(cand, traj) < SEMANTIC_FLOOR_SCORE
 
 
 def test_rule_matches_with_score() -> None:

@@ -151,8 +151,22 @@ class ExtractionAccuracyReport:
     token_agreement: float = 0.0
     agreement: float = 0.0
 
-    def to_dict(self) -> dict[str, float | int]:
-        """Return a JSON-serializable dict."""
+    def to_dict(self) -> dict[str, float | int | None]:
+        """Return a JSON-serializable dict.
+
+        When ``n == 0`` there is no ground truth to measure against, so the
+        rates serialize as ``None`` (n/a) rather than a hard ``0.0`` that
+        would be indistinguishable from a total failure (J10).
+        """
+        if self.n == 0:
+            return {
+                "n": 0,
+                "token_f1": None,
+                "semantic_f1": None,
+                "directive_f1": None,
+                "token_agreement": None,
+                "agreement": None,
+            }
         return {
             "n": self.n,
             "token_f1": round(self.token_f1, 4),

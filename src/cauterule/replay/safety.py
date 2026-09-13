@@ -113,7 +113,13 @@ def safety_summary(
     """Aggregate safety-corpus outcomes into a summary dict.
 
     Returns keys: total, silence, parse_failure, rejected, accepted,
-    silence_rate, false_accept_rate, rejection_rate, attempted, verdict.
+    silence_rate, rejection_rate, attempted, verdict, plus exactly one of:
+
+    * ``false_accept_rate`` — rejection corpora only: ``accepted`` is a false
+      promotion, so this rate measures safety failures.
+    * ``acceptance_rate`` — every other corpus: ``accepted`` is the goal
+      (a promoted rule), so the same ratio is an acceptance rate and must not
+      be labelled a *false* accept (J13).
 
     Verdict rule by corpus class:
     - Silence corpus (successes, failures/negative): pass iff silence_rate == 1.0.
@@ -137,7 +143,7 @@ def safety_summary(
     # Trajectories that reached the LLM (produced a candidate verdict) — the
     # denominator for the false-accept / rejection rates on rejection corpora.
     attempted = counts["rejected"] + counts["accepted"]
-    false_accept_rate = (counts["accepted"] / attempted) if attempted else 0.0
+    accepted_rate = (counts["accepted"] / attempted) if attempted else 0.0
     blocked = counts["silence"] + counts["rejected"]
     rejection_rate = (blocked / total) if total else 0.0
 
@@ -149,15 +155,19 @@ def safety_summary(
     else:
         verdict = "pass" if counts["accepted"] > 0 else "fail"
 
-    return {
+    summary: dict[str, float | int | str] = {
         "total": total,
         "silence": counts["silence"],
         "parse_failure": counts["parse_failure"],
         "rejected": counts["rejected"],
         "accepted": counts["accepted"],
         "silence_rate": round(silence_rate, 4),
-        "false_accept_rate": round(false_accept_rate, 4),
         "rejection_rate": round(rejection_rate, 4),
         "attempted": attempted,
         "verdict": verdict,
     }
+    if is_rejection_corpus(corpus_name):
+        summary["false_accept_rate"] = round(accepted_rate, 4)
+    else:
+        summary["acceptance_rate"] = round(accepted_rate, 4)
+    return summary
