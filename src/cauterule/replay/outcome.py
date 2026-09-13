@@ -4,9 +4,10 @@ Promotion currently gates on a *text* match (``match_score``). This module adds
 a grounded *outcome* signal:
 
 * a matched failure is **verified prevented** only when the rule is anchored to
-  the specific failure (:func:`~cauterule.replay.matcher.is_grounded` — a
-  structured signature hit #725, or a distinctive error phrase present in the
-  failure signature);
+  the specific failure (trigger grounding via
+  :func:`~cauterule.replay.matcher.is_grounded` — a structured signature hit
+  #725 or a distinctive error phrase) **and** the directive is addressed to the
+  failure (:func:`~cauterule.replay.matcher.is_directive_grounded`, #762);
 * a matched success is **verified broken** under the same grounding;
 * anything else is **unverified**.
 
@@ -24,7 +25,7 @@ from dataclasses import dataclass, field
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.evidence import Verdict
 from cauterule.models.trajectory import Trajectory
-from cauterule.replay.matcher import is_grounded
+from cauterule.replay.matcher import is_directive_grounded, is_grounded
 from cauterule.replay.scorer import compute_scores
 from cauterule.replay.simulator import simulate
 
@@ -43,14 +44,19 @@ class OutcomeReport:
 def simulate_outcome(candidate: CandidateRule, trajectory: Trajectory) -> str:
     """Return the grounded outcome: prevented / broken / unverified / no_effect.
 
-    Grounding is evaluated over ``when`` only, so this signal is currently
-    directive-blind as well (#762): two candidates with identical triggers but
-    different directives get the same grounded outcome. Phase 1 of #762/#720
-    adds directive-aware grounding; Phase 2 (#720) adds a true executor.
+    Grounding requires both a trigger anchored to the failure
+    (:func:`~cauterule.replay.matcher.is_grounded`) and a directive addressed to
+    the failure (:func:`~cauterule.replay.matcher.is_directive_grounded`,
+    #762 Phase 1). A trigger-only match with an unanchored directive is
+    ``unverified`` rather than credited. Phase 2 (#720) adds a true executor.
     """
     outcome = simulate(candidate, trajectory)
     if outcome in ("prevented", "broken"):
-        return outcome if is_grounded(candidate, trajectory) else "unverified"
+        if not is_grounded(candidate, trajectory):
+            return "unverified"
+        if not is_directive_grounded(candidate, trajectory):
+            return "unverified"
+        return outcome
     return outcome
 
 

@@ -1,12 +1,15 @@
 """Negative control: replay verdicts ignore ``do.directive`` (#762, Phase 0).
 
-The replay gate has zero discriminating power over the directive — the verdict
-is a pure function of ``when.trigger`` (+ context/signature) and the
-trajectory text. This test pins that property so a matcher refactor cannot
+The *text* replay gate has zero discriminating power over the directive — the
+verdict is a pure function of ``when.trigger`` (+ context/signature) and the
+trajectory text. These two tests pin that property so a matcher refactor cannot
 quietly change it.
 
-When Phase 1 (directive-aware grounding) lands, this test is flipped into its
-inverse: the four directives below must discriminate. See #762 and #720.
+Phase 1 of #762 adds directive-aware grounding to the **behavioral-outcome**
+signal (see ``test_outcome_path_is_directive_discriminating`` and
+``test_outcome_directive_grounding.py``). Promoting on that signal is a
+separate, measurement-affecting decision; the text path is intentionally
+unchanged for now. See #762 and #720.
 """
 
 from __future__ import annotations
@@ -14,6 +17,7 @@ from __future__ import annotations
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.rule import RuleDo, RuleWhen
 from cauterule.models.trajectory import Step, Trajectory
+from cauterule.replay.outcome import simulate_outcome
 from cauterule.replay.report import build_evidence_report
 from cauterule.replay.simulator import simulate
 
@@ -77,3 +81,18 @@ def test_evidence_is_directive_invariant() -> None:
         assert report.precision == first.precision, directive
         assert report.verdict == first.verdict, directive
         assert report.failures_prevented == first.failures_prevented, directive
+
+
+def test_outcome_path_is_directive_discriminating() -> None:
+    # Phase 1 of #762: the *grounded-outcome* signal, unlike the text verdict,
+    # must separate the correct directive from unanchored ones.
+    correct, _force, destructive, nonsense = _DIRECTIVES
+    vectors = {
+        d: tuple(simulate_outcome(_candidate(d), t) for t in _TRAJECTORIES)
+        for d in _DIRECTIVES
+    }
+    assert vectors[correct][0] == "prevented"
+    assert vectors[destructive][0] == "unverified"
+    assert vectors[nonsense][0] == "unverified"
+    assert vectors[correct] != vectors[destructive]
+    assert vectors[correct] != vectors[nonsense]

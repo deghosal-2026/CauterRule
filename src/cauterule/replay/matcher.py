@@ -531,6 +531,37 @@ def is_grounded(candidate: CandidateRule, trajectory: Trajectory) -> bool:
     )
 
 
+def is_directive_grounded(candidate: CandidateRule, trajectory: Trajectory) -> bool:
+    """Return True if the directive is anchored to the failure (#762 Phase 1).
+
+    An anchored directive shares at least one non-generic content token — or a
+    distinctive error phrase — with the failure signature, falling back to the
+    full haystack when the signature is too sparse. A directive unrelated to
+    the failure (e.g. "water the office plants") is not grounded, so the
+    behavioral outcome for it is ``unverified`` rather than
+    ``prevented``/``broken``.
+    """
+    directive = candidate.do.directive
+    directive_tokens = _content_tokens(directive) - _GENERIC_TRIGGERS
+    if not directive_tokens:
+        return False
+    raw = directive.lower()
+    references = [
+        ref for ref in (_reference_signature(trajectory), _build_haystack(trajectory)) if ref
+    ]
+    if not references:
+        return False
+    for reference in references:
+        if any(
+            phrase in raw and _normalize(phrase) in reference for phrase in _DISTINCTIVE_PHRASES
+        ):
+            return True
+        reference_tokens = _content_tokens(reference) - _GENERIC_TRIGGERS
+        if directive_tokens & reference_tokens:
+            return True
+    return False
+
+
 def _view_scores(
     trigger_content: set[str],
     trigger_bigrams: set[tuple[str, str]],

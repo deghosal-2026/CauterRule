@@ -39,6 +39,16 @@ _DANGEROUS_REGEXES: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\b(shutdown|reboot|halt|poweroff)\b"), "host shutdown/reboot is unsafe"),
     (re.compile(r"\bgit\s+clean\b.*\s+/$"), "git clean on filesystem root is unsafe"),
     (re.compile(r":\(\)\s*\{\s*:.*\}\s*;"), "fork bomb is unsafe"),
+    # #762 hardening: destructive history/branch rewrites the replay gate
+    # cannot distinguish from a correct directive.
+    (
+        re.compile(r"\b(delete|remove|drop|destroy|wipe|purge)\b[^\n]*\bbranch\b"),
+        "deleting a branch is destructive",
+    ),
+    (
+        re.compile(r"\brecreate\b[^\n]*\bfrom scratch\b"),
+        "recreating history from scratch is destructive",
+    ),
 ]
 
 

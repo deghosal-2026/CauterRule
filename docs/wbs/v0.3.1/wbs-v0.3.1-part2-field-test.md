@@ -51,7 +51,7 @@
 
 **Why these block M2:** several defects corrupt the measurements M2 exists to publish — cost reports `$0.00` for Anthropic/LiteLLM/Ollama (#802), the end-to-end loop promotes with no gate and never persists (#775), the #727 injection defense has no production caller (#776), and the unsafe-directive blocklist is trivially bypassed (#777). **Fix the Criticals before the M2 exit gate; Importants may be fixed or explicitly deferred with rationale.**
 
-**Fix progress (2026-09-12):** ✅ CR-1 (#763), CR-2 (#764), CR-7 (#769), CR-8 (#770), CR-13 (#775) fixed with tests. **10/11 Criticals done.** Second batch: ✅ CR-14 (#776, wired to `run_loop`), ✅ CR-15 (#777), ✅ CR-16 (#778), ✅ CR-29 (#791), ✅ CR-33 (#795). CR-43 (#762) Phase 0 landed (invariance pinned + documented); Phase 1 (directive-aware grounding) deferred pending a design decision — see #762. `mypy src/ tests/`, `ruff check .`, and the non-field/scale/docker `pytest` suite green.
+**Fix progress (2026-09-12):** ✅ all 11 Criticals fixed with tests. First batch: CR-1 (#763), CR-2 (#764), CR-7 (#769), CR-8 (#770), CR-13 (#775). Second batch: CR-14 (#776), CR-15 (#777), CR-16 (#778), CR-29 (#791), CR-33 (#795). Third batch: CR-43 (#762) Phase 0 (invariance pinned) + Phase 1 (directive-aware `simulate_outcome` grounding + destructive-directive linter hardening + `auto_promote` guard); Phase 2 (true executor) remains tracked in #720. `mypy src/ tests/`, `ruff check .`, and the non-field/scale/docker `pytest` suite green.
 
 **Replay / matcher / cache (6)**
 
@@ -124,7 +124,7 @@
 
 | # | Severity | Task | Issue |
 |---|----------|------|-------|
-| CR-43 | Critical | ◻ Phase 0 done: replay gate directive-invariance pinned + documented; Phase 1 deferred (design) | [#762](https://github.com/deghosal-2026/CauterRule/issues/762) |
+| CR-43 | Critical | ✅ Phases 0–1 done: directive-aware outcome grounding + destructive-directive guard; Phase 2 (#720) tracked | [#762](https://github.com/deghosal-2026/CauterRule/issues/762) |
 
 ### Scope notes
 
@@ -144,7 +144,7 @@
 - [ ] **Code committed and pushed** to `feat-v0.3.1`
 - [ ] **WBS updated** (`docs/wbs/v0.3.1/`)
 - [ ] **All 60 M2 issues closed**
-- [ ] All 11 M2 Critical issues fixed, or explicitly deferred with rationale (10 `[0.3.1-M2-CodeReview]` Criticals + #762: #763, #764, #769, #770, #775, #776, #777, #778, #791, #795)
+- [x] All 11 M2 Critical issues fixed, or explicitly deferred with rationale (10 `[0.3.1-M2-CodeReview]` Criticals + #762: #763, #764, #769, #770, #775, #776, #777, #778, #791, #795)
 - [ ] Full sweep complete with results committed under `field-test/results/0.3.1/`
 - [ ] Release thresholds evaluated and reported (met / not-met with CIs)
 - [ ] Cost, cross-session, and human-agreement measured (not `_pending_`)
