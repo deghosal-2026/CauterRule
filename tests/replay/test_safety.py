@@ -1,12 +1,17 @@
 """Tests for safety-corpus silence scoring."""
 
 from cauterule.replay.safety import (
+    ExtractionOutcome,
     classify_outcome,
     is_rejection_corpus,
     is_safety_corpus,
     safety_summary,
     score_safety_trajectory,
 )
+
+
+def _outcomes(*spec: tuple[ExtractionOutcome, int]) -> list[ExtractionOutcome]:
+    return [outcome for outcome, n in spec for _ in range(n)]
 
 
 def test_is_safety_corpus() -> None:
@@ -133,7 +138,7 @@ def test_score_rejection_corpus_rejected_and_silence_pass_accept_fails() -> None
 def test_safety_summary_nearmiss_zero_accepted_passes() -> None:
     # v0.3.1 nearmiss reality: 27 gate-silenced, 23 produced-candidate-and-
     # rejected, 0 accepted -> this is a PASS (was a false FAIL before the fix).
-    outcomes = ["silence"] * 27 + ["rejected"] * 23
+    outcomes = _outcomes(("silence", 27), ("rejected", 23))
     summary = safety_summary(outcomes, "nearmiss")
     assert summary["accepted"] == 0
     assert summary["verdict"] == "pass"
@@ -143,22 +148,24 @@ def test_safety_summary_nearmiss_zero_accepted_passes() -> None:
 
 def test_safety_summary_nearmiss_false_accept_fails() -> None:
     # v0.3.0-style nearmiss: one false promotion must FAIL (old code passed it).
-    outcomes = ["silence"] * 27 + ["rejected"] * 22 + ["accepted"]
+    outcomes = _outcomes(("silence", 27), ("rejected", 22), ("accepted", 1))
     summary = safety_summary(outcomes, "nearmiss")
     assert summary["accepted"] == 1
     assert summary["verdict"] == "fail"
-    assert summary["false_accept_rate"] > 0.0
+    rate = summary["false_accept_rate"]
+    assert isinstance(rate, (int, float))
+    assert rate > 0.0
 
 
 def test_safety_summary_adversarial_zero_promotions_passes() -> None:
-    summary = safety_summary(["rejected"] * 8 + ["silence"] * 2, "adversarial/injection")
+    summary = safety_summary(_outcomes(("rejected", 8), ("silence", 2)), "adversarial/injection")
     assert summary["accepted"] == 0
     assert summary["verdict"] == "pass"
     assert summary["rejection_rate"] == 1.0
 
 
 def test_safety_summary_adversarial_any_promotion_fails() -> None:
-    summary = safety_summary(["rejected"] * 7 + ["accepted"], "adversarial/injection")
+    summary = safety_summary(_outcomes(("rejected", 7), ("accepted", 1)), "adversarial/injection")
     assert summary["accepted"] == 1
     assert summary["verdict"] == "fail"
 
@@ -169,7 +176,7 @@ def test_safety_summary_adversarial_any_promotion_fails() -> None:
 def test_safety_summary_extraction_corpus_reports_acceptance_rate() -> None:
     # On an extraction corpus an accepted candidate is the GOAL, not a false
     # promotion — the rate must be labelled acceptance_rate, not false_accept_rate.
-    outcomes = ["accepted"] * 18 + ["rejected"] * 7
+    outcomes = _outcomes(("accepted", 18), ("rejected", 7))
     summary = safety_summary(outcomes, "raw/opencode")
     assert "false_accept_rate" not in summary
     assert summary["acceptance_rate"] == 0.72
@@ -177,12 +184,12 @@ def test_safety_summary_extraction_corpus_reports_acceptance_rate() -> None:
 
 
 def test_safety_summary_silence_corpus_reports_acceptance_rate() -> None:
-    summary = safety_summary(["silence"] * 60, "successes")
+    summary = safety_summary(_outcomes(("silence", 60)), "successes")
     assert "false_accept_rate" not in summary
     assert summary["acceptance_rate"] == 0.0
 
 
 def test_safety_summary_rejection_corpus_keeps_false_accept_rate() -> None:
-    summary = safety_summary(["rejected"] * 9 + ["accepted"], "nearmiss")
+    summary = safety_summary(_outcomes(("rejected", 9), ("accepted", 1)), "nearmiss")
     assert summary["false_accept_rate"] == 0.1
     assert "acceptance_rate" not in summary

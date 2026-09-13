@@ -102,10 +102,9 @@ def find_error_line(tail: str) -> str:
 
 
 def has_real_signal(text: str) -> bool:
-    for line in text.splitlines():
-        if _ERROR_RE.search(line) and not _BOILER_RE.search(line):
-            return True
-    return False
+    return any(
+        _ERROR_RE.search(line) and not _BOILER_RE.search(line) for line in text.splitlines()
+    )
 
 
 def main() -> int:

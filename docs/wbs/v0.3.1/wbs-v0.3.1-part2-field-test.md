@@ -39,8 +39,8 @@
 | 2.10 | ✅ Re-run the Docker field test on the v0.3.1 image — **180/180 green** ([plan](../../field-test/v0.3.1/docker-test-plan.md), [results](../../field-test/v0.3.1/docker-test-results.md)) | [#738](https://github.com/deghosal-2026/CauterRule/issues/738) |
 | 2.11 | ✅ Multi-environment validation — macOS, Linux, Docker (`tests/field/test_docker_multienv.py` green; Docker results above) | [#739](https://github.com/deghosal-2026/CauterRule/issues/739) |
 | 2.12 | ✅ Cost measurement — token-enabled re-run + `$`/1k table ([report §10](../../field-test/v0.3.1/FIELD_TEST_REPORT.md)) | [#740](https://github.com/deghosal-2026/CauterRule/issues/740) |
-| 2.13 | Cross-session repeat-failure reduction protocol (5 sessions) | [#741](https://github.com/deghosal-2026/CauterRule/issues/741) |
-| 2.14 | Human-vs-replay agreement sampling and scoring | [#742](https://github.com/deghosal-2026/CauterRule/issues/742) |
+| 2.13 | ⏸️ Deferred (out of scope for v0.3.1) — cross-session repeat-failure reduction protocol (5 sessions) | [#741](https://github.com/deghosal-2026/CauterRule/issues/741) |
+| 2.14 | ⏸️ Deferred (out of scope for v0.3.1) — human-vs-replay agreement sampling and scoring | [#742](https://github.com/deghosal-2026/CauterRule/issues/742) |
 | 2.15 | ✅ Regenerate and publish the v0.3.1 field test report (reproducible from artifacts; drift check passes) — [FIELD_TEST_REPORT.md](../../field-test/v0.3.1/FIELD_TEST_REPORT.md) | [#743](https://github.com/deghosal-2026/CauterRule/issues/743) |
 | 2.16 | ✅ Document known issues from the v0.3.1 field test (report §13 + Appendix A J1–J18; J16/J17/J18 open) | [#744](https://github.com/deghosal-2026/CauterRule/issues/744) |
 | 2.17 | M2 exit gate — thresholds, tests, docs, committed results | [#745](https://github.com/deghosal-2026/CauterRule/issues/745) |

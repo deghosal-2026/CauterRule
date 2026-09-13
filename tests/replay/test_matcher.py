@@ -1,4 +1,5 @@
 import math
+from collections.abc import Callable, Iterator
 
 import pytest
 
@@ -64,7 +65,7 @@ _TRIGGER = "import statements are not at the top-level of a file"
 
 
 @pytest.fixture
-def controlled_embedder():
+def controlled_embedder() -> Iterator[Callable[..., None]]:
     def _install(sims: dict[str, float], trigger: str = _TRIGGER) -> None:
         embeddings.set_embedder_for_testing(_ControlledEmbedder(sims, trigger))
 
@@ -446,7 +447,7 @@ def test_context_domain_label_does_not_match_other_domain() -> None:
 # ── J11: semantic signature must not be diluted by failure_class tokens ──
 
 
-def test_semantic_signature_not_diluted_by_failure_class(controlled_embedder) -> None:
+def test_semantic_signature_not_diluted_by_failure_class(controlled_embedder: Callable[..., None]) -> None:
     # A correct paraphrase trigger ("import statements are not at the
     # top-level of a file") vs the raw CI error ("E402 module level import
     # not at top of file"). With the "ci/lint" class tokens in the signature,
@@ -474,7 +475,7 @@ def test_semantic_signature_not_diluted_by_failure_class(controlled_embedder) ->
     assert match_score(cand, traj) >= SEMANTIC_FLOOR_SCORE
 
 
-def test_semantic_low_similarity_everywhere_stays_low(controlled_embedder) -> None:
+def test_semantic_low_similarity_everywhere_stays_low(controlled_embedder: Callable[..., None]) -> None:
     # Control: when no view reaches the floor, nothing is floored — the
     # class-free view must not manufacture matches for unrelated failures.
     controlled_embedder(
