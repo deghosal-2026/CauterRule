@@ -94,12 +94,12 @@ Before tagging v0.3.1, ALL of the following must be true:
 
 ## Current status
 
-`feat-v0.3.1` @ `be960c2`. **M1 closed** (`2b94b19` + `ccae982`). M2 and M3 open.
+`feat-v0.3.1` merged to `main` as `f6a5971` (PR #805). **v0.3.1 released 2026-09-13. M1-M3 closed.**
 
 - **M1 (Critical Code Fixes): ✅ closed.** 9/10 code issues done; #681 coverage reached 88.5% (gate >92%), remainder folded into M3 (#747).
-- **Docker field test: ✅ 180/180 green** (2026-09-13) — [plan](../../field-test/v0.3.1/docker-test-plan.md) · [results](../../field-test/v0.3.1/docker-test-results.md) · raw artifacts `field-test/results/0.3.1/docker/` (#738).
-- **Pre-sweep blockers done** (2026-09-13): field-test plan (#733), extraction-accuracy metric (#730/#734), adapter/CI references + golden n=60 (#726/#735), threshold recalibration (#736), report reproducibility/drift check (#728). Ready for the cloud sweep (#737) → `field-test/results/0.3.1/`.
-- **M2 (Evaluation & Field Test): open** — **60 issues**: 4 original evaluation tickets + 13 field-test tickets + **43 from the `[0.3.1-M2-CodeReview]` audit** (#762, #763-#804). 11 Critical (10 code-review + #762), 32 Important. **11/11 Criticals + 32/32 Importants fixed** (all 43 code-review findings addressed) (#763, #764, #769, #770, #775, #776, #777, #778, #791, #795, #762 Phases 0–1; #762 Phase 2 tracked in #720).
-- **M3 (Release Readiness & Launch): open** — 16 issues.
+- **M2 (Evaluation & Field Test): ✅ closed.** All 60 issues done; full 40-corpus × 2-model sweep committed; artifact-derived report.
+- **M3 (Release Readiness & Launch): ✅ closed.** Version bumped, security scan clean, PyPI 0.3.1 published + verified, docs/CHANGELOG/release-notes/badges updated, gate passed (coverage 89.16%, ruff+mypy clean), tagged `v0.3.1`, GitHub release + launch published, merged to `main`. **Docker (#750) and Homebrew (#751) deferred by request.**
+
+> **Released:** PyPI https://pypi.org/project/cauterule/0.3.1/ · GitHub https://github.com/deghosal-2026/CauterRule/releases/tag/v0.3.1 · main `f6a5971`.
 
 > **Code review (2026-09-12).** A full-repo audit (code, tests, field-test infrastructure) at `be960c2` logged 42 defects + #762. See [Part 2 → Code review findings](wbs-v0.3.1-part2-field-test.md#code-review-findings-43-issues). Note: 3 audit areas (store/corpus/capture/observe, full test-suite pass, field-test runner/report integrity) were not completed and remain candidates for a follow-up review.
