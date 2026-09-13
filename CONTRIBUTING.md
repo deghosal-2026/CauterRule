@@ -279,3 +279,36 @@ CI (`.github/workflows/ci.yaml`) runs on push/PR to `main`: `ruff check .`,
 `mypy src/`, a field-test report drift check, and `pytest` with the coverage
 gate. `.github/workflows/security-scan.yml` runs truffleHog, pip-audit, the
 secret regex scan, and OpenSSF Scorecard. Run the same locally before pushing.
+
+## v0.3.1 Contribution Areas
+
+### Measurement & Extraction Accuracy
+
+Every field-test `summary.json` carries the extraction-accuracy metrics added in
+v0.3.1 (#730): `extraction_f1` (token), `semantic_f1`, `directive_f1`, and
+trigger-only `extraction_agreement` (J6). When adding corpora with a known
+`expected_rule`, backfill it so the metric has ground truth; corpora without one
+report `null` for extraction metrics (J10), not `0.0`. Tests live in
+`tests/measurement/` and `tests/test_run_field_test_harness.py`.
+
+### Source-Trust Gate
+
+The production promotion path enforces the adversarial source-trust gate (#727).
+Trajectories carrying an injection signature are flagged via
+`detect_injection_signal` / `is_source_tainted` (`src/cauterule/security.py`) and
+propagated to candidate provenance; `auto_promote` hard-rejects them regardless
+of linter/replay/safety/confidence, and `force` does not override. Add cases to
+`tests/promotion/test_source_trust.py`; the test-only `should_reject` runner
+override remains for benchmarking but is not the production control.
+
+### Deterministic Test Invocation
+
+The milestone exit gate excludes the cloud/field/scale/Docker suites, which need
+network or a Docker daemon:
+
+```bash
+pytest --cov=src/cauterule --cov-report=term-missing \
+  --ignore=tests/field --ignore=tests/scale -k "not docker"
+```
+
+`ruff check .` and `mypy src/ tests/` (strict) must be clean.
