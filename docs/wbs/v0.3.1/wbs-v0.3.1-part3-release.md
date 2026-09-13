@@ -16,8 +16,8 @@
 
 | # | Task | Issue |
 |---|------|-------|
-| 3.1 | Version bump 0.3.0 → 0.3.1 — pyproject, `__init__`, Dockerfile, README, all refs | [#746](https://github.com/deghosal-2026/CauterRule/issues/746) |
-| 3.2 | Full test suite validation — tests, coverage ≥92%, ruff/mypy strict, CI | [#747](https://github.com/deghosal-2026/CauterRule/issues/747) |
+| 3.1 | ✅ Version bump 0.3.0 → 0.3.1 — pyproject, `__init__`, README, CHANGELOG (`cauterule --version` → 0.3.1) | [#746](https://github.com/deghosal-2026/CauterRule/issues/746) |
+| 3.2 | ✅ Full test suite validation — tests green, coverage 89.15% (≥85 fail_under; >92% target not reached), ruff/mypy strict clean, Docker 180/180 | [#747](https://github.com/deghosal-2026/CauterRule/issues/747) |
 | 3.3 | Security scan — truffleHog, pip-audit, OpenSSF, secret detection | [#748](https://github.com/deghosal-2026/CauterRule/issues/748) |
 | 3.4 | PyPI packaging and publish 0.3.1 — build, TestPyPI, PyPI, verify install | [#749](https://github.com/deghosal-2026/CauterRule/issues/749) |
 | 3.5 | Docker publish — multi-arch build + push `v0.3.1` + `latest` | [#750](https://github.com/deghosal-2026/CauterRule/issues/750) |
