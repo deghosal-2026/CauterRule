@@ -33,6 +33,35 @@ def test_none_success_raises() -> None:
         Trajectory.from_dict(d)
 
 
+@pytest.mark.parametrize("value", ["false", "true", 0, 1, False, True])
+def test_success_accepts_real_booleans(value: Any) -> None:
+    # #769: numeric/string booleans are coerced; string "false" must not
+    # become True via bool().
+    traj = Trajectory.from_dict(_base(success=value))
+    assert traj.success is bool(value in (True, 1, "true"))
+
+
+@pytest.mark.parametrize("value", ["yes", "no", 2, -1, [], {}, 3.14])
+def test_success_rejects_non_boolean(value: Any) -> None:
+    # #769: fail loud instead of silently coercing arbitrary truthy values.
+    with pytest.raises(ValueError, match="success"):
+        Trajectory.from_dict(_base(success=value))
+
+
+def test_optional_boolean_fields_strict() -> None:
+    # #769: redacted/injection_signal get the same strict coercion.
+    traj = Trajectory.from_dict(_base(success=False, redacted="false", injection_signal="false"))
+    assert traj.redacted is False
+    assert traj.injection_signal is False
+    traj2 = Trajectory.from_dict(_base(success=False, redacted="true", injection_signal=1))
+    assert traj2.redacted is True
+    assert traj2.injection_signal is True
+    with pytest.raises(ValueError, match="redacted"):
+        Trajectory.from_dict(_base(success=False, redacted="maybe"))
+    with pytest.raises(ValueError, match="injection_signal"):
+        Trajectory.from_dict(_base(success=False, injection_signal=2))
+
+
 def test_steps_missing_step_number_do_not_collide() -> None:
     # #595: auto-number by position instead of collapsing to 1.
     d = _base(

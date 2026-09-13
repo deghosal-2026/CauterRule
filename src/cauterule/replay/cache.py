@@ -39,9 +39,10 @@ class ReplayCache:
         cand_hash = hashlib.sha256(
             json.dumps(
                 {
-                    "trigger": candidate.when.trigger,
+                    # Hash the whole ``when`` dict so future RuleWhen fields
+                    # (e.g. ``signature``, #763) can never be silently omitted.
+                    "when": candidate.when.to_dict(),
                     "directive": candidate.do.directive,
-                    "context": list(candidate.when.context),
                     "confidence": candidate.confidence,
                 },
                 sort_keys=True,

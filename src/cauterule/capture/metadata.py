@@ -85,6 +85,11 @@ def enrich_trajectory(
         agent_config=trajectory.agent_config or AgentConfig(),
         environment=inferred_env,
         redacted=trajectory.redacted,
+        # #770: preserve adapter-set trust/annotation fields through the rebuild.
+        injection_signal=trajectory.injection_signal,
+        expected_outcome=trajectory.expected_outcome,
+        expected_outcome_rationale=trajectory.expected_outcome_rationale,
+        expected_outcome_confidence=trajectory.expected_outcome_confidence,
     )
 
 

@@ -2,7 +2,7 @@
 
 **Goal:** Accuracy & Trust — fix the correctness defects found by the v0.3.0 code review, measure the fixes directly and re-verify with a full field test, then release and launch the patch.
 
-**Milestones:** M1-M3 (GitHub milestones 66-68) — M1 ✓ closed (Critical Code Fixes, 10 issues) · M2 (Evaluation & Field Test, 17) · M3 (Release Readiness & Launch, 16).
+**Milestones:** M1-M3 (GitHub milestones 66-68) — M1 ✓ closed (Critical Code Fixes, 10 issues) · M2 (Evaluation & Field Test, 60) · M3 (Release Readiness & Launch, 16).
 
 **Branch:** `feat-v0.3.1`.
 
@@ -19,9 +19,9 @@
 | Part | Title | Milestone | Tasks |
 |------|-------|-----------|-------|
 | [1](wbs-v0.3.1-part1-fixes.md) | Phase 1 — Critical Code Fixes | M1 ([#66](https://github.com/deghosal-2026/CauterRule/milestone/66)) ✓ closed | 10 |
-| [2](wbs-v0.3.1-part2-field-test.md) | Phase 2 — Evaluation & Field Test | M2 ([#67](https://github.com/deghosal-2026/CauterRule/milestone/67)) | 17 |
+| [2](wbs-v0.3.1-part2-field-test.md) | Phase 2 — Evaluation & Field Test | M2 ([#67](https://github.com/deghosal-2026/CauterRule/milestone/67)) | 60 |
 | [3](wbs-v0.3.1-part3-release.md) | Phase 3 — Release Readiness & Launch | M3 ([#68](https://github.com/deghosal-2026/CauterRule/milestone/68)) | 16 |
-| **Total** | | **M1-M3** | **43** |
+| **Total** | | **M1-M3** | **86** |
 
 ---
 
@@ -31,7 +31,7 @@
 M1 (Critical Code Fixes) ✓ closed
               │
               ▼
-M2 (Evaluation & Field Test)   ──  17 issues
+M2 (Evaluation & Field Test)   ──  60 issues
               │
               ▼
 M3 (Release Readiness & Launch) ──  16 issues
@@ -49,6 +49,7 @@ M2 (results + report) ──> M3 (release notes, docs, launch)
 **Internal dependencies within M2:**
 - Evaluation implementation (#726 references, #730 metric) precedes the field-test wiring/run.
 - Plan (#733) → runner (#734) → corpus (#735) → calibration (#736) → sweep (#737) → Docker/multi-env (#738, #739) → measurements (#740-#742) → report (#743) → known issues (#744) → exit gate (#745).
+- **Code review fixes (#762, #763-#804) precede the final measurement run.** Several defects corrupt the measurement itself (cost `$0.00` #802, ungated promotion #775, unwired injection gate #776), so fixing the 11 Criticals before the sweep keeps the M2 numbers honest. Importants may be fixed or explicitly deferred.
 
 **Internal dependencies within M3:**
 - bump (#746) → validation (#747) → security (#748) → packaging (#749-#751) → docs (#752-#756) → pre-release gate (#757) → tag (#758) → launch (#759) → post-release (#760) → merge (#761).
@@ -93,8 +94,10 @@ Before tagging v0.3.1, ALL of the following must be true:
 
 ## Current status
 
-`feat-v0.3.1` @ `ccae982`. **M1 closed** (`2b94b19` + `ccae982`). M2 and M3 open.
+`feat-v0.3.1` @ `be960c2`. **M1 closed** (`2b94b19` + `ccae982`). M2 and M3 open.
 
 - **M1 (Critical Code Fixes): ✅ closed.** 9/10 code issues done; #681 coverage reached 88.5% (gate >92%), remainder folded into M3 (#747).
-- **M2 (Evaluation & Field Test): open** — 17 issues (4 original evaluation tickets kept + 13 field-test tickets).
+- **M2 (Evaluation & Field Test): open** — **60 issues**: 4 original evaluation tickets + 13 field-test tickets + **43 from the `[0.3.1-M2-CodeReview]` audit** (#762, #763-#804). 11 Critical (10 code-review + #762), 32 Important. **5/11 Criticals fixed** (#763, #764, #769, #770, #775).
 - **M3 (Release Readiness & Launch): open** — 16 issues.
+
+> **Code review (2026-09-12).** A full-repo audit (code, tests, field-test infrastructure) at `be960c2` logged 42 defects + #762. See [Part 2 → Code review findings](wbs-v0.3.1-part2-field-test.md#code-review-findings-43-issues). Note: 3 audit areas (store/corpus/capture/observe, full test-suite pass, field-test runner/report integrity) were not completed and remain candidates for a follow-up review.

@@ -33,6 +33,31 @@ def _require_nonblank(value: str, name: str) -> None:
         raise ValueError(f"{name} must be a non-blank string")
 
 
+_TRUE_STRINGS = frozenset({"true", "1"})
+_FALSE_STRINGS = frozenset({"false", "0"})
+
+
+def _coerce_bool(value: object, field: str) -> bool:
+    """Strictly coerce a boolean-ish JSON value (#769).
+
+    Plain ``bool()`` inverts ``"false"``/``"0"`` to ``True`` — a failure
+    trajectory would be silently relabelled a success. Accept only real
+    booleans, integer ``0``/``1``, and the strings ``"true"``/``"false"``
+    (case/whitespace-insensitive); reject everything else loud.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int) and value in (0, 1):
+        return bool(value)
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in _TRUE_STRINGS:
+            return True
+        if lowered in _FALSE_STRINGS:
+            return False
+    raise ValueError(f"Trajectory field '{field}' must be a boolean, got {value!r}")
+
+
 @dataclass(frozen=True)
 class AgentConfig:
     """Agent configuration at time of execution."""
@@ -241,7 +266,7 @@ class Trajectory:
             timestamp=str(data.get("timestamp", "")),
             task=str(data.get("task", "")),
             steps=steps,
-            success=bool(data["success"]),
+            success=_coerce_bool(data["success"], "success"),
             failure_point=data.get("failure_point"),
             failure_class=data.get("failure_class"),
             quality_label=data.get("quality_label"),
@@ -250,8 +275,8 @@ class Trajectory:
             tags=tuple(data.get("tags", [])),
             agent_config=AgentConfig.from_dict(ac_raw) if isinstance(ac_raw, dict) else None,
             environment=Environment.from_dict(env_raw) if isinstance(env_raw, dict) else None,
-            redacted=bool(data.get("redacted", False)),
-            injection_signal=bool(data.get("injection_signal", False)),
+            redacted=_coerce_bool(data.get("redacted", False), "redacted"),
+            injection_signal=_coerce_bool(data.get("injection_signal", False), "injection_signal"),
             expected_outcome=data.get("expected_outcome"),
             expected_outcome_rationale=data.get("expected_outcome_rationale"),
             expected_outcome_confidence=data.get("expected_outcome_confidence"),

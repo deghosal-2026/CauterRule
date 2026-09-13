@@ -114,7 +114,7 @@ def simulate(
         - ``near_miss`` if partial context match or recovery trajectory
         - ``no_effect`` otherwise
     """
-    if is_near_miss(candidate, trajectory):
+    if is_near_miss(candidate, trajectory, threshold):
         return "near_miss"
     # Cross-domain matches on failures are already rejected inside
     # rule_matches_with_score (#487); the score is returned for the margin check.

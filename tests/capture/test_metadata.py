@@ -96,3 +96,69 @@ def test_enrich_no_steps() -> None:
     t = Trajectory(id="T-008", timestamp="t", task="task", steps=(), success=False)
     enriched = enrich_trajectory(t)
     assert enriched.domain is None or isinstance(enriched.domain, str)
+
+
+def test_enrich_preserves_injection_and_expected_outcome() -> None:
+    # #770: enrichment must not drop adapter-set trust/annotation fields.
+    t = Trajectory(
+        id="T-009",
+        timestamp="t",
+        task="task",
+        steps=(),
+        success=False,
+        injection_signal=True,
+        expected_outcome="should_reject",
+        expected_outcome_rationale="payload in tool output",
+        expected_outcome_confidence="high",
+    )
+    enriched = enrich_trajectory(t)
+    assert enriched.injection_signal is True
+    assert enriched.expected_outcome == "should_reject"
+    assert enriched.expected_outcome_rationale == "payload in tool output"
+    assert enriched.expected_outcome_confidence == "high"
+
+
+def test_enrich_round_trips_all_fields() -> None:
+    # #770: enrichment must preserve every Trajectory field, changed or not.
+    t = Trajectory(
+        id="T-010",
+        timestamp="2026-09-03T18:25:00Z",
+        task="git push",
+        steps=(Step(step_number=1, tool="bash", error="non-fast-forward"),),
+        success=False,
+        failure_point="step_1",
+        failure_class="git/push",
+        quality_label="clear",
+        domain="git",
+        severity="high",
+        tags=("git",),
+        agent_config=AgentConfig(model="gpt-4o"),
+        environment=Environment(os="linux", ci=True),
+        redacted=True,
+        injection_signal=True,
+        expected_outcome="should_reject",
+        expected_outcome_rationale="why",
+        expected_outcome_confidence="medium",
+    )
+    enriched = enrich_trajectory(t)
+    for field_name in (
+        "id",
+        "timestamp",
+        "task",
+        "steps",
+        "success",
+        "failure_point",
+        "failure_class",
+        "quality_label",
+        "domain",
+        "severity",
+        "tags",
+        "agent_config",
+        "environment",
+        "redacted",
+        "injection_signal",
+        "expected_outcome",
+        "expected_outcome_rationale",
+        "expected_outcome_confidence",
+    ):
+        assert getattr(enriched, field_name) == getattr(t, field_name), field_name

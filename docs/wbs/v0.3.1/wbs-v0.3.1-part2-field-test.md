@@ -6,7 +6,9 @@
 
 ---
 
-## M2: Evaluation & Field Test (17 issues)
+## M2: Evaluation & Field Test (60 issues)
+
+> **2026-09-12 update — code review added.** A full-repo review (code, tests, field-test infrastructure) logged 42 defects to M2 plus the replay-directive-invariance bug (#762) — see [Code review findings](#code-review-findings-43-issues) below. M2 is now **60 issues**: 17 original evaluation/field-test + 43 code-review. The 10 Critical code-review defects must be fixed (or explicitly deferred with rationale) before the M2 exit gate, because several undermine the field-test numbers M2 exists to produce.
 
 **Goal:** A fix-and-re-verify release. Add the missing evaluation instrumentation, freeze the corpus, run the full sweep on the corrected pipeline, measure cost / cross-session / human agreement, and publish a report whose every number is reproducible from committed artifacts.
 
@@ -43,6 +45,87 @@
 | 2.16 | Document known issues from the v0.3.1 field test | [#744](https://github.com/deghosal-2026/CauterRule/issues/744) |
 | 2.17 | M2 exit gate — thresholds, tests, docs, committed results | [#745](https://github.com/deghosal-2026/CauterRule/issues/745) |
 
+### Code review findings (43 issues)
+
+**Goal:** a `[0.3.1-M2-CodeReview]` audit of `feat-v0.3.1` @ `be960c2` — replay, extraction/models/serialization, promotion/loop/linter/conflict, CLI/TUI/MCP, packs/export/LLM/benchmark — logged **42 defects** (10 Critical, 32 Important) plus the replay-directive-invariance bug (#762). Each carries file:line, a reproduction, and a suggested fix.
+
+**Why these block M2:** several defects corrupt the measurements M2 exists to publish — cost reports `$0.00` for Anthropic/LiteLLM/Ollama (#802), the end-to-end loop promotes with no gate and never persists (#775), the #727 injection defense has no production caller (#776), and the unsafe-directive blocklist is trivially bypassed (#777). **Fix the Criticals before the M2 exit gate; Importants may be fixed or explicitly deferred with rationale.**
+
+**Fix progress (2026-09-12):** ✅ CR-1 (#763), CR-2 (#764), CR-7 (#769), CR-8 (#770), CR-13 (#775) fixed with tests. 5/11 Criticals done (`mypy src/ tests/`, `ruff check .`, and the non-field/scale/docker `pytest` suite green).
+
+**Replay / matcher / cache (6)**
+
+| # | Severity | Task | Issue |
+|---|----------|------|-------|
+| CR-1 | Critical | ✅ Replay cache key omits `when.signature` → stale verdicts | [#763](https://github.com/deghosal-2026/CauterRule/issues/763) |
+| CR-2 | Critical | ✅ `simulate()` doesn't forward threshold to the near-miss path | [#764](https://github.com/deghosal-2026/CauterRule/issues/764) |
+| CR-3 | Important | `is_near_miss` skips the trigger prefilter (degenerate triggers) | [#765](https://github.com/deghosal-2026/CauterRule/issues/765) |
+| CR-4 | Important | Generic-trigger prefilter bypassed by punctuation (`"Error:"`) | [#766](https://github.com/deghosal-2026/CauterRule/issues/766) |
+| CR-5 | Important | `corpus_hash` omits `trajectory.domain` → stale invalidation signal | [#767](https://github.com/deghosal-2026/CauterRule/issues/767) |
+| CR-6 | Important | Vacuous assertion in `tests/replay/test_report.py:29` | [#768](https://github.com/deghosal-2026/CauterRule/issues/768) |
+
+**Extraction / models / serialization (6)**
+
+| # | Severity | Task | Issue |
+|---|----------|------|-------|
+| CR-7 | Critical | ✅ `Trajectory.from_dict`: `bool()` inverts `success`/`redacted`/`injection_signal` | [#769](https://github.com/deghosal-2026/CauterRule/issues/769) |
+| CR-8 | Critical | ✅ `enrich_trajectory` drops `injection_signal` + `expected_outcome*` | [#770](https://github.com/deghosal-2026/CauterRule/issues/770) |
+| CR-9 | Important | `RuleWhen.from_dict` splits scalar `context` into characters | [#771](https://github.com/deghosal-2026/CauterRule/issues/771) |
+| CR-10 | Important | Extraction gate misses state-only failures (`exit_code=1`, no error text) | [#772](https://github.com/deghosal-2026/CauterRule/issues/772) |
+| CR-11 | Important | `load_trajectories` silently drops EOF-truncated multi-line record in strict mode | [#773](https://github.com/deghosal-2026/CauterRule/issues/773) |
+| CR-12 | Important | `is_duplicate` ignores `when.signature` → false dedup | [#774](https://github.com/deghosal-2026/CauterRule/issues/774) |
+
+**Promotion / loop / linter / conflict (12)**
+
+| # | Severity | Task | Issue |
+|---|----------|------|-------|
+| CR-13 | Critical | ✅ `run_loop` "promotes" with zero gates and never persists | [#775](https://github.com/deghosal-2026/CauterRule/issues/775) |
+| CR-14 | Critical | #727 injection defense unwired — `is_source_tainted` has no production caller | [#776](https://github.com/deghosal-2026/CauterRule/issues/776) |
+| CR-15 | Critical | `check_unsafe` blocklist bypassed (`rm -fr`, `push -f`, `chmod 0777`, `\| sudo bash`) | [#777](https://github.com/deghosal-2026/CauterRule/issues/777) |
+| CR-16 | Critical | Rule-ID assignment TOCTOU race → concurrent promotions overwrite | [#778](https://github.com/deghosal-2026/CauterRule/issues/778) |
+| CR-17 | Important | Injection-marker detection bypassed by whitespace/newlines/homoglyphs | [#779](https://github.com/deghosal-2026/CauterRule/issues/779) |
+| CR-18 | Important | `execute_promotion` has no dedup → duplicate active rules | [#780](https://github.com/deghosal-2026/CauterRule/issues/780) |
+| CR-19 | Important | `hybrid_promote` silently disables safety/cutoff/source-trust gates | [#781](https://github.com/deghosal-2026/CauterRule/issues/781) |
+| CR-20 | Important | `check_tautology` false-positives on "note"/"notes" | [#782](https://github.com/deghosal-2026/CauterRule/issues/782) |
+| CR-21 | Important | Near-duplicate check false-positives on distinct failure modes | [#783](https://github.com/deghosal-2026/CauterRule/issues/783) |
+| CR-22 | Important | Hyphenated generic phrases score as "specific" | [#784](https://github.com/deghosal-2026/CauterRule/issues/784) |
+| CR-23 | Important | `consolidate()` sets `superseded` without `superseded_by` → store invalid | [#785](https://github.com/deghosal-2026/CauterRule/issues/785) |
+| CR-24 | Important | Test-suite defects (vacuous poisoning asserts, inverted injection test, fake-ID loop test) | [#786](https://github.com/deghosal-2026/CauterRule/issues/786) |
+
+**CLI / TUI / MCP (8)**
+
+| # | Severity | Task | Issue |
+|---|----------|------|-------|
+| CR-25 | Important | `cauterule retire` exits 0 on failure | [#787](https://github.com/deghosal-2026/CauterRule/issues/787) |
+| CR-26 | Important | `cauterule test` ignores `--store` | [#788](https://github.com/deghosal-2026/CauterRule/issues/788) |
+| CR-27 | Important | `cauterule init` overwrites existing `.gitignore` | [#789](https://github.com/deghosal-2026/CauterRule/issues/789) |
+| CR-28 | Important | `cauterule extract` crashes on non-existent path | [#790](https://github.com/deghosal-2026/CauterRule/issues/790) |
+| CR-29 | Critical | `cauterule report --safety-adjusted` saves an empty file | [#791](https://github.com/deghosal-2026/CauterRule/issues/791) |
+| CR-30 | Important | MCP `report_failure` returns `accepted: true` on construction failure | [#792](https://github.com/deghosal-2026/CauterRule/issues/792) |
+| CR-31 | Important | TUI `reject_current` leaves detail panel stale → wrong candidate approved | [#793](https://github.com/deghosal-2026/CauterRule/issues/793) |
+| CR-32 | Important | MCP server allows unauthenticated non-loopback binding | [#794](https://github.com/deghosal-2026/CauterRule/issues/794) |
+
+**Packs / export / LLM / benchmark / measurement (10)**
+
+| # | Severity | Task | Issue |
+|---|----------|------|-------|
+| CR-33 | Critical | `pack publish` ships `.git/` (incl. credentials in `.git/config`) | [#795](https://github.com/deghosal-2026/CauterRule/issues/795) |
+| CR-34 | Important | `pack install`: `tar.extractall` without filter → path traversal (3.11–3.13) | [#796](https://github.com/deghosal-2026/CauterRule/issues/796) |
+| CR-35 | Important | Exporters don't escape rule text → forged rule entry (prompt injection) | [#797](https://github.com/deghosal-2026/CauterRule/issues/797) |
+| CR-36 | Important | Aider export emits unescaped YAML → corruption/injection | [#798](https://github.com/deghosal-2026/CauterRule/issues/798) |
+| CR-37 | Important | Gist import skips cert + safety yet reports `cert.passed=True` | [#799](https://github.com/deghosal-2026/CauterRule/issues/799) |
+| CR-38 | Important | Pack `latest` cache stale forever; dropped connection poisons cache | [#800](https://github.com/deghosal-2026/CauterRule/issues/800) |
+| CR-39 | Important | `calibration_loop` low-precision escalation branch is dead | [#801](https://github.com/deghosal-2026/CauterRule/issues/801) |
+| CR-40 | Important | Anthropic/Ollama/LiteLLM drop token usage → cost shows `$0.00` | [#802](https://github.com/deghosal-2026/CauterRule/issues/802) |
+| CR-41 | Important | `import_gist(as_id=...)` silently overwrites existing rule | [#803](https://github.com/deghosal-2026/CauterRule/issues/803) |
+| CR-42 | Important | `compare_versions` raises `TypeError` on mixed segments | [#804](https://github.com/deghosal-2026/CauterRule/issues/804) |
+
+**Related — replay gate directive invariance (1)**
+
+| # | Severity | Task | Issue |
+|---|----------|------|-------|
+| CR-43 | Critical | Replay gate has zero discriminating power over `do.directive` (from the dev.to negative-control report) | [#762](https://github.com/deghosal-2026/CauterRule/issues/762) |
+
 ### Scope notes
 
 - **Models:** cloud only — `gpt-4o-mini`, `llama-3.1-8b-instruct` (local OMLX dropped, #713).
@@ -60,7 +143,8 @@
 - [ ] **All necessary and affected docs updated** (field test plan, report, per-model sheets, known issues, WBS)
 - [ ] **Code committed and pushed** to `feat-v0.3.1`
 - [ ] **WBS updated** (`docs/wbs/v0.3.1/`)
-- [ ] **All 17 M2 issues closed**
+- [ ] **All 60 M2 issues closed**
+- [ ] All 11 M2 Critical issues fixed, or explicitly deferred with rationale (10 `[0.3.1-M2-CodeReview]` Criticals + #762: #763, #764, #769, #770, #775, #776, #777, #778, #791, #795)
 - [ ] Full sweep complete with results committed under `field-test/results/0.3.1/`
 - [ ] Release thresholds evaluated and reported (met / not-met with CIs)
 - [ ] Cost, cross-session, and human-agreement measured (not `_pending_`)

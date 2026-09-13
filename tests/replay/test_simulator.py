@@ -41,6 +41,18 @@ def test_near_miss() -> None:
     assert simulate(cand, traj) == "near_miss"
 
 
+def test_simulate_forwards_threshold_to_near_miss() -> None:
+    # #764: a partial-context trajectory scoring below a stricter threshold is
+    # not a match at all; the near-miss path must not use the hard-coded 0.60.
+    from cauterule.replay.matcher import match_score
+
+    cand = _cand("artifact upload failure", context=("artifact", "nonexistent-xyz"))
+    traj = _traj("artifact upload", success=False)
+    assert 0.6 <= match_score(cand, traj) < 0.7  # precondition
+    assert simulate(cand, traj) == "near_miss"
+    assert simulate(cand, traj, threshold=0.7) == "no_effect"
+
+
 def _success_traj(task: str, failure_class: str | None) -> Trajectory:
     return Trajectory(
         id="T-002", timestamp="t", task=task, steps=(), success=True, failure_class=failure_class

@@ -105,6 +105,25 @@ def test_cache_confidence_change_misses() -> None:
     assert len(cache) == 2
 
 
+def test_cache_signature_change_misses() -> None:
+    # #763: same trigger/context, different when.signature → different key.
+    from cauterule.models.rule import RuleDo, RuleWhen
+
+    trajs = [_traj("git push")]
+    cache = ReplayCache()
+    plain = CandidateRule(
+        when=RuleWhen(trigger="when python import fails"), do=RuleDo(directive="d"), confidence=0.9
+    )
+    signed = CandidateRule(
+        when=RuleWhen(trigger="when python import fails", signature="No module named"),
+        do=RuleDo(directive="d"),
+        confidence=0.9,
+    )
+    cache.get(plain, trajs)
+    cache.get(signed, trajs)
+    assert len(cache) == 2
+
+
 def test_cache_threshold_reaches_replay() -> None:
     # Review: the cached threshold must actually drive the replay verdict.
     from unittest.mock import patch
