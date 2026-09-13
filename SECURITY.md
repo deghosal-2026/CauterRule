@@ -34,6 +34,7 @@ CauterRule processes agent trajectories that may contain untrusted content (tool
 | Data poisoning — manipulated trajectories | Corpus, extraction | Corpus validation enforces annotations (`expected_outcome`, `expected_outcome_rationale`); adversarial corpora test detection |
 | Instruction leakage — system prompt in rules | Extraction, store | Instruction leakage test verifies no system prompt fragments in extracted rules |
 | Unsafe rule promotion | Promotion gate | Safety-first promotion gate: 6 deterministic checks (sample floor, effect size, confidence, frozen sections, edit distance, drift) plus broad-trigger penalty and adversarial override |
+| Rule mined from injection-tainted source | Capture, promotion | **#727 source-trust gate:** trajectories carrying an injection signature (`injection_signal` flag or detected prompt-injection/base64 payload) are tainted; `auto_promote` hard-rejects their candidates even when linter, replay, safety, and confidence all pass. `force` does not override it; human review is required |
 | Webhook SSRF / URL injection | Integrations | Webhook URLs are config-supplied only (no user-controlled runtime input); scheme/host validated and requests are bounded by timeout; `http(s)` only (M1 SSRF fix) |
 | OTEL data exposure | Integrations | OpenTelemetry export is opt-in; event filtering strips sensitive fields; no raw trajectory bodies are exported |
 | CI secret exposure | GitHub Action | Redaction runs before extraction; CI secrets never sent to LLM |
@@ -43,6 +44,22 @@ CauterRule processes agent trajectories that may contain untrusted content (tool
 | Adapter-captured data leakage | Adapters (LangGraph/CrewAI/PydanticAI/generic) | Every adapter routes trajectory I/O through the same redaction engine before persistence; conformance kit asserts secrets are redacted on disk (#540) |
 | Pack supply-chain tampering | Pack install | Packs carry checksums and are certified (safety/replay/provenance) before trust |
 | Rule-lifecycle abuse | Supersession / retirement | Supersession chains and retirement policy are auditable; quarantine isolates malformed rules; retired rules cannot masquerade as active (#541-#545) |
+
+### v0.3.1 Additions
+
+- **Adversarial source-trust gate in production promotion (#727)** — the
+  "0 adversarial promotions" protection is no longer test-only. At capture,
+  `detect_injection_signal` flags trajectories whose tool I/O carries an
+  injection signature (prompt-injection markers, encoded blobs); the flag is
+  persisted on the trajectory and propagated to candidate provenance.
+  `auto_promote` (`src/cauterule/promotion/auto.py`) hard-rejects any candidate
+  from a tainted source, independent of linter/replay/safety/confidence, and
+  even `force` cannot bypass it. Covered by `tests/promotion/test_source_trust.py`.
+- **Extraction-accuracy metric** — replay/field-test runs report
+  `extraction_f1` / `extraction_agreement`, making extraction quality directly
+  measurable rather than inferred from verdicts (#730).
+- **43 code-review fixes** (`#762`–`#804`), including export/pack security
+  hardening and input-validation gaps found by the full-repo audit.
 
 ### v0.3.0 Additions
 
@@ -113,13 +130,13 @@ The redaction engine strips secrets before LLM extraction and before export.
 
 Scans run in `.github/workflows/security-scan.yml` on push, PR, and weekly.
 
-| Scan | Scope | Result (v0.3.0, 2026-09-12) |
+| Scan | Scope | Result (v0.3.1, 2026-09-13) |
 |------|-------|------------------------------|
-| truffleHog 3.97.4 | Full repo filesystem | 0 verified secrets; 7 unverified matches, all in `SECURITY-FIXTURE`-marked redaction/adversarial tests |
+| truffleHog 3.97.4 | Full repo filesystem | 0 verified secrets; 0 unverified matches |
 | Custom secret regex | Repo source, fixture-marker aware | 0 unmarked matches |
 | pip-audit 2.10.1 (`--strict .`) | Production deps in `pyproject.toml` | 0 known vulnerabilities |
-| pip-audit (venv, awareness) | Dev deps | 4 advisories in `pip` itself (build tool); non-blocking |
-| OpenSSF Scorecard 5.5.0 | Repository posture | 3.8/10 — structural gaps tracked (see below) |
+| pip-audit (venv, awareness) | Dev deps | Advisories in `pypdf`/`torch` only (dev tooling, not shipped deps); non-blocking |
+| OpenSSF Scorecard v5.1.1 | Repository posture | 5.1/10 (up from 3.8) — structural gaps tracked (see below) |
 
 ### OpenSSF Scorecard remediation
 
@@ -129,13 +146,15 @@ mitigation plans rather than silently accepted:
 
 - **Branch protection / Code-Review / Contributors / Maintained** — require
   organizational history and review policy; track as project matures.
-- **Dependency-Update-Tool** — dependabot config tracked by #615.
+- **Dependency-Update-Tool** — ✅ dependabot detected (`.github/dependabot.yml`), score 10.
 - **SAST** — CodeQL / static analysis tracked by #614.
 - **Token-Permissions** — top-level `permissions: contents: read` added to
-  `ci.yaml` and `security-scan.yml`.
+  `ci.yaml` and `security-scan.yml`; `perf.yml` still lacks a top-level block.
 - **Pinned-Dependencies** — pin GitHub Actions and base images by hash tracked
   by #614.
 - **Fuzzing** — fuzzing integration tracked by #614.
+- **Packaging** — no publishing workflow detected; the release workflow will
+  address this. #749-#751.
 
 ## Contact
 

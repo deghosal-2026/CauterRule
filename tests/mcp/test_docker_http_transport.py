@@ -1,5 +1,8 @@
 """Docker test: MCP HTTP transport end-to-end in-container (#676).
 
+# SECURITY-FIXTURE: every token-like string in this module is an intentional
+# fake credential used to exercise container auth, not a real secret.
+
 Mirrors the host-side proof in ``tests/mcp/test_http_transport.py`` but drives
 the server from *outside* the container the way a deployed agent would: starts
 ``cauterule mcp --transport http`` in a container that binds 8025, maps it to
