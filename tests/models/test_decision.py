@@ -25,3 +25,13 @@ def test_decision_validation() -> None:
         PromotionDecision(verdict="bad")  # type: ignore[arg-type]
     with pytest.raises(ValueError, match="evidence_summary"):
         PromotionDecision(verdict="promote", evidence_summary="   ")
+
+
+def test_scalar_warning_lists_rejected() -> None:
+    # #771: scalar string lists must not split into characters.
+    with pytest.raises(ValueError, match="linter_warnings"):
+        PromotionDecision.from_dict({"verdict": "promote", "linter_warnings": "vague"})
+    with pytest.raises(ValueError, match="conflicts"):
+        PromotionDecision.from_dict({"verdict": "promote", "conflicts": "R-001"})
+    with pytest.raises(ValueError, match="safety_warnings"):
+        PromotionDecision.from_dict({"verdict": "promote", "safety_warnings": "x"})

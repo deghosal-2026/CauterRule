@@ -836,7 +836,9 @@ def trigger_prefilter_reason(candidate: CandidateRule) -> str | None:
     if _DEGENERATE_TRIGGER_RE.match(trigger.strip().lower()):
         return "degenerate"
 
-    trigger_words = _tokenize(trigger)
+    # Normalized tokens (#766): "Error:" / "error." must be treated the same
+    # as "error" so punctuation cannot slip past the generic-trigger guard.
+    trigger_words = {w for w in _normalize(trigger).split() if len(w) > 1}
 
     # Reject overly generic triggers unless context narrows them.
     if len(trigger_words) < _MIN_TRIGGER_WORDS and not candidate.when.context:
@@ -924,6 +926,11 @@ def is_near_miss(
     """
     trigger = candidate.when.trigger
     if not trigger or not trigger.strip():
+        return False
+
+    # #765: mirror rule_matches — a trigger rejected by the prefilter can never
+    # be a near miss (e.g. degenerate "step_1" matched via failure_point).
+    if trigger_prefilter_reason(candidate) is not None:
         return False
 
     if match_score(candidate, trajectory) < threshold:

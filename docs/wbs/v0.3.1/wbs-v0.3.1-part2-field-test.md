@@ -51,7 +51,7 @@
 
 **Why these block M2:** several defects corrupt the measurements M2 exists to publish — cost reports `$0.00` for Anthropic/LiteLLM/Ollama (#802), the end-to-end loop promotes with no gate and never persists (#775), the #727 injection defense has no production caller (#776), and the unsafe-directive blocklist is trivially bypassed (#777). **Fix the Criticals before the M2 exit gate; Importants may be fixed or explicitly deferred with rationale.**
 
-**Fix progress (2026-09-12):** ✅ all 11 Criticals fixed with tests. First batch: CR-1 (#763), CR-2 (#764), CR-7 (#769), CR-8 (#770), CR-13 (#775). Second batch: CR-14 (#776), CR-15 (#777), CR-16 (#778), CR-29 (#791), CR-33 (#795). Third batch: CR-43 (#762) Phase 0 (invariance pinned) + Phase 1 (directive-aware `simulate_outcome` grounding + destructive-directive linter hardening + `auto_promote` guard); Phase 2 (true executor) remains tracked in #720. `mypy src/ tests/`, `ruff check .`, and the non-field/scale/docker `pytest` suite green.
+**Fix progress (2026-09-12):** ✅ all 11 Criticals fixed with tests. First batch: CR-1 (#763), CR-2 (#764), CR-7 (#769), CR-8 (#770), CR-13 (#775). Second batch: CR-14 (#776), CR-15 (#777), CR-16 (#778), CR-29 (#791), CR-33 (#795). Third batch: CR-43 (#762) Phase 0 (invariance pinned) + Phase 1 (directive-aware `simulate_outcome` grounding + destructive-directive linter hardening + `auto_promote` guard); Phase 2 (true executor) remains tracked in #720. `mypy src/ tests/`, `ruff check .`, and the non-field/scale/docker `pytest` suite green. Importants first batch (CR-3/4/5/6/9/10) also fixed with tests.
 
 **Replay / matcher / cache (6)**
 
@@ -59,10 +59,10 @@
 |---|----------|------|-------|
 | CR-1 | Critical | ✅ Replay cache key omits `when.signature` → stale verdicts | [#763](https://github.com/deghosal-2026/CauterRule/issues/763) |
 | CR-2 | Critical | ✅ `simulate()` doesn't forward threshold to the near-miss path | [#764](https://github.com/deghosal-2026/CauterRule/issues/764) |
-| CR-3 | Important | `is_near_miss` skips the trigger prefilter (degenerate triggers) | [#765](https://github.com/deghosal-2026/CauterRule/issues/765) |
-| CR-4 | Important | Generic-trigger prefilter bypassed by punctuation (`"Error:"`) | [#766](https://github.com/deghosal-2026/CauterRule/issues/766) |
-| CR-5 | Important | `corpus_hash` omits `trajectory.domain` → stale invalidation signal | [#767](https://github.com/deghosal-2026/CauterRule/issues/767) |
-| CR-6 | Important | Vacuous assertion in `tests/replay/test_report.py:29` | [#768](https://github.com/deghosal-2026/CauterRule/issues/768) |
+| CR-3 | Important | ✅ `is_near_miss` skips the trigger prefilter (degenerate triggers) | [#765](https://github.com/deghosal-2026/CauterRule/issues/765) |
+| CR-4 | Important | ✅ Generic-trigger prefilter bypassed by punctuation (`"Error:"`) | [#766](https://github.com/deghosal-2026/CauterRule/issues/766) |
+| CR-5 | Important | ✅ `corpus_hash` omits `trajectory.domain` → stale invalidation signal | [#767](https://github.com/deghosal-2026/CauterRule/issues/767) |
+| CR-6 | Important | ✅ Vacuous assertion in `tests/replay/test_report.py:29` | [#768](https://github.com/deghosal-2026/CauterRule/issues/768) |
 
 **Extraction / models / serialization (6)**
 
@@ -70,8 +70,8 @@
 |---|----------|------|-------|
 | CR-7 | Critical | ✅ `Trajectory.from_dict`: `bool()` inverts `success`/`redacted`/`injection_signal` | [#769](https://github.com/deghosal-2026/CauterRule/issues/769) |
 | CR-8 | Critical | ✅ `enrich_trajectory` drops `injection_signal` + `expected_outcome*` | [#770](https://github.com/deghosal-2026/CauterRule/issues/770) |
-| CR-9 | Important | `RuleWhen.from_dict` splits scalar `context` into characters | [#771](https://github.com/deghosal-2026/CauterRule/issues/771) |
-| CR-10 | Important | Extraction gate misses state-only failures (`exit_code=1`, no error text) | [#772](https://github.com/deghosal-2026/CauterRule/issues/772) |
+| CR-9 | Important | ✅ `RuleWhen.from_dict` splits scalar `context` into characters | [#771](https://github.com/deghosal-2026/CauterRule/issues/771) |
+| CR-10 | Important | ✅ Extraction gate misses state-only failures (`exit_code=1`, no error text) | [#772](https://github.com/deghosal-2026/CauterRule/issues/772) |
 | CR-11 | Important | `load_trajectories` silently drops EOF-truncated multi-line record in strict mode | [#773](https://github.com/deghosal-2026/CauterRule/issues/773) |
 | CR-12 | Important | `is_duplicate` ignores `when.signature` → false dedup | [#774](https://github.com/deghosal-2026/CauterRule/issues/774) |
 

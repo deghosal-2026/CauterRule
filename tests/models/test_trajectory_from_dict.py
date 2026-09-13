@@ -103,3 +103,14 @@ def test_steps_auto_number_logs_warning(caplog: pytest.LogCaptureFixture) -> Non
         traj = Trajectory.from_dict(d)
     assert [s.step_number for s in traj.steps] == [1, 2]
     assert "auto-numbering" in caplog.text
+
+
+def test_scalar_tags_rejected() -> None:
+    # #771: scalar tags must not split into characters.
+    with pytest.raises(ValueError, match="tags"):
+        Trajectory.from_dict(_base(success=False, tags="git"))
+
+
+def test_scalar_agent_tools_rejected() -> None:
+    with pytest.raises(ValueError, match="tools"):
+        Trajectory.from_dict(_base(success=False, agent_config={"tools": "bash"}))

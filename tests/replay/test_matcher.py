@@ -339,6 +339,32 @@ def test_trigger_prefilter_reason_categories() -> None:
     assert trigger_prefilter_reason(_cand("distinctive failure signature")) is None
 
 
+def test_generic_trigger_punctuation_rejected() -> None:
+    # #766: "Error:" must be treated as generic like "error" (normalized).
+    from cauterule.replay.matcher import trigger_prefilter_reason
+
+    traj = _traj(task="x", error="fatal error occurred")
+    for trigger in ("Error:", "error.", "ERROR!"):
+        assert trigger_prefilter_reason(_cand(trigger)) == "generic", trigger
+        assert not rule_matches(_cand(trigger), traj), trigger
+
+
+def test_is_near_miss_rejects_degenerate_trigger() -> None:
+    # #765: the near-miss path must apply the same trigger prefilter as
+    # rule_matches — a degenerate trigger is not a near miss.
+    cand = _cand("step_1", context=("run", "kubernetes"))
+    traj = Trajectory(
+        id="T-deg",
+        timestamp="t",
+        task="run",
+        steps=(Step(1, "bash", output="run"),),
+        success=False,
+        failure_point="step_1",
+    )
+    assert not rule_matches(cand, traj)
+    assert not is_near_miss(cand, traj)
+
+
 def test_context_matches_trajectory_domain_label() -> None:
     # #677: golden rules use domain labels (e.g. "devops") as context; a
     # context item equal to the trajectory's domain must satisfy it even when

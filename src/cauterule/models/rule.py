@@ -9,6 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from cauterule.models._coercion import require_str_tuple
+
 Status = Literal["active", "retired", "superseded"]
 _VALID_STATUSES: frozenset[str] = frozenset({"active", "retired", "superseded"})
 
@@ -51,7 +53,7 @@ class RuleWhen:
     def from_dict(cls, data: dict[str, Any]) -> RuleWhen:
         """Create from a dict produced by :meth:`to_dict`."""
         trigger = data.get("trigger", "")
-        context = tuple(data.get("context", []))
+        context = require_str_tuple(data.get("context", []), "when.context")
         signature = data.get("signature")
         return cls(trigger=trigger, context=context, signature=signature)
 
@@ -295,7 +297,7 @@ class StandingRule:
             promoted_at=data.get("promoted_at", ""),
             hit_count=int(data.get("hit_count", 0)),
             last_match=data.get("last_match"),
-            tags=tuple(data.get("tags", [])),
+            tags=require_str_tuple(data.get("tags", []), "tags"),
             taxonomy=data.get("taxonomy"),
             template=data.get("template"),
             pack=data.get("pack"),

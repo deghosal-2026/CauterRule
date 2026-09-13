@@ -30,7 +30,9 @@ def test_report_prevented() -> None:
     report = build_evidence_report(cand, trajs)
     assert "T-1" in report.failures_prevented
     assert report.precision > 0
-    assert report.verdict in ("pass", "inconclusive", "fail")
+    # #768: only 2 trajectories (< MIN_TRAJECTORIES=3), so the min-sample rule
+    # forces the surfaced verdict to inconclusive regardless of the score.
+    assert report.verdict == "inconclusive"
 
 
 def test_report_broken() -> None:

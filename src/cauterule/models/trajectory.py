@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from cauterule.log import get_logger
+from cauterule.models._coercion import require_str_tuple
 
 _log = get_logger(__name__)
 
@@ -77,7 +78,7 @@ class AgentConfig:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> AgentConfig:
         """Create from a dict produced by :meth:`to_dict`."""
-        return cls(model=data.get("model"), tools=tuple(data.get("tools", [])))
+        return cls(model=data.get("model"), tools=require_str_tuple(data.get("tools", []), "tools"))
 
 
 @dataclass(frozen=True)
@@ -272,7 +273,7 @@ class Trajectory:
             quality_label=data.get("quality_label"),
             domain=data.get("domain"),
             severity=data.get("severity"),
-            tags=tuple(data.get("tags", [])),
+            tags=require_str_tuple(data.get("tags", []), "tags"),
             agent_config=AgentConfig.from_dict(ac_raw) if isinstance(ac_raw, dict) else None,
             environment=Environment.from_dict(env_raw) if isinstance(env_raw, dict) else None,
             redacted=_coerce_bool(data.get("redacted", False), "redacted"),

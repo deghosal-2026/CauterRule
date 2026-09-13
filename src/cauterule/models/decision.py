@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from cauterule.models._coercion import require_str_tuple
+
 Verdict = Literal["promote", "reject", "needs_review"]
 _VALID_VERDICTS: frozenset[str] = frozenset({"promote", "reject", "needs_review"})
 
@@ -48,7 +50,7 @@ class PromotionDecision:
             verdict=data.get("verdict", "needs_review"),
             evidence_summary=data.get("evidence_summary"),
             approver=data.get("approver"),
-            linter_warnings=tuple(data.get("linter_warnings", [])),
-            conflicts=tuple(data.get("conflicts", [])),
-            safety_warnings=tuple(data.get("safety_warnings", [])),
+            linter_warnings=require_str_tuple(data.get("linter_warnings", []), "linter_warnings"),
+            conflicts=require_str_tuple(data.get("conflicts", []), "conflicts"),
+            safety_warnings=require_str_tuple(data.get("safety_warnings", []), "safety_warnings"),
         )
