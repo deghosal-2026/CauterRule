@@ -30,11 +30,28 @@ def init(target_dir: str, adapter: str) -> None:
     rules_dir.mkdir(parents=True, exist_ok=True)
     traj_dir = d / "trajectories"
     traj_dir.mkdir(parents=True, exist_ok=True)
-    (d / ".gitignore").write_text("*.pyc\n__pycache__/\n.venv/\n", encoding="utf-8")
+    _update_gitignore(d / ".gitignore")
     click.echo(f"Scaffolded CauterRule project in {d.resolve()}")
 
     if adapter != "none":
         _scaffold_example(d, adapter)
+
+
+def _update_gitignore(gitignore_path: Path) -> None:
+    """Create *gitignore_path* or append only the missing cauterule entries."""
+    entries = ["*.pyc", "__pycache__/", ".venv/"]
+    if not gitignore_path.exists():
+        gitignore_path.write_text("\n".join(entries) + "\n", encoding="utf-8")
+        return
+    existing = gitignore_path.read_text(encoding="utf-8")
+    existing_lines = set(existing.splitlines())
+    missing = [e for e in entries if e not in existing_lines]
+    if not missing:
+        return
+    separator = "" if not existing or existing.endswith("\n") else "\n"
+    gitignore_path.write_text(
+        existing + separator + "\n".join(missing) + "\n", encoding="utf-8"
+    )
 
 
 def _scaffold_example(d: Path, adapter: str) -> None:

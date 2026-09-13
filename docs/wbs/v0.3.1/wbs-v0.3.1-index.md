@@ -97,7 +97,7 @@ Before tagging v0.3.1, ALL of the following must be true:
 `feat-v0.3.1` @ `be960c2`. **M1 closed** (`2b94b19` + `ccae982`). M2 and M3 open.
 
 - **M1 (Critical Code Fixes): ✅ closed.** 9/10 code issues done; #681 coverage reached 88.5% (gate >92%), remainder folded into M3 (#747).
-- **M2 (Evaluation & Field Test): open** — **60 issues**: 4 original evaluation tickets + 13 field-test tickets + **43 from the `[0.3.1-M2-CodeReview]` audit** (#762, #763-#804). 11 Critical (10 code-review + #762), 32 Important. **11/11 Criticals fixed; 12/32 Importants fixed** (CR-3/4/5/6/9/10, CR-11/12/17/18/19/20) (#763, #764, #769, #770, #775, #776, #777, #778, #791, #795, #762 Phases 0–1; #762 Phase 2 tracked in #720).
+- **M2 (Evaluation & Field Test): open** — **60 issues**: 4 original evaluation tickets + 13 field-test tickets + **43 from the `[0.3.1-M2-CodeReview]` audit** (#762, #763-#804). 11 Critical (10 code-review + #762), 32 Important. **11/11 Criticals fixed; 25/32 Importants fixed** (remaining: CR-34/35/36/37/38/41/42) (#763, #764, #769, #770, #775, #776, #777, #778, #791, #795, #762 Phases 0–1; #762 Phase 2 tracked in #720).
 - **M3 (Release Readiness & Launch): open** — 16 issues.
 
 > **Code review (2026-09-12).** A full-repo audit (code, tests, field-test infrastructure) at `be960c2` logged 42 defects + #762. See [Part 2 → Code review findings](wbs-v0.3.1-part2-field-test.md#code-review-findings-43-issues). Note: 3 audit areas (store/corpus/capture/observe, full test-suite pass, field-test runner/report integrity) were not completed and remain candidates for a follow-up review.

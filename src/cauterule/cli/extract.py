@@ -21,21 +21,25 @@ from cauterule.serialization.trajectory_jsonl import load_trajectories
 def extract(trajectory: str, dry_run: bool) -> None:
     """Extract candidate rules from a failure trajectory."""
     path = Path(trajectory)
-    if path.suffix == ".jsonl":
-        trajs = list(load_trajectories(path))
-        if not trajs:
-            click.echo("No trajectories found in file.")
-            return
-        traj = trajs[0]
-    else:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-        traj = (
-            Trajectory.from_dict(raw)
-            if isinstance(raw, dict)
-            else Trajectory.from_dict(
-                {"id": "cli", "timestamp": "", "task": "", "steps": [], "success": False}
+    try:
+        if path.suffix == ".jsonl":
+            trajs = list(load_trajectories(path))
+            if not trajs:
+                click.echo("No trajectories found in file.")
+                return
+            traj = trajs[0]
+        else:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            traj = (
+                Trajectory.from_dict(raw)
+                if isinstance(raw, dict)
+                else Trajectory.from_dict(
+                    {"id": "cli", "timestamp": "", "task": "", "steps": [], "success": False}
+                )
             )
-        )
+    except OSError as e:
+        msg = f"Cannot read trajectory {path}: {e}"
+        raise click.ClickException(msg) from e
 
     cfg = load_config()
     gate_mode: GateMode = "relaxed" if cfg.extraction.gate_mode == "relaxed" else "strict"

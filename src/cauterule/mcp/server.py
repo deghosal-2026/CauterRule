@@ -14,6 +14,7 @@ from cauterule.mcp.validation import McpValidationError, validate_report_failure
 from cauterule.store.manager import StoreManager
 
 _SERVER_NAME = "cauterule"
+_LOOPBACK_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
 _SERVER_INSTRUCTIONS = (
     "Expose CauterRule's standing-rule store as MCP tools. "
     "Supports matching rules to tasks, retrieving single rules with provenance, "
@@ -53,10 +54,12 @@ class CauteruleMCPServer:
         self.auth_mode = auth_mode
         self.auth_tokens = resolve_tokens(list(auth_tokens or []))
         self.rate_limiter = rate_limiter or TokenBucket()
-        if auth_mode == "none" and host not in ("127.0.0.1", "localhost"):
-            from cauterule.log import get_logger
-
-            get_logger(__name__).warning("MCP auth disabled on non-loopback host — local dev only")
+        if auth_mode == "none" and host not in _LOOPBACK_HOSTS:
+            msg = (
+                f"Refusing to bind MCP server to non-loopback host {host!r} with "
+                "auth_mode='none'; bind to a loopback host or enable bearer auth"
+            )
+            raise ValueError(msg)
         self._mcp = FastMCP(
             name=_SERVER_NAME,
             instructions=_SERVER_INSTRUCTIONS,

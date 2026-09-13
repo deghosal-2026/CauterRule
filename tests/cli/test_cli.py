@@ -4,6 +4,7 @@ import os
 import tempfile
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
 from cauterule.cli.app import main
@@ -141,7 +142,72 @@ def test_cli_diff_not_found() -> None:
 def test_cli_retire_not_found() -> None:
     runner = CliRunner()
     result = runner.invoke(main, ["retire", "R-999"])
-    assert result.exit_code != 0 or "Error" in result.output or "not found" in result.output
+    assert result.exit_code != 0
+    assert "not found" in result.output
+
+
+def test_cli_init_preserves_existing_gitignore() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        gitignore = Path(tmp) / ".gitignore"
+        gitignore.write_text("my-custom-entry/\n", encoding="utf-8")
+        runner = CliRunner()
+        result = runner.invoke(main, ["init", "--dir", tmp])
+        assert result.exit_code == 0
+        content = gitignore.read_text(encoding="utf-8")
+        assert "my-custom-entry/" in content
+        assert "*.pyc" in content
+        assert "__pycache__/" in content
+        assert ".venv/" in content
+
+
+def test_cli_init_gitignore_idempotent() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        runner = CliRunner()
+        runner.invoke(main, ["init", "--dir", tmp])
+        runner.invoke(main, ["init", "--dir", tmp])
+        content = (Path(tmp) / ".gitignore").read_text(encoding="utf-8")
+        assert content.count("*.pyc") == 1
+        assert content.count("__pycache__/") == 1
+        assert content.count(".venv/") == 1
+
+
+def test_cli_test_honors_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from cauterule.models.rule import Provenance, RuleDo, RuleWhen, StandingRule
+    from cauterule.serialization.rule_yaml import dump_rule_to_file
+
+    store = tmp_path / "custom-store"
+    store.mkdir()
+    dump_rule_to_file(
+        StandingRule(
+            id="R-001",
+            when=RuleWhen(trigger="git push fails"),
+            do=RuleDo(directive="pull first"),
+            confidence=0.9,
+            provenance=Provenance(
+                source_trajectory="t",
+                extracted_by="m",
+                extract_timestamp="t",
+                extraction_pass=1,
+            ),
+            status="active",
+            promoted_at="t",
+        ),
+        store / "R-001.yaml",
+    )
+    runner = CliRunner()
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(main, ["test", "R-001", "--store", str(store)])
+    assert result.exit_code == 0, result.output
+    assert "No trajectories found" in result.output
+
+
+def test_cli_extract_missing_file_errors(tmp_path: Path) -> None:
+    runner = CliRunner()
+    result = runner.invoke(main, ["extract", str(tmp_path / "nope.json")])
+    assert result.exit_code != 0
+    assert "Error" in result.output
+    assert "Traceback" not in result.output
+    assert not isinstance(result.exception, FileNotFoundError)
 
 
 def test_cli_config_show() -> None:

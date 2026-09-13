@@ -89,6 +89,18 @@ def test_narrow_triggers_score_high() -> None:
         assert trigger_score(t) >= 0.6, f"{t!r} scored {trigger_score(t)}"
 
 
+def test_hyphenated_generic_phrase_scores_broad() -> None:
+    # #784: hyphenating a broad phrase must not buy specificity.
+    assert trigger_score("does-not-work") == trigger_score("does not work")
+    assert trigger_score("does-not-work") < BROAD_SPECIFICITY_THRESHOLD
+
+
+def test_code_like_hyphenations_score_specific() -> None:
+    assert trigger_score("non-fast-forward") == 1.0
+    assert trigger_score("error-123") == 1.0
+    assert trigger_score("exit_code") == 1.0
+
+
 def test_precision_term_boosts_specificity() -> None:
     good = _rule("R-G", prevented=8, broke=2)
     bad = _rule("R-B", prevented=2, broke=8)

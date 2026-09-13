@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import asyncio
 from tempfile import TemporaryDirectory
+
+from textual.widgets import RichLog
 
 from cauterule.models.candidate import CandidateRule
 from cauterule.models.rule import RuleDo, RuleWhen
 from cauterule.store.manager import StoreManager
+from cauterule.tui.app import CauterRuleApp
 from cauterule.tui.review import ReviewScreen
 
 
@@ -61,13 +65,64 @@ def test_approve_current_empty_queue() -> None:
 
 
 def test_reject_current_removes_candidate() -> None:
-    candidates = [_make_candidate("a"), _make_candidate("b")]
-    screen = ReviewScreen()
-    screen._candidates = list(candidates)
-    screen._current_index = 0
-    screen.reject_current()
-    assert len(screen._candidates) == 1
-    assert screen._current_index == 0
+    async def _run() -> None:
+        screen = ReviewScreen()
+        async with CauterRuleApp().run_test() as pilot:
+            pilot.app.push_screen(screen)
+            await pilot.pause()
+            screen._candidates = [_make_candidate("a"), _make_candidate("b")]
+            screen._current_index = 0
+            screen.reject_current()
+            await pilot.pause()
+            assert len(screen._candidates) == 1
+            assert screen._current_index == 0
+
+    asyncio.run(_run())
+
+
+def test_reject_current_refreshes_detail_panel() -> None:
+    async def _run() -> None:
+        screen = ReviewScreen()
+        async with CauterRuleApp().run_test() as pilot:
+            pilot.app.push_screen(screen)
+            await pilot.pause()
+            screen._candidates = [_make_candidate("first"), _make_candidate("second")]
+            screen._current_index = 0
+            screen._show_candidate(screen._candidates[0])
+            await pilot.pause()
+
+            screen.reject_current()
+            await pilot.pause()
+
+            detail = screen.query_one("#detail", RichLog)
+            shown = "".join(strip.text for strip in detail.lines)
+            assert "second" in shown
+            assert "first" not in shown
+            assert screen._current_index == 0
+
+    asyncio.run(_run())
+
+
+def test_reject_last_candidate_clears_detail_panel() -> None:
+    async def _run() -> None:
+        screen = ReviewScreen()
+        async with CauterRuleApp().run_test() as pilot:
+            pilot.app.push_screen(screen)
+            await pilot.pause()
+            screen._candidates = [_make_candidate("only")]
+            screen._current_index = 0
+            screen._show_candidate(screen._candidates[0])
+            await pilot.pause()
+
+            screen.reject_current()
+            await pilot.pause()
+
+            detail = screen.query_one("#detail", RichLog)
+            shown = "".join(strip.text for strip in detail.lines)
+            assert "No more candidates." in shown
+            assert len(screen._candidates) == 0
+
+    asyncio.run(_run())
 
 
 def test_populate_from_store_empty() -> None:

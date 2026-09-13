@@ -149,3 +149,20 @@ class TestServerGuard:
         assert first is None
         _, second = server._guard(cast(Any, "ctx"))
         assert second is not None and second["status"] == 429
+
+    def test_non_loopback_without_auth_refused(self, tmp_path: Path) -> None:
+        with pytest.raises(ValueError, match="loopback"):
+            self._server(tmp_path, host="0.0.0.0", auth_mode="none")
+
+    def test_ipv6_unspecified_without_auth_refused(self, tmp_path: Path) -> None:
+        with pytest.raises(ValueError, match="loopback"):
+            self._server(tmp_path, host="::", auth_mode="none")
+
+    def test_loopback_without_auth_allowed(self, tmp_path: Path) -> None:
+        for host in ("127.0.0.1", "::1", "localhost"):
+            server = self._server(tmp_path, host=host, auth_mode="none")
+            assert server.auth_mode == "none"
+
+    def test_non_loopback_with_bearer_allowed(self, tmp_path: Path) -> None:
+        server = self._server(tmp_path, host="0.0.0.0", auth_mode="bearer", auth_tokens=["s"])
+        assert server.auth_mode == "bearer"

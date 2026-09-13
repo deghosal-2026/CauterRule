@@ -158,6 +158,17 @@ def test_duplicate_paraphrase() -> None:
     assert check_duplicate("restart the machine", "call the vendor", existing) == []
 
 
+def test_duplicate_distinct_failure_modes_not_flagged() -> None:
+    # #783: same tool prefix but a distinct failure mode is a separate rule,
+    # even when the directives largely overlap.
+    existing = [_rule("git push hangs", "kill the push and retry the operation")]
+    assert check_duplicate("git push fails", "retry the operation", existing) == []
+    # The guard must not suppress true paraphrases of the same failure mode.
+    same_mode = [_rule("git push fails", "kill the push and retry the operation")]
+    near = check_duplicate("git push fails", "retry the operation", same_mode)
+    assert len(near) == 1 and "near-duplicate" in near[0]
+
+
 def test_contradiction_refinement_not_flagged() -> None:
     # #504: same trigger + extended directive is a refinement.
     existing = [_rule("git push", "pull --rebase")]

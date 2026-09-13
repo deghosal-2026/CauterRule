@@ -51,7 +51,7 @@
 
 **Why these block M2:** several defects corrupt the measurements M2 exists to publish — cost reports `$0.00` for Anthropic/LiteLLM/Ollama (#802), the end-to-end loop promotes with no gate and never persists (#775), the #727 injection defense has no production caller (#776), and the unsafe-directive blocklist is trivially bypassed (#777). **Fix the Criticals before the M2 exit gate; Importants may be fixed or explicitly deferred with rationale.**
 
-**Fix progress (2026-09-12):** ✅ all 11 Criticals fixed with tests. First batch: CR-1 (#763), CR-2 (#764), CR-7 (#769), CR-8 (#770), CR-13 (#775). Second batch: CR-14 (#776), CR-15 (#777), CR-16 (#778), CR-29 (#791), CR-33 (#795). Third batch: CR-43 (#762) Phase 0 (invariance pinned) + Phase 1 (directive-aware `simulate_outcome` grounding + destructive-directive linter hardening + `auto_promote` guard); Phase 2 (true executor) remains tracked in #720. `mypy src/ tests/`, `ruff check .`, and the non-field/scale/docker `pytest` suite green. Importants first two batches (CR-3/4/5/6/9/10, CR-11/12/17/18/19/20) also fixed with tests.
+**Fix progress (2026-09-12):** ✅ all 11 Criticals fixed with tests. First batch: CR-1 (#763), CR-2 (#764), CR-7 (#769), CR-8 (#770), CR-13 (#775). Second batch: CR-14 (#776), CR-15 (#777), CR-16 (#778), CR-29 (#791), CR-33 (#795). Third batch: CR-43 (#762) Phase 0 (invariance pinned) + Phase 1 (directive-aware `simulate_outcome` grounding + destructive-directive linter hardening + `auto_promote` guard); Phase 2 (true executor) remains tracked in #720. `mypy src/ tests/`, `ruff check .`, and the non-field/scale/docker `pytest` suite green. Importants batches 1-3 fixed with tests: CR-3/4/5/6/9/10, CR-11/12/17/18/19/20, CR-21/22/23/24/25/26/27/28/30/31/32/39/40. Remaining: CR-34/35/36/37/38/41/42 (packs/export).
 
 **Replay / matcher / cache (6)**
 
@@ -87,23 +87,23 @@
 | CR-18 | Important | ✅ `execute_promotion` has no dedup → duplicate active rules | [#780](https://github.com/deghosal-2026/CauterRule/issues/780) |
 | CR-19 | Important | ✅ `hybrid_promote` silently disables safety/cutoff/source-trust gates | [#781](https://github.com/deghosal-2026/CauterRule/issues/781) |
 | CR-20 | Important | ✅ `check_tautology` false-positives on "note"/"notes" | [#782](https://github.com/deghosal-2026/CauterRule/issues/782) |
-| CR-21 | Important | Near-duplicate check false-positives on distinct failure modes | [#783](https://github.com/deghosal-2026/CauterRule/issues/783) |
-| CR-22 | Important | Hyphenated generic phrases score as "specific" | [#784](https://github.com/deghosal-2026/CauterRule/issues/784) |
-| CR-23 | Important | `consolidate()` sets `superseded` without `superseded_by` → store invalid | [#785](https://github.com/deghosal-2026/CauterRule/issues/785) |
-| CR-24 | Important | Test-suite defects (vacuous poisoning asserts, inverted injection test, fake-ID loop test) | [#786](https://github.com/deghosal-2026/CauterRule/issues/786) |
+| CR-21 | Important | ✅ Near-duplicate check false-positives on distinct failure modes | [#783](https://github.com/deghosal-2026/CauterRule/issues/783) |
+| CR-22 | Important | ✅ Hyphenated generic phrases score as "specific" | [#784](https://github.com/deghosal-2026/CauterRule/issues/784) |
+| CR-23 | Important | ✅ `consolidate()` sets `superseded` without `superseded_by` → store invalid | [#785](https://github.com/deghosal-2026/CauterRule/issues/785) |
+| CR-24 | Important | ✅ Test-suite defects (vacuous poisoning asserts, inverted injection test, fake-ID loop test) | [#786](https://github.com/deghosal-2026/CauterRule/issues/786) |
 
 **CLI / TUI / MCP (8)**
 
 | # | Severity | Task | Issue |
 |---|----------|------|-------|
-| CR-25 | Important | `cauterule retire` exits 0 on failure | [#787](https://github.com/deghosal-2026/CauterRule/issues/787) |
-| CR-26 | Important | `cauterule test` ignores `--store` | [#788](https://github.com/deghosal-2026/CauterRule/issues/788) |
-| CR-27 | Important | `cauterule init` overwrites existing `.gitignore` | [#789](https://github.com/deghosal-2026/CauterRule/issues/789) |
-| CR-28 | Important | `cauterule extract` crashes on non-existent path | [#790](https://github.com/deghosal-2026/CauterRule/issues/790) |
+| CR-25 | Important | ✅ `cauterule retire` exits 0 on failure | [#787](https://github.com/deghosal-2026/CauterRule/issues/787) |
+| CR-26 | Important | ✅ `cauterule test` ignores `--store` | [#788](https://github.com/deghosal-2026/CauterRule/issues/788) |
+| CR-27 | Important | ✅ `cauterule init` overwrites existing `.gitignore` | [#789](https://github.com/deghosal-2026/CauterRule/issues/789) |
+| CR-28 | Important | ✅ `cauterule extract` crashes on non-existent path | [#790](https://github.com/deghosal-2026/CauterRule/issues/790) |
 | CR-29 | Critical | ✅ `cauterule report --safety-adjusted` saves an empty file | [#791](https://github.com/deghosal-2026/CauterRule/issues/791) |
-| CR-30 | Important | MCP `report_failure` returns `accepted: true` on construction failure | [#792](https://github.com/deghosal-2026/CauterRule/issues/792) |
-| CR-31 | Important | TUI `reject_current` leaves detail panel stale → wrong candidate approved | [#793](https://github.com/deghosal-2026/CauterRule/issues/793) |
-| CR-32 | Important | MCP server allows unauthenticated non-loopback binding | [#794](https://github.com/deghosal-2026/CauterRule/issues/794) |
+| CR-30 | Important | ✅ MCP `report_failure` returns `accepted: true` on construction failure | [#792](https://github.com/deghosal-2026/CauterRule/issues/792) |
+| CR-31 | Important | ✅ TUI `reject_current` leaves detail panel stale → wrong candidate approved | [#793](https://github.com/deghosal-2026/CauterRule/issues/793) |
+| CR-32 | Important | ✅ MCP server allows unauthenticated non-loopback binding | [#794](https://github.com/deghosal-2026/CauterRule/issues/794) |
 
 **Packs / export / LLM / benchmark / measurement (10)**
 
@@ -115,8 +115,8 @@
 | CR-36 | Important | Aider export emits unescaped YAML → corruption/injection | [#798](https://github.com/deghosal-2026/CauterRule/issues/798) |
 | CR-37 | Important | Gist import skips cert + safety yet reports `cert.passed=True` | [#799](https://github.com/deghosal-2026/CauterRule/issues/799) |
 | CR-38 | Important | Pack `latest` cache stale forever; dropped connection poisons cache | [#800](https://github.com/deghosal-2026/CauterRule/issues/800) |
-| CR-39 | Important | `calibration_loop` low-precision escalation branch is dead | [#801](https://github.com/deghosal-2026/CauterRule/issues/801) |
-| CR-40 | Important | Anthropic/Ollama/LiteLLM drop token usage → cost shows `$0.00` | [#802](https://github.com/deghosal-2026/CauterRule/issues/802) |
+| CR-39 | Important | ✅ `calibration_loop` low-precision escalation branch is dead | [#801](https://github.com/deghosal-2026/CauterRule/issues/801) |
+| CR-40 | Important | ✅ Anthropic/Ollama/LiteLLM drop token usage → cost shows `$0.00` | [#802](https://github.com/deghosal-2026/CauterRule/issues/802) |
 | CR-41 | Important | `import_gist(as_id=...)` silently overwrites existing rule | [#803](https://github.com/deghosal-2026/CauterRule/issues/803) |
 | CR-42 | Important | `compare_versions` raises `TypeError` on mixed segments | [#804](https://github.com/deghosal-2026/CauterRule/issues/804) |
 

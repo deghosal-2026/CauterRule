@@ -15,4 +15,4 @@ def retire(rule_id: str, reason: str) -> None:
         store.retire_rule(rule_id, reason)
         click.echo(f"Rule {rule_id} retired.")
     except ValueError as e:
-        click.echo(f"Error: {e}")
+        raise click.ClickException(str(e)) from e

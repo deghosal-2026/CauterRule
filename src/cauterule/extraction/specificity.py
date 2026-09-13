@@ -16,8 +16,13 @@ Specificity = Literal["specific", "moderate", "generic"]
 # Degenerate trigger patterns — step identifiers, not failure descriptions.
 _DEGENERATE_RE = re.compile(r"^step[_\s]*\d+$", re.IGNORECASE)
 
-# Hyphenated or underscored error codes are strong specificity signals.
-_SPECIFIC_RE = re.compile(r"[a-z]+[-_][a-z]+")
+# A hyphenated/underscored token signals a concrete error code only when it
+# looks code-like — it contains a digit or a camelCase seam. Plain English
+# hyphenation such as "does-not-work" is a word separator, not an error code
+# (#784).
+_HYPHEN_TOKEN_RE = re.compile(r"[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)+")
+_DIGIT_RE = re.compile(r"\d")
+_CAMEL_SEAM_RE = re.compile(r"[a-z][A-Z]")
 
 # Concrete error-condition markers (multi-word or hyphenated).
 _CONCRETE_MARKERS: frozenset[str] = frozenset(
@@ -30,6 +35,9 @@ _CONCRETE_MARKERS: frozenset[str] = frozenset(
         "import error",
         "connection refused",
         "missing peer dependency",
+        "exit_code",
+        "exit-code",
+        "exit code",
     }
 )
 
@@ -140,10 +148,25 @@ _STOPWORDS: frozenset[str] = frozenset(
 )
 
 
+def _has_code_like_token(trigger: str) -> bool:
+    """Return True if *trigger* holds a code-like hyphenated/underscored token.
+
+    Code-like means the token carries a digit or a camelCase seam; plain
+    alphabetic hyphenation is treated as word separation instead (#784).
+    """
+    for match in _HYPHEN_TOKEN_RE.finditer(trigger):
+        token = match.group(0)
+        if _DIGIT_RE.search(token) or _CAMEL_SEAM_RE.search(token):
+            return True
+    return False
+
+
 def _content_tokens(trigger: str) -> list[str]:
     lower = trigger.lower()
-    # Keep hyphenated tokens as one unit for now; split on whitespace.
-    tokens = [t.strip(".,;:!?\"'()[]{}") for t in lower.split()]
+    # Plain hyphens/underscores separate words so "does-not-work" counts the
+    # same as "does not work".
+    separated = re.sub(r"[-_]+", " ", lower)
+    tokens = [t.strip(".,;:!?\"'()[]{}") for t in separated.split()]
     return [t for t in tokens if t and t not in _STOPWORDS and len(t) > 1]
 
 
@@ -156,8 +179,8 @@ def score_specificity(trigger: str) -> Specificity:
     if _DEGENERATE_RE.match(lower.strip()):
         return "generic"
 
-    # Strong signal: hyphenated error code or concrete error phrase.
-    if _SPECIFIC_RE.search(lower):
+    # Strong signal: code-like hyphenated token or concrete error phrase.
+    if _has_code_like_token(trigger):
         return "specific"
     for phrase in _CONCRETE_MARKERS:
         if phrase in lower:
