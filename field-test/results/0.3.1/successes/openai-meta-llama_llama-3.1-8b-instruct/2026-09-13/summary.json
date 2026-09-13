@@ -8,7 +8,7 @@
     "extraction_passes": 2,
     "temperatures": "0.2,0.5",
     "target_trajectories": 60,
-    "reference_trajectories": 486,
+    "reference_trajectories": 540,
     "cost_per_request_usd": 0.01,
     "gate_mode": "strict",
     "quarantined": []
@@ -37,6 +37,9 @@
     "rejected": 0,
     "accepted": 0,
     "silence_rate": 1.0,
+    "false_accept_rate": 0.0,
+    "rejection_rate": 1.0,
+    "attempted": 0,
     "verdict": "pass"
   },
   "confidence_intervals": {
@@ -75,5 +78,5 @@
   "extraction_f1": 0.0,
   "extraction_agreement": 0.0,
   "verdict_reason_breakdown": {},
-  "updated_at": "2026-09-13T08:42:43Z"
+  "updated_at": "2026-09-13T09:25:54Z"
 }

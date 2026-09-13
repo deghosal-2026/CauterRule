@@ -220,6 +220,10 @@ REFERENCE_BUCKETS = [
     PUBLIC_ROOT / "ci_reference",
     # #700/#707: success counterparts from external sources (InjecAgent).
     PUBLIC_ROOT / "successes",
+    # #735 gap: sibling failure references for the 50 freshly-authored golden
+    # scenarios so each new domain has same-domain failures to "prevent"
+    # (see scripts/generate_golden_replay_refs.py).
+    PUBLIC_ROOT / "golden_replay",
 ]
 
 GATE_MODE_STRICT = "strict"

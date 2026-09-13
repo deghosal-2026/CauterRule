@@ -8,12 +8,12 @@
     "extraction_passes": 2,
     "temperatures": "0.2,0.5",
     "target_trajectories": 50,
-    "reference_trajectories": 486,
+    "reference_trajectories": 540,
     "cost_per_request_usd": 0.01,
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 36.9,
+  "elapsed_seconds": 101.8,
   "total": 50,
   "done": 50,
   "gate_dropped": 0,
@@ -21,28 +21,31 @@
   "skipped": 0,
   "total_candidates": 91,
   "total_llm_calls_avoided": 0,
-  "avg_precision": 0.53,
+  "avg_precision": 0.544,
   "avg_recall": 0.232,
-  "avg_match_score": 0.32,
+  "avg_match_score": 0.327,
   "match_detail_count": 91,
-  "passing": 23,
+  "passing": 26,
   "failing": 2,
-  "inconclusive": 25,
+  "inconclusive": 22,
   "safety": {
     "total": 50,
     "silence": 0,
     "parse_failure": 0,
-    "rejected": 27,
-    "accepted": 23,
+    "rejected": 24,
+    "accepted": 26,
     "silence_rate": 0.0,
+    "false_accept_rate": 0.52,
+    "rejection_rate": 0.48,
+    "attempted": 50,
     "verdict": "pass"
   },
   "confidence_intervals": {
     "pass_rate": {
-      "rate": 0.92,
-      "n": 25,
-      "ci_low": 0.7503,
-      "ci_high": 0.9778
+      "rate": 0.9286,
+      "n": 28,
+      "ci_low": 0.7735,
+      "ci_high": 0.9802
     },
     "safety_silence_rate": {
       "rate": 0.0,
@@ -52,32 +55,32 @@
     }
   },
   "specificity_distribution": {
-    "specific": 124,
-    "moderate": 17,
-    "generic": 0
+    "specific": 121,
+    "moderate": 19,
+    "generic": 1
   },
   "inconclusive_breakdown": {
     "broad_trigger": 0,
-    "matcher_gap": 2,
+    "matcher_gap": 3,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 47
+    "ambiguous_evidence": 39
   },
   "extraction": {
     "n": 23,
-    "token_f1": 0.5818,
-    "semantic_f1": 0.6659,
-    "directive_f1": 0.3291,
-    "token_agreement": 0.1739,
-    "agreement": 0.2174
+    "token_f1": 0.6288,
+    "semantic_f1": 0.7131,
+    "directive_f1": 0.2812,
+    "token_agreement": 0.2174,
+    "agreement": 0.2609
   },
-  "extraction_f1": 0.6658913043478261,
-  "extraction_agreement": 0.21739130434782608,
+  "extraction_f1": 0.713095652173913,
+  "extraction_agreement": 0.2608695652173913,
   "verdict_reason_breakdown": {
-    "verdict:pass": 23,
-    "no_signal": 19,
+    "verdict:pass": 26,
+    "no_signal": 17,
     "blocked_by_broken": 2,
     "min_sample: 2 < 3; computed=inconclusive": 1,
-    "blocked_by_near_miss": 5
+    "blocked_by_near_miss": 4
   },
-  "updated_at": "2026-09-13T08:42:37Z"
+  "updated_at": "2026-09-13T09:25:54Z"
 }

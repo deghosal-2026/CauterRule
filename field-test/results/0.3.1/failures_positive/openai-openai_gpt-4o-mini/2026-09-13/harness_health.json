@@ -11,8 +11,8 @@
     {
       "name": "completion_ratio",
       "passed": true,
-      "message": "Completion 85/50 (170.0%)",
-      "value": 1.7,
+      "message": "Completion 88/50 (176.0%)",
+      "value": 1.76,
       "threshold": 0.9
     }
   ],

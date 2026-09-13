@@ -8,12 +8,12 @@
     "extraction_passes": 2,
     "temperatures": "0.2,0.5",
     "target_trajectories": 5,
-    "reference_trajectories": 486,
+    "reference_trajectories": 540,
     "cost_per_request_usd": 0.01,
     "gate_mode": "relaxed",
     "quarantined": []
   },
-  "elapsed_seconds": 11.0,
+  "elapsed_seconds": 11.9,
   "total": 5,
   "done": 5,
   "gate_dropped": 0,
@@ -22,8 +22,8 @@
   "total_candidates": 9,
   "total_llm_calls_avoided": 0,
   "avg_precision": 0.8,
-  "avg_recall": 0.176,
-  "avg_match_score": 0.416,
+  "avg_recall": 0.181,
+  "avg_match_score": 0.394,
   "match_detail_count": 9,
   "passing": 4,
   "failing": 0,
@@ -35,6 +35,9 @@
     "rejected": 1,
     "accepted": 4,
     "silence_rate": 0.0,
+    "false_accept_rate": 0.8,
+    "rejection_rate": 0.2,
+    "attempted": 5,
     "verdict": "pass"
   },
   "confidence_intervals": {
@@ -60,21 +63,21 @@
     "broad_trigger": 0,
     "matcher_gap": 0,
     "corpus_mismatch": 0,
-    "ambiguous_evidence": 1
+    "ambiguous_evidence": 2
   },
   "extraction": {
     "n": 4,
-    "token_f1": 0.4233,
+    "token_f1": 0.4137,
     "semantic_f1": 0.5778,
-    "directive_f1": 0.4,
+    "directive_f1": 0.4236,
     "token_agreement": 0.25,
-    "agreement": 0.5
+    "agreement": 0.25
   },
   "extraction_f1": 0.5778249999999999,
-  "extraction_agreement": 0.5,
+  "extraction_agreement": 0.25,
   "verdict_reason_breakdown": {
     "verdict:pass": 4,
     "no_signal": 1
   },
-  "updated_at": "2026-09-13T08:40:53Z"
+  "updated_at": "2026-09-13T09:21:58Z"
 }
