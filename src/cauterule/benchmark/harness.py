@@ -85,6 +85,7 @@ def harness_health(
     total: int,
     candidates: int,
     trajectories: int,
+    attempted: int | None = None,
     corpus_ranges: dict[str, tuple[int, int]] | None = None,
     candidate_counts: dict[str, int] | None = None,
     parse_threshold: float = DEFAULT_PARSE_RATE_THRESHOLD,
@@ -94,21 +95,32 @@ def harness_health(
 
     Args:
         parsed: Number of successfully parsed candidates.
-        total: Total trajectories processed.
+        total: Total trajectories in the corpus.
         candidates: Total candidates produced.
         trajectories: Total trajectories.
+        attempted: Trajectories that actually reached the LLM
+            (``total - gate_dropped``). The parse-rate is measured over these,
+            not ``total`` — a safety/rejection corpus intentionally
+            gate-drops many trajectories, and counting them as "unparsed"
+            would mis-report a correct harness as defective. Defaults to
+            ``total`` (correct for extraction corpora, which don't gate-drop).
         corpus_ranges: Optional {corpus_name: (min, max)} for candidate range checks.
         candidate_counts: Optional {corpus_name: count} for range checks.
         parse_threshold: Parse rate floor (default 0.7).
-        is_safety_corpus: If True, 0 candidates is expected (gate drops all) — skip
-            parse rate and completion checks.
+        is_safety_corpus: True for silence *and* rejection corpora
+            (successes, failures/negative, nearmiss, adversarial/*) where
+            producing candidates is not required. 0 attempted (everything
+            gate-dropped) is a pass; otherwise only the parse rate is asserted.
 
     Returns:
         :class:`HarnessHealth` with PASS/FAIL.
     """
     checks: list[HealthCheck] = []
+    if attempted is None:
+        attempted = total
 
-    if is_safety_corpus and candidates == 0:
+    if is_safety_corpus and attempted == 0:
+        # Every trajectory was gate-dropped — silence is the pass condition.
         checks.append(
             HealthCheck(
                 name="parse_rate",
@@ -127,8 +139,23 @@ def harness_health(
                 threshold=1.0,
             )
         )
+    elif is_safety_corpus:
+        # Rejection corpus (nearmiss/adversarial): candidates may be produced
+        # and are expected to be blocked in replay. The only harness question is
+        # whether the LLM output that *was* requested parsed cleanly, measured
+        # over the attempted (non-gate-dropped) trajectories.
+        checks.append(check_parse_rate(parsed, attempted, threshold=parse_threshold))
+        checks.append(
+            HealthCheck(
+                name="completion_ratio",
+                passed=True,
+                message=f"Safety corpus: {candidates} candidates produced (replay rejection expected, not a harness defect)",
+                value=float(candidates),
+                threshold=None,
+            )
+        )
     else:
-        checks.append(check_parse_rate(parsed, total, threshold=parse_threshold))
+        checks.append(check_parse_rate(parsed, attempted, threshold=parse_threshold))
         if trajectories > 0 and candidates == 0:
             checks.append(
                 HealthCheck(
@@ -140,7 +167,7 @@ def harness_health(
                 )
             )
         else:
-            checks.append(check_completion_ratio(candidates, trajectories))
+            checks.append(check_completion_ratio(candidates, attempted))
 
     if corpus_ranges and candidate_counts:
         for corpus, (exp_min, exp_max) in corpus_ranges.items():

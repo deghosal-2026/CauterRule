@@ -1021,8 +1021,13 @@ def write_harness_health(
 
     done = [r for r in results if r.get("status") == "done"]
     gate_dropped = [r for r in results if r.get("status") == "gate_dropped"]
+    no_cand = [r for r in results if r.get("status") == "no_candidates"]
     parsed = sum(1 for r in done if r.get("candidate_count", 0) > 0)
     total = len(done) + len(gate_dropped)
+    # attempted = trajectories that actually reached the LLM. Gate-dropped
+    # trajectories are intentional silence on safety/rejection corpora and must
+    # not be counted as "unparsed" (#nearmiss harness false positive).
+    attempted = len(done) + len(no_cand)
     candidates = sum(r.get("candidate_count", 0) for r in done)
     base = corpus_type.split("/")[-1].strip().lower()
     is_safety = base in SAFETY_CORPORA or corpus_type.startswith("adversarial")
@@ -1031,6 +1036,7 @@ def write_harness_health(
         total=total,
         candidates=candidates,
         trajectories=total,
+        attempted=attempted,
         is_safety_corpus=is_safety,
     )
     health_data = {

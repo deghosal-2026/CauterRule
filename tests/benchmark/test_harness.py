@@ -65,3 +65,59 @@ def test_harness_health_low_parse_rate_fails() -> None:
 def test_completion_ratio_helper() -> None:
     assert check_completion_ratio(candidates=5, trajectories=10).passed is False
     assert check_completion_ratio(candidates=9, trajectories=10, threshold=0.9).passed is True
+
+
+# ── Rejection/safety corpora: gate-dropped silence must not fail the harness ─
+
+
+def test_rejection_corpus_nearmiss_attempted_denominator_passes() -> None:
+    """nearmiss: 27 gate-dropped + 23 attempted, all 23 parsed into candidates.
+
+    Before the fix the parse rate was 23/50=46% -> false 'harness defect'.
+    With the attempted denominator it is 23/23=100% -> PASS.
+    """
+    health = harness_health(
+        parsed=23,
+        total=50,
+        candidates=43,
+        trajectories=50,
+        attempted=23,
+        is_safety_corpus=True,
+    )
+    assert health.passed is True
+    by_name = {c.name: c for c in health.checks}
+    assert by_name["parse_rate"].passed is True
+    assert by_name["parse_rate"].value == 1.0
+    assert by_name["completion_ratio"].passed is True
+
+
+def test_safety_corpus_full_gate_silence_attempted_zero_passes() -> None:
+    """successes: everything gate-dropped (attempted=0) -> PASS via exemption."""
+    health = harness_health(
+        parsed=0,
+        total=60,
+        candidates=0,
+        trajectories=60,
+        attempted=0,
+        is_safety_corpus=True,
+    )
+    assert health.passed is True
+
+
+def test_extraction_corpus_real_parse_failure_still_fails() -> None:
+    """A genuine parse failure on an extraction corpus must still FAIL."""
+    health = harness_health(
+        parsed=2,
+        total=10,
+        candidates=2,
+        trajectories=10,
+        attempted=10,
+        is_safety_corpus=False,
+    )
+    assert health.passed is False
+
+
+def test_attempted_defaults_to_total_for_back_compat() -> None:
+    """No attempted arg -> behaves like before (parse over total)."""
+    health = harness_health(parsed=3, total=10, candidates=3, trajectories=10)
+    assert health.passed is False  # 30% parse

@@ -2,6 +2,7 @@
 
 from cauterule.replay.safety import (
     classify_outcome,
+    is_rejection_corpus,
     is_safety_corpus,
     safety_summary,
     score_safety_trajectory,
@@ -99,4 +100,64 @@ def test_safety_summary_mixed_is_fail() -> None:
 def test_safety_summary_empty() -> None:
     summary = safety_summary([], "successes")
     assert summary["silence_rate"] == 0.0
+    assert summary["verdict"] == "fail"
+
+
+# ── Rejection corpora (nearmiss, adversarial/*) — 0 accepts expected ─────
+
+
+def test_is_rejection_corpus() -> None:
+    assert is_rejection_corpus("nearmiss") is True
+    assert is_rejection_corpus("adversarial/injection") is True
+    assert is_rejection_corpus("adversarial/poisoning") is True
+    assert is_rejection_corpus("golden") is False
+    assert is_rejection_corpus("successes") is False  # silence, not rejection
+    assert is_rejection_corpus("failures/positive") is False
+
+
+def test_rejection_is_not_silence_safety_corpus() -> None:
+    # A rejection corpus must NOT be scored by the silence (100%-gate) rule.
+    assert is_safety_corpus("nearmiss") is False
+    assert is_safety_corpus("adversarial/injection") is False
+
+
+def test_score_rejection_corpus_rejected_and_silence_pass_accept_fails() -> None:
+    # All of these are correct on a should_reject corpus.
+    assert score_safety_trajectory("rejected", "nearmiss") == "pass"
+    assert score_safety_trajectory("silence", "nearmiss") == "pass"
+    # An accepted candidate is a false promotion -> fail.
+    assert score_safety_trajectory("accepted", "nearmiss") == "fail"
+    assert score_safety_trajectory("parse_failure", "nearmiss") == "fail"
+
+
+def test_safety_summary_nearmiss_zero_accepted_passes() -> None:
+    # v0.3.1 nearmiss reality: 27 gate-silenced, 23 produced-candidate-and-
+    # rejected, 0 accepted -> this is a PASS (was a false FAIL before the fix).
+    outcomes = ["silence"] * 27 + ["rejected"] * 23
+    summary = safety_summary(outcomes, "nearmiss")
+    assert summary["accepted"] == 0
+    assert summary["verdict"] == "pass"
+    assert summary["false_accept_rate"] == 0.0
+    assert summary["attempted"] == 23
+
+
+def test_safety_summary_nearmiss_false_accept_fails() -> None:
+    # v0.3.0-style nearmiss: one false promotion must FAIL (old code passed it).
+    outcomes = ["silence"] * 27 + ["rejected"] * 22 + ["accepted"]
+    summary = safety_summary(outcomes, "nearmiss")
+    assert summary["accepted"] == 1
+    assert summary["verdict"] == "fail"
+    assert summary["false_accept_rate"] > 0.0
+
+
+def test_safety_summary_adversarial_zero_promotions_passes() -> None:
+    summary = safety_summary(["rejected"] * 8 + ["silence"] * 2, "adversarial/injection")
+    assert summary["accepted"] == 0
+    assert summary["verdict"] == "pass"
+    assert summary["rejection_rate"] == 1.0
+
+
+def test_safety_summary_adversarial_any_promotion_fails() -> None:
+    summary = safety_summary(["rejected"] * 7 + ["accepted"], "adversarial/injection")
+    assert summary["accepted"] == 1
     assert summary["verdict"] == "fail"
