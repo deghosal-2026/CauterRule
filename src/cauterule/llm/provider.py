@@ -38,10 +38,9 @@ def _require_optional(package: str, extra: str) -> None:
         raise ImportError(msg) from None
 
 
-# Substrings marking a failure as worth retrying (#508).
+# Substrings marking a failure as worth retrying (#508). Timeouts are absent on
+# purpose: #713 makes a timeout terminal, not transient.
 _TRANSIENT_HINTS = (
-    "timeout",
-    "timed out",
     "rate limit",
     "ratelimit",
     "overloaded",
@@ -53,16 +52,25 @@ _TRANSIENT_HINTS = (
 )
 
 
+def _is_timeout(exc: BaseException) -> bool:
+    """Return True for a timeout, however the provider reports it (#713)."""
+    if isinstance(exc, TimeoutError):
+        return True
+    text = f"{type(exc).__name__} {exc}".lower()
+    return "timeout" in text or "timed out" in text
+
+
 def _is_transient(exc: BaseException) -> bool:
     """Return True if *exc* looks like a transient provider failure (#508).
 
-    Timeouts are treated as transient (retryable) — a network timeout is
-    usually transient for cloud providers. The field-test runner additionally
-    bounds each trajectory with a per-future timeout (#713) so a local model
-    that hangs on a pathological prompt cannot block the corpus even if the
-    provider retries.
+    Timeouts are terminal, not transient (#713): a timeout against a local
+    model means pathological generation, so retrying only spends the timeout
+    again. The field-test runner bounds each trajectory with its own watchdog
+    (#713), so the provider must not multiply the wait either.
     """
-    if isinstance(exc, (TimeoutError, ConnectionError)):
+    if _is_timeout(exc):
+        return False
+    if isinstance(exc, ConnectionError):
         return True
     text = f"{type(exc).__name__} {exc}".lower()
     return any(hint in text for hint in _TRANSIENT_HINTS)

@@ -105,7 +105,7 @@ def test_require_optional_names_extra() -> None:
 def test_retry_on_transient_then_success(
     _fake_modules: None, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # #508: transient failure retried, then success returned.
+    # #508: transient connection failure retried, then success returned.
     import time
 
     from cauterule.llm.provider import OllamaProvider
@@ -115,13 +115,39 @@ def test_retry_on_transient_then_success(
     monkeypatch.setattr(time, "sleep", lambda _s: None)
     with patch("requests.post", create=True) as mock_post:
         mock_post.side_effect = [
-            TimeoutError("request timed out"),
+            ConnectionError("connection reset by peer"),
             mock_response,
         ]
         p = OllamaProvider(model="llama3", max_retries=2)
         resp = p.complete("hello")
     assert resp.text == "recovered"
     assert mock_post.call_count == 2
+
+
+def test_timeout_is_not_retried(_fake_modules: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    # #713: a timeout is terminal, so the provider must not issue it again.
+    import time
+
+    from cauterule.llm.provider import OllamaProvider
+
+    monkeypatch.setattr(time, "sleep", lambda _s: None)
+    with patch("requests.post", create=True) as mock_post:
+        mock_post.side_effect = TimeoutError("request timed out")
+        p = OllamaProvider(model="llama3", max_retries=2)
+        with pytest.raises(TimeoutError):
+            p.complete("hello")
+    assert mock_post.call_count == 1
+
+
+def test_timeouts_are_not_transient() -> None:
+    # #713: every spelling of a timeout is non-retryable; a connection reset is.
+    from cauterule.llm.provider import _is_transient
+
+    assert not _is_transient(TimeoutError("request timed out"))
+    assert not _is_transient(TimeoutError("deadline exceeded"))
+    assert not _is_transient(RuntimeError("Read timed out"))
+    assert _is_transient(ConnectionError("connection reset by peer"))
+    assert _is_transient(RuntimeError("service unavailable"))
 
 
 def test_no_retry_on_permanent_error(_fake_modules: None) -> None:

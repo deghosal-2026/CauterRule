@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `_is_transient()` now returns `False` for timeouts, honouring the #713 non-retryable-timeout contract: a timeout is terminal, so a provider no longer retries it up to `max_retries` times. Connection errors stay transient. (#807)
+
 ### Planned for v0.4.0
 
 - Semantic matching in replay engine (sentence-transformer embeddings)
